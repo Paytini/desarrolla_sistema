@@ -1,0 +1,244 @@
+// ─────────────────────────────────────────────────────────────
+//  Desarrolla360 — Portal Empresarial
+//  Base de datos: PostgreSQL
+//  ORM: Prisma
+// ─────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // DATABASE_URL="postgresql://usuario:contrasena@localhost:5432/desarrolla360_portal"
+}
+
+// ─────────────────────────────────────────────────────────────
+//  ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum Rol {
+  SUPERADMIN  // Desarrolla360 — acceso total
+  RH          // Encargado de empresa — gestiona sus empleados
+  EMPLEADO    // Trabajador — ve sus propios cursos
+}
+
+// ─────────────────────────────────────────────────────────────
+//  USUARIO
+//  Maneja el login del portal para los tres roles.
+//  Los empleados también tienen un usuario aquí (rol EMPLEADO).
+//  wp_user_id vincula con WordPress cuando aplica.
+// ─────────────────────────────────────────────────────────────
+
+model Usuario {
+  id             Int         @id @default(autoincrement())
+  email          String      @unique
+  password_hash  String
+  rol            Rol
+  nombre         String
+  empresa_id     Int?        // null para SUPERADMIN
+  wp_user_id     Int?        // ID del usuario en WordPress (nullable)
+  activo         Boolean     @default(true)
+  ultimo_acceso  DateTime?
+  created_at     DateTime    @default(now())
+  updated_at     DateTime    @updatedAt
+
+  empresa        Empresa?    @relation(fields: [empresa_id], references: [id])
+  sesiones       SesionPortal[]
+
+  @@index([empresa_id])
+  @@map("usuarios")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EMPRESA
+//  Cada cliente que compró un paquete de cursos.
+//  asientos_contratados: lo define el SuperAdmin al crear la empresa.
+//  asientos_usados: se actualiza automáticamente al dar alta/baja empleados.
+// ─────────────────────────────────────────────────────────────
+
+model Empresa {
+  id                    Int      @id @default(autoincrement())
+  nombre                String
+  email_rh              String   @unique  // correo del encargado de RH
+  telefono              String?
+  rfc                   String?
+  asientos_contratados  Int      // máximo de empleados permitidos
+  asientos_usados       Int      @default(0)
+  activo                Boolean  @default(true)
+  notas                 String?  @db.Text  // notas internas de Desarrolla360
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  usuarios              Usuario[]
+  empleados             Empleado[]
+  paquetes              EmpresaPaquete[]
+
+  @@map("empresas")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PAQUETE
+//  Catálogo de paquetes de cursos que ofrece Desarrolla360.
+//  Los cursos dentro de cada paquete se almacenan en PaqueteCurso.
+// ─────────────────────────────────────────────────────────────
+
+model Paquete {
+  id                     Int      @id @default(autoincrement())
+  nombre                 String   // "CTPAT Básico", "Cadena de Suministro", etc.
+  descripcion            String?  @db.Text
+  modo_entrega           String   @default("DIRECT_ENROLLMENT") // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
+  wp_bundle_id           Int?     // opcional: bundle privado en Tutor LMS para organizacion academica
+  nombre_bundle          String?  // nombre cacheado del bundle privado
+  notas_operativas       String?  @db.Text
+  activo                 Boolean  @default(true)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  cursos                 PaqueteCurso[]
+  empresas               EmpresaPaquete[]
+
+  @@map("paquetes")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PAQUETE_CURSO
+//  Qué cursos de Tutor LMS incluye cada paquete.
+//  wp_curso_id: ID del curso en WordPress/Tutor LMS.
+// ─────────────────────────────────────────────────────────────
+
+model PaqueteCurso {
+  id           Int     @id @default(autoincrement())
+  paquete_id   Int
+  wp_curso_id  Int     // ID del curso en Tutor LMS Pro
+  nombre_curso String  // nombre cacheado para no consultar WP siempre
+
+  paquete      Paquete @relation(fields: [paquete_id], references: [id])
+
+  @@unique([paquete_id, wp_curso_id])
+  @@index([paquete_id])
+  @@map("paquete_cursos")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EMPRESA_PAQUETE
+//  Relación entre empresa y el paquete que contrató.
+//  Incluye fechas para manejar vencimientos y renovaciones.
+// ─────────────────────────────────────────────────────────────
+
+model EmpresaPaquete {
+  id                 Int       @id @default(autoincrement())
+  empresa_id         Int
+  paquete_id         Int
+  fecha_inicio       DateTime  @default(now())
+  fecha_vencimiento  DateTime? // null = sin vencimiento
+  activo             Boolean   @default(true)
+  created_at         DateTime  @default(now())
+
+  empresa            Empresa   @relation(fields: [empresa_id], references: [id])
+  paquete            Paquete   @relation(fields: [paquete_id], references: [id])
+
+  @@index([empresa_id])
+  @@map("empresa_paquetes")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EMPLEADO
+//  Registrado por el área de RH de la empresa.
+//  wp_user_id: se llena cuando el empleado ya existe en WordPress
+//  o cuando se crea su usuario en WP para acceder a Tutor LMS.
+// ─────────────────────────────────────────────────────────────
+
+model Empleado {
+  id            Int       @id @default(autoincrement())
+  empresa_id    Int
+  wp_user_id    Int?      @unique  // ID en WordPress, único si ya está vinculado
+  nombre        String
+  apellido      String
+  email         String    @unique
+  departamento  String?
+  puesto        String?
+  activo        Boolean   @default(true)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  empresa       Empresa         @relation(fields: [empresa_id], references: [id])
+  cursos        EmpleadoCurso[]
+  constancias   Constancia[]
+
+  @@index([empresa_id])
+  @@map("empleados")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EMPLEADO_CURSO
+//  Progreso de cada empleado en cada curso.
+//  Los datos vienen de la REST API de Tutor LMS y se cachean aquí
+//  para no consultar WordPress en cada carga de página.
+//  ultima_sincronizacion: cuándo se actualizó por última vez desde WP.
+// ─────────────────────────────────────────────────────────────
+
+model EmpleadoCurso {
+  id                          Int       @id @default(autoincrement())
+  empleado_id                 Int
+  wp_curso_id                 Int       // ID del curso en Tutor LMS
+  nombre_curso                String    // cacheado desde WP
+  progreso_pct                Int       @default(0)  // 0–100
+  completado                  Boolean   @default(false)
+  acceso_estado               String    @default("PENDING") // PENDING | ACTIVE | ERROR | REQUIRES_REVIEW
+  acceso_origen               String?   // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
+  acceso_error                String?   @db.Text
+  ultimo_intento_acceso       DateTime?
+  fecha_inicio_curso          DateTime?
+  fecha_completado            DateTime?
+  ultima_sincronizacion       DateTime  @default(now())
+
+  empleado                    Empleado  @relation(fields: [empleado_id], references: [id])
+
+  @@unique([empleado_id, wp_curso_id])
+  @@index([empleado_id])
+  @@map("empleado_cursos")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CONSTANCIA
+//  Registro de cada certificado obtenido por un empleado.
+//  folio: generado por el portal (ej. D360-2025-0312-001).
+//  wp_cert_url: enlace al PDF generado por Tutor LMS Pro.
+// ─────────────────────────────────────────────────────────────
+
+model Constancia {
+  id            Int      @id @default(autoincrement())
+  empleado_id   Int
+  wp_curso_id   Int
+  nombre_curso  String
+  folio         String   @unique  // D360-YYYY-MMDD-NNN
+  wp_cert_url   String?  // URL del PDF en WordPress
+  fecha_emision DateTime @default(now())
+
+  empleado      Empleado @relation(fields: [empleado_id], references: [id])
+
+  @@index([empleado_id])
+  @@map("constancias")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SESION_PORTAL
+//  Tokens de sesión activos en el portal.
+//  NextAuth los maneja automáticamente, pero esta tabla
+//  permite revocar accesos desde el panel de SuperAdmin.
+// ─────────────────────────────────────────────────────────────
+
+model SesionPortal {
+  id          Int      @id @default(autoincrement())
+  usuario_id  Int
+  token       String   @unique  @db.VarChar(512)
+  expira_en   DateTime
+  ip_address  String?
+  created_at  DateTime @default(now())
+
+  usuario     Usuario  @relation(fields: [usuario_id], references: [id])
+
+  @@index([usuario_id])
+  @@map("sesiones_portal")
+}
