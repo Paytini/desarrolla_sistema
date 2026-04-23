@@ -53,8 +53,6 @@ NEXTAUTH_URL=
 WP_BRIDGE_BASE_URL=
 WP_BRIDGE_PORTAL_KEY=
 NEXT_PUBLIC_WORDPRESS_SITE_URL=
-CRON_SECRET=
-BACKGROUND_SYNC_SECRET=
 TUTORLMS_API_KEY=
 TUTORLMS_SECRET=
 ```
@@ -96,6 +94,7 @@ npm run dev
 
 - [Blueprint de arquitectura](./docs/ARCHITECTURE.md)
 - [Roadmap de implementacion](./docs/ROADMAP.md)
+- [Repositorio de TutorLMS](https://github.com/themeum/tutor)
 
 ## Notas importantes
 

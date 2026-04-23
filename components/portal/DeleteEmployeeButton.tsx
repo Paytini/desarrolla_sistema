@@ -47,7 +47,7 @@ export default function DeleteEmployeeButton({
       <dialog
         ref={dialogRef}
         onClose={() => setOpen(false)}
-        className="w-full max-w-md rounded-[1.75rem] border border-slate-200 p-0 shadow-2xl backdrop:bg-slate-950/35"
+        className="fixed inset-0 m-auto w-[min(28rem,calc(100vw-2rem))] max-w-md rounded-[1.75rem] border border-slate-200 p-0 shadow-2xl backdrop:bg-slate-950/35"
       >
         <div className="space-y-5 p-6">
           <div className="space-y-2">

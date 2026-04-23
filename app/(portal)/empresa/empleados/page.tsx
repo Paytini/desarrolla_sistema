@@ -315,7 +315,12 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
             ))}
           </div>
 
-          <form action={importEmployeesCsvAction} className="grid gap-4">
+          <form
+            action={importEmployeesCsvAction}
+            className="grid gap-4"
+            data-loading-message="Importando empleados..."
+            data-loading-detail="Estamos leyendo el archivo CSV, creando usuarios y sincronizando accesos. Este proceso puede tardar un poco."
+          >
             <label className="grid gap-1.5 text-sm">
               <span className="font-medium text-slate-700">Archivo CSV</span>
               <input
