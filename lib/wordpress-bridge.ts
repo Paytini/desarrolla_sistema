@@ -44,6 +44,23 @@ export type BridgeDeleteEmployeeResponse = {
   enrollment_posts_deleted: number
 }
 
+export type BridgeCreateBundleInput = {
+  title: string
+  description?: string | null
+  courseIds: number[]
+  visibility?: "private" | "public"
+}
+
+export type BridgeCreateBundleResponse = {
+  bundle_id: number
+  title: string
+  post_type: string
+  status: string
+  visibility: string
+  permalink: string
+  course_ids: number[]
+}
+
 export type BridgeEnrollmentResponse = {
   user_id: number
   enrolled_course_ids: number[]
@@ -298,6 +315,18 @@ export async function bridgeDeleteEmployee(input: BridgeDeleteEmployeeInput) {
       employee_id: input.employeeId ?? null,
       wp_user_id: input.wpUserId ?? null,
       email: input.email ?? null,
+    }),
+  })
+}
+
+export async function bridgeCreateBundle(input: BridgeCreateBundleInput) {
+  return bridgeRequest<BridgeCreateBundleResponse>("/bundles", {
+    method: "POST",
+    body: JSON.stringify({
+      title: input.title,
+      description: input.description ?? "",
+      course_ids: input.courseIds,
+      visibility: input.visibility ?? "private",
     }),
   })
 }

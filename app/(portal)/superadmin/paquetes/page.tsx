@@ -11,7 +11,7 @@ import {
 } from "./actions"
 
 const successMessages: Record<string, string> = {
-  paquete_creado: "El paquete se creo correctamente con sus cursos base.",
+  paquete_creado: "El paquete se creo correctamente con sus cursos base y su bundle privado en Tutor LMS.",
   paquete_asignado: "El paquete activo de la empresa se actualizo correctamente.",
   sync_ok: "Se sincronizaron los cursos del paquete con los empleados activos de la empresa.",
 }
@@ -19,6 +19,7 @@ const successMessages: Record<string, string> = {
 const errorMessages: Record<string, string> = {
   datos: "Faltan datos obligatorios para crear el paquete.",
   cursos: "Debes seleccionar al menos un curso disponible desde WordPress/Tutor LMS.",
+  bundle: "No fue posible crear el bundle del paquete en Tutor LMS.",
   asignacion: "No fue posible asignar el paquete a la empresa.",
   sync: "No fue posible sincronizar el paquete con la empresa. Revisa que exista paquete activo y empleados con WP user ID.",
 }
@@ -175,6 +176,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                   name="wp_bundle_id"
                   type="number"
                   min={1}
+                  placeholder="Opcional si quieres reutilizar uno existente"
                   className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
                 />
               </label>
@@ -182,9 +184,16 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 <span className="font-medium text-slate-700">Nombre del bundle</span>
                 <input
                   name="nombre_bundle"
+                  placeholder="Se llena automaticamente si el bundle se crea desde el portal"
                   className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
                 />
               </label>
+            </div>
+
+            <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-4 text-sm leading-6 text-teal-950">
+              Si dejas vacio <span className="font-semibold">WP Bundle ID</span>, el portal intentara crear
+              automaticamente un <span className="font-semibold">bundle privado</span> en Tutor LMS con los
+              cursos seleccionados y guardara su referencia en este paquete.
             </div>
 
             <label className="grid gap-1.5 text-sm">

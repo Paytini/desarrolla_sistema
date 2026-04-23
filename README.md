@@ -63,6 +63,9 @@ Si tu bridge apunta a `https://desarrolla360.com/wp-json/desarrolla360/v1`, ento
 Si tu panel de Tutor LMS te entrega la API key con otro nombre interno, por compatibilidad
 el portal tambien acepta `TUTORLMS_API_PASSWORD` como alias de `TUTORLMS_API_KEY`.
 
+Si quieres que los paquetes del portal creen automaticamente un `bundle privado` en Tutor LMS,
+debes tener activo el addon oficial `Course Bundle` dentro de Tutor LMS Pro en WordPress.
+
 Para jobs en segundo plano puedes usar `CRON_SECRET` o `BACKGROUND_SYNC_SECRET`.
 La ruta interna `GET/POST /api/internal/sync/employee-learning` acepta:
 
@@ -92,8 +95,6 @@ npm run dev
 
 ## Documentacion clave
 
-- [Blueprint de arquitectura](./docs/ARCHITECTURE.md)
-- [Roadmap de implementacion](./docs/ROADMAP.md)
 - [Repositorio de TutorLMS](https://github.com/themeum/tutor)
 
 ## Notas importantes

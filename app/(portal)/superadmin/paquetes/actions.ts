@@ -5,6 +5,10 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
 import { prisma } from "@/lib/prisma"
+import {
+  bridgeCreateBundle,
+  isWordPressBridgeConfigured,
+} from "@/lib/wordpress-bridge"
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -52,6 +56,36 @@ function getSyncErrorMessage(error: unknown) {
   return rawMessage.slice(0, 500)
 }
 
+function getBundleErrorMessage(error: unknown) {
+  const rawMessage =
+    error instanceof Error
+      ? error.message
+      : "No fue posible crear el bundle en Tutor LMS."
+  const normalizedMessage = rawMessage.toLowerCase()
+
+  if (normalizedMessage.includes("wp bridge base url")) {
+    return "El bridge de WordPress no esta configurado en el portal. Revisa WP_BRIDGE_BASE_URL y WP_BRIDGE_PORTAL_KEY."
+  }
+
+  if (normalizedMessage.includes("course bundle addon") || normalizedMessage.includes("bundle addon")) {
+    return "En WordPress no esta activo el addon oficial Course Bundle de Tutor LMS. Activalo y vuelve a intentar."
+  }
+
+  if (normalizedMessage.includes("post type") && normalizedMessage.includes("bundle")) {
+    return "El bridge no pudo detectar el tipo de contenido de bundles en Tutor LMS. Revisa que el addon Course Bundle este activo."
+  }
+
+  if (normalizedMessage.includes("credenciales insuficientes") || rawMessage.includes("status 401")) {
+    return "El bridge de WordPress rechazo la autenticacion al intentar crear el bundle. Revisa WP_BRIDGE_PORTAL_KEY y la configuracion del plugin."
+  }
+
+  if (rawMessage.includes("CourseModel::WC_PRODUCT_META_KEY")) {
+    return "Tutor LMS reporto una incompatibilidad interna al crear bundles con WooCommerce. Normalmente esto pasa cuando Tutor LMS core y Tutor LMS Pro/addons no estan en versiones compatibles entre si. Actualiza ambos desde el mismo paquete/version y vuelve a intentar."
+  }
+
+  return rawMessage.slice(0, 500)
+}
+
 export async function createPackageAction(formData: FormData) {
   await requireSuperAdmin()
 
@@ -90,14 +124,40 @@ export async function createPackageAction(formData: FormData) {
   }
 
   const wpBundleId = wpBundleIdRaw ? Number.parseInt(wpBundleIdRaw, 10) : NaN
+  let resolvedBundleId = Number.isInteger(wpBundleId) ? wpBundleId : null
+  let resolvedBundleName = nombreBundle || null
+
+  if (!resolvedBundleId) {
+    if (!isWordPressBridgeConfigured()) {
+      const detail = encodeURIComponent(
+        "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS."
+      )
+      redirect(`/superadmin/paquetes?error=bundle&detail=${detail}`)
+    }
+
+    try {
+      const bundle = await bridgeCreateBundle({
+        title: nombre,
+        description: descripcion || "",
+        courseIds: parsedCourses.map((course) => course.wpCourseId),
+        visibility: "private",
+      })
+
+      resolvedBundleId = bundle.bundle_id
+      resolvedBundleName = bundle.title
+    } catch (error) {
+      const detail = encodeURIComponent(getBundleErrorMessage(error))
+      redirect(`/superadmin/paquetes?error=bundle&detail=${detail}`)
+    }
+  }
 
   await prisma.paquete.create({
     data: {
       nombre,
       descripcion: descripcion || null,
       modo_entrega: modoEntrega || "DIRECT_ENROLLMENT",
-      wp_bundle_id: Number.isInteger(wpBundleId) ? wpBundleId : null,
-      nombre_bundle: nombreBundle || null,
+      wp_bundle_id: resolvedBundleId,
+      nombre_bundle: resolvedBundleName,
       notas_operativas: notasOperativas || null,
       activo: true,
       cursos: {

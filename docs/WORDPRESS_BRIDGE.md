@@ -15,6 +15,8 @@ Este puente conecta el portal B2B con el WordPress actual donde viven `Tutor LMS
 
 - `GET /wp-json/desarrolla360/v1/health`
 - `GET /wp-json/desarrolla360/v1/courses`
+- `POST /wp-json/desarrolla360/v1/bundles`
+- `GET /wp-json/desarrolla360/v1/bundles/{bundleId}/diagnostics`
 - `POST /wp-json/desarrolla360/v1/employees/upsert`
 - `POST /wp-json/desarrolla360/v1/enrollments/batch`
 - `GET /wp-json/desarrolla360/v1/students/{studentId}/courses`
@@ -56,7 +58,8 @@ Para crear paquetes en el portal:
 1. `SuperAdmin` abre la pantalla de paquetes.
 2. El portal consulta `GET /courses` en el bridge.
 3. Se muestran los cursos reales de Tutor LMS como seleccion multiple.
-4. Al guardar, el paquete almacena los cursos seleccionados sin capturar IDs manualmente.
+4. Al guardar, el portal intenta crear un `bundle privado` en Tutor LMS mediante `POST /bundles`.
+5. El paquete almacena los cursos seleccionados y tambien cachea el `wp_bundle_id` real devuelto por WordPress.
 
 ## Instalacion del plugin
 
@@ -65,6 +68,7 @@ Para crear paquetes en el portal:
 3. Ir a `Settings > Desarrolla360 Bridge`.
 4. Configurar la llave compartida y el `Service User ID`.
 5. Verificar el endpoint `health`.
+6. Si quieres que el portal cree bundles automaticamente, activar el addon oficial `Course Bundle` de Tutor LMS Pro.
 
 ## Notas tecnicas
 
@@ -72,6 +76,15 @@ Para crear paquetes en el portal:
 - Tutor LMS Pro expone REST APIs oficiales para enrolamiento y consultas de cursos de estudiantes.
 - `certificates` se construye como una normalizacion defensiva de la respuesta del estudiante; la extraccion exacta puede ajustarse segun el payload real del sitio.
 - `diagnostics` sirve para comparar el payload REST de Tutor LMS contra el calculo interno del bridge y las matriculas locales.
+- `bundles/{bundleId}/diagnostics` sirve para inspeccionar un bundle manual existente y descubrir que meta/estructura usa realmente Tutor LMS para guardar sus cursos.
+
+Ejemplo rapido:
+
+```bash
+curl \
+  -H "X-D360-Portal-Key: TU_LLAVE" \
+  "https://tusitio.com/wp-json/desarrolla360/v1/bundles/123/diagnostics"
+```
 
 ## Fuentes oficiales verificadas
 

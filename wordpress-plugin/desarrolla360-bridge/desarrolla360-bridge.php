@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.1.10
+ * Version: 0.1.16
  * Author: Desarrolla360
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.1.10' );
+define( 'D360_BRIDGE_VERSION', '0.1.16' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
 
 add_action( 'admin_menu', 'd360_bridge_register_settings_page' );
@@ -289,6 +289,26 @@ function d360_bridge_register_rest_routes() {
 		array(
 			'methods'             => WP_REST_Server::READABLE,
 			'callback'            => 'd360_bridge_courses',
+			'permission_callback' => 'd360_bridge_rest_permissions',
+		)
+	);
+
+	register_rest_route(
+		'desarrolla360/v1',
+		'/bundles',
+		array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => 'd360_bridge_create_bundle',
+			'permission_callback' => 'd360_bridge_rest_permissions',
+		)
+	);
+
+	register_rest_route(
+		'desarrolla360/v1',
+		'/bundles/(?P<bundle_id>\d+)/diagnostics',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'd360_bridge_bundle_diagnostics',
 			'permission_callback' => 'd360_bridge_rest_permissions',
 		)
 	);
@@ -689,6 +709,634 @@ function d360_bridge_courses() {
 			'total'   => count( $all_courses ),
 		)
 	);
+}
+
+function d360_bridge_create_bundle( WP_REST_Request $request ) {
+	$bundle_id             = 0;
+	$bundle_post_type      = '';
+	$visibility            = 'private';
+	$validated_course_ids  = array();
+
+	try {
+		$params      = $request->get_json_params();
+		$params      = is_array( $params ) ? $params : array();
+		$title       = isset( $params['title'] ) ? sanitize_text_field( $params['title'] ) : '';
+		$description = isset( $params['description'] ) ? wp_kses_post( (string) $params['description'] ) : '';
+		$visibility  = isset( $params['visibility'] ) ? sanitize_key( $params['visibility'] ) : 'private';
+		$course_ids  = isset( $params['course_ids'] ) && is_array( $params['course_ids'] ) ? $params['course_ids'] : array();
+		$course_ids  = array_values(
+			array_filter(
+				array_map( 'absint', $course_ids )
+			)
+		);
+
+		if ( '' === $title || empty( $course_ids ) ) {
+			return new WP_Error(
+				'd360_bridge_invalid_bundle',
+				'title y course_ids son obligatorios para crear el bundle.',
+				array( 'status' => 400 )
+			);
+		}
+
+		$bundle_post_type = d360_bridge_detect_bundle_post_type();
+		if ( is_wp_error( $bundle_post_type ) ) {
+			return $bundle_post_type;
+		}
+
+		$validated_course_ids = d360_bridge_validate_bundle_course_ids( $course_ids );
+		if ( is_wp_error( $validated_course_ids ) ) {
+			return $validated_course_ids;
+		}
+
+		$post_status = 'private' === $visibility ? 'private' : 'publish';
+		$bundle_id   = wp_insert_post(
+			array(
+				'post_type'    => $bundle_post_type,
+				'post_title'   => $title,
+				'post_content' => $description,
+				'post_status'  => $post_status,
+				'meta_input'   => d360_bridge_build_bundle_meta_input( $validated_course_ids, $visibility ),
+			),
+			true,
+			false
+		);
+
+		if ( is_wp_error( $bundle_id ) ) {
+			return $bundle_id;
+		}
+
+		d360_bridge_store_bundle_course_relationships( $bundle_id, $validated_course_ids );
+
+		update_post_meta( $bundle_id, 'd360_managed_bundle', 1 );
+		update_post_meta( $bundle_id, 'd360_bundle_visibility', $visibility );
+
+		return rest_ensure_response(
+			array(
+				'bundle_id'   => (int) $bundle_id,
+				'title'       => get_the_title( $bundle_id ),
+				'post_type'   => $bundle_post_type,
+				'status'      => get_post_status( $bundle_id ),
+				'visibility'  => $visibility,
+				'permalink'   => '',
+				'course_ids'  => $validated_course_ids,
+			)
+		);
+	} catch ( Throwable $error ) {
+		$persisted_course_ids = $bundle_id ? d360_bridge_read_bundle_course_ids( $bundle_id ) : array();
+
+		if ( $bundle_id && ! empty( $persisted_course_ids ) ) {
+			if ( function_exists( 'error_log' ) ) {
+				error_log( '[Desarrolla360 Bridge] Bundle created with recoverable warning: ' . $error->getMessage() );
+			}
+
+			return rest_ensure_response(
+				array(
+					'bundle_id'   => (int) $bundle_id,
+					'title'       => get_the_title( $bundle_id ),
+					'post_type'   => $bundle_post_type ? $bundle_post_type : get_post_type( $bundle_id ),
+					'status'      => get_post_status( $bundle_id ),
+					'visibility'  => $visibility,
+					'permalink'   => '',
+					'course_ids'  => $persisted_course_ids,
+					'warning'     => $error->getMessage(),
+				)
+			);
+		}
+
+		if ( function_exists( 'error_log' ) ) {
+			error_log( '[Desarrolla360 Bridge] Bundle creation failed: ' . $error->getMessage() );
+		}
+
+		return new WP_Error(
+			'd360_bridge_bundle_fatal',
+			'Fallo interno al crear el bundle: ' . $error->getMessage(),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+function d360_bridge_read_bundle_course_ids( $bundle_id ) {
+	$bundle_id = absint( $bundle_id );
+	if ( ! $bundle_id ) {
+		return array();
+	}
+
+	$candidates = array(
+		'bundle-course-ids',
+		'_tutor_bundle_course_ids',
+		'tutor_bundle_course_ids',
+		'd360_bundle_course_ids',
+	);
+
+	foreach ( $candidates as $meta_key ) {
+		$value      = get_post_meta( $bundle_id, $meta_key, true );
+		$course_ids = d360_bridge_debug_extract_course_ids_from_meta_value( $value );
+
+		if ( ! empty( $course_ids ) ) {
+			return $course_ids;
+		}
+	}
+
+	return array();
+}
+
+function d360_bridge_bundle_diagnostics( WP_REST_Request $request ) {
+	$bundle_id = absint( $request['bundle_id'] );
+
+	if ( ! $bundle_id ) {
+		return new WP_Error(
+			'd360_bridge_invalid_bundle_id',
+			'Se requiere un bundle_id valido.',
+			array( 'status' => 400 )
+		);
+	}
+
+	$bundle = get_post( $bundle_id );
+	if ( ! $bundle instanceof WP_Post ) {
+		return new WP_Error(
+			'd360_bridge_bundle_not_found',
+			'No se encontro el bundle solicitado.',
+			array( 'status' => 404 )
+		);
+	}
+
+	$template_bundle = d360_bridge_find_bundle_template_post( $bundle_id );
+	$meta_snapshot   = d360_bridge_debug_collect_post_meta( $bundle_id );
+
+	return rest_ensure_response(
+		array(
+			'bundle' => array(
+				'id'         => $bundle->ID,
+				'title'      => get_the_title( $bundle->ID ),
+				'post_type'  => $bundle->post_type,
+				'status'     => get_post_status( $bundle->ID ),
+				'permalink'  => d360_bridge_safe_get_permalink( $bundle->ID ),
+			),
+			'template_bundle' => $template_bundle instanceof WP_Post
+				? array(
+					'id'        => $template_bundle->ID,
+					'title'     => get_the_title( $template_bundle->ID ),
+					'post_type' => $template_bundle->post_type,
+					'status'    => get_post_status( $template_bundle->ID ),
+				)
+				: null,
+			'detected_courses' => d360_bridge_debug_detect_bundle_courses_from_meta( $meta_snapshot ),
+			'meta' => $meta_snapshot,
+		)
+	);
+}
+
+function d360_bridge_detect_bundle_post_type() {
+	$template_bundle = d360_bridge_find_bundle_template_post();
+	if ( $template_bundle instanceof WP_Post ) {
+		return $template_bundle->post_type;
+	}
+
+	$candidates = array(
+		'tutor_bundle',
+		'tutor-bundle',
+		'course_bundle',
+		'course-bundle',
+		'bundle',
+		'bundles',
+	);
+
+	foreach ( $candidates as $candidate ) {
+		if ( post_type_exists( $candidate ) ) {
+			return $candidate;
+		}
+	}
+
+	$post_types = get_post_types( array(), 'objects' );
+	foreach ( $post_types as $post_type => $object ) {
+		$label        = isset( $object->label ) ? strtolower( (string) $object->label ) : '';
+		$singular     = isset( $object->labels->singular_name ) ? strtolower( (string) $object->labels->singular_name ) : '';
+		$type_name    = strtolower( (string) $post_type );
+		$bundle_match = false !== strpos( $label, 'bundle' ) || false !== strpos( $singular, 'bundle' ) || false !== strpos( $type_name, 'bundle' );
+
+		if ( $bundle_match ) {
+			return $post_type;
+		}
+	}
+
+	return new WP_Error(
+		'd360_bridge_bundle_post_type_missing',
+		'No se detecto el post type del addon Course Bundle de Tutor LMS. Activa el addon oficial y vuelve a intentar.',
+		array( 'status' => 409 )
+	);
+}
+
+function d360_bridge_find_bundle_template_post( $exclude_id = 0 ) {
+	$exclude_id        = absint( $exclude_id );
+	$course_post_types = array( 'courses', 'course', 'tutor_course' );
+	$valid_post_types  = array();
+
+	foreach ( $course_post_types as $candidate ) {
+		if ( post_type_exists( $candidate ) ) {
+			$valid_post_types[] = $candidate;
+		}
+	}
+
+	if ( ! empty( $valid_post_types ) ) {
+		$meta_keys = array(
+			'_tutor_course_type',
+			'tutor_course_type',
+			'_course_type',
+			'course_type',
+		);
+
+		foreach ( $meta_keys as $meta_key ) {
+			$matches = get_posts(
+				array(
+					'post_type'        => $valid_post_types,
+					'post_status'      => array( 'publish', 'private', 'draft', 'pending' ),
+					'numberposts'      => 1,
+					'orderby'          => 'ID',
+					'order'            => 'DESC',
+					'suppress_filters' => false,
+					'post__not_in'     => $exclude_id ? array( $exclude_id ) : array(),
+					'meta_key'         => $meta_key,
+					'meta_value'       => 'bundle',
+				)
+			);
+
+			if ( ! empty( $matches ) && $matches[0] instanceof WP_Post ) {
+				return $matches[0];
+			}
+		}
+	}
+
+	$bundle_post_types = array(
+		'tutor_bundle',
+		'tutor-bundle',
+		'course_bundle',
+		'course-bundle',
+		'bundle',
+		'bundles',
+	);
+
+	foreach ( $bundle_post_types as $post_type ) {
+		if ( ! post_type_exists( $post_type ) ) {
+			continue;
+		}
+
+		$matches = get_posts(
+			array(
+				'post_type'        => $post_type,
+				'post_status'      => array( 'publish', 'private', 'draft', 'pending' ),
+				'numberposts'      => 1,
+				'orderby'          => 'ID',
+				'order'            => 'DESC',
+				'suppress_filters' => false,
+				'post__not_in'     => $exclude_id ? array( $exclude_id ) : array(),
+			)
+		);
+
+		if ( ! empty( $matches ) && $matches[0] instanceof WP_Post ) {
+			return $matches[0];
+		}
+	}
+
+	return null;
+}
+
+function d360_bridge_validate_bundle_course_ids( $course_ids ) {
+	$course_post_types = array( 'courses', 'course', 'tutor_course' );
+	$valid_post_types  = array();
+
+	foreach ( $course_post_types as $candidate ) {
+		if ( post_type_exists( $candidate ) ) {
+			$valid_post_types[] = $candidate;
+		}
+	}
+
+	if ( empty( $valid_post_types ) ) {
+		return new WP_Error(
+			'd360_bridge_course_post_type_missing',
+			'No se encontro el tipo de contenido de cursos de Tutor LMS en WordPress.',
+			array( 'status' => 500 )
+		);
+	}
+
+	$validated = array();
+
+	foreach ( $course_ids as $course_id ) {
+		$course = get_post( $course_id );
+
+		if ( ! $course instanceof WP_Post || ! in_array( $course->post_type, $valid_post_types, true ) ) {
+			return new WP_Error(
+				'd360_bridge_invalid_bundle_course',
+				sprintf( 'El curso %d no existe o no pertenece a Tutor LMS.', absint( $course_id ) ),
+				array( 'status' => 400 )
+			);
+		}
+
+		$validated[] = (int) $course_id;
+	}
+
+	return array_values( array_unique( $validated ) );
+}
+
+function d360_bridge_store_bundle_course_relationships( $bundle_id, $course_ids ) {
+	$bundle_id  = absint( $bundle_id );
+	$course_ids = array_values( array_unique( array_map( 'absint', $course_ids ) ) );
+	$csv_ids    = implode( ',', $course_ids );
+	$json_ids   = wp_json_encode( $course_ids );
+	$template   = d360_bridge_find_bundle_template_post( $bundle_id );
+
+	if ( $template instanceof WP_Post ) {
+		d360_bridge_clone_bundle_course_meta_from_template( $bundle_id, $template->ID, $course_ids );
+	}
+
+	$meta_keys = array(
+		'bundle-course-ids',
+		'_tutor_bundle_course_ids',
+		'tutor_bundle_course_ids',
+		'_tutor_bundle_courses',
+		'tutor_bundle_courses',
+		'_bundle_course_ids',
+		'bundle_course_ids',
+		'_course_bundle_ids',
+		'course_bundle_ids',
+		'_course_ids',
+		'course_ids',
+		'courses',
+		'd360_bundle_course_ids',
+	);
+
+	foreach ( $meta_keys as $meta_key ) {
+		$use_csv_value = 'bundle-course-ids' === $meta_key;
+		update_post_meta( $bundle_id, $meta_key, $use_csv_value ? $csv_ids : $course_ids );
+		update_post_meta( $bundle_id, $meta_key . '_count', count( $course_ids ) );
+		update_post_meta( $bundle_id, $meta_key . '_list', $csv_ids );
+		update_post_meta( $bundle_id, $meta_key . '_raw', $csv_ids );
+		update_post_meta( $bundle_id, $meta_key . '_csv', $csv_ids );
+		update_post_meta( $bundle_id, $meta_key . '_json', $json_ids );
+	}
+}
+
+function d360_bridge_build_bundle_meta_input( $course_ids, $visibility ) {
+	$course_ids = array_values( array_unique( array_map( 'absint', $course_ids ) ) );
+	$csv_ids    = implode( ',', $course_ids );
+	$json_ids   = wp_json_encode( $course_ids );
+
+	return array(
+		'bundle-course-ids'         => $csv_ids,
+		'd360_managed_bundle'        => 1,
+		'd360_bundle_visibility'     => $visibility,
+		'd360_bundle_course_ids'     => $course_ids,
+		'd360_bundle_course_ids_csv' => $csv_ids,
+		'd360_bundle_course_ids_json'=> $json_ids,
+		'd360_bundle_course_count'   => count( $course_ids ),
+		'_tutor_course_type'         => 'bundle',
+		'tutor_course_type'          => 'bundle',
+		'_course_type'               => 'bundle',
+		'course_type'                => 'bundle',
+	);
+}
+
+function d360_bridge_safe_get_permalink( $post_id ) {
+	$post_id = absint( $post_id );
+	if ( ! $post_id ) {
+		return '';
+	}
+
+	$permalink = get_permalink( $post_id );
+	return is_string( $permalink ) ? $permalink : '';
+}
+
+function d360_bridge_clone_bundle_course_meta_from_template( $bundle_id, $template_id, $course_ids ) {
+	$bundle_id   = absint( $bundle_id );
+	$template_id = absint( $template_id );
+	$course_ids  = array_values( array_unique( array_map( 'absint', $course_ids ) ) );
+
+	if ( ! $bundle_id || ! $template_id || empty( $course_ids ) ) {
+		return;
+	}
+
+	$template_meta = get_post_meta( $template_id );
+	if ( ! is_array( $template_meta ) || empty( $template_meta ) ) {
+		return;
+	}
+
+	foreach ( $template_meta as $meta_key => $raw_values ) {
+		if ( ! is_string( $meta_key ) ) {
+			continue;
+		}
+
+		$normalized_key = strtolower( $meta_key );
+		$is_bundle_type = false !== strpos( $normalized_key, 'course_type' );
+		$is_course_meta = false !== strpos( $normalized_key, 'bundle' ) && false !== strpos( $normalized_key, 'course' );
+
+		if ( ! $is_bundle_type && ! $is_course_meta ) {
+			continue;
+		}
+
+		if ( $is_bundle_type ) {
+			update_post_meta( $bundle_id, $meta_key, 'bundle' );
+			continue;
+		}
+
+		if ( ! is_array( $raw_values ) || empty( $raw_values ) ) {
+			continue;
+		}
+
+		$template_value = maybe_unserialize( $raw_values[0] );
+		$adapted_value  = d360_bridge_adapt_bundle_meta_value_from_template( $meta_key, $template_value, $course_ids );
+
+		if ( null === $adapted_value ) {
+			continue;
+		}
+
+		update_post_meta( $bundle_id, $meta_key, $adapted_value );
+	}
+}
+
+function d360_bridge_adapt_bundle_meta_value_from_template( $meta_key, $template_value, $course_ids ) {
+	$normalized_key = strtolower( (string) $meta_key );
+	$course_ids     = array_values( array_unique( array_map( 'absint', $course_ids ) ) );
+
+	if ( false !== strpos( $normalized_key, 'count' ) ) {
+		return count( $course_ids );
+	}
+
+	if ( is_array( $template_value ) ) {
+		$is_numeric_list = ! empty( $template_value );
+		foreach ( $template_value as $item ) {
+			if ( is_array( $item ) ) {
+				$is_numeric_list = false;
+				break;
+			}
+			if ( ! is_numeric( $item ) && ! ( is_string( $item ) && ctype_digit( $item ) ) ) {
+				$is_numeric_list = false;
+				break;
+			}
+		}
+
+		if ( $is_numeric_list ) {
+			return $course_ids;
+		}
+	}
+
+	if ( is_string( $template_value ) ) {
+		$trimmed = trim( $template_value );
+
+		if ( '' === $trimmed ) {
+			return implode( ',', $course_ids );
+		}
+
+		if ( preg_match( '/^\d+(,\d+)*$/', $trimmed ) ) {
+			return implode( ',', $course_ids );
+		}
+
+		if ( '[' === substr( $trimmed, 0, 1 ) && ']' === substr( $trimmed, -1 ) ) {
+			return wp_json_encode( $course_ids );
+		}
+	}
+
+	return null;
+}
+
+function d360_bridge_debug_collect_post_meta( $post_id ) {
+	$post_id  = absint( $post_id );
+	$raw_meta = get_post_meta( $post_id );
+	$result   = array();
+
+	if ( ! is_array( $raw_meta ) ) {
+		return $result;
+	}
+
+	foreach ( $raw_meta as $meta_key => $values ) {
+		if ( ! is_string( $meta_key ) || ! is_array( $values ) || empty( $values ) ) {
+			continue;
+		}
+
+		$parsed_values = array();
+
+		foreach ( $values as $value ) {
+			$parsed_values[] = d360_bridge_debug_normalize_meta_value( maybe_unserialize( $value ) );
+		}
+
+		$result[ $meta_key ] = 1 === count( $parsed_values ) ? $parsed_values[0] : $parsed_values;
+	}
+
+	ksort( $result );
+
+	return $result;
+}
+
+function d360_bridge_debug_normalize_meta_value( $value ) {
+	if ( is_scalar( $value ) || null === $value ) {
+		return $value;
+	}
+
+	if ( is_array( $value ) ) {
+		$normalized = array();
+
+		foreach ( $value as $key => $item ) {
+			$normalized[ $key ] = d360_bridge_debug_normalize_meta_value( $item );
+		}
+
+		return $normalized;
+	}
+
+	if ( is_object( $value ) ) {
+		return d360_bridge_debug_normalize_meta_value( (array) $value );
+	}
+
+	return (string) $value;
+}
+
+function d360_bridge_debug_detect_bundle_courses_from_meta( $meta_snapshot ) {
+	if ( ! is_array( $meta_snapshot ) ) {
+		return array();
+	}
+
+	$detected = array();
+
+	foreach ( $meta_snapshot as $meta_key => $value ) {
+		if ( 0 === strpos( (string) $meta_key, 'd360_' ) ) {
+			continue;
+		}
+
+		$course_ids = d360_bridge_debug_extract_course_ids_from_meta_value( $value );
+
+		if ( empty( $course_ids ) ) {
+			continue;
+		}
+
+		$detected[] = array(
+			'meta_key'   => $meta_key,
+			'course_ids' => $course_ids,
+		);
+	}
+
+	return $detected;
+}
+
+function d360_bridge_debug_extract_course_ids_from_meta_value( $value ) {
+	if ( is_int( $value ) || is_float( $value ) ) {
+		return array();
+	}
+
+	if ( is_array( $value ) ) {
+		$course_ids       = array();
+		$is_numeric_array = ! empty( $value );
+
+		foreach ( $value as $item ) {
+			if ( is_array( $item ) || is_object( $item ) ) {
+				$is_numeric_array = false;
+				break;
+			}
+
+			if ( ! is_numeric( $item ) && ! ( is_string( $item ) && ctype_digit( trim( $item ) ) ) ) {
+				$is_numeric_array = false;
+				break;
+			}
+		}
+
+		if ( $is_numeric_array ) {
+			foreach ( $value as $item ) {
+				$item = absint( $item );
+				if ( $item ) {
+					$course_ids[] = $item;
+				}
+			}
+
+			return array_values( array_unique( $course_ids ) );
+		}
+
+		return array();
+	}
+
+	if ( ! is_string( $value ) ) {
+		return array();
+	}
+
+	$trimmed = trim( $value );
+
+	if ( '' === $trimmed ) {
+		return array();
+	}
+
+	if ( preg_match( '/^\d+(,\d+)*$/', $trimmed ) ) {
+		return array_values(
+			array_unique(
+				array_filter(
+					array_map( 'absint', explode( ',', $trimmed ) )
+				)
+			)
+		);
+	}
+
+	if ( '[' === substr( $trimmed, 0, 1 ) && ']' === substr( $trimmed, -1 ) ) {
+		$decoded = json_decode( $trimmed, true );
+		if ( is_array( $decoded ) ) {
+			return d360_bridge_debug_extract_course_ids_from_meta_value( $decoded );
+		}
+	}
+
+	return array();
 }
 
 function d360_bridge_batch_enrollments( WP_REST_Request $request ) {
