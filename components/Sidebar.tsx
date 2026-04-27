@@ -16,6 +16,7 @@ const navSuperAdmin: NavItem[] = [
 const navRH: NavItem[] = [
   { label: "Inicio",           href: "/empresa/inicio" },
   { label: "Empleados",        href: "/empresa/empleados" },
+  { label: "Asignaciones",     href: "/empresa/asignaciones" },
   { label: "Progreso",         href: "/empresa/progreso" },
   { label: "Constancias",      href: "/empresa/constancias" },
 ]

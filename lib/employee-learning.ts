@@ -14,6 +14,12 @@ const backgroundBatchSyncsInFlight = new Set<string>()
 
 export type EmployeeLearningData = Awaited<ReturnType<typeof getEmployeeLearningData>>
 
+function hasWpCourseId<T extends { wp_course_id?: number | null }>(
+  item: T
+): item is T & { wp_course_id: number } {
+  return Number.isInteger(item.wp_course_id) && Number(item.wp_course_id) > 0
+}
+
 function buildCertificateFolio(empleadoId: number, courseId: number, completedAt?: string | null) {
   const baseDate = completedAt ? new Date(completedAt) : new Date()
   const year = baseDate.getUTCFullYear()
@@ -71,39 +77,42 @@ async function upsertEmployeeCoursesFromBridge(
   courses: BridgeStudentCourse[]
 ) {
   const now = new Date()
-
-  for (const course of courses) {
-    if (!course.wp_course_id) continue
-
-    await prisma.empleadoCurso.upsert({
-      where: {
-        empleado_id_wp_curso_id: {
+  const upsertOperations = courses
+    .filter(hasWpCourseId)
+    .map((course) =>
+      prisma.empleadoCurso.upsert({
+        where: {
+          empleado_id_wp_curso_id: {
+            empleado_id: empleadoId,
+            wp_curso_id: course.wp_course_id,
+          },
+        },
+        update: {
+          nombre_curso: course.title,
+          progreso_pct: course.progress_pct,
+          completado: course.completed,
+          acceso_estado: "ACTIVE",
+          acceso_error: null,
+          fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
+          fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
+          ultima_sincronizacion: now,
+        },
+        create: {
           empleado_id: empleadoId,
           wp_curso_id: course.wp_course_id,
+          nombre_curso: course.title,
+          progreso_pct: course.progress_pct,
+          completado: course.completed,
+          acceso_estado: "ACTIVE",
+          fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
+          fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
+          ultima_sincronizacion: now,
         },
-      },
-      update: {
-        nombre_curso: course.title,
-        progreso_pct: course.progress_pct,
-        completado: course.completed,
-        acceso_estado: "ACTIVE",
-        acceso_error: null,
-        fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-        fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
-        ultima_sincronizacion: now,
-      },
-      create: {
-        empleado_id: empleadoId,
-        wp_curso_id: course.wp_course_id,
-        nombre_curso: course.title,
-        progreso_pct: course.progress_pct,
-        completado: course.completed,
-        acceso_estado: "ACTIVE",
-        fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-        fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
-        ultima_sincronizacion: now,
-      },
-    })
+      })
+    )
+
+  if (upsertOperations.length > 0) {
+    await prisma.$transaction(upsertOperations)
   }
 }
 
@@ -119,34 +128,37 @@ async function upsertEmployeeCertificatesFromBridge(
     existingCertificates.map((certificate) => [certificate.wp_curso_id, certificate])
   )
 
-  for (const certificate of certificates) {
-    if (!certificate.wp_course_id) continue
+  const operations = certificates
+    .filter(hasWpCourseId)
+    .map((certificate) => {
+      const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
+      const fechaEmision = certificate.completed_at ? new Date(certificate.completed_at) : new Date()
 
-    const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
-    const fechaEmision = certificate.completed_at ? new Date(certificate.completed_at) : new Date()
+      if (existingCertificate) {
+        return prisma.constancia.update({
+          where: { id: existingCertificate.id },
+          data: {
+            nombre_curso: certificate.title,
+            wp_cert_url: certificate.certificate_url ?? existingCertificate.wp_cert_url,
+            fecha_emision: fechaEmision,
+          },
+        })
+      }
 
-    if (existingCertificate) {
-      await prisma.constancia.update({
-        where: { id: existingCertificate.id },
+      return prisma.constancia.create({
         data: {
+          empleado_id: empleadoId,
+          wp_curso_id: certificate.wp_course_id,
           nombre_curso: certificate.title,
-          wp_cert_url: certificate.certificate_url ?? existingCertificate.wp_cert_url,
+          folio: buildCertificateFolio(empleadoId, certificate.wp_course_id, certificate.completed_at),
+          wp_cert_url: certificate.certificate_url ?? null,
           fecha_emision: fechaEmision,
         },
       })
-      continue
-    }
-
-    await prisma.constancia.create({
-      data: {
-        empleado_id: empleadoId,
-        wp_curso_id: certificate.wp_course_id,
-        nombre_curso: certificate.title,
-        folio: buildCertificateFolio(empleadoId, certificate.wp_course_id, certificate.completed_at),
-        wp_cert_url: certificate.certificate_url ?? null,
-        fecha_emision: fechaEmision,
-      },
     })
+
+  if (operations.length > 0) {
+    await prisma.$transaction(operations)
   }
 }
 

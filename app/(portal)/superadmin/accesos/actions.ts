@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { auth } from "@/auth"
+import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
+import { requireSuperAdminSession } from "@/lib/auth-guards"
 import {
   deleteEmployeeRecord,
   purgeExpiredPortalSessions,
@@ -11,19 +12,13 @@ import {
   togglePortalUserStatus,
 } from "@/lib/access-control"
 
-async function requireSuperAdmin() {
-  const session = await auth()
-  if (!session || session.user.rol !== "SUPERADMIN") {
-    redirect("/login")
-  }
-}
-
 function getInt(formData: FormData, key: string) {
   return Number.parseInt(String(formData.get(key) ?? "0"), 10)
 }
 
 export async function toggleRhUserStatusAction(formData: FormData) {
-  await requireSuperAdmin()
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
 
   const userId = getInt(formData, "user_id")
   if (!userId) {
@@ -33,7 +28,19 @@ export async function toggleRhUserStatusAction(formData: FormData) {
   try {
     const usuario = await togglePortalUserStatus(userId)
 
+    await createAuditEvent({
+      actor,
+      accion: usuario.activo ? "RH_SUSPENDIDO" : "RH_REACTIVADO",
+      entidadTipo: "USUARIO",
+      entidadId: usuario.id,
+      resumen: `${actor.nombre} ${usuario.activo ? "suspendio" : "reactivo"} un usuario RH.`,
+      metadata: {
+        rol: usuario.rol,
+      },
+    })
+
     revalidatePath("/superadmin/accesos")
+    revalidatePath("/superadmin/reportes")
     redirect(`/superadmin/accesos?success=${usuario.activo ? "rh_suspendido" : "rh_activado"}`)
   } catch {
     redirect("/superadmin/accesos?error=usuario")
@@ -41,7 +48,8 @@ export async function toggleRhUserStatusAction(formData: FormData) {
 }
 
 export async function revokeUserSessionsAction(formData: FormData) {
-  await requireSuperAdmin()
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
 
   const userId = getInt(formData, "user_id")
   if (!userId) {
@@ -50,12 +58,21 @@ export async function revokeUserSessionsAction(formData: FormData) {
 
   await revokeUserPortalSessions(userId)
 
+  await createAuditEvent({
+    actor,
+    accion: "SESIONES_REVOCADAS_USUARIO",
+    entidadTipo: "USUARIO",
+    entidadId: userId,
+    resumen: `${actor.nombre} revoco sesiones de un usuario.`,
+  })
+
   revalidatePath("/superadmin/accesos")
   redirect("/superadmin/accesos?success=sesiones_revocadas")
 }
 
 export async function revokeSingleSessionAction(formData: FormData) {
-  await requireSuperAdmin()
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
 
   const sessionId = getInt(formData, "session_id")
   if (!sessionId) {
@@ -64,21 +81,38 @@ export async function revokeSingleSessionAction(formData: FormData) {
 
   await revokePortalSession(sessionId)
 
+  await createAuditEvent({
+    actor,
+    accion: "SESION_REVOCADA",
+    entidadTipo: "SESION_PORTAL",
+    entidadId: sessionId,
+    resumen: `${actor.nombre} revoco una sesion individual.`,
+  })
+
   revalidatePath("/superadmin/accesos")
   redirect("/superadmin/accesos?success=sesion_revocada")
 }
 
 export async function purgeExpiredSessionsAction() {
-  await requireSuperAdmin()
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
 
   await purgeExpiredPortalSessions()
+
+  await createAuditEvent({
+    actor,
+    accion: "SESIONES_EXPIRADAS_LIMPIADAS",
+    entidadTipo: "SESION_PORTAL",
+    resumen: `${actor.nombre} limpio sesiones expiradas del portal.`,
+  })
 
   revalidatePath("/superadmin/accesos")
   redirect("/superadmin/accesos?success=sesiones_limpiadas")
 }
 
 export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
-  await requireSuperAdmin()
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
 
   const empleadoId = getInt(formData, "empleado_id")
   if (!empleadoId) {
@@ -88,6 +122,8 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   try {
     await deleteEmployeeRecord({
       empleadoId,
+      actor,
+      source: "SUPERADMIN",
     })
   } catch {
     redirect("/superadmin/accesos?error=empleado")
@@ -97,5 +133,6 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   revalidatePath("/empresa/empleados")
   revalidatePath("/empresa/inicio")
   revalidatePath("/empresa/progreso")
+  revalidatePath("/superadmin/reportes")
   redirect("/superadmin/accesos?success=empleado_eliminado")
 }

@@ -3,19 +3,19 @@
 import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { auth } from "@/auth"
 import { deleteEmployeeRecord } from "@/lib/access-control"
+import {
+  createAuditEvent,
+  createSeatHistoryEntry,
+  getAuditActorFromSession,
+  getCompanySeatSnapshot,
+  type AuditActor,
+} from "@/lib/auditing"
+import { requireRhSession } from "@/lib/auth-guards"
 import { parseCsvText } from "@/lib/csv"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
-import { markEmployeeCourseAccessError, upsertEmployeePackageCourses } from "@/lib/course-sync"
 import { prisma } from "@/lib/prisma"
 import {
-  assertAccessConfirmationSucceeded,
-  assertEnrollmentSucceeded,
-  assertStudentHasCourses,
-  bridgeEnrollCourses,
-  bridgeEnsureStudentAccess,
-  bridgeGetStudentCourses,
   bridgeUpsertEmployee,
   isWordPressBridgeConfigured,
 } from "@/lib/wordpress-bridge"
@@ -44,15 +44,6 @@ function withStatus(path: string, key: "success" | "error", value: string) {
   return query ? `${pathname}?${query}` : pathname
 }
 
-async function requireRh() {
-  const session = await auth()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
-    redirect("/login")
-  }
-
-  return session
-}
-
 type EmpresaProvisioningContext = {
   id: number
   nombre: string
@@ -77,6 +68,7 @@ type EmployeeProvisioningInput = {
   puesto?: string | null
   password: string
   empresaContext?: EmpresaProvisioningContext
+  actor: AuditActor
 }
 
 async function loadEmpresaProvisioningContext(empresaId: number) {
@@ -106,105 +98,6 @@ async function loadEmpresaProvisioningContext(empresaId: number) {
       },
     },
   })
-}
-
-async function syncEmployeeWithBridge(params: {
-  createdEmployee: {
-    id: number
-  }
-  empresaId: number
-  empresaNombre: string
-  email: string
-  nombre: string
-  apellido: string
-  departamento?: string | null
-  puesto?: string | null
-  password: string
-  packageCourses: Array<{
-    wp_curso_id: number
-    nombre_curso: string
-  }>
-  accessOrigin: string
-}) {
-  const courseIds = params.packageCourses.map((course) => course.wp_curso_id)
-
-  const bridgeEmployee = await bridgeUpsertEmployee({
-    employeeId: params.createdEmployee.id,
-    companyId: params.empresaId,
-    companyName: params.empresaNombre,
-    email: params.email,
-    firstName: params.nombre,
-    lastName: params.apellido,
-    password: params.password,
-    department: params.departamento ?? null,
-    position: params.puesto ?? null,
-  })
-
-  await prisma.$transaction(async (tx) => {
-    await tx.empleado.update({
-      where: { id: params.createdEmployee.id },
-      data: { wp_user_id: bridgeEmployee.wp_user_id },
-    })
-
-    await tx.usuario.updateMany({
-      where: {
-        email: params.email,
-        empresa_id: params.empresaId,
-      },
-      data: { wp_user_id: bridgeEmployee.wp_user_id },
-    })
-  })
-
-  if (courseIds.length > 0) {
-    const enrollment = await bridgeEnrollCourses(bridgeEmployee.wp_user_id, courseIds)
-    assertEnrollmentSucceeded(enrollment, courseIds)
-    const accessConfirmation = await bridgeEnsureStudentAccess(bridgeEmployee.wp_user_id, courseIds)
-    assertAccessConfirmationSucceeded(accessConfirmation, courseIds)
-  }
-
-  const studentCourses = await bridgeGetStudentCourses(bridgeEmployee.wp_user_id)
-  if (courseIds.length > 0) {
-    assertStudentHasCourses(studentCourses, courseIds)
-  }
-
-  for (const course of studentCourses.courses) {
-    if (!course.wp_course_id) continue
-
-    await prisma.empleadoCurso.upsert({
-      where: {
-        empleado_id_wp_curso_id: {
-          empleado_id: params.createdEmployee.id,
-          wp_curso_id: course.wp_course_id,
-        },
-      },
-      update: {
-        nombre_curso: course.title,
-        progreso_pct: course.progress_pct,
-        completado: course.completed,
-        acceso_estado: "ACTIVE",
-        acceso_origen: params.accessOrigin,
-        acceso_error: null,
-        ultimo_intento_acceso: new Date(),
-        fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-        fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
-        ultima_sincronizacion: new Date(),
-      },
-      create: {
-        empleado_id: params.createdEmployee.id,
-        wp_curso_id: course.wp_course_id,
-        nombre_curso: course.title,
-        progreso_pct: course.progress_pct,
-        completado: course.completed,
-        acceso_estado: "ACTIVE",
-        acceso_origen: params.accessOrigin,
-        acceso_error: null,
-        ultimo_intento_acceso: new Date(),
-        fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-        fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
-        ultima_sincronizacion: new Date(),
-      },
-    })
-  }
 }
 
 async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
@@ -238,12 +131,22 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     }
   }
 
-  const activeEmployees = await prisma.empleado.count({
-    where: {
-      empresa_id: input.empresaId,
-      activo: true,
-    },
-  })
+  const [beforeSeatSnapshot, activeEmployees] = await Promise.all([
+    getCompanySeatSnapshot(input.empresaId),
+    prisma.empleado.count({
+      where: {
+        empresa_id: input.empresaId,
+        activo: true,
+      },
+    }),
+  ])
+
+  if (!beforeSeatSnapshot) {
+    return {
+      ok: false as const,
+      code: "empresa",
+    }
+  }
 
   if (activeEmployees >= empresaContext.asientos_contratados) {
     return {
@@ -254,13 +157,7 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
 
   const passwordHash = await bcrypt.hash(input.password, 12)
   const activePackage = empresaContext.paquetes[0]
-  const packageCourses =
-    activePackage?.paquete.cursos.map((curso) => ({
-      wp_curso_id: curso.wp_curso_id,
-      nombre_curso: curso.nombre_curso,
-    })) ?? []
-  const accessOrigin = activePackage?.paquete.modo_entrega ?? "DIRECT_ENROLLMENT"
-  const courseIds = packageCourses.map((course) => course.wp_curso_id)
+  const hasActivePackage = Boolean(activePackage)
 
   const createdEmployee = await prisma.$transaction(async (tx) => {
     const empleado = await tx.empleado.create({
@@ -293,51 +190,74 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     return empleado
   })
 
-  if (packageCourses.length > 0) {
-    await upsertEmployeePackageCourses(
-      createdEmployee.id,
-      packageCourses.map((course) => ({
-        ...course,
-        acceso_origen: accessOrigin,
-      }))
-    )
+  const afterSeatSnapshot = await getCompanySeatSnapshot(input.empresaId)
+  if (afterSeatSnapshot) {
+    await createSeatHistoryEntry({
+      actor: input.actor,
+      empresaId: input.empresaId,
+      motivo: "empleado_creado",
+      detalle: `Alta de empleado ${input.nombre} ${input.apellido}.`,
+      before: beforeSeatSnapshot,
+      after: afterSeatSnapshot,
+    })
   }
+
+  await createAuditEvent({
+    actor: input.actor,
+    accion: "EMPLEADO_CREADO",
+    entidadTipo: "EMPLEADO",
+    entidadId: createdEmployee.id,
+    empresaId: input.empresaId,
+    resumen: `${input.actor.nombre} dio de alta al empleado ${input.nombre} ${input.apellido}.`,
+    metadata: {
+      email,
+      departamento: input.departamento ?? null,
+      puesto: input.puesto ?? null,
+      tiene_paquete_activo: hasActivePackage,
+    },
+  })
 
   if (isWordPressBridgeConfigured()) {
     try {
-      await syncEmployeeWithBridge({
-        createdEmployee,
-        empresaId: empresaContext.id,
-        empresaNombre: empresaContext.nombre,
+      const bridgeEmployee = await bridgeUpsertEmployee({
+        employeeId: createdEmployee.id,
+        companyId: empresaContext.id,
+        companyName: empresaContext.nombre,
         email,
-        nombre: input.nombre,
-        apellido: input.apellido,
-        departamento: input.departamento ?? null,
-        puesto: input.puesto ?? null,
+        firstName: input.nombre,
+        lastName: input.apellido,
         password: input.password,
-        packageCourses,
-        accessOrigin,
+        department: input.departamento ?? null,
+        position: input.puesto ?? null,
+      })
+
+      await prisma.$transaction(async (tx) => {
+        await tx.empleado.update({
+          where: { id: createdEmployee.id },
+          data: { wp_user_id: bridgeEmployee.wp_user_id },
+        })
+
+        await tx.usuario.updateMany({
+          where: {
+            email,
+            empresa_id: input.empresaId,
+          },
+          data: { wp_user_id: bridgeEmployee.wp_user_id },
+        })
       })
 
       return {
         ok: true as const,
         code: "empleado_creado_sync",
         employeeId: createdEmployee.id,
+        hasActivePackage,
       }
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message.slice(0, 500)
-          : "No fue posible confirmar el acceso academico en Tutor LMS."
-
-      if (courseIds.length > 0) {
-        await markEmployeeCourseAccessError(createdEmployee.id, courseIds, accessOrigin, message)
-      }
-
       return {
         ok: true as const,
         code: "empleado_creado_bridge_error",
         employeeId: createdEmployee.id,
+        hasActivePackage,
       }
     }
   }
@@ -346,6 +266,7 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     ok: true as const,
     code: "empleado_creado",
     employeeId: createdEmployee.id,
+    hasActivePackage,
   }
 }
 
@@ -374,7 +295,8 @@ function csvField(
 }
 
 export async function createEmployeeAction(formData: FormData) {
-  const session = await requireRh()
+  const session = await requireRhSession()
+  const actor = getAuditActorFromSession(session)
 
   const empresaId = session.user.empresa_id as number
   const nombre = getString(formData, "nombre")
@@ -396,28 +318,42 @@ export async function createEmployeeAction(formData: FormData) {
     departamento: departamento || null,
     puesto: puesto || null,
     password,
+    actor,
   })
 
   revalidatePath("/empresa/empleados")
+  revalidatePath("/empresa/asignaciones")
   revalidatePath("/empleado/cursos")
+  revalidatePath("/superadmin/reportes")
 
   if (!result.ok) {
     redirect(`/empresa/empleados?error=${result.code}`)
   }
 
   if (result.code === "empleado_creado_sync") {
+    if (result.hasActivePackage) {
+      redirect("/empresa/empleados?success=empleado_creado_sync&error=asignacion_manual")
+    }
     redirect("/empresa/empleados?success=empleado_creado_sync")
   }
 
   if (result.code === "empleado_creado_bridge_error") {
+    if (result.hasActivePackage) {
+      redirect("/empresa/empleados?success=empleado_creado&error=asignacion_manual")
+    }
     redirect("/empresa/empleados?success=empleado_creado&error=bridge_sync")
+  }
+
+  if (result.hasActivePackage) {
+    redirect("/empresa/empleados?success=empleado_creado&error=asignacion_manual")
   }
 
   redirect("/empresa/empleados?success=empleado_creado")
 }
 
 export async function importEmployeesCsvAction(formData: FormData) {
-  const session = await requireRh()
+  const session = await requireRhSession()
+  const actor = getAuditActorFromSession(session)
   const empresaId = session.user.empresa_id as number
   const fallbackPassword = getString(formData, "password_csv")
   const file = formData.get("archivo_csv")
@@ -509,6 +445,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
       puesto,
       password,
       empresaContext,
+      actor,
     })
 
     if (!result.ok) {
@@ -528,10 +465,26 @@ export async function importEmployeesCsvAction(formData: FormData) {
     }
   }
 
+  await createAuditEvent({
+    actor,
+    accion: "EMPLEADOS_IMPORTADOS_CSV",
+    entidadTipo: "EMPRESA",
+    entidadId: empresaId,
+    empresaId,
+    resumen: `${actor.nombre} ejecuto importacion masiva CSV de empleados.`,
+    metadata: {
+      creados: created,
+      sincronizados: synced,
+      advertencias_bridge: bridgeWarnings,
+      omitidos: skipped,
+    },
+  })
+
   revalidatePath("/empresa/empleados")
   revalidatePath("/empresa/inicio")
   revalidatePath("/empresa/progreso")
   revalidatePath("/empresa/constancias")
+  revalidatePath("/superadmin/reportes")
 
   redirect(
     `/empresa/empleados?success=csv_imported&created=${created}&synced=${synced}&warnings=${bridgeWarnings}&skipped=${skipped}`
@@ -539,7 +492,8 @@ export async function importEmployeesCsvAction(formData: FormData) {
 }
 
 export async function toggleEmployeeStatusAction(formData: FormData) {
-  const session = await requireRh()
+  const session = await requireRhSession()
+  const actor = getAuditActorFromSession(session)
 
   const empresaId = session.user.empresa_id as number
   const empleadoId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
@@ -549,19 +503,24 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
-  const empleado = await prisma.empleado.findFirst({
-    where: {
-      id: empleadoId,
-      empresa_id: empresaId,
-    },
-    select: {
-      id: true,
-      activo: true,
-      email: true,
-    },
-  })
+  const [empleado, beforeSeatSnapshot] = await Promise.all([
+    prisma.empleado.findFirst({
+      where: {
+        id: empleadoId,
+        empresa_id: empresaId,
+      },
+      select: {
+        id: true,
+        activo: true,
+        email: true,
+        nombre: true,
+        apellido: true,
+      },
+    }),
+    getCompanySeatSnapshot(empresaId),
+  ])
 
-  if (!empleado) {
+  if (!empleado || !beforeSeatSnapshot) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
@@ -592,12 +551,38 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
     })
   })
 
+  const afterSeatSnapshot = await getCompanySeatSnapshot(empresaId)
+  if (afterSeatSnapshot) {
+    await createSeatHistoryEntry({
+      actor,
+      empresaId,
+      motivo: empleado.activo ? "empleado_suspendido" : "empleado_reactivado",
+      detalle: `${empleado.nombre} ${empleado.apellido} (${empleado.email})`,
+      before: beforeSeatSnapshot,
+      after: afterSeatSnapshot,
+    })
+  }
+
+  await createAuditEvent({
+    actor,
+    accion: empleado.activo ? "EMPLEADO_SUSPENDIDO" : "EMPLEADO_REACTIVADO",
+    entidadTipo: "EMPLEADO",
+    entidadId: empleado.id,
+    empresaId,
+    resumen: `${actor.nombre} ${empleado.activo ? "suspendio" : "reactivo"} al empleado ${empleado.nombre} ${empleado.apellido}.`,
+    metadata: {
+      email: empleado.email,
+    },
+  })
+
   revalidatePath("/empresa/empleados")
+  revalidatePath("/superadmin/reportes")
   redirect(withStatus(returnTo, "success", empleado.activo ? "empleado_suspendido" : "empleado_activado"))
 }
 
 export async function deleteEmployeeAction(formData: FormData) {
-  const session = await requireRh()
+  const session = await requireRhSession()
+  const actor = getAuditActorFromSession(session)
 
   const empresaId = session.user.empresa_id as number
   const empleadoId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
@@ -611,6 +596,8 @@ export async function deleteEmployeeAction(formData: FormData) {
     await deleteEmployeeRecord({
       empleadoId,
       empresaId,
+      actor,
+      source: "RH",
     })
   } catch (error) {
     const errorCode =
@@ -625,16 +612,27 @@ export async function deleteEmployeeAction(formData: FormData) {
   revalidatePath("/empresa/inicio")
   revalidatePath("/empresa/progreso")
   revalidatePath("/superadmin/accesos")
+  revalidatePath("/superadmin/reportes")
   redirect(withStatus(returnTo, "success", "empleado_eliminado"))
 }
 
 export async function triggerCompanyLearningSyncAction() {
-  const session = await requireRh()
+  const session = await requireRhSession()
+  const actor = getAuditActorFromSession(session)
   const empresaId = session.user.empresa_id as number
 
   const queued = scheduleCompanyEmployeeLearningBatch(empresaId, {
     limit: 100,
     staleOnly: false,
+  })
+
+  await createAuditEvent({
+    actor,
+    accion: queued ? "SYNC_EMPRESA_EN_COLA" : "SYNC_EMPRESA_YA_EN_COLA",
+    entidadTipo: "EMPRESA",
+    entidadId: empresaId,
+    empresaId,
+    resumen: `${actor.nombre} solicito sincronizacion de aprendizaje para su empresa.`,
   })
 
   revalidatePath("/empresa/empleados")
@@ -643,6 +641,7 @@ export async function triggerCompanyLearningSyncAction() {
   revalidatePath("/empleado/cursos")
   revalidatePath("/empleado/progreso")
   revalidatePath("/empleado/constancias")
+  revalidatePath("/superadmin/reportes")
 
   redirect(`/empresa/empleados?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
 }

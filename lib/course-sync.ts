@@ -15,39 +15,92 @@ type PackageCourseInput = {
   acceso_origen?: string | null
 }
 
+function hasValidWpCourseId<T extends { wp_course_id?: number | null }>(
+  course: T
+): course is T & { wp_course_id: number } {
+  return Number.isInteger(course.wp_course_id) && Number(course.wp_course_id) > 0
+}
+
+function buildPackageCourseUpsertOperation(
+  empleadoId: number,
+  packageCourse: PackageCourseInput,
+  syncedAt: Date
+) {
+  return prisma.empleadoCurso.upsert({
+    where: {
+      empleado_id_wp_curso_id: {
+        empleado_id: empleadoId,
+        wp_curso_id: packageCourse.wp_curso_id,
+      },
+    },
+    update: {
+      nombre_curso: packageCourse.nombre_curso,
+      acceso_origen: packageCourse.acceso_origen ?? "DIRECT_ENROLLMENT",
+      acceso_estado: "PENDING",
+      acceso_error: null,
+      ultimo_intento_acceso: syncedAt,
+    },
+    create: {
+      empleado_id: empleadoId,
+      wp_curso_id: packageCourse.wp_curso_id,
+      nombre_curso: packageCourse.nombre_curso,
+      progreso_pct: 0,
+      completado: false,
+      acceso_estado: "PENDING",
+      acceso_origen: packageCourse.acceso_origen ?? "DIRECT_ENROLLMENT",
+      acceso_error: null,
+      ultimo_intento_acceso: syncedAt,
+      ultima_sincronizacion: syncedAt,
+    },
+  })
+}
+
 export async function upsertEmployeePackageCourses(
   empleadoId: number,
   packageCourses: PackageCourseInput[]
 ) {
-  for (const packageCourse of packageCourses) {
-    await prisma.empleadoCurso.upsert({
-      where: {
-        empleado_id_wp_curso_id: {
-          empleado_id: empleadoId,
-          wp_curso_id: packageCourse.wp_curso_id,
-        },
-      },
-      update: {
-        nombre_curso: packageCourse.nombre_curso,
-        acceso_origen: packageCourse.acceso_origen ?? "DIRECT_ENROLLMENT",
-        acceso_estado: "PENDING",
-        acceso_error: null,
-        ultimo_intento_acceso: new Date(),
-      },
-      create: {
-        empleado_id: empleadoId,
-        wp_curso_id: packageCourse.wp_curso_id,
-        nombre_curso: packageCourse.nombre_curso,
-        progreso_pct: 0,
-        completado: false,
-        acceso_estado: "PENDING",
-        acceso_origen: packageCourse.acceso_origen ?? "DIRECT_ENROLLMENT",
-        acceso_error: null,
-        ultimo_intento_acceso: new Date(),
-        ultima_sincronizacion: new Date(),
-      },
-    })
+  if (packageCourses.length === 0) {
+    return
   }
+
+  const syncedAt = new Date()
+  await prisma.$transaction(
+    packageCourses.map((packageCourse) =>
+      buildPackageCourseUpsertOperation(empleadoId, packageCourse, syncedAt)
+    )
+  )
+}
+
+export async function replaceEmployeePackageCourses(
+  empleadoId: number,
+  packageCourses: PackageCourseInput[]
+) {
+  const selectedCourseIds = packageCourses.map((course) => course.wp_curso_id)
+  const syncedAt = new Date()
+
+  const deleteOperation = selectedCourseIds.length > 0
+    ? prisma.empleadoCurso.deleteMany({
+        where: {
+          empleado_id: empleadoId,
+          wp_curso_id: {
+            notIn: selectedCourseIds,
+          },
+        },
+      })
+    : prisma.empleadoCurso.deleteMany({
+        where: {
+          empleado_id: empleadoId,
+        },
+      })
+
+  const operations = [
+    deleteOperation,
+    ...packageCourses.map((packageCourse) =>
+      buildPackageCourseUpsertOperation(empleadoId, packageCourse, syncedAt)
+    ),
+  ]
+
+  await prisma.$transaction(operations)
 }
 
 export async function syncCompanyPackageEnrollments(empresaId: number) {
@@ -89,6 +142,7 @@ export async function syncCompanyPackageEnrollments(empresaId: number) {
   }
 
   const courseIds = activePackage.paquete.cursos.map((curso) => curso.wp_curso_id)
+  const courseIdSet = new Set(courseIds)
   const packageCourses = activePackage.paquete.cursos.map((curso) => ({
     wp_curso_id: curso.wp_curso_id,
     nombre_curso: curso.nombre_curso,
@@ -104,7 +158,7 @@ export async function syncCompanyPackageEnrollments(empresaId: number) {
   }> = []
 
   for (const empleado of empresa.empleados) {
-    await upsertEmployeePackageCourses(empleado.id, packageCourses)
+    await replaceEmployeePackageCourses(empleado.id, packageCourses)
 
     const wpUserId = empleado.wp_user_id
     if (!wpUserId) {
@@ -130,43 +184,48 @@ export async function syncCompanyPackageEnrollments(empresaId: number) {
         assertStudentHasCourses(studentCourses, courseIds)
       }
 
-      for (const course of studentCourses.courses) {
-        if (!course.wp_course_id) continue
-
-        await prisma.empleadoCurso.upsert({
-          where: {
-            empleado_id_wp_curso_id: {
+      const syncedAt = new Date()
+      const upsertOperations = studentCourses.courses
+        .filter((course) => hasValidWpCourseId(course) && courseIdSet.has(course.wp_course_id))
+        .map((course) =>
+          prisma.empleadoCurso.upsert({
+            where: {
+              empleado_id_wp_curso_id: {
+                empleado_id: empleado.id,
+                wp_curso_id: course.wp_course_id,
+              },
+            },
+            update: {
+              nombre_curso: course.title,
+              progreso_pct: course.progress_pct,
+              completado: course.completed,
+              acceso_estado: "ACTIVE",
+              acceso_origen: activePackage.paquete.modo_entrega,
+              acceso_error: null,
+              ultimo_intento_acceso: syncedAt,
+              fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
+              fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
+              ultima_sincronizacion: syncedAt,
+            },
+            create: {
               empleado_id: empleado.id,
               wp_curso_id: course.wp_course_id,
+              nombre_curso: course.title,
+              progreso_pct: course.progress_pct,
+              completado: course.completed,
+              acceso_estado: "ACTIVE",
+              acceso_origen: activePackage.paquete.modo_entrega,
+              acceso_error: null,
+              ultimo_intento_acceso: syncedAt,
+              fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
+              fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
+              ultima_sincronizacion: syncedAt,
             },
-          },
-          update: {
-            nombre_curso: course.title,
-            progreso_pct: course.progress_pct,
-            completado: course.completed,
-            acceso_estado: "ACTIVE",
-            acceso_origen: activePackage.paquete.modo_entrega,
-            acceso_error: null,
-            ultimo_intento_acceso: new Date(),
-            fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-            fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
-            ultima_sincronizacion: new Date(),
-          },
-          create: {
-            empleado_id: empleado.id,
-            wp_curso_id: course.wp_course_id,
-            nombre_curso: course.title,
-            progreso_pct: course.progress_pct,
-            completado: course.completed,
-            acceso_estado: "ACTIVE",
-            acceso_origen: activePackage.paquete.modo_entrega,
-            acceso_error: null,
-            ultimo_intento_acceso: new Date(),
-            fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-            fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
-            ultima_sincronizacion: new Date(),
-          },
-        })
+          })
+        )
+
+      if (upsertOperations.length > 0) {
+        await prisma.$transaction(upsertOperations)
       }
 
       syncedEmployees.push({

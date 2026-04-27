@@ -1,12 +1,25 @@
 import { prisma } from "@/lib/prisma"
+import {
+  createAuditEvent,
+  createSeatHistoryEntry,
+  getCompanySeatSnapshot,
+  type AuditActor,
+} from "@/lib/auditing"
 import { bridgeDeleteEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
 
 type DeleteEmployeeOptions = {
   empleadoId: number
   empresaId?: number
+  actor?: AuditActor
+  source?: "RH" | "SUPERADMIN" | "SYSTEM"
 }
 
-export async function deleteEmployeeRecord({ empleadoId, empresaId }: DeleteEmployeeOptions) {
+export async function deleteEmployeeRecord({
+  empleadoId,
+  empresaId,
+  actor,
+  source = "SYSTEM",
+}: DeleteEmployeeOptions) {
   const empleado = await prisma.empleado.findFirst({
     where: {
       id: empleadoId,
@@ -17,12 +30,26 @@ export async function deleteEmployeeRecord({ empleadoId, empresaId }: DeleteEmpl
       empresa_id: true,
       email: true,
       wp_user_id: true,
+      nombre: true,
+      apellido: true,
     },
   })
 
   if (!empleado) {
     throw new Error("Empleado no encontrado")
   }
+
+  const actingUser: AuditActor = actor ?? {
+    usuarioId: null,
+    nombre: "Sistema",
+    email: null,
+    rol: source,
+  }
+  const beforeSeatSnapshot = await getCompanySeatSnapshot(empleado.empresa_id)
+  const empresa = await prisma.empresa.findUnique({
+    where: { id: empleado.empresa_id },
+    select: { nombre: true },
+  })
 
   if (isWordPressBridgeConfigured()) {
     const bridgeResponse = await bridgeDeleteEmployee({
@@ -79,6 +106,31 @@ export async function deleteEmployeeRecord({ empleadoId, empresaId }: DeleteEmpl
       where: { id: empleado.empresa_id },
       data: { asientos_usados: activeEmployees },
     })
+  })
+
+  const afterSeatSnapshot = await getCompanySeatSnapshot(empleado.empresa_id)
+  if (beforeSeatSnapshot && afterSeatSnapshot) {
+    await createSeatHistoryEntry({
+      actor: actingUser,
+      empresaId: empleado.empresa_id,
+      motivo: "empleado_eliminado",
+      detalle: `${empleado.nombre} ${empleado.apellido} (${empleado.email})`,
+      before: beforeSeatSnapshot,
+      after: afterSeatSnapshot,
+    })
+  }
+
+  await createAuditEvent({
+    actor: actingUser,
+    accion: "EMPLEADO_ELIMINADO",
+    entidadTipo: "EMPLEADO",
+    entidadId: empleado.id,
+    empresaId: empleado.empresa_id,
+    resumen: `${actingUser.nombre} elimino al empleado ${empleado.nombre} ${empleado.apellido} de ${empresa?.nombre ?? "la empresa"}.`,
+    metadata: {
+      email: empleado.email,
+      source,
+    },
   })
 
   return empleado

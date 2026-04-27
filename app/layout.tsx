@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import GlobalLoadingController from "@/components/portal/GlobalLoadingController";
 import "./globals.css";
 
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <GlobalLoadingController />
+        <Suspense fallback={null}>
+          <GlobalLoadingController />
+        </Suspense>
         {children}
       </body>
     </html>

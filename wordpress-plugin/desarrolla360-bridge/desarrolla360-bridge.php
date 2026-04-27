@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.1.16
+ * Version: 0.1.17
  * Author: Desarrolla360
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.1.16' );
+define( 'D360_BRIDGE_VERSION', '0.1.17' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
 
 add_action( 'admin_menu', 'd360_bridge_register_settings_page' );
@@ -716,6 +716,7 @@ function d360_bridge_create_bundle( WP_REST_Request $request ) {
 	$bundle_post_type      = '';
 	$visibility            = 'private';
 	$validated_course_ids  = array();
+	$title                 = '';
 
 	try {
 		$params      = $request->get_json_params();
@@ -803,6 +804,36 @@ function d360_bridge_create_bundle( WP_REST_Request $request ) {
 			);
 		}
 
+		$recovered_bundle = d360_bridge_find_recent_bundle_by_signature(
+			$title,
+			$bundle_post_type,
+			$validated_course_ids
+		);
+
+		if ( $recovered_bundle instanceof WP_Post ) {
+			$recovered_course_ids = d360_bridge_read_bundle_course_ids( $recovered_bundle->ID );
+
+			if ( ! empty( $recovered_course_ids ) ) {
+				if ( function_exists( 'error_log' ) ) {
+					error_log( '[Desarrolla360 Bridge] Bundle recovered after warning: ' . $error->getMessage() );
+				}
+
+				return rest_ensure_response(
+					array(
+						'bundle_id'   => (int) $recovered_bundle->ID,
+						'title'       => get_the_title( $recovered_bundle->ID ),
+						'post_type'   => $recovered_bundle->post_type,
+						'status'      => get_post_status( $recovered_bundle->ID ),
+						'visibility'  => $visibility,
+						'permalink'   => '',
+						'course_ids'  => $recovered_course_ids,
+						'warning'     => $error->getMessage(),
+						'recovered'   => true,
+					)
+				);
+			}
+		}
+
 		if ( function_exists( 'error_log' ) ) {
 			error_log( '[Desarrolla360 Bridge] Bundle creation failed: ' . $error->getMessage() );
 		}
@@ -813,6 +844,93 @@ function d360_bridge_create_bundle( WP_REST_Request $request ) {
 			array( 'status' => 500 )
 		);
 	}
+}
+
+function d360_bridge_find_recent_bundle_by_signature( $title, $post_type, $course_ids ) {
+	$title     = is_string( $title ) ? trim( $title ) : '';
+	$post_type = is_string( $post_type ) ? trim( $post_type ) : '';
+	$course_ids = array_values( array_unique( array_map( 'absint', is_array( $course_ids ) ? $course_ids : array() ) ) );
+
+	if ( '' === $title ) {
+		return null;
+	}
+
+	$post_types = array();
+
+	if ( '' !== $post_type ) {
+		$post_types[] = $post_type;
+	}
+
+	$template_bundle = d360_bridge_find_bundle_template_post();
+	if ( $template_bundle instanceof WP_Post && ! in_array( $template_bundle->post_type, $post_types, true ) ) {
+		$post_types[] = $template_bundle->post_type;
+	}
+
+	if ( empty( $post_types ) ) {
+		$detected_post_type = d360_bridge_detect_bundle_post_type();
+		if ( ! is_wp_error( $detected_post_type ) ) {
+			$post_types[] = $detected_post_type;
+		}
+	}
+
+	if ( empty( $post_types ) ) {
+		return null;
+	}
+
+	$matches = get_posts(
+		array(
+			'post_type'        => $post_types,
+			'post_status'      => array( 'publish', 'private', 'draft', 'pending' ),
+			'numberposts'      => 10,
+			'orderby'          => 'ID',
+			'order'            => 'DESC',
+			'suppress_filters' => false,
+			'title'            => $title,
+		)
+	);
+
+	if ( empty( $matches ) ) {
+		$matches = get_posts(
+			array(
+				'post_type'        => $post_types,
+				'post_status'      => array( 'publish', 'private', 'draft', 'pending' ),
+				'numberposts'      => 10,
+				'orderby'          => 'ID',
+				'order'            => 'DESC',
+				'suppress_filters' => false,
+			)
+		);
+	}
+
+	foreach ( $matches as $match ) {
+		if ( ! $match instanceof WP_Post ) {
+			continue;
+		}
+
+		if ( trim( wp_strip_all_tags( get_the_title( $match->ID ) ) ) !== $title ) {
+			continue;
+		}
+
+		$persisted_course_ids = d360_bridge_read_bundle_course_ids( $match->ID );
+		if ( empty( $persisted_course_ids ) ) {
+			continue;
+		}
+
+		if ( empty( $course_ids ) ) {
+			return $match;
+		}
+
+		$left  = $persisted_course_ids;
+		$right = $course_ids;
+		sort( $left );
+		sort( $right );
+
+		if ( $left === $right ) {
+			return $match;
+		}
+	}
+
+	return null;
 }
 
 function d360_bridge_read_bundle_course_ids( $bundle_id ) {

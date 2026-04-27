@@ -242,3 +242,56 @@ model SesionPortal {
   @@index([usuario_id])
   @@map("sesiones_portal")
 }
+
+// ─────────────────────────────────────────────────────────────
+//  AUDITORIA_EVENTO
+//  Bitacora de acciones administrativas relevantes
+//  (alta de empresa, asignacion de paquete, suspensiones, etc.).
+// ─────────────────────────────────────────────────────────────
+
+model AuditoriaEvento {
+  id               Int      @id @default(autoincrement())
+  actor_usuario_id Int?
+  actor_nombre     String
+  actor_email      String?
+  actor_rol        String
+  accion           String
+  entidad_tipo     String
+  entidad_id       Int?
+  empresa_id       Int?
+  resumen          String
+  metadata         Json?
+  created_at       DateTime @default(now())
+
+  @@index([created_at])
+  @@index([empresa_id])
+  @@index([accion])
+  @@map("auditoria_eventos")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  HISTORIAL_CUPO
+//  Registro historico de cambios en cupos por empresa.
+//  Sirve para trazabilidad de capacidad contratada vs usada.
+// ─────────────────────────────────────────────────────────────
+
+model HistorialCupo {
+  id                           Int      @id @default(autoincrement())
+  empresa_id                   Int
+  actor_usuario_id             Int?
+  actor_nombre                 String
+  actor_email                  String?
+  actor_rol                    String
+  motivo                       String
+  detalle                      String?  @db.Text
+  asientos_contratados_antes   Int
+  asientos_contratados_despues Int
+  asientos_usados_antes        Int
+  asientos_usados_despues      Int
+  empleados_suspendidos        Int      @default(0)
+  created_at                   DateTime @default(now())
+
+  @@index([empresa_id])
+  @@index([created_at])
+  @@map("historial_cupos")
+}

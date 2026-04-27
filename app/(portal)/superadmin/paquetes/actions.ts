@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { auth } from "@/auth"
+import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
+import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
 import { prisma } from "@/lib/prisma"
 import {
@@ -17,13 +18,6 @@ function getString(formData: FormData, key: string) {
 function getInteger(value: string) {
   const parsed = Number.parseInt(value, 10)
   return Number.isInteger(parsed) ? parsed : NaN
-}
-
-async function requireSuperAdmin() {
-  const session = await auth()
-  if (!session || session.user.rol !== "SUPERADMIN") {
-    redirect("/login")
-  }
 }
 
 function getSyncErrorMessage(error: unknown) {
@@ -79,15 +73,12 @@ function getBundleErrorMessage(error: unknown) {
     return "El bridge de WordPress rechazo la autenticacion al intentar crear el bundle. Revisa WP_BRIDGE_PORTAL_KEY y la configuracion del plugin."
   }
 
-  if (rawMessage.includes("CourseModel::WC_PRODUCT_META_KEY")) {
-    return "Tutor LMS reporto una incompatibilidad interna al crear bundles con WooCommerce. Normalmente esto pasa cuando Tutor LMS core y Tutor LMS Pro/addons no estan en versiones compatibles entre si. Actualiza ambos desde el mismo paquete/version y vuelve a intentar."
-  }
-
   return rawMessage.slice(0, 500)
 }
 
 export async function createPackageAction(formData: FormData) {
-  await requireSuperAdmin()
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
 
   const nombre = getString(formData, "nombre")
   const descripcion = getString(formData, "descripcion")
@@ -151,7 +142,7 @@ export async function createPackageAction(formData: FormData) {
     }
   }
 
-  await prisma.paquete.create({
+  const paquete = await prisma.paquete.create({
     data: {
       nombre,
       descripcion: descripcion || null,
@@ -169,12 +160,31 @@ export async function createPackageAction(formData: FormData) {
     },
   })
 
+  await createAuditEvent({
+    actor,
+    accion: "PAQUETE_CREADO",
+    entidadTipo: "PAQUETE",
+    entidadId: paquete.id,
+    resumen: `${actor.nombre} creo el paquete ${nombre}.`,
+    metadata: {
+      modo_entrega: modoEntrega || "DIRECT_ENROLLMENT",
+      cursos: parsedCourses.map((course) => ({
+        wp_curso_id: course.wpCourseId,
+        nombre_curso: course.nombreCurso,
+      })),
+      wp_bundle_id: resolvedBundleId,
+      nombre_bundle: resolvedBundleName,
+    },
+  })
+
   revalidatePath("/superadmin/paquetes")
+  revalidatePath("/superadmin/reportes")
   redirect("/superadmin/paquetes?success=paquete_creado")
 }
 
 export async function assignPackageToCompanyAction(formData: FormData) {
-  await requireSuperAdmin()
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
 
   const empresaId = getInteger(getString(formData, "empresa_id"))
   const paqueteId = getInteger(getString(formData, "paquete_id"))
@@ -204,15 +214,42 @@ export async function assignPackageToCompanyAction(formData: FormData) {
     }),
   ])
 
+  const [empresa, paquete] = await Promise.all([
+    prisma.empresa.findUnique({
+      where: { id: empresaId },
+      select: { nombre: true },
+    }),
+    prisma.paquete.findUnique({
+      where: { id: paqueteId },
+      select: { nombre: true },
+    }),
+  ])
+
+  await createAuditEvent({
+    actor,
+    accion: "PAQUETE_ASIGNADO",
+    entidadTipo: "EMPRESA_PAQUETE",
+    entidadId: paqueteId,
+    empresaId,
+    resumen: `${actor.nombre} asigno ${paquete?.nombre ?? "un paquete"} a ${empresa?.nombre ?? "una empresa"}.`,
+    metadata: {
+      empresa_id: empresaId,
+      paquete_id: paqueteId,
+      fecha_vencimiento: fechaVencimientoRaw || null,
+    },
+  })
+
   revalidatePath("/superadmin/paquetes")
   revalidatePath("/superadmin/empresas")
+  revalidatePath("/superadmin/reportes")
   revalidatePath("/empresa/inicio")
   revalidatePath("/empresa/empleados")
   redirect("/superadmin/paquetes?success=paquete_asignado")
 }
 
 export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
-  await requireSuperAdmin()
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
 
   const empresaId = getInteger(getString(formData, "empresa_id"))
   if (!empresaId) {
@@ -222,11 +259,32 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   try {
     await syncCompanyPackageEnrollments(empresaId)
   } catch (error) {
+    await createAuditEvent({
+      actor,
+      accion: "SYNC_PAQUETE_EMPRESA_ERROR",
+      entidadTipo: "EMPRESA",
+      entidadId: empresaId,
+      empresaId,
+      resumen: `${actor.nombre} intento sincronizar paquete y hubo error.`,
+      metadata: {
+        message: getSyncErrorMessage(error),
+      },
+    })
     const detail = encodeURIComponent(getSyncErrorMessage(error))
     redirect(`/superadmin/paquetes?error=sync&detail=${detail}`)
   }
 
+  await createAuditEvent({
+    actor,
+    accion: "SYNC_PAQUETE_EMPRESA_OK",
+    entidadTipo: "EMPRESA",
+    entidadId: empresaId,
+    empresaId,
+    resumen: `${actor.nombre} sincronizo paquete activo con empleados de la empresa.`,
+  })
+
   revalidatePath("/superadmin/paquetes")
+  revalidatePath("/superadmin/reportes")
   revalidatePath("/empresa/empleados")
   revalidatePath("/empresa/progreso")
   revalidatePath("/empleado/cursos")

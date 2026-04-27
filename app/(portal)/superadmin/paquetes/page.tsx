@@ -4,6 +4,7 @@ import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
 import { formatDate } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import {
   assignPackageToCompanyAction,
   createPackageAction,
@@ -28,19 +29,11 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-function getParam(
-  params: Record<string, string | string[] | undefined> | undefined,
-  key: string
-) {
-  const value = params?.[key]
-  return Array.isArray(value) ? value[0] : value
-}
-
 export default async function SuperAdminPaquetesPage({ searchParams }: PageProps) {
   const params = await searchParams
-  const success = getParam(params, "success")
-  const error = getParam(params, "error")
-  const detail = getParam(params, "detail")
+  const success = readSearchParam(params, "success")
+  const error = readSearchParam(params, "error")
+  const detail = readDecodedSearchParam(params, "detail")
 
   const [paquetes, empresas] = await Promise.all([
     prisma.paquete.findMany({

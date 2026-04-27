@@ -9,6 +9,7 @@ import {
 } from "@/lib/company-employees"
 import { formatDate } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import {
@@ -21,7 +22,8 @@ import {
 
 const successMessages: Record<string, string> = {
   empleado_creado: "El empleado se creo correctamente y ya puede entrar al portal con sus credenciales.",
-  empleado_creado_sync: "El empleado se creo y tambien quedo provisionado en WordPress/Tutor LMS con su paquete activo.",
+  empleado_creado_sync:
+    "El empleado se creo y tambien quedo provisionado en WordPress/Tutor LMS. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
   empleado_suspendido: "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
   empleado_eliminado: "El empleado se elimino del portal y su cupo fue liberado.",
@@ -38,6 +40,8 @@ const errorMessages: Record<string, string> = {
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
   bridge_sync: "El empleado se creo en el portal, pero no fue posible sincronizarlo con WordPress. Revisa la configuracion del puente.",
+  asignacion_manual:
+    "El empleado se creo, pero aun no tiene cursos asignados. Asignalo desde RH > Asignaciones segun su area.",
   csv_file: "Selecciona un archivo CSV valido para importar empleados.",
   csv_empty: "El archivo CSV no contiene filas suficientes para importar empleados.",
   csv_limit: "El archivo CSV excede el limite permitido de 200 filas por carga.",
@@ -51,14 +55,6 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-function getParam(
-  params: Record<string, string | string[] | undefined> | undefined,
-  key: string
-) {
-  const value = params?.[key]
-  return Array.isArray(value) ? value[0] : value
-}
-
 function getSuccessMessage(
   success: string | undefined,
   params: Record<string, string | string[] | undefined> | undefined
@@ -68,10 +64,10 @@ function getSuccessMessage(
   }
 
   if (success === "csv_imported") {
-    const created = getParam(params, "created") ?? "0"
-    const synced = getParam(params, "synced") ?? "0"
-    const warnings = getParam(params, "warnings") ?? "0"
-    const skipped = getParam(params, "skipped") ?? "0"
+    const created = readSearchParam(params, "created") ?? "0"
+    const synced = readSearchParam(params, "synced") ?? "0"
+    const warnings = readSearchParam(params, "warnings") ?? "0"
+    const skipped = readSearchParam(params, "skipped") ?? "0"
 
     return `Importacion completada. Creados: ${created}. Sincronizados con WordPress/Tutor: ${synced}. Con advertencia de bridge: ${warnings}. Omitidos: ${skipped}.`
   }
@@ -101,11 +97,11 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
   }
 
   const params = await searchParams
-  const success = getParam(params, "success")
-  const error = getParam(params, "error")
-  const searchQuery = (getParam(params, "q") ?? "").trim()
+  const success = readSearchParam(params, "success")
+  const error = readSearchParam(params, "error")
+  const searchQuery = (readSearchParam(params, "q") ?? "").trim()
   const query = normalizeEmployeeSearchQuery(searchQuery)
-  const status = normalizeEmployeeFilterStatus(getParam(params, "status"))
+  const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
 
   const empresa = await prisma.empresa.findUnique({
     where: { id: session.user.empresa_id },
@@ -219,8 +215,8 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.45fr)]">
+        <article className="min-w-0 rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 space-y-1">
             <h2 className="text-lg font-semibold text-slate-950">Alta de empleado</h2>
             <p className="text-sm leading-6 text-slate-600">
@@ -296,7 +292,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
           </form>
         </article>
 
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <article className="min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 space-y-1">
             <h2 className="text-lg font-semibold text-slate-950">Carga masiva por CSV</h2>
             <p className="text-sm leading-6 text-slate-600">
@@ -343,7 +339,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
               />
             </label>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+            <div className="max-w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Ejemplo visual tipo Excel</p>
@@ -354,18 +350,18 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
 
                 <a
                   href="/api/templates/empleados-csv"
-                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+                  className="inline-flex self-start items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
                 >
                   Descargar plantilla CSV
                 </a>
               </div>
 
-              <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-                <table className="min-w-full text-sm">
+              <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+                <table className="min-w-[720px] text-sm">
                   <thead className="bg-slate-100 text-left text-slate-700">
                     <tr>
                       {["nombre", "apellido", "email", "departamento", "puesto", "password"].map((column) => (
-                        <th key={column} className="px-4 py-3 font-semibold">
+                        <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">
                           {column}
                         </th>
                       ))}
@@ -373,20 +369,20 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
                   </thead>
                   <tbody className="divide-y divide-slate-200 text-slate-700">
                     <tr>
-                      <td className="px-4 py-3">Ana</td>
-                      <td className="px-4 py-3">Perez</td>
-                      <td className="px-4 py-3">ana@empresa.com</td>
-                      <td className="px-4 py-3">Operaciones</td>
-                      <td className="px-4 py-3">Analista</td>
-                      <td className="px-4 py-3">Temporal123</td>
+                      <td className="whitespace-nowrap px-4 py-3">Ana</td>
+                      <td className="whitespace-nowrap px-4 py-3">Perez</td>
+                      <td className="whitespace-nowrap px-4 py-3">ana@empresa.com</td>
+                      <td className="whitespace-nowrap px-4 py-3">Operaciones</td>
+                      <td className="whitespace-nowrap px-4 py-3">Analista</td>
+                      <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-3">Luis</td>
-                      <td className="px-4 py-3">Lopez</td>
-                      <td className="px-4 py-3">luis@empresa.com</td>
-                      <td className="px-4 py-3">Seguridad</td>
-                      <td className="px-4 py-3">Supervisor</td>
-                      <td className="px-4 py-3">Temporal123</td>
+                      <td className="whitespace-nowrap px-4 py-3">Luis</td>
+                      <td className="whitespace-nowrap px-4 py-3">Lopez</td>
+                      <td className="whitespace-nowrap px-4 py-3">luis@empresa.com</td>
+                      <td className="whitespace-nowrap px-4 py-3">Seguridad</td>
+                      <td className="whitespace-nowrap px-4 py-3">Supervisor</td>
+                      <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
                     </tr>
                   </tbody>
                 </table>

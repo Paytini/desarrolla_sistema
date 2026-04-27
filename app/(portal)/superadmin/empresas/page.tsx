@@ -1,14 +1,20 @@
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
-import { formatDate } from "@/lib/format"
+import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
-import { createCompanyAction, toggleCompanyStatusAction } from "./actions"
+import { readSearchParam } from "@/lib/search-params"
+import {
+  createCompanyAction,
+  toggleCompanyStatusAction,
+  updateCompanySeatsAction,
+} from "./actions"
 
 const successMessages: Record<string, string> = {
   empresa_creada: "La empresa se creo correctamente con su usuario RH inicial.",
   empresa_suspendida: "La empresa fue suspendida. Ya no deberia operar nuevos accesos hasta reactivarse.",
   empresa_activada: "La empresa fue reactivada correctamente.",
+  cupos_actualizados: "Los cupos contratados se actualizaron correctamente.",
 }
 
 const errorMessages: Record<string, string> = {
@@ -16,26 +22,21 @@ const errorMessages: Record<string, string> = {
   email_rh: "Ese correo RH ya esta ligado a una empresa.",
   usuario_rh: "Ese correo ya existe como usuario del portal.",
   empresa: "No se encontro la empresa solicitada.",
+  cupos: "No fue posible actualizar cupos. Revisa que el valor sea mayor a cero.",
+  cupos_menor_uso:
+    "No puedes definir cupos contratados por debajo de los cupos actualmente usados por esa empresa.",
 }
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-function getParam(
-  params: Record<string, string | string[] | undefined> | undefined,
-  key: string
-) {
-  const value = params?.[key]
-  return Array.isArray(value) ? value[0] : value
-}
-
 export default async function EmpresasPage({ searchParams }: PageProps) {
   const params = await searchParams
-  const success = getParam(params, "success")
-  const error = getParam(params, "error")
+  const success = readSearchParam(params, "success")
+  const error = readSearchParam(params, "error")
 
-  const [empresas, paquetes] = await Promise.all([
+  const [empresas, paquetes, seatHistory] = await Promise.all([
     prisma.empresa.findMany({
       orderBy: { created_at: "desc" },
       include: {
@@ -45,8 +46,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
           take: 1,
         },
         empleados: {
-          where: { activo: true },
-          select: { id: true },
+          select: { id: true, activo: true },
         },
         paquetes: {
           where: { activo: true },
@@ -64,6 +64,10 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
       where: { activo: true },
       orderBy: { nombre: "asc" },
     }),
+    prisma.historialCupo.findMany({
+      orderBy: { created_at: "desc" },
+      take: 30,
+    }),
   ])
 
   const empresasActivas = empresas.filter((empresa) => empresa.activo).length
@@ -72,6 +76,12 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
     0
   )
   const cuposUsados = empresas.reduce((total, empresa) => total + empresa.asientos_usados, 0)
+  const colaboradoresSuspendidos = empresas.reduce(
+    (total, empresa) => total + empresa.empleados.filter((empleado) => !empleado.activo).length,
+    0
+  )
+  const occupancyPct = cuposVendidos ? Math.round((cuposUsados / cuposVendidos) * 100) : 0
+  const companyNameById = new Map(empresas.map((empresa) => [empresa.id, empresa.nombre]))
 
   return (
     <div className="space-y-8">
@@ -84,7 +94,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
       {success ? <StatusNotice tone="success" message={successMessages[success] ?? success} /> : null}
       {error ? <StatusNotice tone="error" message={errorMessages[error] ?? error} /> : null}
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid gap-4 lg:grid-cols-4">
         <InfoCard
           title="Empresas activas"
           value={String(empresasActivas)}
@@ -102,6 +112,12 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
           value={String(cuposUsados)}
           description="Empleados activos ocupando lugares dentro de sus paquetes."
           accent="violet"
+        />
+        <InfoCard
+          title="Colaboradores suspendidos"
+          value={String(colaboradoresSuspendidos)}
+          description={`Ocupacion global actual: ${occupancyPct}% del total contratado.`}
+          accent="slate"
         />
       </section>
 
@@ -246,6 +262,12 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             {empresas.map((empresa) => {
               const rh = empresa.usuarios[0]
               const paquete = empresa.paquetes[0]?.paquete?.nombre ?? "Sin paquete asignado"
+              const empleadosActivos = empresa.empleados.filter((empleado) => empleado.activo).length
+              const empleadosSuspendidos = empresa.empleados.length - empleadosActivos
+              const cuposDisponibles = Math.max(empresa.asientos_contratados - empleadosActivos, 0)
+              const ocupacionEmpresa = empresa.asientos_contratados
+                ? Math.round((empleadosActivos / empresa.asientos_contratados) * 100)
+                : 0
 
               return (
                 <div
@@ -277,7 +299,19 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                         </p>
                         <p>
                           <span className="font-medium text-slate-800">Cupos:</span>{" "}
-                          {empresa.asientos_usados}/{empresa.asientos_contratados}
+                          {empleadosActivos}/{empresa.asientos_contratados}
+                        </p>
+                        <p>
+                          <span className="font-medium text-slate-800">Disponibles:</span>{" "}
+                          {cuposDisponibles}
+                        </p>
+                        <p>
+                          <span className="font-medium text-slate-800">Suspendidos:</span>{" "}
+                          {empleadosSuspendidos}
+                        </p>
+                        <p>
+                          <span className="font-medium text-slate-800">Ocupacion:</span>{" "}
+                          {ocupacionEmpresa}%
                         </p>
                         <p>
                           <span className="font-medium text-slate-800">Creada:</span>{" "}
@@ -290,25 +324,95 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                       ) : null}
                     </div>
 
-                    <form action={toggleCompanyStatusAction}>
-                      <input type="hidden" name="empresa_id" value={empresa.id} />
-                      <button
-                        type="submit"
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                          empresa.activo
-                            ? "bg-slate-900 text-white hover:bg-slate-700"
-                            : "bg-teal-700 text-white hover:bg-teal-800"
-                        }`}
-                      >
-                        {empresa.activo ? "Suspender" : "Reactivar"}
-                      </button>
-                    </form>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <form action={updateCompanySeatsAction} className="flex items-center gap-2">
+                        <input type="hidden" name="empresa_id" value={empresa.id} />
+                        <input
+                          name="asientos_contratados"
+                          type="number"
+                          min={Math.max(empleadosActivos, 1)}
+                          defaultValue={empresa.asientos_contratados}
+                          className="w-24 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-violet-600"
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+                        >
+                          Actualizar cupos
+                        </button>
+                      </form>
+
+                      <form action={toggleCompanyStatusAction}>
+                        <input type="hidden" name="empresa_id" value={empresa.id} />
+                        <button
+                          type="submit"
+                          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                            empresa.activo
+                              ? "bg-slate-900 text-white hover:bg-slate-700"
+                              : "bg-teal-700 text-white hover:bg-teal-800"
+                          }`}
+                        >
+                          {empresa.activo ? "Suspender" : "Reactivar"}
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 </div>
               )
             })}
           </div>
         </article>
+      </section>
+
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 space-y-1">
+          <h2 className="text-lg font-semibold text-slate-950">Historial de cambios de cupos</h2>
+          <p className="text-sm leading-6 text-slate-600">
+            Bitacora operativa de ajustes en cupos contratados/usados para trazabilidad administrativa.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {seatHistory.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+              Aun no hay movimientos de cupos registrados.
+            </div>
+          ) : null}
+
+          {seatHistory.map((item) => (
+            <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+              <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2 lg:grid-cols-3">
+                <p>
+                  <span className="font-medium text-slate-800">Empresa:</span>{" "}
+                  {companyNameById.get(item.empresa_id) ?? `Empresa #${item.empresa_id}`}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">Motivo:</span> {item.motivo}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">Actor:</span>{" "}
+                  {item.actor_nombre} ({item.actor_rol})
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">Contratados:</span>{" "}
+                  {item.asientos_contratados_antes} → {item.asientos_contratados_despues}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">Usados:</span>{" "}
+                  {item.asientos_usados_antes} → {item.asientos_usados_despues}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-800">Suspendidos:</span>{" "}
+                  {item.empleados_suspendidos}
+                </p>
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                {formatDateTime(item.created_at)}
+                {item.detalle ? ` · ${item.detalle}` : ""}
+              </p>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   )

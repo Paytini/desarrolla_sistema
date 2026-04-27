@@ -4,6 +4,7 @@ import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import {
   deleteEmployeeAsSuperAdminAction,
@@ -32,21 +33,13 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-function getParam(
-  params: Record<string, string | string[] | undefined> | undefined,
-  key: string
-) {
-  const value = params?.[key]
-  return Array.isArray(value) ? value[0] : value
-}
-
 export default async function SuperAdminAccesosPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
   const params = await searchParams
-  const success = getParam(params, "success")
-  const error = getParam(params, "error")
+  const success = readSearchParam(params, "success")
+  const error = readSearchParam(params, "error")
 
   const [rhUsers, employeeUsers, employees, trackedSessions] = await Promise.all([
     prisma.usuario.findMany({
