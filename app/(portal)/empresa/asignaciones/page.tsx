@@ -2,7 +2,7 @@ import { auth } from "@/auth"
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
-import { prisma } from "@/lib/prisma"
+import { getRhAsignacionesSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
 import { redirect } from "next/navigation"
 import { assignEmployeeCoursesAction } from "./actions"
@@ -39,36 +39,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
 
-  const empresa = await prisma.empresa.findUnique({
-    where: { id: session.user.empresa_id },
-    include: {
-      paquetes: {
-        where: { activo: true },
-        orderBy: { created_at: "desc" },
-        include: {
-          paquete: {
-            include: {
-              cursos: {
-                orderBy: { nombre_curso: "asc" },
-              },
-            },
-          },
-        },
-        take: 1,
-      },
-      empleados: {
-        where: { activo: true },
-        include: {
-          cursos: {
-            select: {
-              wp_curso_id: true,
-            },
-          },
-        },
-        orderBy: [{ departamento: "asc" }, { nombre: "asc" }],
-      },
-    },
-  })
+  const empresa = await getRhAsignacionesSnapshot(session.user.empresa_id)
 
   if (!empresa) {
     redirect("/login")

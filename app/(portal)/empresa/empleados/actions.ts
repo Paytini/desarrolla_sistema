@@ -1,7 +1,7 @@
 "use server"
 
 import bcrypt from "bcryptjs"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { deleteEmployeeRecord } from "@/lib/access-control"
 import {
@@ -12,6 +12,7 @@ import {
   type AuditActor,
 } from "@/lib/auditing"
 import { requireRhSession } from "@/lib/auth-guards"
+import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import { parseCsvText } from "@/lib/csv"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
@@ -325,6 +326,8 @@ export async function createEmployeeAction(formData: FormData) {
   revalidatePath("/empresa/asignaciones")
   revalidatePath("/empleado/cursos")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   if (!result.ok) {
     redirect(`/empresa/empleados?error=${result.code}`)
@@ -485,6 +488,8 @@ export async function importEmployeesCsvAction(formData: FormData) {
   revalidatePath("/empresa/progreso")
   revalidatePath("/empresa/constancias")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(
     `/empresa/empleados?success=csv_imported&created=${created}&synced=${synced}&warnings=${bridgeWarnings}&skipped=${skipped}`
@@ -577,6 +582,8 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
 
   revalidatePath("/empresa/empleados")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect(withStatus(returnTo, "success", empleado.activo ? "empleado_suspendido" : "empleado_activado"))
 }
 
@@ -613,6 +620,8 @@ export async function deleteEmployeeAction(formData: FormData) {
   revalidatePath("/empresa/progreso")
   revalidatePath("/superadmin/accesos")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect(withStatus(returnTo, "success", "empleado_eliminado"))
 }
 
@@ -642,6 +651,8 @@ export async function triggerCompanyLearningSyncAction() {
   revalidatePath("/empleado/progreso")
   revalidatePath("/empleado/constancias")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(`/empresa/empleados?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
 }

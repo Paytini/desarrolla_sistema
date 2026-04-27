@@ -2,8 +2,8 @@ import InfoCard from "@/components/portal/InfoCard"
 import PackageCourseSelector from "@/components/portal/PackageCourseSelector"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
+import { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
-import { prisma } from "@/lib/prisma"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import {
   assignPackageToCompanyAction,
@@ -35,44 +35,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
   const error = readSearchParam(params, "error")
   const detail = readDecodedSearchParam(params, "detail")
 
-  const [paquetes, empresas] = await Promise.all([
-    prisma.paquete.findMany({
-      orderBy: { created_at: "desc" },
-      include: {
-        cursos: {
-          orderBy: { wp_curso_id: "asc" },
-        },
-        empresas: {
-          where: { activo: true },
-          include: {
-            empresa: {
-              select: { nombre: true },
-            },
-          },
-        },
-      },
-    }),
-    prisma.empresa.findMany({
-      where: { activo: true },
-      orderBy: { nombre: "asc" },
-      include: {
-        paquetes: {
-          where: { activo: true },
-          orderBy: { created_at: "desc" },
-          include: {
-            paquete: {
-              select: { nombre: true },
-            },
-          },
-          take: 1,
-        },
-        empleados: {
-          where: { activo: true },
-          select: { id: true, wp_user_id: true },
-        },
-      },
-    }),
-  ])
+  const { paquetes, empresas } = await getSuperadminPaquetesSnapshot()
 
   const totalPackages = paquetes.length
   const totalCourses = paquetes.reduce((sum, paquete) => sum + paquete.cursos.length, 0)

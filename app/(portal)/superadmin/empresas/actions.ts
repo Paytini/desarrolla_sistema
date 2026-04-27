@@ -1,7 +1,7 @@
 "use server"
 
 import bcrypt from "bcryptjs"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import {
   createAuditEvent,
@@ -10,6 +10,7 @@ import {
   getCompanySeatSnapshot,
 } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
+import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import { prisma } from "@/lib/prisma"
 
 function getString(formData: FormData, key: string) {
@@ -149,6 +150,8 @@ export async function createCompanyAction(formData: FormData) {
 
   revalidatePath("/superadmin/empresas")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(empresaCacheRootTag(createdResult.empresaId), "max")
   redirect("/superadmin/empresas?success=empresa_creada")
 }
 
@@ -186,6 +189,8 @@ export async function toggleCompanyStatusAction(formData: FormData) {
 
   revalidatePath("/superadmin/empresas")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
   redirect(`/superadmin/empresas?success=${empresa.activo ? "empresa_suspendida" : "empresa_activada"}`)
 }
 
@@ -255,5 +260,7 @@ export async function updateCompanySeatsAction(formData: FormData) {
 
   revalidatePath("/superadmin/empresas")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
   redirect("/superadmin/empresas?success=cupos_actualizados")
 }

@@ -7,8 +7,8 @@ import {
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
 } from "@/lib/company-employees"
+import { getRhEmpleadosSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
-import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -103,31 +103,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
 
-  const empresa = await prisma.empresa.findUnique({
-    where: { id: session.user.empresa_id },
-    include: {
-      empleados: {
-        include: {
-          cursos: {
-            select: {
-              acceso_estado: true,
-            },
-          },
-        },
-        orderBy: { created_at: "desc" },
-      },
-      paquetes: {
-        where: { activo: true },
-        orderBy: { created_at: "desc" },
-        include: {
-          paquete: {
-            select: { nombre: true },
-          },
-        },
-        take: 1,
-      },
-    },
-  })
+  const empresa = await getRhEmpleadosSnapshot(session.user.empresa_id)
 
   if (!empresa) {
     redirect("/login")

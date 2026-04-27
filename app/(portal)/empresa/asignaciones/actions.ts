@@ -1,8 +1,9 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { requireRhSession } from "@/lib/auth-guards"
+import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import { replaceEmployeePackageCourses } from "@/lib/course-sync"
 import { prisma } from "@/lib/prisma"
 import {
@@ -104,6 +105,8 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     revalidatePath("/empresa/asignaciones")
     revalidatePath("/empresa/progreso")
     revalidatePath("/empleado/cursos")
+    revalidateTag(empresaCacheRootTag(empresaId), "max")
+    revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/empresa/asignaciones?success=limpio_local")
   }
 
@@ -111,6 +114,8 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     revalidatePath("/empresa/asignaciones")
     revalidatePath("/empresa/progreso")
     revalidatePath("/empleado/cursos")
+    revalidateTag(empresaCacheRootTag(empresaId), "max")
+    revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/empresa/asignaciones?success=asignado_local")
   }
 
@@ -161,11 +166,15 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   } catch {
     revalidatePath("/empresa/asignaciones")
     revalidatePath("/empleado/cursos")
+    revalidateTag(empresaCacheRootTag(empresaId), "max")
+    revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/empresa/asignaciones?success=asignado_local&error=bridge_sync")
   }
 
   revalidatePath("/empresa/asignaciones")
   revalidatePath("/empresa/progreso")
   revalidatePath("/empleado/cursos")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/empresa/asignaciones?success=asignado_sync")
 }

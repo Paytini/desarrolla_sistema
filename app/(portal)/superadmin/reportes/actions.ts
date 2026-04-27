@@ -1,9 +1,10 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
+import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
 import {
   scheduleCompanyEmployeeLearningBatch,
@@ -53,6 +54,7 @@ export async function triggerGlobalLearningSyncAction() {
   revalidatePath("/empleado/cursos")
   revalidatePath("/empleado/progreso")
   revalidatePath("/empleado/constancias")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(`/superadmin/reportes?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
 }
@@ -99,6 +101,8 @@ export async function retryCompanySyncAction(formData: FormData) {
   revalidatePath("/empleado/cursos")
   revalidatePath("/empleado/progreso")
   revalidatePath("/empleado/constancias")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
 
   if (packageSyncError) {
     const detail = encodeURIComponent(packageSyncError)

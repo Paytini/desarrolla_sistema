@@ -1,9 +1,10 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
+import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import {
   deleteEmployeeRecord,
   purgeExpiredPortalSessions,
@@ -41,6 +42,7 @@ export async function toggleRhUserStatusAction(formData: FormData) {
 
     revalidatePath("/superadmin/accesos")
     revalidatePath("/superadmin/reportes")
+    revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect(`/superadmin/accesos?success=${usuario.activo ? "rh_suspendido" : "rh_activado"}`)
   } catch {
     redirect("/superadmin/accesos?error=usuario")
@@ -67,6 +69,7 @@ export async function revokeUserSessionsAction(formData: FormData) {
   })
 
   revalidatePath("/superadmin/accesos")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/superadmin/accesos?success=sesiones_revocadas")
 }
 
@@ -90,6 +93,7 @@ export async function revokeSingleSessionAction(formData: FormData) {
   })
 
   revalidatePath("/superadmin/accesos")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/superadmin/accesos?success=sesion_revocada")
 }
 
@@ -107,6 +111,7 @@ export async function purgeExpiredSessionsAction() {
   })
 
   revalidatePath("/superadmin/accesos")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/superadmin/accesos?success=sesiones_limpiadas")
 }
 
@@ -119,8 +124,9 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
     redirect("/superadmin/accesos?error=empleado")
   }
 
+  let deletedEmployee: Awaited<ReturnType<typeof deleteEmployeeRecord>> | null = null
   try {
-    await deleteEmployeeRecord({
+    deletedEmployee = await deleteEmployeeRecord({
       empleadoId,
       actor,
       source: "SUPERADMIN",
@@ -134,5 +140,9 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   revalidatePath("/empresa/inicio")
   revalidatePath("/empresa/progreso")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  if (deletedEmployee) {
+    revalidateTag(empresaCacheRootTag(deletedEmployee.empresa_id), "max")
+  }
   redirect("/superadmin/accesos?success=empleado_eliminado")
 }

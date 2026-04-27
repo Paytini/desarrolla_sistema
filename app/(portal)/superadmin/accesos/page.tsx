@@ -2,8 +2,8 @@ import { redirect } from "next/navigation"
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
+import { getSuperadminAccesosSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
-import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import {
@@ -41,81 +41,8 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
 
-  const [rhUsers, employeeUsers, employees, trackedSessions] = await Promise.all([
-    prisma.usuario.findMany({
-      where: { rol: "RH" },
-      orderBy: [{ activo: "desc" }, { created_at: "desc" }],
-      select: {
-        id: true,
-        nombre: true,
-        email: true,
-        activo: true,
-        ultimo_acceso: true,
-        created_at: true,
-        empresa: {
-          select: {
-            id: true,
-            nombre: true,
-            activo: true,
-            asientos_contratados: true,
-            asientos_usados: true,
-          },
-        },
-        _count: {
-          select: { sesiones: true },
-        },
-      },
-    }),
-    prisma.usuario.findMany({
-      where: { rol: "EMPLEADO" },
-      select: {
-        id: true,
-        email: true,
-        activo: true,
-        ultimo_acceso: true,
-      },
-    }),
-    prisma.empleado.findMany({
-      orderBy: [{ activo: "desc" }, { created_at: "desc" }],
-      select: {
-        id: true,
-        nombre: true,
-        apellido: true,
-        email: true,
-        activo: true,
-        wp_user_id: true,
-        created_at: true,
-        empresa: {
-          select: {
-            nombre: true,
-            activo: true,
-          },
-        },
-      },
-      take: 18,
-    }),
-    prisma.sesionPortal.findMany({
-      orderBy: { created_at: "desc" },
-      take: 12,
-      select: {
-        id: true,
-        ip_address: true,
-        created_at: true,
-        expira_en: true,
-        usuario: {
-          select: {
-            id: true,
-            nombre: true,
-            email: true,
-            rol: true,
-            empresa: {
-              select: { nombre: true },
-            },
-          },
-        },
-      },
-    }),
-  ])
+  const { rhUsers, employeeUsers, employees, trackedSessions } =
+    await getSuperadminAccesosSnapshot()
 
   const employeeUserByEmail = new Map(
     employeeUsers.map((user) => [user.email.toLowerCase(), user])

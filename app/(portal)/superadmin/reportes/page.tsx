@@ -2,8 +2,8 @@ import { redirect } from "next/navigation"
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
+import { getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
-import { prisma } from "@/lib/prisma"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { retryCompanySyncAction, triggerGlobalLearningSyncAction } from "./actions"
@@ -53,46 +53,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
   const error = readSearchParam(params, "error")
   const detail = readDecodedSearchParam(params, "detail")
 
-  const [empresas, auditEvents] = await Promise.all([
-    prisma.empresa.findMany({
-      orderBy: { nombre: "asc" },
-      include: {
-        paquetes: {
-          where: { activo: true },
-          orderBy: { created_at: "desc" },
-          include: {
-            paquete: {
-              select: {
-                id: true,
-                nombre: true,
-                modo_entrega: true,
-              },
-            },
-          },
-          take: 1,
-        },
-        empleados: {
-          select: {
-            id: true,
-            activo: true,
-            wp_user_id: true,
-            cursos: {
-              select: {
-                progreso_pct: true,
-                completado: true,
-                acceso_estado: true,
-                ultima_sincronizacion: true,
-              },
-            },
-          },
-        },
-      },
-    }),
-    prisma.auditoriaEvento.findMany({
-      orderBy: { created_at: "desc" },
-      take: 40,
-    }),
-  ])
+  const { empresas, auditEvents } = await getSuperadminReportesSnapshot()
 
   const companyNameById = new Map(empresas.map((empresa) => [empresa.id, empresa.nombre]))
   const now = Date.now()

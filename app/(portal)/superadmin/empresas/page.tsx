@@ -1,8 +1,8 @@
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
+import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
-import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import {
   createCompanyAction,
@@ -36,39 +36,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
 
-  const [empresas, paquetes, seatHistory] = await Promise.all([
-    prisma.empresa.findMany({
-      orderBy: { created_at: "desc" },
-      include: {
-        usuarios: {
-          where: { rol: "RH" },
-          select: { nombre: true, email: true, activo: true },
-          take: 1,
-        },
-        empleados: {
-          select: { id: true, activo: true },
-        },
-        paquetes: {
-          where: { activo: true },
-          orderBy: { created_at: "desc" },
-          include: {
-            paquete: {
-              select: { nombre: true },
-            },
-          },
-          take: 1,
-        },
-      },
-    }),
-    prisma.paquete.findMany({
-      where: { activo: true },
-      orderBy: { nombre: "asc" },
-    }),
-    prisma.historialCupo.findMany({
-      orderBy: { created_at: "desc" },
-      take: 30,
-    }),
-  ])
+  const { empresas, paquetes, seatHistory } = await getSuperadminEmpresasSnapshot()
 
   const empresasActivas = empresas.filter((empresa) => empresa.activo).length
   const cuposVendidos = empresas.reduce(

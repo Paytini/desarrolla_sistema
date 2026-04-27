@@ -1,9 +1,10 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
+import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
 import { prisma } from "@/lib/prisma"
 import {
@@ -179,6 +180,7 @@ export async function createPackageAction(formData: FormData) {
 
   revalidatePath("/superadmin/paquetes")
   revalidatePath("/superadmin/reportes")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/superadmin/paquetes?success=paquete_creado")
 }
 
@@ -244,6 +246,8 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   revalidatePath("/superadmin/reportes")
   revalidatePath("/empresa/inicio")
   revalidatePath("/empresa/empleados")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
   redirect("/superadmin/paquetes?success=paquete_asignado")
 }
 
@@ -288,5 +292,7 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   revalidatePath("/empresa/empleados")
   revalidatePath("/empresa/progreso")
   revalidatePath("/empleado/cursos")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(empresaCacheRootTag(empresaId), "max")
   redirect("/superadmin/paquetes?success=sync_ok")
 }
