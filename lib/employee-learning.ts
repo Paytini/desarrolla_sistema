@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma"
+ import { prisma } from "@/lib/prisma"
 import {
   bridgeGetStudentCertificates,
   bridgeGetStudentCourses,
@@ -187,6 +187,13 @@ async function fetchEmployeeLearningRecord(email: string) {
   return prisma.empleado.findUnique({
     where: { email },
     include: {
+      empresa: {
+        select: {
+          id: true,
+          nombre: true,
+          rfc: true,
+        },
+      },
       cursos: {
         orderBy: [
           { completado: "asc" },
@@ -205,6 +212,13 @@ async function fetchEmployeeLearningRecordById(empleadoId: number) {
   return prisma.empleado.findUnique({
     where: { id: empleadoId },
     include: {
+      empresa: {
+        select: {
+          id: true,
+          nombre: true,
+          rfc: true,
+        },
+      },
       cursos: {
         orderBy: [
           { completado: "asc" },

@@ -55,9 +55,10 @@ export default function Sidebar({
   const badge    = badgeByRol[rol]
 
   return (
-    <aside className="w-52 min-h-screen bg-white border-r border-gray-100 flex flex-col">
+    <aside className="sticky top-0 h-screen w-52 shrink-0 overflow-hidden border-r border-gray-100 bg-white">
+      <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="px-5 py-4 border-b border-gray-100">
+      <div className="border-b border-gray-100 px-5 py-4">
         <p className="text-base font-medium">
           Desarrolla<span className="text-purple-600">360</span>
         </p>
@@ -65,7 +66,7 @@ export default function Sidebar({
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 space-y-0.5 px-2">
+      <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-0.5">
         {items.map((item) => {
           const active = pathname === item.href
           return (
@@ -86,7 +87,7 @@ export default function Sidebar({
       </nav>
 
       {/* Usuario */}
-      <div className="px-4 py-4 border-t border-gray-100">
+      <div className="border-t border-gray-100 px-4 py-4">
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${badge.className}`}>
           {badge.label}
         </span>
@@ -100,6 +101,7 @@ export default function Sidebar({
         >
           Cerrar sesión
         </button>
+      </div>
       </div>
     </aside>
   )

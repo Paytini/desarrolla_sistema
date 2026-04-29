@@ -141,6 +141,23 @@ export type BridgeCourseOption = {
   course_url?: string | null
 }
 
+export type BridgeCourseDetails = {
+  wp_course_id: number
+  title: string
+  status?: string | null
+  post_type?: string | null
+  course_url?: string | null
+  summary?: string | null
+  instructor_name?: string | null
+  training_agent_name?: string | null
+  duration_hours?: number | null
+  duration_label?: string | null
+  thematic_area_name?: string | null
+  thematic_area_code?: string | null
+  category_names?: string[]
+  tutor_course_payload?: Record<string, unknown> | null
+}
+
 type BridgeCoursesResponse = {
   courses: BridgeCourseOption[]
   total: number
@@ -435,6 +452,12 @@ export async function bridgeGetStudentDiagnostics(studentId: number, courseId?: 
 
 export async function bridgeListCourses() {
   return bridgeRequest<BridgeCoursesResponse>("/courses", {
+    method: "GET",
+  })
+}
+
+export async function bridgeGetCourseDetails(courseId: number) {
+  return bridgeRequest<BridgeCourseDetails>(`/courses/${courseId}`, {
     method: "GET",
   })
 }

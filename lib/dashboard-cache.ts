@@ -13,48 +13,42 @@ import { prisma } from "@/lib/prisma"
 
 const getSuperadminReportesSnapshotCached = unstable_cache(
   async () => {
-    const [empresas, auditEvents] = await Promise.all([
-      prisma.empresa.findMany({
-        orderBy: { nombre: "asc" },
-        include: {
-          paquetes: {
-            where: { activo: true },
-            orderBy: { created_at: "desc" },
-            include: {
-              paquete: {
-                select: {
-                  id: true,
-                  nombre: true,
-                  modo_entrega: true,
-                },
+    const empresas = await prisma.empresa.findMany({
+      orderBy: { nombre: "asc" },
+      include: {
+        paquetes: {
+          where: { activo: true },
+          orderBy: { created_at: "desc" },
+          include: {
+            paquete: {
+              select: {
+                id: true,
+                nombre: true,
+                modo_entrega: true,
               },
             },
-            take: 1,
           },
-          empleados: {
-            select: {
-              id: true,
-              activo: true,
-              wp_user_id: true,
-              cursos: {
-                select: {
-                  progreso_pct: true,
-                  completado: true,
-                  acceso_estado: true,
-                  ultima_sincronizacion: true,
-                },
+          take: 1,
+        },
+        empleados: {
+          select: {
+            id: true,
+            activo: true,
+            wp_user_id: true,
+            cursos: {
+              select: {
+                progreso_pct: true,
+                completado: true,
+                acceso_estado: true,
+                ultima_sincronizacion: true,
               },
             },
           },
         },
-      }),
-      prisma.auditoriaEvento.findMany({
-        orderBy: { created_at: "desc" },
-        take: 40,
-      }),
-    ])
+      },
+    })
 
-    return { empresas, auditEvents }
+    return { empresas }
   },
   ["dashboard-snapshot", "superadmin", "reportes"],
   {
@@ -69,7 +63,7 @@ export async function getSuperadminReportesSnapshot() {
 
 const getSuperadminEmpresasSnapshotCached = unstable_cache(
   async () => {
-    const [empresas, paquetes, seatHistory] = await Promise.all([
+    const [empresas, paquetes] = await Promise.all([
       prisma.empresa.findMany({
         orderBy: { created_at: "desc" },
         include: {
@@ -97,13 +91,9 @@ const getSuperadminEmpresasSnapshotCached = unstable_cache(
         where: { activo: true },
         orderBy: { nombre: "asc" },
       }),
-      prisma.historialCupo.findMany({
-        orderBy: { created_at: "desc" },
-        take: 30,
-      }),
     ])
 
-    return { empresas, paquetes, seatHistory }
+    return { empresas, paquetes }
   },
   ["dashboard-snapshot", "superadmin", "empresas"],
   {

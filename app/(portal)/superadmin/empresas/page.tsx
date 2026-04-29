@@ -2,7 +2,7 @@ import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
-import { formatDate, formatDateTime } from "@/lib/format"
+import { formatDate } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import {
   createCompanyAction,
@@ -36,7 +36,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
 
-  const { empresas, paquetes, seatHistory } = await getSuperadminEmpresasSnapshot()
+  const { empresas, paquetes } = await getSuperadminEmpresasSnapshot()
 
   const empresasActivas = empresas.filter((empresa) => empresa.activo).length
   const cuposVendidos = empresas.reduce(
@@ -49,8 +49,6 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
     0
   )
   const occupancyPct = cuposVendidos ? Math.round((cuposUsados / cuposVendidos) * 100) : 0
-  const companyNameById = new Map(empresas.map((empresa) => [empresa.id, empresa.nombre]))
-
   return (
     <div className="space-y-8">
       <PageHeader
@@ -332,56 +330,6 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
         </article>
       </section>
 
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 space-y-1">
-          <h2 className="text-lg font-semibold text-slate-950">Historial de cambios de cupos</h2>
-          <p className="text-sm leading-6 text-slate-600">
-            Bitacora operativa de ajustes en cupos contratados/usados para trazabilidad administrativa.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {seatHistory.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-              Aun no hay movimientos de cupos registrados.
-            </div>
-          ) : null}
-
-          {seatHistory.map((item) => (
-            <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-              <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2 lg:grid-cols-3">
-                <p>
-                  <span className="font-medium text-slate-800">Empresa:</span>{" "}
-                  {companyNameById.get(item.empresa_id) ?? `Empresa #${item.empresa_id}`}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Motivo:</span> {item.motivo}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Actor:</span>{" "}
-                  {item.actor_nombre} ({item.actor_rol})
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Contratados:</span>{" "}
-                  {item.asientos_contratados_antes} → {item.asientos_contratados_despues}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Usados:</span>{" "}
-                  {item.asientos_usados_antes} → {item.asientos_usados_despues}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Suspendidos:</span>{" "}
-                  {item.empleados_suspendidos}
-                </p>
-              </div>
-              <p className="mt-2 text-xs text-slate-500">
-                {formatDateTime(item.created_at)}
-                {item.detalle ? ` · ${item.detalle}` : ""}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }

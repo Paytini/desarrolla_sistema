@@ -1,5 +1,6 @@
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
+import { getDc3MissingFields } from "@/lib/dc3"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
@@ -33,13 +34,26 @@ export default async function EmpresaConstanciasPage() {
     redirect("/login")
   }
 
-  const constancias = empresa.empleados.flatMap((empleado) =>
-    empleado.constancias.map((constancia) => ({
-      ...constancia,
-      empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
-      empleadoEmail: empleado.email,
-    }))
-  )
+  const constancias = empresa.empleados.flatMap((empleado) => {
+    const courseById = new Map(empleado.cursos.map((course) => [course.wp_curso_id, course]))
+
+    return empleado.constancias.map((constancia) => {
+      const course = courseById.get(constancia.wp_curso_id)
+      const dc3MissingFields = getDc3MissingFields({
+        employeePosition: empleado.puesto,
+        companyRfc: empresa.rfc,
+        courseStartedAt: course?.fecha_inicio_curso ?? null,
+        courseCompletedAt: course?.fecha_completado ?? constancia.fecha_emision,
+      })
+
+      return {
+        ...constancia,
+        empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
+        empleadoEmail: empleado.email,
+        dc3MissingFields,
+      }
+    })
+  })
 
   const pendingCertificates = empresa.empleados.flatMap((empleado) => {
     const existingCourseIds = new Set(empleado.constancias.map((certificate) => certificate.wp_curso_id))
@@ -119,7 +133,20 @@ export default async function EmpresaConstanciasPage() {
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="space-y-2">
-                    <h3 className="text-base font-semibold text-slate-950">{constancia.nombre_curso}</h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-semibold text-slate-950">{constancia.nombre_curso}</h3>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          constancia.dc3MissingFields.length === 0
+                            ? "bg-teal-100 text-teal-900"
+                            : "bg-amber-100 text-amber-900"
+                        }`}
+                      >
+                        {constancia.dc3MissingFields.length === 0
+                          ? "DC-3 listo"
+                          : `DC-3 con ${constancia.dc3MissingFields.length} campo(s) pendiente(s)`}
+                      </span>
+                    </div>
                     <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2">
                       <p>
                         <span className="font-medium text-slate-800">Empleado:</span> {constancia.empleadoNombre}
@@ -137,20 +164,28 @@ export default async function EmpresaConstanciasPage() {
                     </div>
                   </div>
 
-                  {constancia.wp_cert_url ? (
+                  <div className="flex flex-wrap gap-2">
+                    {constancia.wp_cert_url ? (
+                      <a
+                        href={constancia.wp_cert_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                      >
+                        Ver constancia
+                      </a>
+                    ) : (
+                      <span className="self-center text-sm text-slate-400">Sin URL publica de Tutor</span>
+                    )}
                     <a
-                      href={constancia.wp_cert_url}
+                      href={`/api/dc3/${constancia.id}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+                      className="rounded-full border border-violet-300 bg-white px-4 py-2 text-sm font-semibold text-violet-900 transition hover:bg-violet-50"
                     >
-                      Ver constancia
+                      Ver DC-3
                     </a>
-                  ) : (
-                    <span className="text-sm text-slate-400">
-                      La constancia existe en el portal, pero aun no trae URL publica.
-                    </span>
-                  )}
+                  </div>
                 </div>
               </article>
             ))}

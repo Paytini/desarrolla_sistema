@@ -293,7 +293,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-2">
           {paquetes.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
               Aun no hay paquetes registrados.

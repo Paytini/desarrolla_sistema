@@ -3,7 +3,7 @@ import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
 import { getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
-import { formatDate, formatDateTime } from "@/lib/format"
+import { formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { retryCompanySyncAction, triggerGlobalLearningSyncAction } from "./actions"
@@ -53,9 +53,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
   const error = readSearchParam(params, "error")
   const detail = readDecodedSearchParam(params, "detail")
 
-  const { empresas, auditEvents } = await getSuperadminReportesSnapshot()
-
-  const companyNameById = new Map(empresas.map((empresa) => [empresa.id, empresa.nombre]))
+  const { empresas } = await getSuperadminReportesSnapshot()
   const now = Date.now()
 
   const companyStats = empresas.map((empresa) => {
@@ -141,15 +139,6 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
       syncStatus,
       activePackage,
       remainingDays,
-      pctEmployeesWithoutCourses: empleadosActivos.length
-        ? Math.round((employeesWithoutCourses / empleadosActivos.length) * 100)
-        : 0,
-      pctNotStartedCourses: totalCourses
-        ? Math.round((notStartedCourses / totalCourses) * 100)
-        : 0,
-      pctCompletedCourses: totalCourses
-        ? Math.round((completedCourses / totalCourses) * 100)
-        : 0,
     }
   })
 
@@ -421,100 +410,6 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
         </div>
       </section>
 
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 space-y-1">
-          <h2 className="text-lg font-semibold text-slate-950">Salud academica por empresa</h2>
-          <p className="text-sm leading-6 text-slate-600">
-            KPIs de aprendizaje para detectar rezagos por cuenta empresarial y priorizar acompañamiento.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {companyStats.map((item) => (
-            <div key={item.empresa.id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-              <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2 lg:grid-cols-4">
-                <p>
-                  <span className="font-medium text-slate-800">Empresa:</span> {item.empresa.nombre}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Promedio avance:</span>{" "}
-                  {item.averageProgress}%
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Empleados sin cursos:</span>{" "}
-                  {item.pctEmployeesWithoutCourses}%
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Cursos sin iniciar:</span>{" "}
-                  {item.pctNotStartedCourses}%
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Cursos completados:</span>{" "}
-                  {item.pctCompletedCourses}%
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Paquete:</span>{" "}
-                  {item.activePackage?.paquete.nombre ?? "Sin paquete activo"}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Cupos usados:</span>{" "}
-                  {item.empleadosActivos}/{item.empresa.asientos_contratados}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Suspendidos:</span>{" "}
-                  {item.empleadosSuspendidos}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 space-y-1">
-          <h2 className="text-lg font-semibold text-slate-950">Auditoria reciente</h2>
-          <p className="text-sm leading-6 text-slate-600">
-            Registro de acciones clave: alta de empresas, asignaciones, suspensiones/reactivaciones y sincronizaciones.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {auditEvents.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-              Aun no hay eventos de auditoria registrados.
-            </div>
-          ) : null}
-
-          {auditEvents.map((event) => (
-            <div key={event.id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-              <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2 lg:grid-cols-3">
-                <p>
-                  <span className="font-medium text-slate-800">Accion:</span> {event.accion}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Actor:</span> {event.actor_nombre} (
-                  {event.actor_rol})
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Entidad:</span>{" "}
-                  {event.entidad_tipo}
-                  {event.entidad_id ? ` #${event.entidad_id}` : ""}
-                </p>
-                <p>
-                  <span className="font-medium text-slate-800">Empresa:</span>{" "}
-                  {event.empresa_id
-                    ? companyNameById.get(event.empresa_id) ?? `Empresa #${event.empresa_id}`
-                    : "General"}
-                </p>
-                <p className="md:col-span-2 lg:col-span-2">
-                  <span className="font-medium text-slate-800">Resumen:</span> {event.resumen}
-                </p>
-              </div>
-              <p className="mt-2 text-xs text-slate-500">{formatDateTime(event.created_at)}</p>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }
