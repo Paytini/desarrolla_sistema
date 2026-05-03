@@ -70,7 +70,6 @@ export default async function EmpleadoCursos() {
           ])
       )
     } catch {
-      // If the bridge is temporarily unavailable, keep the page usable without blocking the employee dashboard.
     }
   }
 
