@@ -44,6 +44,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    sync_interval_ms: Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "60000", 10) || 60000,
     ...result,
   })
 }

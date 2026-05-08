@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.1.18
+ * Version: 0.2.0
  * Author: Desarrolla360
  */
 
@@ -10,13 +10,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.1.18' );
+define( 'D360_BRIDGE_VERSION', '0.2.0' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
+define( 'D360_BRIDGE_WEBHOOK_CRON_HOOK', 'd360_bridge_learning_webhook_tick' );
+define( 'D360_BRIDGE_WEBHOOK_CURSOR_OPTION', 'd360_bridge_learning_webhook_cursor' );
 
 add_action( 'admin_menu', 'd360_bridge_register_settings_page' );
 add_action( 'admin_init', 'd360_bridge_register_settings' );
 add_action( 'rest_api_init', 'd360_bridge_register_rest_routes' );
 add_action( 'init', 'd360_bridge_handle_portal_autologin', 1 );
+add_action( 'init', 'd360_bridge_maybe_schedule_learning_webhook' );
+add_filter( 'cron_schedules', 'd360_bridge_register_cron_schedule' );
+add_action( D360_BRIDGE_WEBHOOK_CRON_HOOK, 'd360_bridge_process_learning_webhook_tick' );
+
+register_activation_hook( __FILE__, 'd360_bridge_activate_plugin' );
+register_deactivation_hook( __FILE__, 'd360_bridge_deactivate_plugin' );
 
 function d360_bridge_default_settings() {
 	return array(
@@ -24,6 +32,9 @@ function d360_bridge_default_settings() {
 		'service_user_id'   => 0,
 		'tutor_api_key'     => '',
 		'tutor_api_secret'  => '',
+		'portal_webhook_url' => '',
+		'portal_webhook_secret' => '',
+		'webhook_batch_size' => 10,
 	);
 }
 
@@ -71,6 +82,37 @@ function d360_bridge_get_tutor_api_secret() {
 
 	$settings = d360_bridge_get_settings();
 	return (string) $settings['tutor_api_secret'];
+}
+
+function d360_bridge_get_portal_webhook_url() {
+	if ( defined( 'D360_BRIDGE_PORTAL_WEBHOOK_URL' ) && D360_BRIDGE_PORTAL_WEBHOOK_URL ) {
+		return esc_url_raw( (string) D360_BRIDGE_PORTAL_WEBHOOK_URL );
+	}
+
+	$settings = d360_bridge_get_settings();
+	return esc_url_raw( (string) $settings['portal_webhook_url'] );
+}
+
+function d360_bridge_get_portal_webhook_secret() {
+	if ( defined( 'D360_BRIDGE_WEBHOOK_SECRET' ) && D360_BRIDGE_WEBHOOK_SECRET ) {
+		return (string) D360_BRIDGE_WEBHOOK_SECRET;
+	}
+
+	$settings = d360_bridge_get_settings();
+	return (string) $settings['portal_webhook_secret'];
+}
+
+function d360_bridge_get_webhook_batch_size() {
+	if ( defined( 'D360_BRIDGE_WEBHOOK_BATCH_SIZE' ) && D360_BRIDGE_WEBHOOK_BATCH_SIZE ) {
+		return max( 1, min( 50, (int) D360_BRIDGE_WEBHOOK_BATCH_SIZE ) );
+	}
+
+	$settings = d360_bridge_get_settings();
+	return max( 1, min( 50, absint( $settings['webhook_batch_size'] ) ) );
+}
+
+function d360_bridge_is_learning_webhook_configured() {
+	return '' !== d360_bridge_get_portal_webhook_url() && '' !== d360_bridge_get_portal_webhook_secret();
 }
 
 function d360_bridge_get_site_origin() {
@@ -166,6 +208,49 @@ function d360_bridge_handle_portal_autologin() {
 	exit;
 }
 
+function d360_bridge_register_cron_schedule( $schedules ) {
+	if ( ! isset( $schedules['d360_every_minute'] ) ) {
+		$schedules['d360_every_minute'] = array(
+			'interval' => 60,
+			'display'  => 'Every Minute (Desarrolla360 Bridge)',
+		);
+	}
+
+	return $schedules;
+}
+
+function d360_bridge_schedule_learning_webhook() {
+	if ( ! wp_next_scheduled( D360_BRIDGE_WEBHOOK_CRON_HOOK ) ) {
+		wp_schedule_event( time() + 60, 'd360_every_minute', D360_BRIDGE_WEBHOOK_CRON_HOOK );
+	}
+}
+
+function d360_bridge_unschedule_learning_webhook() {
+	$timestamp = wp_next_scheduled( D360_BRIDGE_WEBHOOK_CRON_HOOK );
+
+	while ( $timestamp ) {
+		wp_unschedule_event( $timestamp, D360_BRIDGE_WEBHOOK_CRON_HOOK );
+		$timestamp = wp_next_scheduled( D360_BRIDGE_WEBHOOK_CRON_HOOK );
+	}
+}
+
+function d360_bridge_activate_plugin() {
+	d360_bridge_schedule_learning_webhook();
+}
+
+function d360_bridge_deactivate_plugin() {
+	d360_bridge_unschedule_learning_webhook();
+}
+
+function d360_bridge_maybe_schedule_learning_webhook() {
+	if ( ! d360_bridge_is_learning_webhook_configured() ) {
+		d360_bridge_unschedule_learning_webhook();
+		return;
+	}
+
+	d360_bridge_schedule_learning_webhook();
+}
+
 function d360_bridge_register_settings_page() {
 	add_options_page(
 		'Desarrolla360 Bridge',
@@ -196,6 +281,9 @@ function d360_bridge_sanitize_settings( $input ) {
 		'service_user_id'   => isset( $input['service_user_id'] ) ? absint( $input['service_user_id'] ) : 0,
 		'tutor_api_key'     => isset( $input['tutor_api_key'] ) ? sanitize_text_field( $input['tutor_api_key'] ) : '',
 		'tutor_api_secret'  => isset( $input['tutor_api_secret'] ) ? sanitize_text_field( $input['tutor_api_secret'] ) : '',
+		'portal_webhook_url' => isset( $input['portal_webhook_url'] ) ? esc_url_raw( $input['portal_webhook_url'] ) : '',
+		'portal_webhook_secret' => isset( $input['portal_webhook_secret'] ) ? sanitize_text_field( $input['portal_webhook_secret'] ) : '',
+		'webhook_batch_size' => isset( $input['webhook_batch_size'] ) ? max( 1, min( 50, absint( $input['webhook_batch_size'] ) ) ) : 10,
 	);
 }
 
@@ -263,6 +351,47 @@ function d360_bridge_render_settings_page() {
 							value="<?php echo esc_attr( $settings['tutor_api_secret'] ); ?>"
 						/>
 						<p class="description">Opcional. Secret oficial de Tutor LMS para completar accesos cuando el Service User no tenga permisos suficientes.</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="d360-portal-webhook-url">Portal Webhook URL</label></th>
+					<td>
+						<input
+							id="d360-portal-webhook-url"
+							name="<?php echo esc_attr( D360_BRIDGE_OPTION_KEY ); ?>[portal_webhook_url]"
+							type="url"
+							class="regular-text"
+							value="<?php echo esc_attr( $settings['portal_webhook_url'] ); ?>"
+						/>
+						<p class="description">URL del portal que recibira cambios academicos. Ejemplo: <code>https://portal.tudominio.com/api/internal/webhooks/tutor-learning</code>.</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="d360-portal-webhook-secret">Portal Webhook Secret</label></th>
+					<td>
+						<input
+							id="d360-portal-webhook-secret"
+							name="<?php echo esc_attr( D360_BRIDGE_OPTION_KEY ); ?>[portal_webhook_secret]"
+							type="password"
+							class="regular-text"
+							value="<?php echo esc_attr( $settings['portal_webhook_secret'] ); ?>"
+						/>
+						<p class="description">Debe coincidir con <code>BRIDGE_WEBHOOK_SECRET</code> del portal para validar la firma HMAC.</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="d360-webhook-batch-size">Webhook Batch Size</label></th>
+					<td>
+						<input
+							id="d360-webhook-batch-size"
+							name="<?php echo esc_attr( D360_BRIDGE_OPTION_KEY ); ?>[webhook_batch_size]"
+							type="number"
+							min="1"
+							max="50"
+							class="small-text"
+							value="<?php echo esc_attr( $settings['webhook_batch_size'] ); ?>"
+						/>
+						<p class="description">Cuantos alumnos vinculados revisa el bridge por minuto. Recomendado: 10.</p>
 					</td>
 				</tr>
 			</table>
@@ -451,6 +580,7 @@ function d360_bridge_health() {
 			'tutor_rest_available'    => $tutor_available,
 			'service_user_configured' => d360_bridge_get_service_user_id() > 0,
 			'tutor_api_configured'    => '' !== d360_bridge_get_tutor_api_key() && '' !== d360_bridge_get_tutor_api_secret(),
+			'learning_webhook_configured' => d360_bridge_is_learning_webhook_configured(),
 		)
 	);
 }
@@ -826,8 +956,6 @@ function d360_bridge_extract_course_instructor_name( $course_id, $author_id ) {
 	$meta_value = d360_bridge_get_first_post_meta_value(
 		$course_id,
 		array(
-			'd360_dc3_instructor_name',
-			'dc3_instructor_name',
 			'stps_instructor_name',
 			'tutor_instructor_name',
 		)
@@ -849,8 +977,6 @@ function d360_bridge_extract_course_training_agent_name( $course_id, $instructor
 	$meta_value = d360_bridge_get_first_post_meta_value(
 		$course_id,
 		array(
-			'd360_dc3_agent_name',
-			'dc3_agent_name',
 			'stps_agent_name',
 			'd360_training_agent_name',
 		)
@@ -871,8 +997,6 @@ function d360_bridge_extract_course_thematic_area( $course_id, $category_names )
 	$name = d360_bridge_get_first_post_meta_value(
 		$course_id,
 		array(
-			'd360_dc3_area_name',
-			'dc3_area_name',
 			'stps_area_name',
 			'd360_thematic_area_name',
 		)
@@ -881,8 +1005,6 @@ function d360_bridge_extract_course_thematic_area( $course_id, $category_names )
 	$code = d360_bridge_get_first_post_meta_value(
 		$course_id,
 		array(
-			'd360_dc3_area_code',
-			'dc3_area_code',
 			'stps_area_code',
 			'd360_thematic_area_code',
 		)
@@ -903,8 +1025,6 @@ function d360_bridge_extract_course_duration_hours( $course_id, $tutor_payload )
 		d360_bridge_get_first_post_meta_value(
 			$course_id,
 			array(
-				'd360_dc3_duration_hours',
-				'dc3_duration_hours',
 				'_course_duration',
 				'course_duration',
 				'_tutor_course_duration',
@@ -3184,6 +3304,242 @@ function d360_bridge_get_direct_student_courses( $student_id ) {
 	}
 
 	return $courses;
+}
+
+function d360_bridge_get_cached_course_certificate_url( $student_id, $course_id ) {
+	$cache_key = sprintf( 'd360_certificate_url_%d', absint( $course_id ) );
+	$cached    = get_user_meta( $student_id, $cache_key, true );
+
+	if ( is_string( $cached ) && '' !== trim( $cached ) ) {
+		return trim( $cached );
+	}
+
+	$resolved = d360_bridge_resolve_course_certificate_url( $student_id, $course_id );
+	if ( $resolved ) {
+		update_user_meta( $student_id, $cache_key, esc_url_raw( $resolved ) );
+	}
+
+	return $resolved;
+}
+
+function d360_bridge_enrich_student_courses_for_sync( $student_id, $courses ) {
+	if ( ! is_array( $courses ) ) {
+		return array();
+	}
+
+	$enriched_courses = array();
+
+	foreach ( $courses as $course ) {
+		if ( ! is_array( $course ) ) {
+			continue;
+		}
+
+		$course_id = isset( $course['wp_course_id'] ) ? absint( $course['wp_course_id'] ) : 0;
+		if ( ! $course_id ) {
+			continue;
+		}
+
+		$progress_stats = d360_bridge_get_course_progress_stats( $student_id, $course_id );
+		if ( ! empty( $progress_stats ) ) {
+			$course['progress_pct'] = isset( $progress_stats['progress_pct'] ) ? (int) $progress_stats['progress_pct'] : ( isset( $course['progress_pct'] ) ? (int) $course['progress_pct'] : 0 );
+			$course['completed']    = ! empty( $progress_stats['completed'] );
+
+			if ( empty( $course['started_at'] ) && ! empty( $progress_stats['started_at'] ) ) {
+				$course['started_at'] = $progress_stats['started_at'];
+			}
+
+			if ( ! empty( $progress_stats['completed_at'] ) ) {
+				$course['completed_at'] = $progress_stats['completed_at'];
+			}
+		}
+
+		if ( empty( $course['certificate_url'] ) && ! empty( $course['completed'] ) ) {
+			$course['certificate_url'] = d360_bridge_get_cached_course_certificate_url( $student_id, $course_id );
+		}
+
+		$enriched_courses[] = array(
+			'wp_course_id'    => $course_id,
+			'title'           => isset( $course['title'] ) ? wp_strip_all_tags( (string) $course['title'] ) : '',
+			'progress_pct'    => isset( $course['progress_pct'] ) ? max( 0, min( 100, (int) $course['progress_pct'] ) ) : 0,
+			'completed'       => ! empty( $course['completed'] ),
+			'started_at'      => isset( $course['started_at'] ) ? $course['started_at'] : null,
+			'completed_at'    => isset( $course['completed_at'] ) ? $course['completed_at'] : null,
+			'certificate_url' => isset( $course['certificate_url'] ) ? $course['certificate_url'] : null,
+		);
+	}
+
+	return $enriched_courses;
+}
+
+function d360_bridge_build_student_learning_snapshot( $student_id ) {
+	$student_id = absint( $student_id );
+	if ( ! $student_id ) {
+		return array();
+	}
+
+	$courses = d360_bridge_enrich_student_courses_for_sync(
+		$student_id,
+		d360_bridge_get_direct_student_courses( $student_id )
+	);
+
+	$certificates = array();
+
+	foreach ( $courses as $course ) {
+		if ( empty( $course['completed'] ) || empty( $course['certificate_url'] ) ) {
+			continue;
+		}
+
+		$certificates[] = array(
+			'wp_course_id'    => isset( $course['wp_course_id'] ) ? (int) $course['wp_course_id'] : 0,
+			'title'           => isset( $course['title'] ) ? $course['title'] : '',
+			'certificate_url' => isset( $course['certificate_url'] ) ? $course['certificate_url'] : null,
+			'completed_at'    => isset( $course['completed_at'] ) ? $course['completed_at'] : null,
+		);
+	}
+
+	return array(
+		'courses'      => $courses,
+		'certificates' => $certificates,
+	);
+}
+
+function d360_bridge_get_tracked_student_ids( $after_user_id, $limit ) {
+	global $wpdb;
+
+	$after_user_id = absint( $after_user_id );
+	$limit         = max( 1, min( 50, absint( $limit ) ) );
+
+	$query = $wpdb->prepare(
+		"SELECT DISTINCT u.ID
+		FROM {$wpdb->users} u
+		INNER JOIN {$wpdb->usermeta} um ON um.user_id = u.ID AND um.meta_key = %s
+		WHERE u.ID > %d
+		ORDER BY u.ID ASC
+		LIMIT %d",
+		'd360_employee_id',
+		$after_user_id,
+		$limit
+	);
+
+	$results = $wpdb->get_col( $query );
+	return array_map( 'absint', is_array( $results ) ? $results : array() );
+}
+
+function d360_bridge_send_learning_webhook( $payload ) {
+	$webhook_url    = d360_bridge_get_portal_webhook_url();
+	$webhook_secret = d360_bridge_get_portal_webhook_secret();
+
+	if ( '' === $webhook_url || '' === $webhook_secret ) {
+		return new WP_Error(
+			'd360_bridge_webhook_not_configured',
+			'No se ha configurado el webhook del portal.',
+			array( 'status' => 500 )
+		);
+	}
+
+	$timestamp = (string) time();
+	$body      = wp_json_encode( $payload );
+	$signature = hash_hmac( 'sha256', $timestamp . '.' . $body, $webhook_secret );
+
+	$response = wp_remote_post(
+		$webhook_url,
+		array(
+			'timeout' => 12,
+			'headers' => array(
+				'Content-Type'             => 'application/json',
+				'Accept'                   => 'application/json',
+				'X-D360-Webhook-Timestamp' => $timestamp,
+				'X-D360-Webhook-Signature' => $signature,
+				'X-D360-Webhook-Event'     => 'student_learning_changed',
+			),
+			'body'    => $body,
+		)
+	);
+
+	if ( is_wp_error( $response ) ) {
+		return $response;
+	}
+
+	$status_code = wp_remote_retrieve_response_code( $response );
+	if ( $status_code < 200 || $status_code >= 300 ) {
+		return new WP_Error(
+			'd360_bridge_webhook_http_error',
+			sprintf( 'El portal respondio con status %d al webhook academico.', (int) $status_code ),
+			array(
+				'status' => $status_code,
+				'body'   => wp_remote_retrieve_body( $response ),
+			)
+		);
+	}
+
+	return true;
+}
+
+function d360_bridge_process_learning_webhook_tick() {
+	if ( ! d360_bridge_is_learning_webhook_configured() ) {
+		return;
+	}
+
+	$batch_size = d360_bridge_get_webhook_batch_size();
+	$cursor     = absint( get_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, 0 ) );
+	$user_ids   = d360_bridge_get_tracked_student_ids( $cursor, $batch_size );
+
+	if ( empty( $user_ids ) ) {
+		if ( 0 !== $cursor ) {
+			update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, 0, false );
+		}
+		return;
+	}
+
+	foreach ( $user_ids as $user_id ) {
+		$employee_id = absint( get_user_meta( $user_id, 'd360_employee_id', true ) );
+		$company_id  = absint( get_user_meta( $user_id, 'd360_company_id', true ) );
+		$snapshot    = d360_bridge_build_student_learning_snapshot( $user_id );
+
+		if ( empty( $snapshot['courses'] ) && empty( $snapshot['certificates'] ) ) {
+			update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
+			continue;
+		}
+
+		$hash_payload = array(
+			'courses'      => isset( $snapshot['courses'] ) ? $snapshot['courses'] : array(),
+			'certificates' => isset( $snapshot['certificates'] ) ? $snapshot['certificates'] : array(),
+		);
+		$source_hash = hash( 'sha256', wp_json_encode( $hash_payload ) );
+		$last_hash   = (string) get_user_meta( $user_id, 'd360_learning_snapshot_hash', true );
+
+		if ( $source_hash === $last_hash ) {
+			update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
+			continue;
+		}
+
+		$payload = array(
+			'event_type'         => 'student_learning_changed',
+			'occurred_at'        => gmdate( 'c' ),
+			'student_wp_user_id' => $user_id,
+			'employee_id'        => $employee_id ? $employee_id : null,
+			'company_id'         => $company_id ? $company_id : null,
+			'source_hash'        => $source_hash,
+			'courses'            => $snapshot['courses'],
+			'certificates'       => $snapshot['certificates'],
+		);
+
+		$sent = d360_bridge_send_learning_webhook( $payload );
+		if ( true === $sent ) {
+			update_user_meta( $user_id, 'd360_learning_snapshot_hash', $source_hash );
+			update_user_meta( $user_id, 'd360_learning_snapshot_sent_at', gmdate( 'c' ) );
+		} else {
+			error_log(
+				sprintf(
+					'[Desarrolla360 Bridge] Learning webhook failed for user %d: %s',
+					$user_id,
+					is_wp_error( $sent ) ? $sent->get_error_message() : 'Unknown webhook error'
+				)
+			);
+		}
+
+		update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
+	}
 }
 
 function d360_bridge_dispatch_tutor_request( $method, $route, $params = array() ) {

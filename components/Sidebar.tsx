@@ -10,6 +10,7 @@ const navSuperAdmin: NavItem[] = [
   { label: "Empresas",         href: "/superadmin/empresas" },
   { label: "Paquetes",         href: "/superadmin/paquetes" },
   { label: "Reportes globales",href: "/superadmin/reportes" },
+  { label: "Integración",      href: "/superadmin/integracion" },
   { label: "Accesos",          href: "/superadmin/accesos" },
 ]
 

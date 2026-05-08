@@ -53,8 +53,13 @@ NEXTAUTH_URL=
 WP_BRIDGE_BASE_URL=
 WP_BRIDGE_PORTAL_KEY=
 NEXT_PUBLIC_WORDPRESS_SITE_URL=
+BRIDGE_WEBHOOK_SECRET=
 TUTORLMS_API_KEY=
 TUTORLMS_SECRET=
+CANVA_CLIENT_ID=
+CANVA_CLIENT_SECRET=
+CANVA_REDIRECT_URI=
+CANVA_BRAND_TEMPLATE_ID=
 ```
 
 Si tu bridge apunta a `https://desarrolla360.com/wp-json/desarrolla360/v1`, entonces
@@ -73,13 +78,39 @@ La ruta interna `GET/POST /api/internal/sync/employee-learning` acepta:
 Authorization: Bearer <CRON_SECRET>
 ```
 
-Si no usas Vercel, puedes conectar cualquier scheduler externo cada 5 minutos. Ejemplo:
+Si no usas Vercel, puedes conectar cualquier scheduler externo cada minuto o cada 5 minutos. Ejemplo:
 
 ```bash
 curl -X POST \
   -H "Authorization: Bearer $CRON_SECRET" \
   "https://tu-dominio.com/api/internal/sync/employee-learning?limit=50"
 ```
+
+Si quieres sincronizacion academica casi en tiempo real, configura tambien el webhook del bridge:
+
+- En el portal define `BRIDGE_WEBHOOK_SECRET`
+- En WordPress > `Settings > Desarrolla360 Bridge` define:
+  - `Portal Webhook URL`
+  - `Portal Webhook Secret`
+
+La URL esperada del portal es:
+
+```bash
+https://tu-dominio.com/api/internal/webhooks/tutor-learning
+```
+
+El bridge revisa alumnos vinculados por lotes pequenos cada minuto y solo envia al portal
+los snapshots que realmente cambiaron, para no degradar WordPress ni saturar el portal.
+
+Para generar DC3 con Canva, configura la app de Canva Connect con este redirect:
+
+```bash
+https://tu-dominio.com/api/canva/oauth/callback
+```
+
+Despues entra a `SuperAdmin > Integracion`, conecta Canva y revisa los campos Autofill
+detectados en la Brand Template. Si los nombres de Canva no son obvios, usa
+`CANVA_DC3_FIELD_MAP_JSON` para mapearlos a valores del portal.
 
 4. Ejecuta Prisma:
 

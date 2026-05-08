@@ -1,5 +1,5 @@
 const csvTemplate = `nombre,apellido,email,departamento,puesto,password
-Ana,Perez,ana@empresa.com,Operaciones,Analista,Temporal123
+Ana,Perez,ana@empresa.com,Operaciones,Supervisor,Temporal123
 Luis,Lopez,luis@empresa.com,Seguridad,Supervisor,Temporal123
 `
 

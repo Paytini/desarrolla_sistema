@@ -1,0 +1,259 @@
+import { redirect } from "next/navigation"
+
+import InfoCard from "@/components/portal/InfoCard"
+import PageHeader from "@/components/portal/PageHeader"
+import { getCanvaDiagnostics } from "@/lib/canva"
+import { formatDateTime } from "@/lib/format"
+import { getSession } from "@/lib/session"
+import { getTutorLearningWebhookDiagnostics } from "@/lib/webhook-monitor"
+
+function buildPortalWebhookUrl() {
+  const baseUrl = process.env.NEXTAUTH_URL?.trim().replace(/\/$/, "")
+  if (!baseUrl) {
+    return "/api/internal/webhooks/tutor-learning"
+  }
+
+  return `${baseUrl}/api/internal/webhooks/tutor-learning`
+}
+
+function formatBooleanStatus(value: boolean) {
+  return value ? "Sí" : "No"
+}
+
+function formatMinutes(milliseconds: number) {
+  return `${Math.max(1, Math.round(milliseconds / 60_000))} min`
+}
+
+export default async function SuperAdminIntegracionPage() {
+  const session = await getSession()
+  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+
+  const [diagnostics, canvaDiagnostics] = await Promise.all([
+    getTutorLearningWebhookDiagnostics(),
+    getCanvaDiagnostics(),
+  ])
+  const bridgeHealth = diagnostics.bridgeHealth
+  const bridgeReachable = bridgeHealth ? bridgeHealth.ok : false
+  const bridgeError =
+    bridgeHealth && "error_message" in bridgeHealth ? bridgeHealth.error_message : null
+  const lastEvent = diagnostics.lastEvent
+
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="SuperAdmin"
+        title="Integración WordPress / Tutor"
+        description="Diagnóstico rápido del bridge, del webhook académico y del último evento recibido por el portal."
+      />
+
+      <section className="grid gap-4 lg:grid-cols-4">
+        <InfoCard
+          title="Bridge configurado"
+          value={formatBooleanStatus(diagnostics.bridgeConfigured)}
+          description="Confirma que el portal tiene base URL y credenciales para hablar con WordPress."
+          accent={diagnostics.bridgeConfigured ? "teal" : "violet"}
+        />
+        <InfoCard
+          title="Bridge responde"
+          value={formatBooleanStatus(bridgeReachable)}
+          description="Valida si el health check del bridge responde correctamente desde el portal."
+          accent={bridgeReachable ? "teal" : "violet"}
+        />
+        <InfoCard
+          title="Webhook local"
+          value={formatBooleanStatus(diagnostics.webhookSecretConfigured)}
+          description="Indica si el portal tiene configurado el secreto HMAC para validar eventos entrantes."
+          accent={diagnostics.webhookSecretConfigured ? "teal" : "amber"}
+        />
+        <InfoCard
+          title="Intervalo respaldo"
+          value={formatMinutes(diagnostics.syncIntervalMs)}
+          description="Frecuencia del polling de respaldo para refresco académico si el webhook no dispara."
+          accent="slate"
+        />
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-slate-950">Canva DC3</h2>
+              <p className="text-sm leading-6 text-slate-600">
+                Conexión OAuth para generar constancias DC3 desde una Brand Template de Canva.
+              </p>
+            </div>
+            <a
+              href="/api/canva/oauth/start"
+              className="inline-flex w-fit items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+            >
+              {canvaDiagnostics.connected ? "Reconectar Canva" : "Conectar Canva"}
+            </a>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700">
+              <p>
+                Configuración: <span className="font-semibold text-slate-950">{formatBooleanStatus(canvaDiagnostics.configured)}</span>
+              </p>
+              <p className="mt-1">
+                OAuth conectado: <span className="font-semibold text-slate-950">{formatBooleanStatus(canvaDiagnostics.connected)}</span>
+              </p>
+              <p className="mt-1">
+                Template DC3: <span className="font-semibold text-slate-950">{canvaDiagnostics.brandTemplateId || "Sin configurar"}</span>
+              </p>
+              <p className="mt-1">
+                Token vence: <span className="font-semibold text-slate-950">{formatDateTime(canvaDiagnostics.tokenExpiresAt)}</span>
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700">
+              <p className="break-all">
+                Redirect URI: <span className="font-semibold text-slate-950">{canvaDiagnostics.redirectUri || "Sin configurar"}</span>
+              </p>
+              <p className="mt-2">
+                Plantilla: <span className="font-semibold text-slate-950">{canvaDiagnostics.brandTemplate?.title || "Sin leer todavia"}</span>
+              </p>
+              <p className="mt-1">
+                Campos Autofill: <span className="font-semibold text-slate-950">{canvaDiagnostics.datasetFields.length}</span>
+              </p>
+            </div>
+          </div>
+
+          {canvaDiagnostics.error ? (
+            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+              Canva respondió con error: {canvaDiagnostics.error}
+            </div>
+          ) : null}
+        </article>
+
+        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold text-slate-950">Campos detectados</h2>
+            <p className="text-sm leading-6 text-slate-600">
+              Estos nombres deben coincidir con los campos Autofill configurados dentro de la plantilla Canva.
+            </p>
+          </div>
+
+          <div className="mt-5 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            {canvaDiagnostics.datasetFields.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                Conecta Canva y confirma que la plantilla tenga campos Autofill.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {canvaDiagnostics.datasetFields.map((field) => (
+                  <span
+                    key={field.name}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
+                  >
+                    {field.name} · {field.type}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold text-slate-950">Estado del bridge</h2>
+            <p className="text-sm leading-6 text-slate-600">
+              Verifica si WordPress está accesible y si el bridge ya quedó listo para empujar cambios.
+            </p>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Plugin</p>
+              <p className="mt-2 text-sm text-slate-700">
+                Versión: <span className="font-semibold text-slate-950">{bridgeHealth?.plugin_version || "Sin dato"}</span>
+              </p>
+              <p className="mt-1 text-sm text-slate-700">
+                WordPress: <span className="font-semibold text-slate-950">{bridgeHealth?.wordpress_version || "Sin dato"}</span>
+              </p>
+              <p className="mt-1 text-sm text-slate-700">
+                Tutor REST: <span className="font-semibold text-slate-950">{formatBooleanStatus(Boolean(bridgeHealth?.tutor_rest_available))}</span>
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Configuración</p>
+              <p className="mt-2 text-sm text-slate-700">
+                Service user: <span className="font-semibold text-slate-950">{formatBooleanStatus(Boolean(bridgeHealth?.service_user_configured))}</span>
+              </p>
+              <p className="mt-1 text-sm text-slate-700">
+                Webhook en bridge: <span className="font-semibold text-slate-950">{formatBooleanStatus(Boolean(bridgeHealth?.learning_webhook_configured))}</span>
+              </p>
+              <p className="mt-1 text-sm text-slate-700 break-all">
+                URL esperada: <span className="font-semibold text-slate-950">{buildPortalWebhookUrl()}</span>
+              </p>
+            </div>
+          </div>
+
+          {bridgeError ? (
+            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+              No pudimos consultar el health del bridge. Detalle: {bridgeError}
+            </div>
+          ) : null}
+        </article>
+
+        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold text-slate-950">Último webhook</h2>
+            <p className="text-sm leading-6 text-slate-600">
+              Último evento académico válido que el portal aceptó desde WordPress/Tutor LMS.
+            </p>
+          </div>
+
+          {!lastEvent ? (
+            <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+              Aún no entra ningún webhook válido al portal.
+            </div>
+          ) : (
+            <div className="mt-5 space-y-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-sm text-slate-700">
+                  Evento: <span className="font-semibold text-slate-950">{lastEvent.event_type || "student_learning_changed"}</span>
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  Ocurrió en WordPress: <span className="font-semibold text-slate-950">{formatDateTime(lastEvent.occurred_at)}</span>
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  Recibido en portal: <span className="font-semibold text-slate-950">{formatDateTime(lastEvent.received_at || diagnostics.lastEventUpdatedAt)}</span>
+                </p>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700">
+                  <p>
+                    Empleado portal: <span className="font-semibold text-slate-950">{lastEvent.employee_id ?? "Sin dato"}</span>
+                  </p>
+                  <p className="mt-1">
+                    WP user ID: <span className="font-semibold text-slate-950">{lastEvent.student_wp_user_id ?? "Sin dato"}</span>
+                  </p>
+                  <p className="mt-1">
+                    Empresa: <span className="font-semibold text-slate-950">{lastEvent.company_id ?? "Sin dato"}</span>
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700">
+                  <p>
+                    Cursos actualizados: <span className="font-semibold text-slate-950">{lastEvent.courses_updated ?? 0}</span>
+                  </p>
+                  <p className="mt-1">
+                    Constancias actualizadas: <span className="font-semibold text-slate-950">{lastEvent.certificates_updated ?? 0}</span>
+                  </p>
+                  <p className="mt-1 break-all">
+                    Hash: <span className="font-semibold text-slate-950">{lastEvent.source_hash || "Sin hash"}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </article>
+      </section>
+    </div>
+  )
+}

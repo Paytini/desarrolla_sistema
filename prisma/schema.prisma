@@ -63,6 +63,8 @@ model Empresa {
   email_rh              String   @unique  // correo del encargado de RH
   telefono              String?
   rfc                   String?
+  representante_legal   String?
+  representante_laboral String?
   asientos_contratados  Int      // máximo de empleados permitidos
   asientos_usados       Int      @default(0)
   activo                Boolean  @default(true)
@@ -150,21 +152,24 @@ model EmpresaPaquete {
 // ─────────────────────────────────────────────────────────────
 
 model Empleado {
-  id            Int       @id @default(autoincrement())
-  empresa_id    Int
-  wp_user_id    Int?      @unique  // ID en WordPress, único si ya está vinculado
-  nombre        String
-  apellido      String
-  email         String    @unique
-  departamento  String?
-  puesto        String?
-  activo        Boolean   @default(true)
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  id                         Int       @id @default(autoincrement())
+  empresa_id                 Int
+  wp_user_id                 Int?      @unique  // ID en WordPress, único si ya está vinculado
+  nombre                     String
+  apellido                   String
+  email                      String    @unique
+  curp                       String?
+  departamento               String?
+  puesto                     String?
+  ocupacion_especifica_clave String?
+  ocupacion_especifica       String?
+  activo                     Boolean   @default(true)
+  created_at                 DateTime  @default(now())
+  updated_at                 DateTime  @updatedAt
 
-  empresa       Empresa         @relation(fields: [empresa_id], references: [id])
-  cursos        EmpleadoCurso[]
-  constancias   Constancia[]
+  empresa                    Empresa         @relation(fields: [empresa_id], references: [id])
+  cursos                     EmpleadoCurso[]
+  constancias                Constancia[]
 
   @@index([empresa_id])
   @@map("empleados")
@@ -215,11 +220,29 @@ model Constancia {
   folio         String   @unique  // D360-YYYY-MMDD-NNN
   wp_cert_url   String?  // URL del PDF en WordPress
   fecha_emision DateTime @default(now())
+  canva_estado  String?  // PENDING | IN_PROGRESS | READY | ERROR
+  canva_design_id String?
+  canva_design_url String? @db.Text
+  canva_edit_url String? @db.Text
+  canva_export_url String? @db.Text
+  canva_export_expires_at DateTime?
+  canva_generada_at DateTime?
+  canva_error String? @db.Text
 
   empleado      Empleado @relation(fields: [empleado_id], references: [id])
 
   @@index([empleado_id])
   @@map("constancias")
+}
+
+model IntegracionEstado {
+  id         Int      @id @default(autoincrement())
+  clave      String   @unique
+  payload    Json?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("integracion_estados")
 }
 
 // ─────────────────────────────────────────────────────────────

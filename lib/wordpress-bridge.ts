@@ -9,6 +9,7 @@ export type BridgeHealthResponse = {
   wordpress_version: string
   tutor_rest_available: boolean
   service_user_configured: boolean
+  learning_webhook_configured?: boolean
 }
 
 export type BridgeUpsertEmployeeInput = {

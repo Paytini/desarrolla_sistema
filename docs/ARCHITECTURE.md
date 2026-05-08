@@ -163,6 +163,7 @@ El portal **no debe consultar la base de datos de WordPress de forma directa**. 
 - `Lectura en caliente` solo para eventos especificos.
 - `Cache local` en PostgreSQL para dashboards.
 - `Jobs programados` para refrescar progreso y constancias.
+- `Polling corto recomendado` cada 60 segundos para mantener el portal casi en tiempo real sin depender de webhooks de Tutor LMS.
 
 ## Modelo de datos
 

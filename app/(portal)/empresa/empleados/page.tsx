@@ -277,7 +277,14 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
           </div>
 
           <div className="mb-5 flex flex-wrap gap-2">
-            {["nombre", "apellido", "email", "departamento", "puesto", "password"].map((column) => (
+            {[
+              "nombre",
+              "apellido",
+              "email",
+              "departamento",
+              "puesto",
+              "password",
+            ].map((column) => (
               <span
                 key={column}
                 className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700"
@@ -336,7 +343,14 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
                 <table className="min-w-[720px] text-sm">
                   <thead className="bg-slate-100 text-left text-slate-700">
                     <tr>
-                      {["nombre", "apellido", "email", "departamento", "puesto", "password"].map((column) => (
+                      {[
+                        "nombre",
+                        "apellido",
+                        "email",
+                        "departamento",
+                        "puesto",
+                        "password",
+                      ].map((column) => (
                         <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">
                           {column}
                         </th>
@@ -349,7 +363,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
                       <td className="whitespace-nowrap px-4 py-3">Perez</td>
                       <td className="whitespace-nowrap px-4 py-3">ana@empresa.com</td>
                       <td className="whitespace-nowrap px-4 py-3">Operaciones</td>
-                      <td className="whitespace-nowrap px-4 py-3">Analista</td>
+                      <td className="whitespace-nowrap px-4 py-3">Supervisor</td>
                       <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
                     </tr>
                     <tr>

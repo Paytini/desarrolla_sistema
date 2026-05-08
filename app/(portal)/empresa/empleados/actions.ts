@@ -210,13 +210,13 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     entidadId: createdEmployee.id,
     empresaId: input.empresaId,
     resumen: `${input.actor.nombre} dio de alta al empleado ${input.nombre} ${input.apellido}.`,
-    metadata: {
-      email,
-      departamento: input.departamento ?? null,
-      puesto: input.puesto ?? null,
-      tiene_paquete_activo: hasActivePackage,
-    },
-  })
+      metadata: {
+        email,
+        departamento: input.departamento ?? null,
+        puesto: input.puesto ?? null,
+        tiene_paquete_activo: hasActivePackage,
+      },
+    })
 
   if (isWordPressBridgeConfigured()) {
     try {
