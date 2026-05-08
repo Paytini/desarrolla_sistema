@@ -2,6 +2,7 @@ import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDate, formatDateTime } from "@/lib/format"
+import type { PortalCourseRecord } from "@/lib/learning-types"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 
@@ -18,7 +19,7 @@ export default async function EmpleadoProgresoPage() {
     redirect("/login")
   }
 
-  const cursos = empleado.cursos
+  const cursos = empleado.cursos as PortalCourseRecord[]
   const cursosCompletados = cursos.filter((curso) => curso.completado)
   const cursosEnProgreso = cursos.filter((curso) => !curso.completado && curso.progreso_pct > 0)
   const cursosSinIniciar = cursos.filter((curso) => curso.progreso_pct === 0)

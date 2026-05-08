@@ -2,6 +2,7 @@ import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
+import type { PortalCourseRecord } from "@/lib/learning-types"
 import { getSession } from "@/lib/session"
 import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
 import {
@@ -73,7 +74,7 @@ export default async function EmpleadoCursos() {
     }
   }
 
-  const cursos = empleado.cursos
+  const cursos = empleado.cursos as PortalCourseRecord[]
   const cursosAsignados = cursos.length
   const cursosCompletados = cursos.filter((curso) => curso.completado).length
   const cursosPendientes = cursos.filter((curso) => !curso.completado).length
