@@ -4,10 +4,12 @@ import { generateCanvaDc3Action } from "@/app/(portal)/constancias/actions"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
-import type { Constancia, EmpleadoCurso } from "@prisma/client"
 import { redirect } from "next/navigation"
 
-type CompanyCertificate = Constancia & {
+type CompanyRecord = NonNullable<Awaited<ReturnType<typeof getCompanyCertificatesRecord>>>
+type CompanyEmployee = CompanyRecord["empleados"][number]
+type EmployeeCourse = CompanyEmployee["cursos"][number]
+type CompanyCertificate = CompanyEmployee["constancias"][number] & {
   empleadoNombre: string
   empleadoEmail: string
 }
@@ -20,14 +22,9 @@ type PendingCertificate = {
   completedAt: Date | null
 }
 
-export default async function EmpresaConstanciasPage() {
-  const session = await getSession()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
-    redirect("/login")
-  }
-
-  const empresa = await prisma.empresa.findUnique({
-    where: { id: session.user.empresa_id },
+async function getCompanyCertificatesRecord(empresaId: number) {
+  return prisma.empresa.findUnique({
+    where: { id: empresaId },
     include: {
       empleados: {
         where: { activo: true },
@@ -43,6 +40,15 @@ export default async function EmpresaConstanciasPage() {
       },
     },
   })
+}
+
+export default async function EmpresaConstanciasPage() {
+  const session = await getSession()
+  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
+    redirect("/login")
+  }
+
+  const empresa = await getCompanyCertificatesRecord(session.user.empresa_id)
 
   if (!empresa) {
     redirect("/login")
@@ -60,7 +66,7 @@ export default async function EmpresaConstanciasPage() {
     const existingCourseIds = new Set(empleado.constancias.map((certificate) => certificate.wp_curso_id))
 
     return empleado.cursos
-      .filter((course: EmpleadoCurso) => course.completado && !existingCourseIds.has(course.wp_curso_id))
+      .filter((course: EmployeeCourse) => course.completado && !existingCourseIds.has(course.wp_curso_id))
       .map((course) => ({
         id: `${empleado.id}-${course.wp_curso_id}`,
         empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
