@@ -31,3 +31,10 @@ export type PortalCertificateRecord = {
   canva_generada_at: Date | null
   canva_error: string | null
 }
+
+export type PortalPackageCourseRecord = {
+  id?: number
+  paquete_id?: number
+  wp_curso_id: number
+  nombre_curso: string
+}

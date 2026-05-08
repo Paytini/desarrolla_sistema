@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { requireRhSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import { replaceEmployeePackageCourses } from "@/lib/course-sync"
+import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
 import {
   bridgeEnrollCourses,
@@ -81,8 +82,9 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     redirect("/empresa/asignaciones?error=paquete")
   }
 
+  const packageCourses = activePackage.paquete.cursos as PortalPackageCourseRecord[]
   const allowedCourseMap = new Map(
-    activePackage.paquete.cursos.map((course) => [course.wp_curso_id, course])
+    packageCourses.map((course: PortalPackageCourseRecord) => [course.wp_curso_id, course])
   )
 
   const validSelectedCourses = selectedCourseIds

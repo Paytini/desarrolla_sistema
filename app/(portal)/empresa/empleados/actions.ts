@@ -542,7 +542,7 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
       },
       data: { activo: !empleado.activo },
     })
-
+    
     const activeEmployees = await tx.empleado.count({
       where: {
         empresa_id: empresaId,

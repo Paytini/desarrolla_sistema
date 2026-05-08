@@ -3,6 +3,7 @@ import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
 import { getRhAsignacionesSnapshot } from "@/lib/dashboard-cache"
+import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { readSearchParam } from "@/lib/search-params"
 import { redirect } from "next/navigation"
 import { assignEmployeeCoursesAction } from "./actions"
@@ -29,6 +30,16 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
+type AssignmentEmployee = {
+  id: number
+  nombre: string
+  apellido: string
+  email: string
+  departamento: string | null
+  puesto: string | null
+  cursos: Array<{ wp_curso_id: number }>
+}
+
 export default async function EmpresaAsignacionesPage({ searchParams }: PageProps) {
   const session = await auth()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
@@ -46,8 +57,8 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
   }
 
   const activePackage = empresa.paquetes[0]?.paquete
-  const packageCourses = activePackage?.cursos ?? []
-  const empleados = empresa.empleados
+  const packageCourses = (activePackage?.cursos ?? []) as PortalPackageCourseRecord[]
+  const empleados = empresa.empleados as AssignmentEmployee[]
 
   return (
     <div className="space-y-8">
