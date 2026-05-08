@@ -4,12 +4,24 @@ import { generateCanvaDc3Action } from "@/app/(portal)/constancias/actions"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { getSession } from "@/lib/session"
+import type { Prisma } from "@prisma/client"
 import { redirect } from "next/navigation"
 
-type EmployeeLearningData = NonNullable<Awaited<ReturnType<typeof getEmployeeLearningData>>>
-type EmployeeLearningRecord = EmployeeLearningData["empleado"]
+type EmployeeLearningRecord = Prisma.EmpleadoGetPayload<{
+  include: {
+    empresa: {
+      select: {
+        id: true
+        nombre: true
+        rfc: true
+      }
+    }
+    cursos: true
+    constancias: true
+  }
+}>
 type EmployeeCertificate = EmployeeLearningRecord["constancias"][number]
-type PendingCertificate = EmployeeLearningData["pendingCertificates"][number]
+type EmployeeCourse = EmployeeLearningRecord["cursos"][number]
 
 export default async function EmpleadoConstanciasPage() {
   const session = await getSession()
@@ -18,14 +30,14 @@ export default async function EmpleadoConstanciasPage() {
   }
 
   const learningData = await getEmployeeLearningData(session.user.email ?? "")
-  const empleado = learningData?.empleado
+  const empleado = learningData?.empleado as EmployeeLearningRecord | undefined
 
   if (!empleado) {
     redirect("/login")
   }
 
   const constancias: EmployeeCertificate[] = empleado.constancias
-  const pendingCertificates: PendingCertificate[] = learningData?.pendingCertificates ?? []
+  const pendingCertificates: EmployeeCourse[] = (learningData?.pendingCertificates ?? []) as EmployeeCourse[]
   const latestIssued = constancias[0]
 
   return (
@@ -85,7 +97,7 @@ export default async function EmpleadoConstanciasPage() {
               </div>
             ) : null}
 
-            {constancias.map((constancia) => (
+            {constancias.map((constancia: EmployeeCertificate) => (
               <article
                 key={constancia.id}
                 className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5"
@@ -181,7 +193,7 @@ export default async function EmpleadoConstanciasPage() {
             </div>
 
             <div className="mt-5 space-y-3">
-              {pendingCertificates.map((course) => (
+              {pendingCertificates.map((course: EmployeeCourse) => (
                 <div
                   key={course.id}
                   className="rounded-2xl border border-dashed border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
@@ -212,7 +224,7 @@ export default async function EmpleadoConstanciasPage() {
             <div className="mt-5 space-y-4 text-sm text-slate-600">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="font-medium text-slate-900">Cursos completados</p>
-                <p className="mt-1">{empleado.cursos.filter((course) => course.completado).length} registrados en tu perfil.</p>
+                <p className="mt-1">{empleado.cursos.filter((course: EmployeeCourse) => course.completado).length} registrados en tu perfil.</p>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -222,7 +234,7 @@ export default async function EmpleadoConstanciasPage() {
                     ? formatDateTime(
                         [...empleado.cursos]
                           .sort(
-                            (a, b) =>
+                            (a: EmployeeCourse, b: EmployeeCourse) =>
                               new Date(b.ultima_sincronizacion).getTime() -
                               new Date(a.ultima_sincronizacion).getTime()
                           )[0].ultima_sincronizacion

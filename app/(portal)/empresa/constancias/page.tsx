@@ -4,9 +4,19 @@ import { generateCanvaDc3Action } from "@/app/(portal)/constancias/actions"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
+import type { Prisma } from "@prisma/client"
 import { redirect } from "next/navigation"
 
-type CompanyRecord = NonNullable<Awaited<ReturnType<typeof getCompanyCertificatesRecord>>>
+type CompanyRecord = Prisma.EmpresaGetPayload<{
+  include: {
+    empleados: {
+      include: {
+        constancias: true
+        cursos: true
+      }
+    }
+  }
+}>
 type CompanyEmployee = CompanyRecord["empleados"][number]
 type EmployeeCourse = CompanyEmployee["cursos"][number]
 type CompanyCertificate = CompanyEmployee["constancias"][number] & {
@@ -54,20 +64,20 @@ export default async function EmpresaConstanciasPage() {
     redirect("/login")
   }
 
-  const constancias: CompanyCertificate[] = empresa.empleados.flatMap((empleado) =>
-    empleado.constancias.map((constancia) => ({
+  const constancias: CompanyCertificate[] = empresa.empleados.flatMap((empleado: CompanyEmployee) =>
+    empleado.constancias.map((constancia: CompanyEmployee["constancias"][number]) => ({
       ...constancia,
       empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
       empleadoEmail: empleado.email,
     }))
   )
 
-  const pendingCertificates: PendingCertificate[] = empresa.empleados.flatMap((empleado) => {
-    const existingCourseIds = new Set(empleado.constancias.map((certificate) => certificate.wp_curso_id))
+  const pendingCertificates: PendingCertificate[] = empresa.empleados.flatMap((empleado: CompanyEmployee) => {
+    const existingCourseIds = new Set(empleado.constancias.map((certificate: CompanyEmployee["constancias"][number]) => certificate.wp_curso_id))
 
     return empleado.cursos
       .filter((course: EmployeeCourse) => course.completado && !existingCourseIds.has(course.wp_curso_id))
-      .map((course) => ({
+      .map((course: EmployeeCourse) => ({
         id: `${empleado.id}-${course.wp_curso_id}`,
         empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
         empleadoEmail: empleado.email,
@@ -80,7 +90,7 @@ export default async function EmpresaConstanciasPage() {
     (left, right) =>
       new Date(right.fecha_emision).getTime() - new Date(left.fecha_emision).getTime()
   )[0]
-  const employeesWithCertificates = new Set(constancias.map((certificate) => certificate.empleadoEmail)).size
+  const employeesWithCertificates = new Set(constancias.map((certificate: CompanyCertificate) => certificate.empleadoEmail)).size
 
   return (
     <div className="space-y-8">
@@ -133,7 +143,7 @@ export default async function EmpresaConstanciasPage() {
               </div>
             ) : null}
 
-            {constancias.map((constancia) => (
+            {constancias.map((constancia: CompanyCertificate) => (
               <article
                 key={constancia.id}
                 className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5"
@@ -238,7 +248,7 @@ export default async function EmpresaConstanciasPage() {
               </div>
             ) : null}
 
-            {pendingCertificates.map((item) => (
+            {pendingCertificates.map((item: PendingCertificate) => (
               <article
                 key={item.id}
                 className="rounded-3xl border border-amber-200 bg-amber-50/70 p-5"
