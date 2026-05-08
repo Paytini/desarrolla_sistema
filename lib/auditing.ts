@@ -1,6 +1,9 @@
-import type { Prisma } from "@prisma/client"
 import type { Session } from "next-auth"
 import { prisma } from "@/lib/prisma"
+
+type JsonPrimitive = string | number | boolean | null
+type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue | undefined }
+type InputJsonValue = string | number | boolean | JsonValue[] | { [key: string]: JsonValue | undefined }
 
 export type AuditActor = {
   usuarioId: number | null
@@ -77,7 +80,7 @@ export async function createAuditEvent(input: {
   entidadId?: number | null
   empresaId?: number | null
   resumen: string
-  metadata?: Prisma.InputJsonValue
+  metadata?: InputJsonValue
 }) {
   try {
     await prisma.auditoriaEvento.create({

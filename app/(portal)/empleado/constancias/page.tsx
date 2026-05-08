@@ -3,25 +3,16 @@ import PageHeader from "@/components/portal/PageHeader"
 import { generateCanvaDc3Action } from "@/app/(portal)/constancias/actions"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDate, formatDateTime } from "@/lib/format"
+import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import { getSession } from "@/lib/session"
-import type { Prisma } from "@prisma/client"
 import { redirect } from "next/navigation"
 
-type EmployeeLearningRecord = Prisma.EmpleadoGetPayload<{
-  include: {
-    empresa: {
-      select: {
-        id: true
-        nombre: true
-        rfc: true
-      }
-    }
-    cursos: true
-    constancias: true
-  }
-}>
-type EmployeeCertificate = EmployeeLearningRecord["constancias"][number]
-type EmployeeCourse = EmployeeLearningRecord["cursos"][number]
+type EmployeeLearningRecord = {
+  cursos: PortalCourseRecord[]
+  constancias: PortalCertificateRecord[]
+}
+type EmployeeCertificate = PortalCertificateRecord
+type EmployeeCourse = PortalCourseRecord
 
 export default async function EmpleadoConstanciasPage() {
   const session = await getSession()

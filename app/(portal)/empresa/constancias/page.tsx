@@ -2,24 +2,21 @@ import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import { generateCanvaDc3Action } from "@/app/(portal)/constancias/actions"
 import { formatDateTime } from "@/lib/format"
+import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
-import type { Prisma } from "@prisma/client"
 import { redirect } from "next/navigation"
 
-type CompanyRecord = Prisma.EmpresaGetPayload<{
-  include: {
-    empleados: {
-      include: {
-        constancias: true
-        cursos: true
-      }
-    }
-  }
-}>
-type CompanyEmployee = CompanyRecord["empleados"][number]
-type EmployeeCourse = CompanyEmployee["cursos"][number]
-type CompanyCertificate = CompanyEmployee["constancias"][number] & {
+type CompanyEmployee = {
+  id: number
+  nombre: string
+  apellido: string
+  email: string
+  constancias: PortalCertificateRecord[]
+  cursos: PortalCourseRecord[]
+}
+type EmployeeCourse = PortalCourseRecord
+type CompanyCertificate = PortalCertificateRecord & {
   empleadoNombre: string
   empleadoEmail: string
 }
@@ -65,7 +62,7 @@ export default async function EmpresaConstanciasPage() {
   }
 
   const constancias: CompanyCertificate[] = empresa.empleados.flatMap((empleado: CompanyEmployee) =>
-    empleado.constancias.map((constancia: CompanyEmployee["constancias"][number]) => ({
+    empleado.constancias.map((constancia: PortalCertificateRecord) => ({
       ...constancia,
       empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
       empleadoEmail: empleado.email,
@@ -73,7 +70,9 @@ export default async function EmpresaConstanciasPage() {
   )
 
   const pendingCertificates: PendingCertificate[] = empresa.empleados.flatMap((empleado: CompanyEmployee) => {
-    const existingCourseIds = new Set(empleado.constancias.map((certificate: CompanyEmployee["constancias"][number]) => certificate.wp_curso_id))
+    const existingCourseIds = new Set(
+      empleado.constancias.map((certificate: PortalCertificateRecord) => certificate.wp_curso_id)
+    )
 
     return empleado.cursos
       .filter((course: EmployeeCourse) => course.completado && !existingCourseIds.has(course.wp_curso_id))
