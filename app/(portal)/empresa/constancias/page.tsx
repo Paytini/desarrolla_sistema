@@ -4,7 +4,21 @@ import { generateCanvaDc3Action } from "@/app/(portal)/constancias/actions"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
+import type { Constancia, EmpleadoCurso } from "@prisma/client"
 import { redirect } from "next/navigation"
+
+type CompanyCertificate = Constancia & {
+  empleadoNombre: string
+  empleadoEmail: string
+}
+
+type PendingCertificate = {
+  id: string
+  empleadoNombre: string
+  empleadoEmail: string
+  courseName: string
+  completedAt: Date | null
+}
 
 export default async function EmpresaConstanciasPage() {
   const session = await getSession()
@@ -34,7 +48,7 @@ export default async function EmpresaConstanciasPage() {
     redirect("/login")
   }
 
-  const constancias = empresa.empleados.flatMap((empleado) =>
+  const constancias: CompanyCertificate[] = empresa.empleados.flatMap((empleado) =>
     empleado.constancias.map((constancia) => ({
       ...constancia,
       empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
@@ -42,11 +56,11 @@ export default async function EmpresaConstanciasPage() {
     }))
   )
 
-  const pendingCertificates = empresa.empleados.flatMap((empleado) => {
+  const pendingCertificates: PendingCertificate[] = empresa.empleados.flatMap((empleado) => {
     const existingCourseIds = new Set(empleado.constancias.map((certificate) => certificate.wp_curso_id))
 
     return empleado.cursos
-      .filter((course) => course.completado && !existingCourseIds.has(course.wp_curso_id))
+      .filter((course: EmpleadoCurso) => course.completado && !existingCourseIds.has(course.wp_curso_id))
       .map((course) => ({
         id: `${empleado.id}-${course.wp_curso_id}`,
         empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),

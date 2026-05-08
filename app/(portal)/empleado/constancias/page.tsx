@@ -4,6 +4,7 @@ import { generateCanvaDc3Action } from "@/app/(portal)/constancias/actions"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { getSession } from "@/lib/session"
+import type { Constancia, EmpleadoCurso } from "@prisma/client"
 import { redirect } from "next/navigation"
 
 export default async function EmpleadoConstanciasPage() {
@@ -19,8 +20,8 @@ export default async function EmpleadoConstanciasPage() {
     redirect("/login")
   }
 
-  const constancias = empleado.constancias
-  const pendingCertificates = learningData?.pendingCertificates ?? []
+  const constancias = empleado.constancias as Constancia[]
+  const pendingCertificates = (learningData?.pendingCertificates ?? []) as EmpleadoCurso[]
   const latestIssued = constancias[0]
 
   return (
