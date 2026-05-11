@@ -1,16 +1,12 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { PrismaClient } from "@prisma/client"
-import { PrismaPg } from "@prisma/adapter-pg"
-import { Pool } from "pg"
 import bcrypt from "bcryptjs"
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter: new PrismaPg(pool) })
+import { prisma } from "@/lib/prisma"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   pages: { signIn: "/login" },
   callbacks: {
     async jwt({ token, user }) {
@@ -41,35 +37,43 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        const usuario = await prisma.usuario.findUnique({
-          where: { email: credentials.email as string },
-          include: {
-            empresa: {
-              select: { nombre: true },
+        try {
+          const usuario = await prisma.usuario.findUnique({
+            where: { email: credentials.email as string },
+            include: {
+              empresa: {
+                select: { nombre: true },
+              },
             },
-          },
-        })
+          })
 
-        if (!usuario || !usuario.activo) return null
+          if (!usuario || !usuario.activo) return null
 
-        const valida = await bcrypt.compare(
-          credentials.password as string,
-          usuario.password_hash
-        )
-        if (!valida) return null
+          const valida = await bcrypt.compare(
+            credentials.password as string,
+            usuario.password_hash
+          )
+          if (!valida) return null
 
-        await prisma.usuario.update({
-          where: { id: usuario.id },
-          data:  { ultimo_acceso: new Date() },
-        })
+          await prisma.usuario.update({
+            where: { id: usuario.id },
+            data:  { ultimo_acceso: new Date() },
+          })
 
-        return {
-          id: String(usuario.id),
-          email: usuario.email,
-          nombre: usuario.nombre,
-          rol: usuario.rol,
-          empresa_id: usuario.empresa_id,
-          empresa: usuario.empresa?.nombre ?? null,
+          return {
+            id: String(usuario.id),
+            email: usuario.email,
+            nombre: usuario.nombre,
+            rol: usuario.rol,
+            empresa_id: usuario.empresa_id,
+            empresa: usuario.empresa?.nombre ?? null,
+          }
+        } catch (error) {
+          console.error("Credentials login failed while reading database", {
+            message: error instanceof Error ? error.message : String(error),
+            hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+          })
+          return null
         }
       },
     }),
