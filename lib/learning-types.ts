@@ -22,14 +22,6 @@ export type PortalCertificateRecord = {
   folio: string
   wp_cert_url: string | null
   fecha_emision: Date
-  canva_estado: string | null
-  canva_design_id: string | null
-  canva_design_url: string | null
-  canva_edit_url: string | null
-  canva_export_url: string | null
-  canva_export_expires_at: Date | null
-  canva_generada_at: Date | null
-  canva_error: string | null
 }
 
 export type PortalPackageCourseRecord = {

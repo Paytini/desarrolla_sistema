@@ -2,7 +2,6 @@ import { redirect } from "next/navigation"
 
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
-import { getCanvaDiagnostics } from "@/lib/canva"
 import { formatDateTime } from "@/lib/format"
 import { getSession } from "@/lib/session"
 import { getTutorLearningWebhookDiagnostics } from "@/lib/webhook-monitor"
@@ -28,10 +27,7 @@ export default async function SuperAdminIntegracionPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
-  const [diagnostics, canvaDiagnostics] = await Promise.all([
-    getTutorLearningWebhookDiagnostics(),
-    getCanvaDiagnostics(),
-  ])
+  const diagnostics = await getTutorLearningWebhookDiagnostics()
   const bridgeHealth = diagnostics.bridgeHealth
   const bridgeReachable = bridgeHealth ? bridgeHealth.ok : false
   const bridgeError =
@@ -71,88 +67,6 @@ export default async function SuperAdminIntegracionPage() {
           description="Frecuencia del polling de respaldo para refresco académico si el webhook no dispara."
           accent="slate"
         />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold text-slate-950">Canva DC3</h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Conexión OAuth para generar constancias DC3 desde una Brand Template de Canva.
-              </p>
-            </div>
-            <a
-              href="/api/canva/oauth/start"
-              className="inline-flex w-fit items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
-            >
-              {canvaDiagnostics.connected ? "Reconectar Canva" : "Conectar Canva"}
-            </a>
-          </div>
-
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700">
-              <p>
-                Configuración: <span className="font-semibold text-slate-950">{formatBooleanStatus(canvaDiagnostics.configured)}</span>
-              </p>
-              <p className="mt-1">
-                OAuth conectado: <span className="font-semibold text-slate-950">{formatBooleanStatus(canvaDiagnostics.connected)}</span>
-              </p>
-              <p className="mt-1">
-                Template DC3: <span className="font-semibold text-slate-950">{canvaDiagnostics.brandTemplateId || "Sin configurar"}</span>
-              </p>
-              <p className="mt-1">
-                Token vence: <span className="font-semibold text-slate-950">{formatDateTime(canvaDiagnostics.tokenExpiresAt)}</span>
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700">
-              <p className="break-all">
-                Redirect URI: <span className="font-semibold text-slate-950">{canvaDiagnostics.redirectUri || "Sin configurar"}</span>
-              </p>
-              <p className="mt-2">
-                Plantilla: <span className="font-semibold text-slate-950">{canvaDiagnostics.brandTemplate?.title || "Sin leer todavia"}</span>
-              </p>
-              <p className="mt-1">
-                Campos Autofill: <span className="font-semibold text-slate-950">{canvaDiagnostics.datasetFields.length}</span>
-              </p>
-            </div>
-          </div>
-
-          {canvaDiagnostics.error ? (
-            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-              Canva respondió con error: {canvaDiagnostics.error}
-            </div>
-          ) : null}
-        </article>
-
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-slate-950">Campos detectados</h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Estos nombres deben coincidir con los campos Autofill configurados dentro de la plantilla Canva.
-            </p>
-          </div>
-
-          <div className="mt-5 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-            {canvaDiagnostics.datasetFields.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                Conecta Canva y confirma que la plantilla tenga campos Autofill.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {canvaDiagnostics.datasetFields.map((field) => (
-                  <span
-                    key={field.name}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
-                  >
-                    {field.name} · {field.type}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </article>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">

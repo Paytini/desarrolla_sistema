@@ -1,6 +1,5 @@
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
-import { generateCanvaDc3Action } from "@/app/(portal)/constancias/actions"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
@@ -170,11 +169,6 @@ export default async function EmpresaConstanciasPage() {
                         {formatDateTime(constancia.fecha_emision)}
                       </p>
                     </div>
-                    {constancia.canva_estado === "ERROR" && constancia.canva_error ? (
-                      <p className="max-w-2xl text-sm text-rose-700">
-                        Canva DC3: {constancia.canva_error}
-                      </p>
-                    ) : null}
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -189,41 +183,6 @@ export default async function EmpresaConstanciasPage() {
                       </a>
                     ) : (
                       <span className="self-center text-sm text-slate-400">Sin URL publica de Tutor</span>
-                    )}
-                    {constancia.canva_export_url ? (
-                      <a
-                        href={constancia.canva_export_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-full border border-teal-300 bg-white px-4 py-2 text-sm font-semibold text-teal-900 transition hover:bg-teal-50"
-                      >
-                        Ver DC3 Canva
-                      </a>
-                    ) : constancia.canva_design_url ? (
-                      <a
-                        href={constancia.canva_design_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-full border border-teal-300 bg-white px-4 py-2 text-sm font-semibold text-teal-900 transition hover:bg-teal-50"
-                      >
-                        Ver diseño DC3
-                      </a>
-                    ) : null}
-                    {constancia.canva_estado === "IN_PROGRESS" ? (
-                      <span className="self-center text-sm font-medium text-slate-500">
-                        Generando DC3...
-                      </span>
-                    ) : (
-                      <form action={generateCanvaDc3Action}>
-                        <input type="hidden" name="constancia_id" value={constancia.id} />
-                        <input type="hidden" name="return_to" value="/empresa/constancias" />
-                        <button
-                          type="submit"
-                          className="rounded-full border border-sky-300 bg-white px-4 py-2 text-sm font-semibold text-sky-900 transition hover:bg-sky-50"
-                        >
-                          Generar DC3 Canva
-                        </button>
-                      </form>
                     )}
                   </div>
                 </div>

@@ -56,10 +56,6 @@ NEXT_PUBLIC_WORDPRESS_SITE_URL=
 BRIDGE_WEBHOOK_SECRET=
 TUTORLMS_API_KEY=
 TUTORLMS_SECRET=
-CANVA_CLIENT_ID=
-CANVA_CLIENT_SECRET=
-CANVA_REDIRECT_URI=
-CANVA_BRAND_TEMPLATE_ID=
 ```
 
 Si tu bridge apunta a `https://desarrolla360.com/wp-json/desarrolla360/v1`, entonces
@@ -101,16 +97,6 @@ https://tu-dominio.com/api/internal/webhooks/tutor-learning
 
 El bridge revisa alumnos vinculados por lotes pequenos cada minuto y solo envia al portal
 los snapshots que realmente cambiaron, para no degradar WordPress ni saturar el portal.
-
-Para generar DC3 con Canva, configura la app de Canva Connect con este redirect:
-
-```bash
-https://tu-dominio.com/api/canva/oauth/callback
-```
-
-Despues entra a `SuperAdmin > Integracion`, conecta Canva y revisa los campos Autofill
-detectados en la Brand Template. Si los nombres de Canva no son obvios, usa
-`CANVA_DC3_FIELD_MAP_JSON` para mapearlos a valores del portal.
 
 4. Ejecuta Prisma:
 
