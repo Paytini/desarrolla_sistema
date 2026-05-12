@@ -74,7 +74,9 @@ La ruta interna `GET/POST /api/internal/sync/employee-learning` acepta:
 Authorization: Bearer <CRON_SECRET>
 ```
 
-Si no usas Vercel, puedes conectar cualquier scheduler externo cada minuto o cada 5 minutos. Ejemplo:
+Si no usas Vercel, puedes conectar cualquier scheduler externo cada minuto o cada 5 minutos.
+Para una experiencia mas cercana a tiempo real, usa el webhook del bridge y deja
+`EMPLOYEE_SYNC_INTERVAL_MS=15000` como respaldo de refresco en vistas del empleado. Ejemplo:
 
 ```bash
 curl -X POST \

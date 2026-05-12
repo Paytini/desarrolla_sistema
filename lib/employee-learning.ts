@@ -9,9 +9,9 @@ import {
 import { after } from "next/server"
 
 function getEmployeeSyncIntervalMs() {
-  const rawValue = Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "60000", 10)
+  const rawValue = Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "15000", 10)
   if (!Number.isFinite(rawValue) || rawValue < 15_000) {
-    return 60_000
+    return 15_000
   }
 
   return rawValue
@@ -228,6 +228,49 @@ export async function syncEmployeeLearningFromBridgeSnapshot(input: {
     empleadoId,
     coursesUpdated: input.snapshot.courses.filter(hasWpCourseId).length,
     certificatesUpdated: normalizedCertificates.filter(hasWpCourseId).length,
+  }
+}
+
+export async function syncEmployeeLearningByEmail(
+  email: string,
+  options?: {
+    force?: boolean
+  }
+) {
+  const empleado = await fetchEmployeeLearningRecord(email)
+
+  if (!empleado) {
+    return {
+      ok: false,
+      synced: false,
+      skipped: false,
+      empleadoId: null,
+      empresaId: null,
+      message: "No se encontro el empleado para sincronizar su avance.",
+    }
+  }
+
+  const shouldSync = options?.force || shouldSyncEmployeeLearning(empleado)
+  if (!shouldSync) {
+    return {
+      ok: true,
+      synced: false,
+      skipped: true,
+      empleadoId: empleado.id,
+      empresaId: empleado.empresa_id,
+      message: "El progreso ya esta actualizado recientemente.",
+    }
+  }
+
+  const result = await syncEmployeeLearningRecord(empleado.id)
+
+  return {
+    ok: true,
+    synced: result.synced,
+    skipped: false,
+    empleadoId: empleado.id,
+    empresaId: empleado.empresa_id,
+    coursesUpdated: result.bridgeCourses.length,
   }
 }
 

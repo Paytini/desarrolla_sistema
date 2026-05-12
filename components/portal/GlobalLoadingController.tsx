@@ -50,6 +50,10 @@ function shouldTrackFetch(input: RequestInfo | URL, init?: RequestInit) {
       (typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined)
   )
 
+  if (headers.get("x-skip-global-loading") === "1") {
+    return false
+  }
+
   return headers.get("purpose") !== "prefetch" && headers.get("next-router-prefetch") !== "1"
 }
 

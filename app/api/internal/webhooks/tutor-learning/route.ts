@@ -1,6 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
 
+import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import {
   syncEmployeeLearningFromBridgeSnapshot,
   type EmployeeLearningBridgeSnapshot,
@@ -118,6 +120,18 @@ export async function POST(request: Request) {
       courses_updated: result.coursesUpdated,
       certificates_updated: result.certificatesUpdated,
     })
+
+    revalidatePath("/empleado/cursos")
+    revalidatePath("/empleado/progreso")
+    revalidatePath("/empleado/constancias")
+
+    if (payload.company_id) {
+      revalidatePath("/empresa/inicio")
+      revalidatePath("/empresa/progreso")
+      revalidatePath("/empresa/constancias")
+      revalidateTag(empresaCacheRootTag(payload.company_id), "max")
+      revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+    }
 
     return NextResponse.json({
       ok: true,

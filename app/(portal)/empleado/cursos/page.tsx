@@ -1,4 +1,5 @@
 import InfoCard from "@/components/portal/InfoCard"
+import EmployeeLearningRefresh from "@/components/portal/EmployeeLearningRefresh"
 import PageHeader from "@/components/portal/PageHeader"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
@@ -117,6 +118,8 @@ export default async function EmpleadoCursos() {
         />
       </section>
 
+      <EmployeeLearningRefresh autoRefresh={Boolean(learningData?.backgroundSyncQueued)} />
+
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 space-y-1">
           <h2 className="text-lg font-semibold text-slate-950">Ruta actual</h2>
@@ -133,7 +136,7 @@ export default async function EmpleadoCursos() {
 
         {!learningData?.syncError && learningData?.backgroundSyncQueued ? (
           <div className="mb-5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-6 text-sky-900">
-            Estamos actualizando tus cursos en segundo plano. Esta vista muestra el ultimo dato guardado mientras termina la sincronizacion.
+            Estamos verificando tu avance con Tutor LMS. Si hay cambios recientes, la vista se actualizara automaticamente.
           </div>
         ) : null}
 

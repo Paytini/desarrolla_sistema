@@ -64,7 +64,7 @@ export async function getTutorLearningWebhookDiagnostics() {
     webhookSecretConfigured: Boolean(
       process.env.BRIDGE_WEBHOOK_SECRET?.trim() || process.env.WP_BRIDGE_WEBHOOK_SECRET?.trim()
     ),
-    syncIntervalMs: Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "60000", 10) || 60000,
+    syncIntervalMs: Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "15000", 10) || 15000,
     webhookUrlPath: "/api/internal/webhooks/tutor-learning",
     bridgeHealth,
     lastEvent,

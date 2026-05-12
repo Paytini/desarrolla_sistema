@@ -1,4 +1,5 @@
 import InfoCard from "@/components/portal/InfoCard"
+import EmployeeLearningRefresh from "@/components/portal/EmployeeLearningRefresh"
 import PageHeader from "@/components/portal/PageHeader"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDate, formatDateTime } from "@/lib/format"
@@ -73,6 +74,8 @@ export default async function EmpleadoProgresoPage() {
         />
       </section>
 
+      <EmployeeLearningRefresh autoRefresh={Boolean(learningData?.backgroundSyncQueued)} />
+
       {learningData?.syncError ? (
         <section className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">
           No pudimos refrescar tu progreso en este momento. Mostramos el ultimo estado guardado en el portal.
@@ -81,7 +84,7 @@ export default async function EmpleadoProgresoPage() {
 
       {!learningData?.syncError && learningData?.backgroundSyncQueued ? (
         <section className="rounded-3xl border border-sky-200 bg-sky-50 px-5 py-4 text-sm leading-6 text-sky-900">
-          Tu progreso se esta actualizando en segundo plano. Mientras tanto, mostramos el ultimo estado sincronizado.
+          Tu progreso se esta verificando con Tutor LMS. Si hay cambios recientes, la vista se actualizara automaticamente.
         </section>
       ) : null}
 
