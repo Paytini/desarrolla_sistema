@@ -60,7 +60,7 @@ export default async function EmpleadoConstanciasPage() {
         />
       </section>
 
-      <EmployeeLearningRefresh autoRefresh={Boolean(learningData?.backgroundSyncQueued)} />
+      <EmployeeLearningRefresh autoRefresh pollIntervalMs={15_000} />
 
       {learningData?.syncError ? (
         <section className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-900">

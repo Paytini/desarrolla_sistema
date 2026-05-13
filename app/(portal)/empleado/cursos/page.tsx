@@ -118,7 +118,7 @@ export default async function EmpleadoCursos() {
         />
       </section>
 
-      <EmployeeLearningRefresh autoRefresh={Boolean(learningData?.backgroundSyncQueued)} />
+      <EmployeeLearningRefresh autoRefresh pollIntervalMs={15_000} />
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 space-y-1">

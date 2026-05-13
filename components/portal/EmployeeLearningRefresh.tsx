@@ -10,7 +10,7 @@ type EmployeeLearningRefreshProps = {
 
 export default function EmployeeLearningRefresh({
   autoRefresh = false,
-  pollIntervalMs = 30_000,
+  pollIntervalMs = 15_000,
 }: EmployeeLearningRefreshProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -44,8 +44,13 @@ export default function EmployeeLearningRefresh({
       }
 
       const latestSyncAt = payload.latestSyncAt ?? null
-      if (latestSyncAt && latestSyncAt !== latestSyncAtRef.current) {
+      const shouldRefresh = force || (latestSyncAt && latestSyncAt !== latestSyncAtRef.current)
+
+      if (latestSyncAt) {
         latestSyncAtRef.current = latestSyncAt
+      }
+
+      if (shouldRefresh) {
         startTransition(() => {
           router.refresh()
         })
@@ -63,7 +68,7 @@ export default function EmployeeLearningRefresh({
     }
 
     didAutoRefresh.current = true
-    void refreshLearning(false)
+    void refreshLearning(true)
   }, [autoRefresh])
 
   useEffect(() => {

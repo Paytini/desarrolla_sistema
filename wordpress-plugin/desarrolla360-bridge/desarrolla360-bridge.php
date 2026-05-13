@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Desarrolla360
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.2.1' );
+define( 'D360_BRIDGE_VERSION', '0.2.2' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
 define( 'D360_BRIDGE_WEBHOOK_CRON_HOOK', 'd360_bridge_learning_webhook_tick' );
 define( 'D360_BRIDGE_WEBHOOK_CURSOR_OPTION', 'd360_bridge_learning_webhook_cursor' );
@@ -2733,7 +2733,94 @@ function d360_bridge_find_course_completion_date( $student_id, $course_id ) {
 		}
 	}
 
+	$latest_completed_content_date = d360_bridge_find_latest_completed_content_date( $student_id, $course_id );
+	if ( $latest_completed_content_date ) {
+		return $latest_completed_content_date;
+	}
+
 	return null;
+}
+
+function d360_bridge_find_latest_completed_content_date( $student_id, $course_id ) {
+	global $wpdb;
+
+	$student_id = absint( $student_id );
+	$course_id  = absint( $course_id );
+
+	if ( ! $student_id || ! $course_id ) {
+		return null;
+	}
+
+	$content_ids = d360_bridge_get_course_content_ids( $course_id );
+	if ( empty( $content_ids ) ) {
+		return null;
+	}
+
+	$placeholders = implode( ',', array_fill( 0, count( $content_ids ), '%d' ) );
+	$sql          = "SELECT comment_date_gmt FROM {$wpdb->comments} WHERE user_id = %d AND comment_post_ID IN ({$placeholders}) AND comment_date_gmt IS NOT NULL AND comment_date_gmt != '0000-00-00 00:00:00' ORDER BY comment_date_gmt DESC LIMIT 1"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$params       = array_merge( array( $student_id ), $content_ids );
+	$prepared     = call_user_func_array( array( $wpdb, 'prepare' ), array_merge( array( $sql ), $params ) );
+	$latest_date  = $wpdb->get_var( $prepared ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	$normalized   = d360_bridge_mysql_gmt_to_iso( $latest_date );
+
+	return $normalized ? $normalized : null;
+}
+
+function d360_bridge_get_course_content_ids( $course_id ) {
+	$course_id = absint( $course_id );
+	if ( ! $course_id ) {
+		return array();
+	}
+
+	$content_ids = array();
+	$tutor_utils = function_exists( 'tutor_utils' ) ? tutor_utils() : null;
+
+	if ( $tutor_utils && method_exists( $tutor_utils, 'get_course_contents_by_id' ) ) {
+		$course_contents = d360_bridge_call_tutor_utils_method( $tutor_utils, 'get_course_contents_by_id', array( $course_id ) );
+
+		if ( is_array( $course_contents ) || $course_contents instanceof Traversable ) {
+			foreach ( $course_contents as $content ) {
+				if ( $content instanceof WP_Post ) {
+					$content_ids[] = (int) $content->ID;
+				}
+			}
+		}
+	}
+
+	$frontier = array( $course_id );
+	for ( $depth = 0; $depth < 5; $depth++ ) {
+		$children = get_posts(
+			array(
+				'post_parent__in' => $frontier,
+				'post_type'       => 'any',
+				'post_status'     => 'any',
+				'fields'          => 'ids',
+				'numberposts'     => -1,
+				'no_found_rows'   => true,
+			)
+		);
+
+		if ( empty( $children ) ) {
+			break;
+		}
+
+		$children    = array_map( 'absint', $children );
+		$content_ids = array_merge( $content_ids, $children );
+		$frontier    = $children;
+	}
+
+	$content_ids = array_values(
+		array_unique(
+			array_filter(
+				$content_ids,
+				static function( $content_id ) use ( $course_id ) {
+					return $content_id && $content_id !== $course_id;
+				}
+			)
+		)
+	);
+
+	return $content_ids;
 }
 
 function d360_bridge_find_candidate_certificate_hashes_by_user( $student_id ) {

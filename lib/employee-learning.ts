@@ -627,7 +627,7 @@ function mergeEmployeeCoursesWithBridgeData(
         progreso_pct: bridgeCourse.progress_pct,
         completado: bridgeCourse.completed,
         fecha_inicio_curso: parseBridgeDate(bridgeCourse.started_at) ?? curso.fecha_inicio_curso,
-        fecha_completado: parseBridgeDate(bridgeCourse.completed_at) ?? curso.fecha_completado,
+        fecha_completado: bridgeCourse.completed ? parseBridgeDate(bridgeCourse.completed_at) : null,
         ultima_sincronizacion: syncedAt,
       }
     })
