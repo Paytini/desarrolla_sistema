@@ -7,9 +7,6 @@ import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import {
   deleteEmployeeRecord,
-  purgeExpiredPortalSessions,
-  revokePortalSession,
-  revokeUserPortalSessions,
   togglePortalUserStatus,
 } from "@/lib/access-control"
 
@@ -47,72 +44,6 @@ export async function toggleRhUserStatusAction(formData: FormData) {
   } catch {
     redirect("/superadmin/accesos?error=usuario")
   }
-}
-
-export async function revokeUserSessionsAction(formData: FormData) {
-  const session = await requireSuperAdminSession()
-  const actor = getAuditActorFromSession(session)
-
-  const userId = getInt(formData, "user_id")
-  if (!userId) {
-    redirect("/superadmin/accesos?error=sesion")
-  }
-
-  await revokeUserPortalSessions(userId)
-
-  await createAuditEvent({
-    actor,
-    accion: "SESIONES_REVOCADAS_USUARIO",
-    entidadTipo: "USUARIO",
-    entidadId: userId,
-    resumen: `${actor.nombre} revoco sesiones de un usuario.`,
-  })
-
-  revalidatePath("/superadmin/accesos")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/superadmin/accesos?success=sesiones_revocadas")
-}
-
-export async function revokeSingleSessionAction(formData: FormData) {
-  const session = await requireSuperAdminSession()
-  const actor = getAuditActorFromSession(session)
-
-  const sessionId = getInt(formData, "session_id")
-  if (!sessionId) {
-    redirect("/superadmin/accesos?error=sesion")
-  }
-
-  await revokePortalSession(sessionId)
-
-  await createAuditEvent({
-    actor,
-    accion: "SESION_REVOCADA",
-    entidadTipo: "SESION_PORTAL",
-    entidadId: sessionId,
-    resumen: `${actor.nombre} revoco una sesion individual.`,
-  })
-
-  revalidatePath("/superadmin/accesos")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/superadmin/accesos?success=sesion_revocada")
-}
-
-export async function purgeExpiredSessionsAction() {
-  const session = await requireSuperAdminSession()
-  const actor = getAuditActorFromSession(session)
-
-  await purgeExpiredPortalSessions()
-
-  await createAuditEvent({
-    actor,
-    accion: "SESIONES_EXPIRADAS_LIMPIADAS",
-    entidadTipo: "SESION_PORTAL",
-    resumen: `${actor.nombre} limpio sesiones expiradas del portal.`,
-  })
-
-  revalidatePath("/superadmin/accesos")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/superadmin/accesos?success=sesiones_limpiadas")
 }
 
 export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {

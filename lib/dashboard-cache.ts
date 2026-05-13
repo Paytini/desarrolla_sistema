@@ -162,7 +162,7 @@ export async function getSuperadminPaquetesSnapshot() {
 
 const getSuperadminAccesosSnapshotCached = unstable_cache(
   async () => {
-    const [rhUsers, employeeUsers, employees, trackedSessions] = await Promise.all([
+    const [rhUsers, employeeUsers, employees] = await Promise.all([
       prisma.usuario.findMany({
         where: { rol: "RH" },
         orderBy: [{ activo: "desc" }, { created_at: "desc" }],
@@ -181,9 +181,6 @@ const getSuperadminAccesosSnapshotCached = unstable_cache(
               asientos_contratados: true,
               asientos_usados: true,
             },
-          },
-          _count: {
-            select: { sesiones: true },
           },
         },
       }),
@@ -215,30 +212,9 @@ const getSuperadminAccesosSnapshotCached = unstable_cache(
         },
         take: 18,
       }),
-      prisma.sesionPortal.findMany({
-        orderBy: { created_at: "desc" },
-        take: 12,
-        select: {
-          id: true,
-          ip_address: true,
-          created_at: true,
-          expira_en: true,
-          usuario: {
-            select: {
-              id: true,
-              nombre: true,
-              email: true,
-              rol: true,
-              empresa: {
-                select: { nombre: true },
-              },
-            },
-          },
-        },
-      }),
     ])
 
-    return { rhUsers, employeeUsers, employees, trackedSessions }
+    return { rhUsers, employeeUsers, employees }
   },
   ["dashboard-snapshot", "superadmin", "accesos"],
   {
