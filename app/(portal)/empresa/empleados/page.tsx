@@ -191,7 +191,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.45fr)]">
+      <section className="grid gap-6">
         <article className="min-w-0 rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 space-y-1">
             <h2 className="text-lg font-semibold text-slate-950">Alta de empleado</h2>
