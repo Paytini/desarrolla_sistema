@@ -37,20 +37,20 @@ function shouldTrackFetch(input: RequestInfo | URL, init?: RequestInit) {
     return false
   }
 
-  if (method !== "GET") {
-    return true
-  }
-
-  if (!url.pathname.startsWith("/api/")) {
-    return false
-  }
-
   const headers = new Headers(
     init?.headers ??
       (typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined)
   )
 
   if (headers.get("x-skip-global-loading") === "1") {
+    return false
+  }
+
+  if (method !== "GET") {
+    return true
+  }
+
+  if (!url.pathname.startsWith("/api/")) {
     return false
   }
 

@@ -246,10 +246,12 @@ export async function syncEmployeeLearningByEmail(
       skipped: false,
       empleadoId: null,
       empresaId: null,
+      latestSyncAt: null,
       message: "No se encontro el empleado para sincronizar su avance.",
     }
   }
 
+  const latestSyncAt = getLatestCourseSyncIso(empleado.cursos)
   const shouldSync = options?.force || shouldSyncEmployeeLearning(empleado)
   if (!shouldSync) {
     return {
@@ -258,11 +260,17 @@ export async function syncEmployeeLearningByEmail(
       skipped: true,
       empleadoId: empleado.id,
       empresaId: empleado.empresa_id,
+      latestSyncAt,
       message: "El progreso ya esta actualizado recientemente.",
     }
   }
 
   const result = await syncEmployeeLearningRecord(empleado.id)
+  const latestSyncedCourse = await prisma.empleadoCurso.findFirst({
+    where: { empleado_id: empleado.id },
+    orderBy: { ultima_sincronizacion: "desc" },
+    select: { ultima_sincronizacion: true },
+  })
 
   return {
     ok: true,
@@ -270,7 +278,9 @@ export async function syncEmployeeLearningByEmail(
     skipped: false,
     empleadoId: empleado.id,
     empresaId: empleado.empresa_id,
-    coursesUpdated: result.bridgeCourses.length,
+    coursesUpdated: result.coursesUpdated,
+    certificatesUpdated: result.certificatesUpdated,
+    latestSyncAt: latestSyncedCourse?.ultima_sincronizacion.toISOString() ?? latestSyncAt,
   }
 }
 
@@ -282,17 +292,26 @@ function shouldSyncEmployeeLearning(empleado: {
     return false
   }
 
-  const latestSync = empleado.cursos.reduce<number>(
-    (currentLatest, course) =>
-      Math.max(currentLatest, new Date(course.ultima_sincronizacion).getTime()),
-    0
-  )
+  const latestSync = getLatestCourseSyncTimestamp(empleado.cursos)
 
   if (!latestSync) {
     return true
   }
 
   return Date.now() - latestSync >= EMPLOYEE_SYNC_INTERVAL_MS
+}
+
+function getLatestCourseSyncTimestamp(courses: Array<{ ultima_sincronizacion: Date }>) {
+  return courses.reduce<number>(
+    (currentLatest, course) =>
+      Math.max(currentLatest, new Date(course.ultima_sincronizacion).getTime()),
+    0
+  )
+}
+
+function getLatestCourseSyncIso(courses: Array<{ ultima_sincronizacion: Date }>) {
+  const latestSync = getLatestCourseSyncTimestamp(courses)
+  return latestSync ? new Date(latestSync).toISOString() : null
 }
 
 async function fetchEmployeeLearningRecord(email: string) {
@@ -352,6 +371,8 @@ async function syncEmployeeLearningRecord(empleadoId: number) {
     return {
       synced: false,
       bridgeCourses: [] as BridgeStudentCourse[],
+      coursesUpdated: 0,
+      certificatesUpdated: 0,
     }
   }
 
@@ -365,7 +386,7 @@ async function syncEmployeeLearningRecord(empleadoId: number) {
   }
 
   const bridgeCourses = coursesResult.value
-  await syncEmployeeLearningFromBridgeSnapshot({
+  const appliedSnapshot = await syncEmployeeLearningFromBridgeSnapshot({
     empleadoId: empleado.id,
     snapshot: {
       courses: bridgeCourses.courses,
@@ -379,6 +400,8 @@ async function syncEmployeeLearningRecord(empleadoId: number) {
   return {
     synced: true,
     bridgeCourses: bridgeCourses.courses,
+    coursesUpdated: appliedSnapshot.coursesUpdated,
+    certificatesUpdated: appliedSnapshot.certificatesUpdated,
   }
 }
 
