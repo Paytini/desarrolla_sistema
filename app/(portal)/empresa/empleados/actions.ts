@@ -648,7 +648,6 @@ export async function triggerCompanyLearningSyncAction() {
   revalidatePath("/empresa/inicio")
   revalidatePath("/empresa/progreso")
   revalidatePath("/empleado/cursos")
-  revalidatePath("/empleado/progreso")
   revalidatePath("/empleado/constancias")
   revalidatePath("/superadmin/reportes")
   revalidateTag(empresaCacheRootTag(empresaId), "max")

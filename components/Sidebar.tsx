@@ -24,7 +24,6 @@ const navRH: NavItem[] = [
 
 const navEmpleado: NavItem[] = [
   { label: "Mis cursos",       href: "/empleado/cursos" },
-  { label: "Mi progreso",      href: "/empleado/progreso" },
   { label: "Mis constancias",  href: "/empleado/constancias" },
 ]
 

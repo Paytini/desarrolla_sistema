@@ -52,7 +52,6 @@ export async function triggerGlobalLearningSyncAction() {
 
   revalidatePath("/superadmin/reportes")
   revalidatePath("/empleado/cursos")
-  revalidatePath("/empleado/progreso")
   revalidatePath("/empleado/constancias")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
@@ -99,7 +98,6 @@ export async function retryCompanySyncAction(formData: FormData) {
   revalidatePath("/empresa/empleados")
   revalidatePath("/empresa/progreso")
   revalidatePath("/empleado/cursos")
-  revalidatePath("/empleado/progreso")
   revalidatePath("/empleado/constancias")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(empresaCacheRootTag(empresaId), "max")

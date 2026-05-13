@@ -35,7 +35,6 @@ export const rhModules = [
 
 export const employeeModules = [
   "Mis cursos activos y pendientes",
-  "Mi progreso y avance historico",
   "Mis constancias disponibles",
   "Notificaciones de asignaciones nuevas",
 ]

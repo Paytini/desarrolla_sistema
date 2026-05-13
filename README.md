@@ -13,7 +13,7 @@ El proyecto separa dos frentes:
 
 - `SuperAdmin`: alta de empresas, asignacion de paquetes, monitoreo y control de accesos.
 - `Empresa / RH`: alta de empleados, seguimiento por curso, reportes y constancias.
-- `Empleado`: mis cursos, progreso, trayectoria y constancias.
+- `Empleado`: mis cursos y constancias.
 
 ## Stack actual
 

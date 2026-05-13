@@ -23,7 +23,6 @@ export async function POST(request: Request) {
   })
 
   revalidatePath("/empleado/cursos")
-  revalidatePath("/empleado/progreso")
   revalidatePath("/empleado/constancias")
 
   if (result.empresaId) {
