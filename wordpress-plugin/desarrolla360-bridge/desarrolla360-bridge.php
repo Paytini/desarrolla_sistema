@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: Desarrolla360
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.2.0' );
+define( 'D360_BRIDGE_VERSION', '0.2.1' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
 define( 'D360_BRIDGE_WEBHOOK_CRON_HOOK', 'd360_bridge_learning_webhook_tick' );
 define( 'D360_BRIDGE_WEBHOOK_CURSOR_OPTION', 'd360_bridge_learning_webhook_cursor' );
@@ -2405,13 +2405,11 @@ function d360_bridge_get_course_progress_stats( $student_id, $course_id ) {
 
 		if ( $enrollment instanceof WP_Post ) {
 			$started_at = $enrollment->post_date_gmt ? mysql2date( 'c', $enrollment->post_date_gmt, false ) : null;
-
-			if ( $progress_pct >= 100 ) {
-				$completed_at = $enrollment->post_modified_gmt
-					? mysql2date( 'c', $enrollment->post_modified_gmt, false )
-					: $started_at;
-			}
 		}
+	}
+
+	if ( $progress_pct >= 100 ) {
+		$completed_at = d360_bridge_find_course_completion_date( $student_id, $course_id );
 	}
 
 	if ( $course_post instanceof WP_Post ) {
@@ -2600,6 +2598,125 @@ function d360_bridge_find_course_certificate_hash( $student_id, $course_id ) {
 		}
 
 		return $candidate_hash;
+	}
+
+	return null;
+}
+
+function d360_bridge_normalize_datetime_to_iso( $value ) {
+	if ( null === $value || '' === $value ) {
+		return null;
+	}
+
+	if ( is_numeric( $value ) ) {
+		$timestamp = (int) $value;
+		if ( $timestamp > 1000000000 ) {
+			return gmdate( 'c', $timestamp );
+		}
+
+		return null;
+	}
+
+	$value = is_string( $value ) ? trim( $value ) : '';
+	if ( '' === $value ) {
+		return null;
+	}
+
+	if ( preg_match( '/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}:\d{2})?$/', $value ) ) {
+		return mysql2date( 'c', $value, false );
+	}
+
+	$timestamp = strtotime( $value );
+	if ( false === $timestamp ) {
+		return null;
+	}
+
+	return gmdate( 'c', $timestamp );
+}
+
+function d360_bridge_find_course_completion_date( $student_id, $course_id ) {
+	global $wpdb;
+
+	$student_id = absint( $student_id );
+	$course_id  = absint( $course_id );
+
+	if ( ! $student_id || ! $course_id ) {
+		return null;
+	}
+
+	$tables = $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $wpdb->prefix ) . '%' ) );
+	if ( empty( $tables ) ) {
+		return null;
+	}
+
+	$user_columns   = array( 'completed_user_id', 'user_id', 'student_id', 'author', 'completed_by' );
+	$course_columns = array( 'course_id', 'post_id', 'completed_course_id', 'item_id' );
+	$date_columns   = array( 'completion_date', 'completed_at', 'date_completed', 'issued_at', 'created_at', 'date_created' );
+
+	foreach ( $tables as $table_name ) {
+		$columns = $wpdb->get_results( "SHOW COLUMNS FROM `{$table_name}`", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		if ( empty( $columns ) ) {
+			continue;
+		}
+
+		$column_names = array_map(
+			static function( $column ) {
+				return isset( $column['Field'] ) ? (string) $column['Field'] : '';
+			},
+			$columns
+		);
+
+		$user_column   = d360_bridge_find_first_matching_column( $column_names, $user_columns );
+		$course_column = d360_bridge_find_first_matching_column( $column_names, $course_columns );
+		$date_column   = d360_bridge_find_first_matching_column( $column_names, $date_columns );
+
+		if ( ! $user_column || ! $course_column || ! $date_column ) {
+			continue;
+		}
+
+		$sql = "SELECT `{$date_column}` FROM `{$table_name}` WHERE `{$user_column}` = %d AND `{$course_column}` = %d AND `{$date_column}` IS NOT NULL AND `{$date_column}` != '' ORDER BY `{$date_column}` DESC LIMIT 1"; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+		$completion_date = $wpdb->get_var(
+			$wpdb->prepare(
+				$sql,
+				$student_id,
+				$course_id
+			)
+		);
+
+		$normalized = d360_bridge_normalize_datetime_to_iso( $completion_date );
+		if ( $normalized ) {
+			return $normalized;
+		}
+	}
+
+	$candidate_hashes = d360_bridge_find_candidate_certificate_hashes_by_user( $student_id );
+	foreach ( $candidate_hashes as $candidate_hash ) {
+		$completion_data = apply_filters( 'tutor_certificate_completion_data', $candidate_hash );
+
+		if ( ! is_object( $completion_data ) || ! property_exists( $completion_data, 'course_id' ) ) {
+			continue;
+		}
+
+		if ( (int) $completion_data->course_id !== $course_id ) {
+			continue;
+		}
+
+		$completed_user_id = property_exists( $completion_data, 'completed_user_id' ) ? (int) $completion_data->completed_user_id : 0;
+		if ( $completed_user_id && $completed_user_id !== $student_id ) {
+			continue;
+		}
+
+		foreach ( array( 'completion_date', 'completed_at', 'date_completed', 'issued_at', 'created_at', 'date_created' ) as $property_name ) {
+			if ( ! property_exists( $completion_data, $property_name ) ) {
+				continue;
+			}
+
+			$normalized = d360_bridge_normalize_datetime_to_iso( $completion_data->{$property_name} );
+			if ( $normalized ) {
+				return $normalized;
+			}
+		}
 	}
 
 	return null;

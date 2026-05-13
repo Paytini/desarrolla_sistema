@@ -21,6 +21,15 @@ function hasValidWpCourseId<T extends { wp_course_id?: number | null }>(
   return Number.isInteger(course.wp_course_id) && Number(course.wp_course_id) > 0
 }
 
+function parseBridgeDate(value?: string | null) {
+  if (!value) {
+    return null
+  }
+
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 function buildPackageCourseUpsertOperation(
   empleadoId: number,
   packageCourse: PackageCourseInput,
@@ -187,8 +196,11 @@ export async function syncCompanyPackageEnrollments(empresaId: number) {
       const syncedAt = new Date()
       const upsertOperations = studentCourses.courses
         .filter((course) => hasValidWpCourseId(course) && courseIdSet.has(course.wp_course_id))
-        .map((course) =>
-          prisma.empleadoCurso.upsert({
+        .map((course) => {
+          const startedAt = parseBridgeDate(course.started_at)
+          const completedAt = parseBridgeDate(course.completed_at)
+
+          return prisma.empleadoCurso.upsert({
             where: {
               empleado_id_wp_curso_id: {
                 empleado_id: empleado.id,
@@ -203,8 +215,8 @@ export async function syncCompanyPackageEnrollments(empresaId: number) {
               acceso_origen: activePackage.paquete.modo_entrega,
               acceso_error: null,
               ultimo_intento_acceso: syncedAt,
-              fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-              fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
+              fecha_inicio_curso: startedAt,
+              fecha_completado: completedAt,
               ultima_sincronizacion: syncedAt,
             },
             create: {
@@ -217,12 +229,12 @@ export async function syncCompanyPackageEnrollments(empresaId: number) {
               acceso_origen: activePackage.paquete.modo_entrega,
               acceso_error: null,
               ultimo_intento_acceso: syncedAt,
-              fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-              fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
+              fecha_inicio_curso: startedAt,
+              fecha_completado: completedAt,
               ultima_sincronizacion: syncedAt,
             },
           })
-        )
+        })
 
       if (upsertOperations.length > 0) {
         await prisma.$transaction(upsertOperations)

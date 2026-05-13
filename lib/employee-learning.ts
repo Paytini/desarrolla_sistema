@@ -34,12 +34,21 @@ function hasWpCourseId<T extends { wp_course_id?: number | null }>(
 }
 
 function buildCertificateFolio(empleadoId: number, courseId: number, completedAt?: string | null) {
-  const baseDate = completedAt ? new Date(completedAt) : new Date()
+  const baseDate = parseBridgeDate(completedAt) ?? new Date()
   const year = baseDate.getUTCFullYear()
   const month = String(baseDate.getUTCMonth() + 1).padStart(2, "0")
   const day = String(baseDate.getUTCDate()).padStart(2, "0")
 
   return `D360-${year}-${month}${day}-${empleadoId}-${courseId}`
+}
+
+function parseBridgeDate(value?: string | null) {
+  if (!value) {
+    return null
+  }
+
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 function deriveCertificatesFromCourses(courses: BridgeStudentCourse[]): BridgeStudentCertificate[] {
@@ -92,8 +101,11 @@ async function upsertEmployeeCoursesFromBridge(
   const now = new Date()
   const upsertOperations = courses
     .filter(hasWpCourseId)
-    .map((course) =>
-      prisma.empleadoCurso.upsert({
+    .map((course) => {
+      const startedAt = parseBridgeDate(course.started_at)
+      const completedAt = parseBridgeDate(course.completed_at)
+
+      return prisma.empleadoCurso.upsert({
         where: {
           empleado_id_wp_curso_id: {
             empleado_id: empleadoId,
@@ -106,8 +118,8 @@ async function upsertEmployeeCoursesFromBridge(
           completado: course.completed,
           acceso_estado: "ACTIVE",
           acceso_error: null,
-          fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-          fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
+          fecha_inicio_curso: startedAt,
+          fecha_completado: completedAt,
           ultima_sincronizacion: now,
         },
         create: {
@@ -117,12 +129,12 @@ async function upsertEmployeeCoursesFromBridge(
           progreso_pct: course.progress_pct,
           completado: course.completed,
           acceso_estado: "ACTIVE",
-          fecha_inicio_curso: course.started_at ? new Date(course.started_at) : null,
-          fecha_completado: course.completed_at ? new Date(course.completed_at) : null,
+          fecha_inicio_curso: startedAt,
+          fecha_completado: completedAt,
           ultima_sincronizacion: now,
         },
       })
-    )
+    })
 
   if (upsertOperations.length > 0) {
     await prisma.$transaction(upsertOperations)
@@ -145,7 +157,7 @@ async function upsertEmployeeCertificatesFromBridge(
     .filter(hasWpCourseId)
     .map((certificate) => {
       const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
-      const fechaEmision = certificate.completed_at ? new Date(certificate.completed_at) : new Date()
+      const fechaEmision = parseBridgeDate(certificate.completed_at)
 
       if (existingCertificate) {
         return prisma.constancia.update({
@@ -153,9 +165,13 @@ async function upsertEmployeeCertificatesFromBridge(
           data: {
             nombre_curso: certificate.title,
             wp_cert_url: certificate.certificate_url ?? existingCertificate.wp_cert_url,
-            fecha_emision: fechaEmision,
+            ...(fechaEmision ? { fecha_emision: fechaEmision } : {}),
           },
         })
+      }
+
+      if (!fechaEmision) {
+        return null
       }
 
       return prisma.constancia.create({
@@ -169,6 +185,7 @@ async function upsertEmployeeCertificatesFromBridge(
         },
       })
     })
+    .filter((operation) => operation !== null)
 
   if (operations.length > 0) {
     await prisma.$transaction(operations)
@@ -609,8 +626,8 @@ function mergeEmployeeCoursesWithBridgeData(
         nombre_curso: bridgeCourse.title || curso.nombre_curso,
         progreso_pct: bridgeCourse.progress_pct,
         completado: bridgeCourse.completed,
-        fecha_inicio_curso: bridgeCourse.started_at ? new Date(bridgeCourse.started_at) : curso.fecha_inicio_curso,
-        fecha_completado: bridgeCourse.completed_at ? new Date(bridgeCourse.completed_at) : curso.fecha_completado,
+        fecha_inicio_curso: parseBridgeDate(bridgeCourse.started_at) ?? curso.fecha_inicio_curso,
+        fecha_completado: parseBridgeDate(bridgeCourse.completed_at) ?? curso.fecha_completado,
         ultima_sincronizacion: syncedAt,
       }
     })
