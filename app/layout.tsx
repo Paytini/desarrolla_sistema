@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Suspense } from "react";
 import GlobalLoadingController from "@/components/portal/GlobalLoadingController";
 import "./globals.css";
@@ -20,6 +21,7 @@ export default function RootLayout({
           <GlobalLoadingController />
         </Suspense>
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
