@@ -1,7 +1,10 @@
+const PORTAL_TIME_ZONE = process.env.NEXT_PUBLIC_PORTAL_TIME_ZONE || "America/Tijuana"
+
 export function formatDate(date: Date | string | null | undefined) {
   if (!date) return "Sin fecha"
 
   return new Intl.DateTimeFormat("es-MX", {
+    timeZone: PORTAL_TIME_ZONE,
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -12,6 +15,7 @@ export function formatDateTime(date: Date | string | null | undefined) {
   if (!date) return "Sin fecha"
 
   return new Intl.DateTimeFormat("es-MX", {
+    timeZone: PORTAL_TIME_ZONE,
     day: "2-digit",
     month: "short",
     year: "numeric",
