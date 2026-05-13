@@ -1,4 +1,5 @@
 import InfoCard from "@/components/portal/InfoCard"
+import DeletePackageButton from "@/components/portal/DeletePackageButton"
 import PackageCourseSelector from "@/components/portal/PackageCourseSelector"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
@@ -8,11 +9,13 @@ import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import {
   assignPackageToCompanyAction,
   createPackageAction,
+  deletePackageAction,
   syncPackageToCompanyEmployeesAction,
 } from "./actions"
 
 const successMessages: Record<string, string> = {
   paquete_creado: "El paquete se creo correctamente con sus cursos base y su bundle privado en Tutor LMS.",
+  paquete_eliminado: "El paquete se elimino del catalogo correctamente.",
   paquete_asignado: "El paquete activo de la empresa se actualizo correctamente.",
   sync_ok: "Se sincronizaron los cursos del paquete con los empleados activos de la empresa.",
 }
@@ -21,6 +24,8 @@ const errorMessages: Record<string, string> = {
   datos: "Faltan datos obligatorios para crear el paquete.",
   cursos: "Debes seleccionar al menos un curso disponible desde WordPress/Tutor LMS.",
   bundle: "No fue posible crear el bundle del paquete en Tutor LMS.",
+  paquete: "No fue posible eliminar el paquete solicitado.",
+  paquete_asignado: "No puedes eliminar un paquete que aun esta activo en una empresa.",
   asignacion: "No fue posible asignar el paquete a la empresa.",
   sync: "No fue posible sincronizar el paquete con la empresa. Revisa que exista paquete activo y empleados con WP user ID.",
 }
@@ -303,11 +308,20 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
           {paquetes.map((paquete) => (
             <div key={paquete.id} className="rounded-3xl border border-slate-200 bg-slate-50/60 p-5">
               <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h3 className="text-base font-semibold text-slate-950">{paquete.nombre}</h3>
-                  <span className="rounded-full bg-teal-100 px-2.5 py-1 text-xs font-semibold text-teal-900">
-                    {paquete.cursos.length} cursos
-                  </span>
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="text-base font-semibold text-slate-950">{paquete.nombre}</h3>
+                    <span className="rounded-full bg-teal-100 px-2.5 py-1 text-xs font-semibold text-teal-900">
+                      {paquete.cursos.length} cursos
+                    </span>
+                  </div>
+
+                  <DeletePackageButton
+                    action={deletePackageAction}
+                    paqueteId={paquete.id}
+                    packageName={paquete.nombre}
+                    assignedCompaniesCount={paquete.empresas.length}
+                  />
                 </div>
 
                 {paquete.descripcion ? (

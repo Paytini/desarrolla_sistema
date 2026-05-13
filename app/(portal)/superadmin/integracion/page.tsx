@@ -55,18 +55,6 @@ export default async function SuperAdminIntegracionPage() {
           description="Valida si el health check del bridge responde correctamente desde el portal."
           accent={bridgeReachable ? "teal" : "violet"}
         />
-        <InfoCard
-          title="Webhook local"
-          value={formatBooleanStatus(diagnostics.webhookSecretConfigured)}
-          description="Indica si el portal tiene configurado el secreto HMAC para validar eventos entrantes."
-          accent={diagnostics.webhookSecretConfigured ? "teal" : "amber"}
-        />
-        <InfoCard
-          title="Intervalo respaldo"
-          value={formatMinutes(diagnostics.syncIntervalMs)}
-          description="Frecuencia del polling de respaldo para refresco académico si el webhook no dispara."
-          accent="slate"
-        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -111,61 +99,6 @@ export default async function SuperAdminIntegracionPage() {
               No pudimos consultar el health del bridge. Detalle: {bridgeError}
             </div>
           ) : null}
-        </article>
-
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-slate-950">Último webhook</h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Último evento académico válido que el portal aceptó desde WordPress/Tutor LMS.
-            </p>
-          </div>
-
-          {!lastEvent ? (
-            <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-              Aún no entra ningún webhook válido al portal.
-            </div>
-          ) : (
-            <div className="mt-5 space-y-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                <p className="text-sm text-slate-700">
-                  Evento: <span className="font-semibold text-slate-950">{lastEvent.event_type || "student_learning_changed"}</span>
-                </p>
-                <p className="mt-1 text-sm text-slate-700">
-                  Ocurrió en WordPress: <span className="font-semibold text-slate-950">{formatDateTime(lastEvent.occurred_at)}</span>
-                </p>
-                <p className="mt-1 text-sm text-slate-700">
-                  Recibido en portal: <span className="font-semibold text-slate-950">{formatDateTime(lastEvent.received_at || diagnostics.lastEventUpdatedAt)}</span>
-                </p>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700">
-                  <p>
-                    Empleado portal: <span className="font-semibold text-slate-950">{lastEvent.employee_id ?? "Sin dato"}</span>
-                  </p>
-                  <p className="mt-1">
-                    WP user ID: <span className="font-semibold text-slate-950">{lastEvent.student_wp_user_id ?? "Sin dato"}</span>
-                  </p>
-                  <p className="mt-1">
-                    Empresa: <span className="font-semibold text-slate-950">{lastEvent.company_id ?? "Sin dato"}</span>
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700">
-                  <p>
-                    Cursos actualizados: <span className="font-semibold text-slate-950">{lastEvent.courses_updated ?? 0}</span>
-                  </p>
-                  <p className="mt-1">
-                    Constancias actualizadas: <span className="font-semibold text-slate-950">{lastEvent.certificates_updated ?? 0}</span>
-                  </p>
-                  <p className="mt-1 break-all">
-                    Hash: <span className="font-semibold text-slate-950">{lastEvent.source_hash || "Sin hash"}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </article>
       </section>
     </div>

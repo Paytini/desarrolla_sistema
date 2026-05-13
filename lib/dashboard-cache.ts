@@ -110,6 +110,7 @@ const getSuperadminPaquetesSnapshotCached = unstable_cache(
   async () => {
     const [paquetes, empresas] = await Promise.all([
       prisma.paquete.findMany({
+        where: { activo: true },
         orderBy: { created_at: "desc" },
         include: {
           cursos: {

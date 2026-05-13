@@ -184,6 +184,70 @@ export async function createPackageAction(formData: FormData) {
   redirect("/superadmin/paquetes?success=paquete_creado")
 }
 
+export async function deletePackageAction(formData: FormData) {
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
+  const paqueteId = getInteger(getString(formData, "paquete_id"))
+
+  if (!paqueteId) {
+    redirect("/superadmin/paquetes?error=paquete")
+  }
+
+  const paquete = await prisma.paquete.findUnique({
+    where: { id: paqueteId },
+    select: {
+      id: true,
+      nombre: true,
+      activo: true,
+      empresas: {
+        where: { activo: true },
+        select: {
+          empresa_id: true,
+          empresa: {
+            select: { nombre: true },
+          },
+        },
+      },
+    },
+  })
+
+  if (!paquete || !paquete.activo) {
+    redirect("/superadmin/paquetes?error=paquete")
+  }
+
+  if (paquete.empresas.length > 0) {
+    const companyNames = paquete.empresas
+      .map((assignment) => assignment.empresa.nombre)
+      .join(", ")
+    const detail = encodeURIComponent(
+      `Primero cambia o desactiva el paquete activo en: ${companyNames}.`
+    )
+    redirect(`/superadmin/paquetes?error=paquete_asignado&detail=${detail}`)
+  }
+
+  await prisma.paquete.update({
+    where: { id: paquete.id },
+    data: { activo: false },
+  })
+
+  await createAuditEvent({
+    actor,
+    accion: "PAQUETE_ELIMINADO",
+    entidadTipo: "PAQUETE",
+    entidadId: paquete.id,
+    resumen: `${actor.nombre} elimino el paquete ${paquete.nombre}.`,
+    metadata: {
+      baja_logica: true,
+    },
+  })
+
+  revalidatePath("/superadmin/paquetes")
+  revalidatePath("/superadmin/empresas")
+  revalidatePath("/superadmin/reportes")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  redirect("/superadmin/paquetes?success=paquete_eliminado")
+}
+
 export async function assignPackageToCompanyAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
