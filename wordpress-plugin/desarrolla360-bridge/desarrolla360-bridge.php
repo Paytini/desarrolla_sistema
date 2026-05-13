@@ -2404,7 +2404,7 @@ function d360_bridge_get_course_progress_stats( $student_id, $course_id ) {
 		$enrollment = get_post( $enrollment_id );
 
 		if ( $enrollment instanceof WP_Post ) {
-			$started_at = $enrollment->post_date_gmt ? mysql2date( 'c', $enrollment->post_date_gmt, false ) : null;
+			$started_at = d360_bridge_mysql_gmt_to_iso( $enrollment->post_date_gmt );
 		}
 	}
 
@@ -2627,6 +2627,20 @@ function d360_bridge_normalize_datetime_to_iso( $value ) {
 	}
 
 	$timestamp = strtotime( $value );
+	if ( false === $timestamp ) {
+		return null;
+	}
+
+	return gmdate( 'c', $timestamp );
+}
+
+function d360_bridge_mysql_gmt_to_iso( $value ) {
+	$value = is_string( $value ) ? trim( $value ) : '';
+	if ( '' === $value || '0000-00-00 00:00:00' === $value ) {
+		return null;
+	}
+
+	$timestamp = strtotime( $value . ' UTC' );
 	if ( false === $timestamp ) {
 		return null;
 	}
@@ -3401,7 +3415,7 @@ function d360_bridge_get_direct_student_courses( $student_id ) {
 		}
 
 		$seen[ $course_id ] = true;
-		$started_at = $enrollment->post_date_gmt ? mysql2date( 'c', $enrollment->post_date_gmt, false ) : null;
+		$started_at = d360_bridge_mysql_gmt_to_iso( $enrollment->post_date_gmt );
 
 		$courses[] = array(
 			'wp_course_id'    => $course_id,
