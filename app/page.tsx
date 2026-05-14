@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 
 function isDiagramImageUrl(url: string) {
@@ -101,19 +100,6 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-12 lg:px-10">
         <section className="grid gap-6 rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-sm backdrop-blur md:grid-cols-[1.4fr_0.9fr]">
           <div className="space-y-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <span className="flex h-20 w-full max-w-xs items-center justify-center">
-                <Image
-                  src="/assets/logo_desarrolla_cropped.png"
-                  alt="DesarrollaMX 360"
-                  width={260}
-                  height={110}
-                  className="h-16 w-full object-contain"
-                  priority
-                />
-              </span>
-            </div>
-
             <PageHeader
               eyebrow="Desarrolla360"
               title="Portal empresarial para cursos corporativos y trazabilidad por empresa"
