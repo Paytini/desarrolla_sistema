@@ -163,17 +163,46 @@ function ManualEmployeeForm() {
 }
 
 function CsvEmployeeImportForm() {
-  const columns = ["nombre", "apellido", "email", "departamento", "puesto", "password"]
+  const columns = [
+    { key: "nombre", label: "nombre", required: true },
+    { key: "apellido", label: "apellido", required: true },
+    { key: "email", label: "email", required: true },
+    { key: "departamento", label: "departamento", required: false },
+    { key: "puesto", label: "puesto", required: false },
+    { key: "password", label: "password", required: false },
+  ]
+  const sampleRows = [
+    {
+      nombre: "Ana",
+      apellido: "Perez",
+      email: "ana@empresa.com",
+      departamento: "Operaciones",
+      puesto: "Supervisor",
+      password: "Temporal123",
+    },
+    {
+      nombre: "Luis",
+      apellido: "Lopez",
+      email: "luis@empresa.com",
+      departamento: "Seguridad",
+      puesto: "Supervisor",
+      password: "Temporal123",
+    },
+  ]
 
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap gap-2">
         {columns.map((column) => (
           <span
-            key={column}
-            className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700"
+            key={column.key}
+            className={`rounded-full border px-3 py-1 text-xs font-medium ${
+              column.required
+                ? "border-violet-200 bg-violet-50 text-violet-900"
+                : "border-slate-200 bg-slate-50 text-slate-700"
+            }`}
           >
-            {column}
+            {column.label}
           </span>
         ))}
       </div>
@@ -206,57 +235,112 @@ function CsvEmployeeImportForm() {
           />
         </label>
 
-        <div className="max-w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-violet-50/40 p-4 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm font-semibold text-slate-900">Ejemplo visual tipo Excel</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold text-slate-950">Ejemplo visual tipo Excel</p>
+                <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
+                  CSV
+                </span>
+              </div>
               <p className="text-xs leading-5 text-slate-500">
-                Asi debe verse la informacion dentro del archivo CSV antes de importarla.
+                Copia estos encabezados exactamente. Las columnas marcadas como obligatorias deben venir llenas.
               </p>
+              <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium">
+                <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1 text-violet-900">
+                  <span className="h-1.5 w-1.5 rounded-full bg-violet-600" />
+                  Obligatorio
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                  Opcional
+                </span>
+              </div>
             </div>
 
             <a
               href="/api/templates/empleados-csv"
-              className="inline-flex self-start items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+              className="inline-flex self-start items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-100"
             >
               Descargar plantilla CSV
             </a>
           </div>
 
-          <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-            <table className="min-w-[720px] text-sm">
-              <thead className="bg-slate-100 text-left text-slate-700">
-                <tr>
+          <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-inner">
+            <table className="min-w-[860px] border-separate border-spacing-0 text-sm">
+              <thead>
+                <tr className="bg-slate-100 text-center text-xs font-semibold text-slate-500">
+                  <th className="w-12 border-b border-r border-slate-200 px-3 py-2" />
+                  {columns.map((column, index) => (
+                    <th
+                      key={`letter-${column.key}`}
+                      className="border-b border-r border-slate-200 px-4 py-2 last:border-r-0"
+                    >
+                      {String.fromCharCode(65 + index)}
+                    </th>
+                  ))}
+                </tr>
+                <tr className="bg-white text-left text-slate-800">
+                  <th className="border-b border-r border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-500">
+                    1
+                  </th>
                   {columns.map((column) => (
-                    <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">
-                      {column}
+                    <th
+                      key={column.key}
+                      className="border-b border-r border-slate-200 px-4 py-3 last:border-r-0"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">{column.label}</span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            column.required
+                              ? "bg-violet-100 text-violet-900"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {column.required ? "obligatorio" : "opcional"}
+                        </span>
+                      </div>
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-700">
-                <tr>
-                  <td className="whitespace-nowrap px-4 py-3">Ana</td>
-                  <td className="whitespace-nowrap px-4 py-3">Perez</td>
-                  <td className="whitespace-nowrap px-4 py-3">ana@empresa.com</td>
-                  <td className="whitespace-nowrap px-4 py-3">Operaciones</td>
-                  <td className="whitespace-nowrap px-4 py-3">Supervisor</td>
-                  <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
-                </tr>
-                <tr>
-                  <td className="whitespace-nowrap px-4 py-3">Luis</td>
-                  <td className="whitespace-nowrap px-4 py-3">Lopez</td>
-                  <td className="whitespace-nowrap px-4 py-3">luis@empresa.com</td>
-                  <td className="whitespace-nowrap px-4 py-3">Seguridad</td>
-                  <td className="whitespace-nowrap px-4 py-3">Supervisor</td>
-                  <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
+              <tbody className="text-slate-700">
+                {sampleRows.map((row, rowIndex) => (
+                  <tr key={row.email} className="transition hover:bg-violet-50/50">
+                    <td className="border-b border-r border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-500">
+                      {rowIndex + 2}
+                    </td>
+                    {columns.map((column) => (
+                      <td
+                        key={`${row.email}-${column.key}`}
+                        className="whitespace-nowrap border-b border-r border-slate-200 px-4 py-3 last:border-r-0"
+                      >
+                        {row[column.key as keyof typeof row]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                <tr className="bg-slate-50/70 text-slate-400">
+                  <td className="border-r border-slate-200 px-3 py-3 text-center text-xs font-semibold">
+                    ...
+                  </td>
+                  <td colSpan={columns.length} className="px-4 py-3 text-xs">
+                    Puedes agregar mas empleados, uno por fila, hasta 200 registros por archivo.
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
-            Si el CSV no incluye la columna <span className="font-semibold">password</span>, captura arriba un password temporal por defecto para todos los empleados de esa carga.
+          <div className="mt-3 grid gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950 md:grid-cols-[auto_1fr] md:items-start">
+            <span className="rounded-full bg-amber-200 px-2.5 py-1 font-semibold text-amber-950">
+              Nota
+            </span>
+            <p>
+              Si el CSV no incluye la columna <span className="font-semibold">password</span>, captura arriba un password temporal por defecto para todos los empleados de esa carga.
+            </p>
           </div>
         </div>
 
