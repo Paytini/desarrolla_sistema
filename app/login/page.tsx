@@ -45,19 +45,19 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/10 bg-white p-8 shadow-2xl shadow-slate-950/40">
         <div className="mb-8 grid justify-items-center gap-3">
-          <div className="grid size-20 place-items-center rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+          <div className="flex h-24 w-full items-center justify-center rounded-[1.5rem] border border-slate-200 bg-white px-8 shadow-sm">
             <Image
-              src="/assets/D%20nueva.png"
+              src="/assets/logo_desarrolla.png"
               alt="DesarrollaMX 360"
-              width={60}
-              height={60}
-              className="h-14 w-14 object-contain"
+              width={280}
+              height={120}
+              className="h-20 w-full object-contain"
               priority
             />
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-semibold text-slate-950">DesarrollaMX 360</h1>
-            <p className="mt-1 text-sm text-slate-500">Portal empresarial</p>
+            <h1 className="text-xl font-semibold text-slate-950">Portal empresarial</h1>
+            <p className="mt-1 text-sm text-slate-500">Acceso corporativo a cursos y constancias</p>
           </div>
         </div>
 

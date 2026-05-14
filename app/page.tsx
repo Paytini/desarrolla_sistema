@@ -15,14 +15,14 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-12 lg:px-10">
         <section className="grid gap-6 rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-sm backdrop-blur md:grid-cols-[1.4fr_0.9fr]">
           <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <span className="grid size-14 place-items-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <span className="flex h-20 w-full max-w-xs items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 shadow-sm sm:w-72">
                 <Image
-                  src="/assets/D%20nueva.png"
+                  src="/assets/logo_desarrolla.png"
                   alt="DesarrollaMX 360"
-                  width={42}
-                  height={42}
-                  className="h-10 w-10 object-contain"
+                  width={260}
+                  height={110}
+                  className="h-16 w-full object-contain"
                   priority
                 />
               </span>

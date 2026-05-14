@@ -150,23 +150,18 @@ export default function Sidebar({
     <aside className="sticky top-0 h-screen w-72 shrink-0 overflow-hidden border-r border-slate-800 bg-slate-950 text-slate-100 shadow-2xl">
       <div className="flex h-full flex-col">
         <div className="px-6 pb-6 pt-7">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="grid size-12 place-items-center rounded-2xl bg-white shadow-lg shadow-orange-950/20">
+          <Link href="/" className="grid gap-2 rounded-3xl bg-white/[0.06] p-4 ring-1 ring-white/10">
+            <span className="flex h-16 items-center justify-center rounded-2xl bg-white px-4 shadow-lg shadow-orange-950/20">
               <Image
-                src="/assets/D%20nueva.png"
+                src="/assets/logo_desarrolla.png"
                 alt="DesarrollaMX 360"
-                width={36}
-                height={36}
-                className="h-9 w-9 object-contain"
+                width={220}
+                height={80}
+                className="h-14 w-full object-contain"
                 priority
               />
             </span>
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold uppercase tracking-[0.2em] text-orange-300">
-                DesarrollaMX
-              </span>
-              <span className="block text-xs text-slate-400">Portal empresarial</span>
-            </span>
+            <span className="text-center text-xs font-medium text-slate-400">Portal empresarial</span>
           </Link>
         </div>
 
