@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import StatusNotice from "@/components/portal/StatusNotice"
 
 type CourseOption = {
   wp_course_id: number
@@ -118,7 +119,11 @@ export default function PackageCourseSelector({
         ) : null}
 
         {error ? (
-          <p className="text-sm text-rose-700">{error}</p>
+          <StatusNotice
+            tone="error"
+            title="No fue posible cargar cursos desde WordPress"
+            message={error}
+          />
         ) : null}
 
         {!loading && !error && filteredCourses.length === 0 ? (
