@@ -145,6 +145,7 @@ async function upsertEmployeeCertificatesFromBridge(
   empleadoId: number,
   certificates: BridgeStudentCertificate[]
 ) {
+  const syncedAt = new Date()
   const existingCertificates = await prisma.constancia.findMany({
     where: { empleado_id: empleadoId },
   })
@@ -157,20 +158,24 @@ async function upsertEmployeeCertificatesFromBridge(
     .filter(hasWpCourseId)
     .map((certificate) => {
       const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
-      const fechaEmision = parseBridgeDate(certificate.completed_at)
+      const certificateUrl = certificate.certificate_url?.trim() || null
+      const fechaEmision =
+        parseBridgeDate(certificate.completed_at) ??
+        existingCertificate?.fecha_emision ??
+        syncedAt
 
       if (existingCertificate) {
         return prisma.constancia.update({
           where: { id: existingCertificate.id },
           data: {
             nombre_curso: certificate.title,
-            wp_cert_url: certificate.certificate_url ?? existingCertificate.wp_cert_url,
-            ...(fechaEmision ? { fecha_emision: fechaEmision } : {}),
+            wp_cert_url: certificateUrl ?? existingCertificate.wp_cert_url,
+            fecha_emision: fechaEmision,
           },
         })
       }
 
-      if (!fechaEmision) {
+      if (!certificateUrl) {
         return null
       }
 
@@ -179,8 +184,8 @@ async function upsertEmployeeCertificatesFromBridge(
           empleado_id: empleadoId,
           wp_curso_id: certificate.wp_course_id,
           nombre_curso: certificate.title,
-          folio: buildCertificateFolio(empleadoId, certificate.wp_course_id, certificate.completed_at),
-          wp_cert_url: certificate.certificate_url ?? null,
+          folio: buildCertificateFolio(empleadoId, certificate.wp_course_id, fechaEmision.toISOString()),
+          wp_cert_url: certificateUrl,
           fecha_emision: fechaEmision,
         },
       })
@@ -190,6 +195,8 @@ async function upsertEmployeeCertificatesFromBridge(
   if (operations.length > 0) {
     await prisma.$transaction(operations)
   }
+
+  return operations.length
 }
 
 function normalizeBridgeSnapshotCertificates(snapshot: EmployeeLearningBridgeSnapshot) {
@@ -237,14 +244,14 @@ export async function syncEmployeeLearningFromBridgeSnapshot(input: {
 
   await upsertEmployeeCoursesFromBridge(empleadoId, input.snapshot.courses)
 
-  if (normalizedCertificates.length > 0) {
-    await upsertEmployeeCertificatesFromBridge(empleadoId, normalizedCertificates)
-  }
+  const certificatesUpdated = normalizedCertificates.length > 0
+    ? await upsertEmployeeCertificatesFromBridge(empleadoId, normalizedCertificates)
+    : 0
 
   return {
     empleadoId,
     coursesUpdated: input.snapshot.courses.filter(hasWpCourseId).length,
-    certificatesUpdated: normalizedCertificates.filter(hasWpCourseId).length,
+    certificatesUpdated,
   }
 }
 
