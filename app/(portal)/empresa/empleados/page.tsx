@@ -1,4 +1,5 @@
 import DeleteEmployeeButton from "@/components/portal/DeleteEmployeeButton"
+import EmployeeOnboardingTabs from "@/components/portal/EmployeeOnboardingTabs"
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
@@ -88,6 +89,186 @@ function buildEmployeeListPath(query: string, status: string) {
 
   const serialized = searchParams.toString()
   return serialized ? `/empresa/empleados?${serialized}` : "/empresa/empleados"
+}
+
+function ManualEmployeeForm() {
+  return (
+    <form action={createEmployeeAction} className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Nombre</span>
+          <input
+            name="nombre"
+            required
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+          />
+        </label>
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Apellido</span>
+          <input
+            name="apellido"
+            required
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Correo electronico</span>
+          <input
+            name="email"
+            type="email"
+            required
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+          />
+        </label>
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Password temporal</span>
+          <input
+            name="password"
+            type="password"
+            minLength={8}
+            required
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Departamento</span>
+          <input
+            name="departamento"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+          />
+        </label>
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Puesto</span>
+          <input
+            name="puesto"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+          />
+        </label>
+      </div>
+
+      <button
+        type="submit"
+        className="inline-flex w-fit items-center rounded-full bg-violet-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-800"
+      >
+        Crear empleado
+      </button>
+    </form>
+  )
+}
+
+function CsvEmployeeImportForm() {
+  const columns = ["nombre", "apellido", "email", "departamento", "puesto", "password"]
+
+  return (
+    <div className="grid gap-4">
+      <div className="flex flex-wrap gap-2">
+        {columns.map((column) => (
+          <span
+            key={column}
+            className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700"
+          >
+            {column}
+          </span>
+        ))}
+      </div>
+
+      <form
+        action={importEmployeesCsvAction}
+        className="grid gap-4"
+        data-loading-message="Importando empleados..."
+        data-loading-detail="Estamos leyendo el CSV, creando usuarios y sincronizando accesos. Mantendremos este modal abierto hasta terminar."
+      >
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Archivo CSV</span>
+          <input
+            name="archivo_csv"
+            type="file"
+            accept=".csv,text/csv"
+            required
+            className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition file:mr-3 file:rounded-full file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700"
+          />
+        </label>
+
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Password temporal por defecto</span>
+          <input
+            name="password_csv"
+            type="text"
+            minLength={8}
+            placeholder="Recomendado si tu CSV no incluye columna password"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+          />
+        </label>
+
+        <div className="max-w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Ejemplo visual tipo Excel</p>
+              <p className="text-xs leading-5 text-slate-500">
+                Asi debe verse la informacion dentro del archivo CSV antes de importarla.
+              </p>
+            </div>
+
+            <a
+              href="/api/templates/empleados-csv"
+              className="inline-flex self-start items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+            >
+              Descargar plantilla CSV
+            </a>
+          </div>
+
+          <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <table className="min-w-[720px] text-sm">
+              <thead className="bg-slate-100 text-left text-slate-700">
+                <tr>
+                  {columns.map((column) => (
+                    <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">
+                      {column}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-slate-700">
+                <tr>
+                  <td className="whitespace-nowrap px-4 py-3">Ana</td>
+                  <td className="whitespace-nowrap px-4 py-3">Perez</td>
+                  <td className="whitespace-nowrap px-4 py-3">ana@empresa.com</td>
+                  <td className="whitespace-nowrap px-4 py-3">Operaciones</td>
+                  <td className="whitespace-nowrap px-4 py-3">Supervisor</td>
+                  <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
+                </tr>
+                <tr>
+                  <td className="whitespace-nowrap px-4 py-3">Luis</td>
+                  <td className="whitespace-nowrap px-4 py-3">Lopez</td>
+                  <td className="whitespace-nowrap px-4 py-3">luis@empresa.com</td>
+                  <td className="whitespace-nowrap px-4 py-3">Seguridad</td>
+                  <td className="whitespace-nowrap px-4 py-3">Supervisor</td>
+                  <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+            Si el CSV no incluye la columna <span className="font-semibold">password</span>, captura arriba un password temporal por defecto para todos los empleados de esa carga.
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          className="inline-flex w-fit items-center rounded-full bg-violet-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-800"
+        >
+          Importar empleados
+        </button>
+      </form>
+    </div>
+  )
 }
 
 export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) {
@@ -191,206 +372,11 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
         />
       </section>
 
-      <section className="grid gap-6">
-        <article className="min-w-0 rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 space-y-1">
-            <h2 className="text-lg font-semibold text-slate-950">Alta de empleado</h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Cada alta crea el empleado y su usuario del portal. Es ideal para casos puntuales o cuando RH solo necesita registrar a una persona a la vez.
-            </p>
-          </div>
-
-          <form action={createEmployeeAction} className="grid gap-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-medium text-slate-700">Nombre</span>
-                <input
-                  name="nombre"
-                  required
-                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-medium text-slate-700">Apellido</span>
-                <input
-                  name="apellido"
-                  required
-                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
-                />
-              </label>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-medium text-slate-700">Correo electronico</span>
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-medium text-slate-700">Password temporal</span>
-                <input
-                  name="password"
-                  type="password"
-                  minLength={8}
-                  required
-                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
-                />
-              </label>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-medium text-slate-700">Departamento</span>
-                <input
-                  name="departamento"
-                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-medium text-slate-700">Puesto</span>
-                <input
-                  name="puesto"
-                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
-                />
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex w-fit items-center rounded-full bg-violet-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-800"
-            >
-              Crear empleado
-            </button>
-          </form>
-        </article>
-
-        <article className="min-w-0 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 space-y-1">
-            <h2 className="text-lg font-semibold text-slate-950">Carga masiva por CSV</h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Recomendado cuando necesitas registrar múltiples empleados simultáneamente. El portal valida el formato CSV y verifica los datos antes de crear usuarios, garantizando confiabilidad en importaciones masivas.
-            </p>
-          </div>
-
-          <div className="mb-5 flex flex-wrap gap-2">
-            {[
-              "nombre",
-              "apellido",
-              "email",
-              "departamento",
-              "puesto",
-              "password",
-            ].map((column) => (
-              <span
-                key={column}
-                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700"
-              >
-                {column}
-              </span>
-            ))}
-          </div>
-
-          <form
-            action={importEmployeesCsvAction}
-            className="grid gap-4"
-            data-loading-message="Importando empleados..."
-            data-loading-detail="Estamos leyendo el archivo CSV, creando usuarios y sincronizando accesos. Este proceso puede tardar un poco."
-          >
-            <label className="grid gap-1.5 text-sm">
-              <span className="font-medium text-slate-700">Archivo CSV</span>
-              <input
-                name="archivo_csv"
-                type="file"
-                accept=".csv,text/csv"
-                required
-                className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition file:mr-3 file:rounded-full file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700"
-              />
-            </label>
-
-            <label className="grid gap-1.5 text-sm">
-              <span className="font-medium text-slate-700">Password temporal por defecto</span>
-              <input
-                name="password_csv"
-                type="text"
-                minLength={8}
-                placeholder="Recomendado si tu CSV no incluye columna password"
-                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
-              />
-            </label>
-
-            <div className="max-w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">Ejemplo visual tipo Excel</p>
-                  <p className="text-xs leading-5 text-slate-500">
-                    Asi debe verse la informacion dentro del archivo CSV antes de importarla.
-                  </p>
-                </div>
-
-                <a
-                  href="/api/templates/empleados-csv"
-                  className="inline-flex self-start items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-                >
-                  Descargar plantilla CSV
-                </a>
-              </div>
-
-              <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-                <table className="min-w-[720px] text-sm">
-                  <thead className="bg-slate-100 text-left text-slate-700">
-                    <tr>
-                      {[
-                        "nombre",
-                        "apellido",
-                        "email",
-                        "departamento",
-                        "puesto",
-                        "password",
-                      ].map((column) => (
-                        <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">
-                          {column}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 text-slate-700">
-                    <tr>
-                      <td className="whitespace-nowrap px-4 py-3">Ana</td>
-                      <td className="whitespace-nowrap px-4 py-3">Perez</td>
-                      <td className="whitespace-nowrap px-4 py-3">ana@empresa.com</td>
-                      <td className="whitespace-nowrap px-4 py-3">Operaciones</td>
-                      <td className="whitespace-nowrap px-4 py-3">Supervisor</td>
-                      <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
-                    </tr>
-                    <tr>
-                      <td className="whitespace-nowrap px-4 py-3">Luis</td>
-                      <td className="whitespace-nowrap px-4 py-3">Lopez</td>
-                      <td className="whitespace-nowrap px-4 py-3">luis@empresa.com</td>
-                      <td className="whitespace-nowrap px-4 py-3">Seguridad</td>
-                      <td className="whitespace-nowrap px-4 py-3">Supervisor</td>
-                      <td className="whitespace-nowrap px-4 py-3">Temporal123</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
-                Si el CSV no incluye la columna <span className="font-semibold">password</span>, captura arriba un password temporal por defecto para todos los empleados de esa carga.
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex w-fit items-center rounded-full bg-violet-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-800"
-            >
-              Importar empleados
-            </button>
-          </form>
-        </article>
+      <section>
+        <EmployeeOnboardingTabs
+          manualContent={<ManualEmployeeForm />}
+          csvContent={<CsvEmployeeImportForm />}
+        />
       </section>
 
       <section className="grid gap-6">

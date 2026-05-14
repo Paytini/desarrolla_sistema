@@ -22,6 +22,8 @@ import {
 } from "@/lib/wordpress-bridge"
 
 const CSV_IMPORT_LIMIT = 200
+const CSV_HASH_CONCURRENCY = 8
+const CSV_BRIDGE_CONCURRENCY = 5
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -295,6 +297,172 @@ function csvField(
   return ""
 }
 
+type NormalizedCsvEmployeeRow = {
+  nombre: string
+  apellido: string
+  email: string
+  departamento: string | null
+  puesto: string | null
+  password: string
+}
+
+type CreatedCsvEmployee = NormalizedCsvEmployeeRow & {
+  id: number
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>
+) {
+  const results = new Array<R>(items.length)
+  let nextIndex = 0
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex
+      nextIndex += 1
+      results[currentIndex] = await mapper(items[currentIndex], currentIndex)
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(Math.max(concurrency, 1), items.length) },
+    () => worker()
+  )
+
+  await Promise.all(workers)
+  return results
+}
+
+function normalizeCsvEmployees(
+  dataRows: string[][],
+  headers: string[],
+  fallbackPassword: string
+) {
+  const employees: NormalizedCsvEmployeeRow[] = []
+  const seenEmails = new Set<string>()
+  let skipped = 0
+  let missingPassword = false
+
+  for (const dataRow of dataRows) {
+    const row = Object.fromEntries(
+      headers.map((header, index) => [header, String(dataRow[index] ?? "").trim()])
+    )
+
+    const nombre = csvField(row, ["nombre", "first_name", "nombres"])
+    const apellido = csvField(row, ["apellido", "apellidos", "last_name", "lastname"])
+    const email = csvField(row, ["email", "correo", "correo_electronico"]).toLowerCase()
+    const departamento = csvField(row, ["departamento", "department"]) || null
+    const puesto = csvField(row, ["puesto", "position", "cargo"]) || null
+    const password =
+      csvField(row, ["password", "contrasena", "contrasena_temporal"]) ||
+      fallbackPassword
+
+    if (!nombre || !apellido || !email) {
+      skipped += 1
+      continue
+    }
+
+    if (!password) {
+      missingPassword = true
+      continue
+    }
+
+    if (seenEmails.has(email)) {
+      skipped += 1
+      continue
+    }
+
+    seenEmails.add(email)
+    employees.push({
+      nombre,
+      apellido,
+      email,
+      departamento,
+      puesto,
+      password,
+    })
+  }
+
+  return {
+    employees,
+    skipped,
+    missingPassword,
+  }
+}
+
+async function syncCsvEmployeesToWordPress(input: {
+  empresaContext: EmpresaProvisioningContext
+  employees: CreatedCsvEmployee[]
+}) {
+  if (!isWordPressBridgeConfigured() || input.employees.length === 0) {
+    return {
+      synced: 0,
+      bridgeWarnings: 0,
+    }
+  }
+
+  const results = await mapWithConcurrency(
+    input.employees,
+    CSV_BRIDGE_CONCURRENCY,
+    async (employee) => {
+      try {
+        const bridgeEmployee = await bridgeUpsertEmployee({
+          employeeId: employee.id,
+          companyId: input.empresaContext.id,
+          companyName: input.empresaContext.nombre,
+          email: employee.email,
+          firstName: employee.nombre,
+          lastName: employee.apellido,
+          password: employee.password,
+          department: employee.departamento,
+          position: employee.puesto,
+        })
+
+        return {
+          status: "synced" as const,
+          employeeId: employee.id,
+          email: employee.email,
+          wpUserId: bridgeEmployee.wp_user_id,
+        }
+      } catch {
+        return {
+          status: "warning" as const,
+          employeeId: employee.id,
+          email: employee.email,
+          wpUserId: null,
+        }
+      }
+    }
+  )
+
+  const syncedResults = results.filter((result) => result.status === "synced")
+
+  if (syncedResults.length > 0) {
+    await prisma.$transaction(
+      syncedResults.flatMap((result) => [
+        prisma.empleado.update({
+          where: { id: result.employeeId },
+          data: { wp_user_id: result.wpUserId },
+        }),
+        prisma.usuario.updateMany({
+          where: {
+            email: result.email,
+            empresa_id: input.empresaContext.id,
+          },
+          data: { wp_user_id: result.wpUserId },
+        }),
+      ])
+    )
+  }
+
+  return {
+    synced: syncedResults.length,
+    bridgeWarnings: results.length - syncedResults.length,
+  }
+}
+
 export async function createEmployeeAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
@@ -382,26 +550,14 @@ export async function importEmployeesCsvAction(formData: FormData) {
 
   const [headerRow, ...dataRows] = rows
   const headers = headerRow.map((header) => normalizeCsvHeader(header))
+  const normalizedCsv = normalizeCsvEmployees(dataRows, headers, fallbackPassword)
 
-  const hasMissingPasswordWithoutFallback = dataRows.some((dataRow) => {
-    const row = Object.fromEntries(
-      headers.map((header, index) => [header, String(dataRow[index] ?? "").trim()])
-    )
-
-    const nombre = csvField(row, ["nombre", "first_name", "nombres"])
-    const apellido = csvField(row, ["apellido", "apellidos", "last_name", "lastname"])
-    const email = csvField(row, ["email", "correo", "correo_electronico"])
-    const password = csvField(row, ["password", "contrasena", "contrasena_temporal"])
-
-    if (!nombre || !apellido || !email) {
-      return false
-    }
-
-    return !fallbackPassword && !password
-  })
-
-  if (hasMissingPasswordWithoutFallback) {
+  if (normalizedCsv.missingPassword) {
     redirect("/empresa/empleados?error=csv_password_required")
+  }
+
+  if (normalizedCsv.employees.length === 0) {
+    redirect("/empresa/empleados?error=csv_empty")
   }
 
   const empresaContext = await loadEmpresaProvisioningContext(empresaId)
@@ -409,63 +565,135 @@ export async function importEmployeesCsvAction(formData: FormData) {
     redirect("/empresa/empleados?error=empresa")
   }
 
-  let created = 0
-  let synced = 0
-  let bridgeWarnings = 0
-  let skipped = 0
+  const candidateEmails = normalizedCsv.employees.map((employee) => employee.email)
+  const [beforeSeatSnapshot, activeEmployees, existingEmployees, existingUsers] = await Promise.all([
+    getCompanySeatSnapshot(empresaId),
+    prisma.empleado.count({
+      where: {
+        empresa_id: empresaId,
+        activo: true,
+      },
+    }),
+    candidateEmails.length > 0
+      ? prisma.empleado.findMany({
+          where: { email: { in: candidateEmails } },
+          select: { email: true },
+        })
+      : Promise.resolve([]),
+    candidateEmails.length > 0
+      ? prisma.usuario.findMany({
+          where: { email: { in: candidateEmails } },
+          select: { email: true },
+        })
+      : Promise.resolve([]),
+  ])
 
-  for (const dataRow of dataRows) {
-    const row = Object.fromEntries(
-      headers.map((header, index) => [header, String(dataRow[index] ?? "").trim()])
-    )
+  if (!beforeSeatSnapshot) {
+    redirect("/empresa/empleados?error=empresa")
+  }
 
-    const nombre = csvField(row, ["nombre", "first_name", "nombres"])
-    const apellido = csvField(row, ["apellido", "apellidos", "last_name", "lastname"])
-    const email = csvField(row, ["email", "correo", "correo_electronico"])
-      .toLowerCase()
-    const departamento = csvField(row, ["departamento", "department"]) || null
-    const puesto = csvField(row, ["puesto", "position", "cargo"]) || null
-    const password =
-      csvField(row, ["password", "contrasena", "contrasena_temporal"]) ||
-      fallbackPassword
+  const existingEmails = new Set([
+    ...existingEmployees.map((employee) => employee.email.toLowerCase()),
+    ...existingUsers.map((user) => user.email.toLowerCase()),
+  ])
 
-    if (!nombre || !apellido || !email) {
-      skipped += 1
-      continue
-    }
+  const availableEmployees = normalizedCsv.employees.filter((employee) => {
+    return !existingEmails.has(employee.email)
+  })
+  let skipped = normalizedCsv.skipped + (normalizedCsv.employees.length - availableEmployees.length)
+  const availableSeats = Math.max(empresaContext.asientos_contratados - activeEmployees, 0)
 
-    if (!password) {
-      skipped += 1
-      continue
-    }
+  if (availableSeats <= 0) {
+    redirect("/empresa/empleados?error=cupos")
+  }
 
-    const result = await createEmployeeForEmpresa({
-      empresaId,
-      nombre,
-      apellido,
-      email,
-      departamento,
-      puesto,
-      password,
-      empresaContext,
+  const employeesToCreate = availableEmployees.slice(0, availableSeats)
+  skipped += Math.max(availableEmployees.length - employeesToCreate.length, 0)
+
+  const passwordHashes = await mapWithConcurrency(
+    employeesToCreate,
+    CSV_HASH_CONCURRENCY,
+    (employee) => bcrypt.hash(employee.password, 12)
+  )
+
+  const createdEmployees = employeesToCreate.length > 0
+    ? await prisma.$transaction(async (tx) => {
+        await tx.empleado.createMany({
+          data: employeesToCreate.map((employee) => ({
+            empresa_id: empresaId,
+            nombre: employee.nombre,
+            apellido: employee.apellido,
+            email: employee.email,
+            departamento: employee.departamento,
+            puesto: employee.puesto,
+          })),
+        })
+
+        await tx.usuario.createMany({
+          data: employeesToCreate.map((employee, index) => ({
+            email: employee.email,
+            password_hash: passwordHashes[index],
+            nombre: `${employee.nombre} ${employee.apellido}`.trim(),
+            rol: "EMPLEADO",
+            empresa_id: empresaId,
+            activo: true,
+          })),
+        })
+
+        await tx.empresa.update({
+          where: { id: empresaId },
+          data: { asientos_usados: activeEmployees + employeesToCreate.length },
+        })
+
+        const persistedEmployees = await tx.empleado.findMany({
+          where: {
+            empresa_id: empresaId,
+            email: { in: employeesToCreate.map((employee) => employee.email) },
+          },
+          select: {
+            id: true,
+            email: true,
+          },
+        })
+
+        const persistedByEmail = new Map(
+          persistedEmployees.map((employee) => [employee.email.toLowerCase(), employee])
+        )
+
+        return employeesToCreate.flatMap((employee) => {
+          const persistedEmployee = persistedByEmail.get(employee.email)
+          return persistedEmployee
+            ? [
+                {
+                  ...employee,
+                  id: persistedEmployee.id,
+                },
+              ]
+            : []
+        })
+      }, {
+        timeout: 15_000,
+      })
+    : []
+
+  const bridgeResult = await syncCsvEmployeesToWordPress({
+    empresaContext,
+    employees: createdEmployees,
+  })
+  const created = createdEmployees.length
+  const synced = bridgeResult.synced
+  const bridgeWarnings = bridgeResult.bridgeWarnings
+
+  const afterSeatSnapshot = await getCompanySeatSnapshot(empresaId)
+  if (afterSeatSnapshot && created > 0) {
+    await createSeatHistoryEntry({
       actor,
+      empresaId,
+      motivo: "empleados_importados_csv",
+      detalle: `Importacion CSV de ${created} empleado(s).`,
+      before: beforeSeatSnapshot,
+      after: afterSeatSnapshot,
     })
-
-    if (!result.ok) {
-      skipped += 1
-      if (result.code === "cupos") {
-        break
-      }
-      continue
-    }
-
-    created += 1
-    if (result.code === "empleado_creado_sync") {
-      synced += 1
-    }
-    if (result.code === "empleado_creado_bridge_error") {
-      bridgeWarnings += 1
-    }
   }
 
   await createAuditEvent({
