@@ -2,6 +2,13 @@
 
 Portal B2B para administrar empresas clientes, sus empleados y el avance en cursos de `Tutor LMS Pro`, sin reemplazar el sitio publico actual en WordPress.
 
+## Documentacion clave
+
+- [Documentacion tecnica](https://docs.google.com/document/d/15FFbeow9qA0egQceBSOO3m3dXgoJnVEd3W8Rf7C33fA/edit?usp=drive_link)
+- [Diagrama visual en Excalidraw](https://excalidraw.com/#json=O0WQwOZZu5Y-I4MWcUmW-,Osa6Epzp7T0KP3kt3EvWkA)
+- [Portal publico en Vercel](https://desarrolla-sistema.vercel.app/)
+- [Repositorio de TutorLMS](https://github.com/themeum/tutor)
+
 ## Objetivo
 
 El proyecto separa dos frentes:
@@ -111,10 +118,6 @@ npm run prisma:generate
 ```bash
 npm run dev
 ```
-
-## Documentacion clave
-
-- [Repositorio de TutorLMS](https://github.com/themeum/tutor)
 
 ## Notas importantes
 
