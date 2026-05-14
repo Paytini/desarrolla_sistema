@@ -40,8 +40,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-slate-950 px-4 py-10">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.22),transparent_28rem),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.16),transparent_24rem)]" />
+    <div className="relative grid min-h-screen overflow-hidden place-items-center bg-slate-950 px-4 py-10">
+      <div className="pointer-events-none fixed inset-0 login-aurora" />
+      <div className="pointer-events-none fixed -left-24 top-12 h-72 w-72 rounded-full bg-orange-500/20 blur-3xl login-blob-one" />
+      <div className="pointer-events-none fixed -right-20 bottom-8 h-80 w-80 rounded-full bg-teal-400/15 blur-3xl login-blob-two" />
+      <div className="pointer-events-none fixed left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/10 blur-3xl login-blob-three" />
+      <div className="pointer-events-none fixed inset-0 opacity-[0.08] login-grid" />
 
       <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/10 bg-white p-8 shadow-2xl shadow-slate-950/40">
         <div className="mb-8 grid justify-items-center gap-3">

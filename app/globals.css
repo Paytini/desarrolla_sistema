@@ -45,3 +45,82 @@ body {
     transform: rotate(360deg);
   }
 }
+
+.login-aurora {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(249, 115, 22, 0.26), transparent 26rem),
+    radial-gradient(circle at 82% 78%, rgba(20, 184, 166, 0.2), transparent 24rem),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 1));
+  animation: login-aurora-drift 18s ease-in-out infinite alternate;
+}
+
+.login-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.7) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+  mask-image: radial-gradient(circle at center, black, transparent 72%);
+}
+
+.login-blob-one {
+  animation: login-float-one 16s ease-in-out infinite;
+}
+
+.login-blob-two {
+  animation: login-float-two 18s ease-in-out infinite;
+}
+
+.login-blob-three {
+  animation: login-float-three 20s ease-in-out infinite;
+}
+
+@keyframes login-aurora-drift {
+  from {
+    filter: hue-rotate(0deg) saturate(1);
+    transform: scale(1);
+  }
+
+  to {
+    filter: hue-rotate(-10deg) saturate(1.12);
+    transform: scale(1.04);
+  }
+}
+
+@keyframes login-float-one {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(4rem, 3rem, 0) scale(1.12);
+  }
+}
+
+@keyframes login-float-two {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(-4rem, -2rem, 0) scale(1.08);
+  }
+}
+
+@keyframes login-float-three {
+  0%, 100% {
+    transform: translate3d(-50%, -50%, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(calc(-50% + 2rem), calc(-50% - 3rem), 0) scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-aurora,
+  .login-blob-one,
+  .login-blob-two,
+  .login-blob-three {
+    animation: none;
+  }
+}
