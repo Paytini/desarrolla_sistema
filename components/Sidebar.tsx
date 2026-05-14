@@ -153,7 +153,7 @@ export default function Sidebar({
           <Link href="/" className="grid gap-2 rounded-3xl bg-white/[0.06] p-4 ring-1 ring-white/10">
             <span className="flex h-16 items-center justify-center rounded-2xl bg-white px-4 shadow-lg shadow-orange-950/20">
               <Image
-                src="/assets/logo_desarrolla.png"
+                src="/assets/logo_desarrolla_cropped.png"
                 alt="DesarrollaMX 360"
                 width={220}
                 height={80}

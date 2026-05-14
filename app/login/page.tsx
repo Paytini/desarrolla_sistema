@@ -47,7 +47,7 @@ export default function LoginPage() {
         <div className="mb-8 grid justify-items-center gap-3">
           <div className="flex h-24 w-full items-center justify-center rounded-[1.5rem] border border-slate-200 bg-white px-8 shadow-sm">
             <Image
-              src="/assets/logo_desarrolla.png"
+              src="/assets/logo_desarrolla_cropped.png"
               alt="DesarrollaMX 360"
               width={280}
               height={120}

@@ -18,7 +18,7 @@ export default function Home() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <span className="flex h-20 w-full max-w-xs items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 shadow-sm sm:w-72">
                 <Image
-                  src="/assets/logo_desarrolla.png"
+                  src="/assets/logo_desarrolla_cropped.png"
                   alt="DesarrollaMX 360"
                   width={260}
                   height={110}
