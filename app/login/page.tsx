@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
@@ -39,39 +40,57 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white border border-gray-200 rounded-2xl p-8 w-full max-w-sm shadow-sm">
-        <h1 className="text-xl font-medium text-center mb-1">
-          Desarrolla<span className="text-purple-600">360</span>
-        </h1>
-        <p className="text-sm text-gray-500 text-center mb-6">Portal empresarial</p>
+    <div className="grid min-h-screen place-items-center bg-slate-950 px-4 py-10">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.22),transparent_28rem),radial-gradient(circle_at_bottom_right,rgba(20,184,166,0.16),transparent_24rem)]" />
+
+      <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/10 bg-white p-8 shadow-2xl shadow-slate-950/40">
+        <div className="mb-8 grid justify-items-center gap-3">
+          <div className="grid size-20 place-items-center rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+            <Image
+              src="/assets/D%20nueva.png"
+              alt="DesarrollaMX 360"
+              width={60}
+              height={60}
+              className="h-14 w-14 object-contain"
+              priority
+            />
+          </div>
+          <div className="text-center">
+            <h1 className="text-xl font-semibold text-slate-950">DesarrollaMX 360</h1>
+            <p className="mt-1 text-sm text-slate-500">Portal empresarial</p>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs text-gray-500 block mb-1">Correo electrónico</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Correo electrónico</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 block mb-1">Contraseña</label>
+            <label className="mb-1 block text-xs font-medium text-slate-500">Contraseña</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
             />
           </div>
-          {error && <p className="text-xs text-red-500 text-center">{error}</p>}
+          {error ? (
+            <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-center text-xs text-rose-700">
+              {error}
+            </p>
+          ) : null}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-purple-700 disabled:opacity-60 transition-colors"
+            className="w-full rounded-xl bg-slate-950 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>

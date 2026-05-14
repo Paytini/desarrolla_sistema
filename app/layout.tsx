@@ -7,6 +7,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Desarrolla360 Portal Empresarial",
   description: "Portal B2B para empresas, RH, empleados y monitoreo academico de paquetes corporativos.",
+  icons: {
+    icon: "/assets/D%20nueva.png",
+    apple: "/assets/D%20nueva.png",
+  },
 };
 
 export default function RootLayout({

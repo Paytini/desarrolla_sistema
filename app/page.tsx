@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
@@ -14,6 +15,25 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-12 lg:px-10">
         <section className="grid gap-6 rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-sm backdrop-blur md:grid-cols-[1.4fr_0.9fr]">
           <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <span className="grid size-14 place-items-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <Image
+                  src="/assets/D%20nueva.png"
+                  alt="DesarrollaMX 360"
+                  width={42}
+                  height={42}
+                  className="h-10 w-10 object-contain"
+                  priority
+                />
+              </span>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">
+                  DesarrollaMX 360
+                </p>
+                <p className="text-sm text-slate-500">Portal empresarial</p>
+              </div>
+            </div>
+
             <PageHeader
               eyebrow="Desarrolla360"
               title="Portal empresarial para cursos corporativos y trazabilidad por empresa"
