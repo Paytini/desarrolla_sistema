@@ -53,9 +53,9 @@ const navByRol: Record<Rol, NavItem[]> = {
 }
 
 const badgeByRol: Record<Rol, { label: string; className: string }> = {
-  SUPERADMIN: { label: "SuperAdmin", className: "bg-teal-400/10 text-teal-200 ring-teal-300/20" },
-  RH: { label: "RH / Empresa", className: "bg-violet-400/10 text-violet-200 ring-violet-300/20" },
-  EMPLEADO: { label: "Empleado", className: "bg-amber-400/10 text-amber-200 ring-amber-300/20" },
+  SUPERADMIN: { label: "SuperAdmin", className: "bg-teal-50 text-teal-800 ring-teal-200" },
+  RH: { label: "RH / Empresa", className: "bg-violet-50 text-violet-800 ring-violet-200" },
+  EMPLEADO: { label: "Empleado", className: "bg-amber-50 text-amber-800 ring-amber-200" },
 }
 
 const iconPaths: Record<IconName, string[]> = {
@@ -147,11 +147,11 @@ export default function Sidebar({
   const badge = badgeByRol[rol]
 
   return (
-    <aside className="sticky top-0 h-screen w-72 shrink-0 overflow-hidden border-r border-slate-800 bg-slate-950 text-slate-100 shadow-2xl">
+    <aside className="sticky top-0 h-screen w-72 shrink-0 overflow-hidden border-r border-orange-900/20 bg-[#fff7ef] text-slate-950 shadow-2xl">
       <div className="flex h-full flex-col">
         <div className="px-6 pb-6 pt-7">
-          <Link href="/" className="grid gap-2 rounded-3xl bg-white/[0.06] p-4 ring-1 ring-white/10">
-            <span className="flex h-16 items-center justify-center rounded-2xl bg-white px-4 shadow-lg shadow-orange-950/20">
+          <Link href="/" className="grid gap-2 rounded-3xl border border-orange-100 bg-white p-4 shadow-sm">
+            <span className="flex h-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white to-orange-50 px-4">
               <Image
                 src="/assets/logo_desarrolla_cropped.png"
                 alt="DesarrollaMX 360"
@@ -161,7 +161,7 @@ export default function Sidebar({
                 priority
               />
             </span>
-            <span className="text-center text-xs font-medium text-slate-400">Portal empresarial</span>
+            <span className="text-center text-xs font-semibold text-slate-500">Portal empresarial</span>
           </Link>
         </div>
 
@@ -176,8 +176,8 @@ export default function Sidebar({
                 prefetch
                 className={`group flex items-center gap-4 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
                   active
-                    ? "bg-white/10 text-white shadow-inner ring-1 ring-white/10"
-                    : "text-slate-400 hover:bg-white/[0.06] hover:text-white"
+                    ? "bg-slate-950 text-white shadow-lg shadow-orange-950/10"
+                    : "text-slate-600 hover:bg-white hover:text-slate-950 hover:shadow-sm"
                 }`}
               >
                 <NavIcon name={item.icon} />
@@ -187,19 +187,19 @@ export default function Sidebar({
           })}
         </nav>
 
-        <div className="border-t border-white/10 p-5">
+        <div className="border-t border-orange-100 p-5">
           <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ${badge.className}`}>
             {badge.label}
           </span>
 
-          <div className="mt-4 rounded-2xl bg-white/[0.06] p-4">
-            <p className="truncate text-sm font-semibold text-white">{nombre}</p>
-            {empresa ? <p className="mt-1 truncate text-xs text-slate-400">{empresa}</p> : null}
+          <div className="mt-4 rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
+            <p className="truncate text-sm font-semibold text-slate-950">{nombre}</p>
+            {empresa ? <p className="mt-1 truncate text-xs text-slate-500">{empresa}</p> : null}
           </div>
 
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="mt-4 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
+            className="mt-4 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-500 transition hover:bg-white hover:text-slate-950 hover:shadow-sm"
           >
             <svg
               aria-hidden="true"
