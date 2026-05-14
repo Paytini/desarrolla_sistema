@@ -2,12 +2,98 @@ import Image from "next/image"
 import Link from "next/link"
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
-import {
-  architectureLayers,
-  employeeModules,
-  rhModules,
-  superAdminModules,
-} from "@/lib/portal-blueprint"
+
+function isDiagramImageUrl(url: string) {
+  return /\.(svg|png|jpe?g|webp|gif)(\?.*)?$/i.test(url) || url.startsWith("/")
+}
+
+function PortalDiagramSection() {
+  const diagramUrl = process.env.NEXT_PUBLIC_EXCALIDRAW_DIAGRAM_URL?.trim()
+
+  return (
+    <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/90 shadow-sm backdrop-blur">
+      <div className="grid gap-6 p-6 lg:grid-cols-[0.75fr_1.25fr] lg:p-8">
+        <div className="space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">
+            Diagrama del sistema
+          </p>
+          <div className="space-y-3">
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+              Flujo visual del portal
+            </h2>
+            <p className="text-sm leading-6 text-slate-600">
+              Aqui puedes mostrar el diagrama de Excalidraw con la arquitectura e integraciones principales
+              entre Frontend, Backend, WordPress, Tutor LMS y base de datos.
+            </p>
+          </div>
+
+          {diagramUrl ? (
+            <a
+              href={diagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Abrir diagrama
+            </a>
+          ) : (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+              Configura <code className="font-semibold">NEXT_PUBLIC_EXCALIDRAW_DIAGRAM_URL</code>{" "}
+              con el link publico o una exportacion SVG/PNG en <code>public/assets</code>.
+            </div>
+          )}
+        </div>
+
+        <div className="min-h-[22rem] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-50 shadow-inner">
+          {diagramUrl ? (
+            isDiagramImageUrl(diagramUrl) ? (
+              <img
+                src={diagramUrl}
+                alt="Diagrama de arquitectura del portal Desarrolla360"
+                className="h-full min-h-[22rem] w-full object-contain p-4"
+              />
+            ) : (
+              <iframe
+                src={diagramUrl}
+                title="Diagrama de arquitectura del portal Desarrolla360"
+                className="h-[32rem] w-full bg-white"
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              />
+            )
+          ) : (
+            <div className="grid h-full min-h-[22rem] place-items-center p-8 text-center">
+              <div className="max-w-sm space-y-3">
+                <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-white text-slate-500 shadow-sm">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className="size-7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.8"
+                  >
+                    <path d="M4 7h16" />
+                    <path d="M4 17h16" />
+                    <path d="M7 4v16" />
+                    <path d="M17 4v16" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-slate-900">Diagrama pendiente</p>
+                <p className="text-sm leading-6 text-slate-500">
+                  Exporta tu proyecto de Excalidraw como SVG/PNG o pega aqui una URL publica para mostrarlo.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
 
 export default function Home() {
   return (
@@ -16,7 +102,7 @@ export default function Home() {
         <section className="grid gap-6 rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-sm backdrop-blur md:grid-cols-[1.4fr_0.9fr]">
           <div className="space-y-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <span className="flex h-20 w-full max-w-xs items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 shadow-sm sm:w-72">
+              <span className="flex h-20 w-full max-w-xs items-center justify-center">
                 <Image
                   src="/assets/logo_desarrolla_cropped.png"
                   alt="DesarrollaMX 360"
@@ -26,12 +112,6 @@ export default function Home() {
                   priority
                 />
               </span>
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">
-                  DesarrollaMX 360
-                </p>
-                <p className="text-sm text-slate-500">Portal empresarial</p>
-              </div>
             </div>
 
             <PageHeader
@@ -79,52 +159,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
-          {architectureLayers.map((layer) => (
-            <InfoCard
-              key={layer.title}
-              title={layer.title}
-              description={layer.description}
-              accent={layer.accent}
-            />
-          ))}
-        </section>
-
-        <section className="grid gap-5 lg:grid-cols-3">
-          <InfoCard
-            title="Dashboard SuperAdmin"
-            description="Control centralizado de empresas, paquetes, vigencias, accesos y monitoreo global."
-            accent="teal"
-          >
-            <ul className="space-y-2 text-sm text-slate-700">
-              {superAdminModules.map((item) => (
-                <li key={item}>• {item}</li>
-              ))}
-            </ul>
-          </InfoCard>
-          <InfoCard
-            title="Dashboard Empresa / RH"
-            description="Operacion diaria de la cuenta corporativa, alta de empleados y seguimiento academico."
-            accent="violet"
-          >
-            <ul className="space-y-2 text-sm text-slate-700">
-              {rhModules.map((item) => (
-                <li key={item}>• {item}</li>
-              ))}
-            </ul>
-          </InfoCard>
-          <InfoCard
-            title="Dashboard Empleado"
-            description="Vista individual con enfoque en cursos, trayectorias, constancias y recordatorios."
-            accent="amber"
-          >
-            <ul className="space-y-2 text-sm text-slate-700">
-              {employeeModules.map((item) => (
-                <li key={item}>• {item}</li>
-              ))}
-            </ul>
-          </InfoCard>
-        </section>
+        <PortalDiagramSection />
       </main>
     </div>
   )
