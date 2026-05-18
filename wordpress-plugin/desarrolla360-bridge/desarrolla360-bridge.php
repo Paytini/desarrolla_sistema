@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.2.2
+ * Version: 0.2.3
  * Author: Desarrolla360
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.2.2' );
+define( 'D360_BRIDGE_VERSION', '0.2.3' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
 define( 'D360_BRIDGE_WEBHOOK_CRON_HOOK', 'd360_bridge_learning_webhook_tick' );
 define( 'D360_BRIDGE_WEBHOOK_CURSOR_OPTION', 'd360_bridge_learning_webhook_cursor' );
@@ -880,7 +880,9 @@ function d360_bridge_course_details( WP_REST_Request $request ) {
 	$category_names           = d360_bridge_get_course_category_names( $course_id, $course->post_type );
 	$thematic_area            = d360_bridge_extract_course_thematic_area( $course_id, $category_names );
 	$instructor_name          = d360_bridge_extract_course_instructor_name( $course_id, $course->post_author );
+	$instructor_signature_url = d360_bridge_extract_course_instructor_signature_url( $course_id );
 	$training_agent_name      = d360_bridge_extract_course_training_agent_name( $course_id, $instructor_name );
+	$training_agent_registry  = d360_bridge_extract_course_training_agent_registry( $course_id );
 	$duration_hours           = d360_bridge_extract_course_duration_hours( $course_id, $normalized_tutor_payload );
 
 	return rest_ensure_response(
@@ -892,7 +894,9 @@ function d360_bridge_course_details( WP_REST_Request $request ) {
 			'course_url'           => get_permalink( $course_id ),
 			'summary'              => wp_strip_all_tags( get_the_excerpt( $course_id ) ),
 			'instructor_name'      => $instructor_name,
+			'instructor_signature_url' => $instructor_signature_url,
 			'training_agent_name'  => $training_agent_name,
+			'training_agent_registry' => $training_agent_registry,
 			'duration_hours'       => $duration_hours,
 			'duration_label'       => null !== $duration_hours ? sprintf( '%s horas', rtrim( rtrim( number_format( $duration_hours, 2, '.', '' ), '0' ), '.' ) ) : null,
 			'thematic_area_name'   => $thematic_area['name'],
@@ -991,6 +995,51 @@ function d360_bridge_extract_course_training_agent_name( $course_id, $instructor
 	}
 
 	return get_bloginfo( 'name' );
+}
+
+function d360_bridge_extract_course_training_agent_registry( $course_id ) {
+	$meta_value = d360_bridge_get_first_post_meta_value(
+		$course_id,
+		array(
+			'stps_agent_registry',
+			'stps_registry',
+			'stps_registration',
+			'd360_training_agent_registry',
+			'd360_stps_registration',
+			'registro_stps',
+		)
+	);
+
+	if ( is_scalar( $meta_value ) && '' !== trim( (string) $meta_value ) ) {
+		return trim( (string) $meta_value );
+	}
+
+	return '';
+}
+
+function d360_bridge_extract_course_instructor_signature_url( $course_id ) {
+	$meta_value = d360_bridge_get_first_post_meta_value(
+		$course_id,
+		array(
+			'stps_instructor_signature_url',
+			'd360_instructor_signature_url',
+			'instructor_signature_url',
+			'stps_instructor_signature_id',
+			'd360_instructor_signature_id',
+			'instructor_signature_id',
+		)
+	);
+
+	if ( is_numeric( $meta_value ) ) {
+		$attachment_url = wp_get_attachment_url( absint( $meta_value ) );
+		return $attachment_url ? esc_url_raw( $attachment_url ) : '';
+	}
+
+	if ( is_string( $meta_value ) && '' !== trim( $meta_value ) ) {
+		return esc_url_raw( trim( $meta_value ) );
+	}
+
+	return '';
 }
 
 function d360_bridge_extract_course_thematic_area( $course_id, $category_names ) {

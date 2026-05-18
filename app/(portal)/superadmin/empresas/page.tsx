@@ -166,6 +166,30 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
               </label>
             </div>
 
+            <div className="rounded-2xl border border-teal-100 bg-teal-50/50 p-4">
+              <p className="mb-3 text-sm font-semibold text-teal-950">Datos para constancias DC-3</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-1.5 text-sm">
+                  <span className="font-medium text-slate-700">Representante legal</span>
+                  <input
+                    name="representante_legal"
+                    placeholder="Nombre completo"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none transition focus:border-teal-600"
+                  />
+                </label>
+                <label className="grid gap-1.5 text-sm">
+                  <span className="font-medium text-slate-700">
+                    Representante de trabajadores
+                  </span>
+                  <input
+                    name="representante_laboral"
+                    placeholder="Si aplica"
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none transition focus:border-teal-600"
+                  />
+                </label>
+              </div>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-1.5 text-sm">
                 <span className="font-medium text-slate-700">Paquete inicial</span>

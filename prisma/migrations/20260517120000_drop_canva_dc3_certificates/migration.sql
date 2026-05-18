@@ -1,0 +1,9 @@
+ALTER TABLE "constancias"
+DROP COLUMN "canva_estado",
+DROP COLUMN "canva_design_id",
+DROP COLUMN "canva_design_url",
+DROP COLUMN "canva_edit_url",
+DROP COLUMN "canva_export_url",
+DROP COLUMN "canva_export_expires_at",
+DROP COLUMN "canva_generada_at",
+DROP COLUMN "canva_error";

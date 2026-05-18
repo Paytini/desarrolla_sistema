@@ -67,8 +67,11 @@ type EmployeeProvisioningInput = {
   nombre: string
   apellido: string
   email: string
+  curp?: string | null
   departamento?: string | null
   puesto?: string | null
+  ocupacionEspecificaClave?: string | null
+  ocupacionEspecifica?: string | null
   password: string
   empresaContext?: EmpresaProvisioningContext
   actor: AuditActor
@@ -169,8 +172,11 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
         nombre: input.nombre,
         apellido: input.apellido,
         email,
+        curp: input.curp || null,
         departamento: input.departamento || null,
         puesto: input.puesto || null,
+        ocupacion_especifica_clave: input.ocupacionEspecificaClave || null,
+        ocupacion_especifica: input.ocupacionEspecifica || null,
       },
     })
 
@@ -216,6 +222,9 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
       email,
       departamento: input.departamento ?? null,
       puesto: input.puesto ?? null,
+      curp: input.curp ?? null,
+      ocupacion_especifica_clave: input.ocupacionEspecificaClave ?? null,
+      ocupacion_especifica: input.ocupacionEspecifica ?? null,
       tiene_paquete_activo: hasActivePackage,
     },
   })
@@ -301,8 +310,11 @@ type NormalizedCsvEmployeeRow = {
   nombre: string
   apellido: string
   email: string
+  curp: string | null
   departamento: string | null
   puesto: string | null
+  ocupacionEspecificaClave: string | null
+  ocupacionEspecifica: string | null
   password: string
 }
 
@@ -353,8 +365,17 @@ function normalizeCsvEmployees(
     const nombre = csvField(row, ["nombre", "first_name", "nombres"])
     const apellido = csvField(row, ["apellido", "apellidos", "last_name", "lastname"])
     const email = csvField(row, ["email", "correo", "correo_electronico"]).toLowerCase()
+    const curp = csvField(row, ["curp"]) || null
     const departamento = csvField(row, ["departamento", "department"]) || null
     const puesto = csvField(row, ["puesto", "position", "cargo"]) || null
+    const ocupacionEspecificaClave =
+      csvField(row, [
+        "ocupacion_especifica_clave",
+        "clave_ocupacion",
+        "clave_ocupacion_especifica",
+      ]) || null
+    const ocupacionEspecifica =
+      csvField(row, ["ocupacion_especifica", "ocupacion", "ocupacion_cno"]) || null
     const password =
       csvField(row, ["password", "contrasena", "contrasena_temporal"]) ||
       fallbackPassword
@@ -379,8 +400,11 @@ function normalizeCsvEmployees(
       nombre,
       apellido,
       email,
+      curp,
       departamento,
       puesto,
+      ocupacionEspecificaClave,
+      ocupacionEspecifica,
       password,
     })
   }
@@ -471,8 +495,11 @@ export async function createEmployeeAction(formData: FormData) {
   const nombre = getString(formData, "nombre")
   const apellido = getString(formData, "apellido")
   const email = getString(formData, "email").toLowerCase()
+  const curp = getString(formData, "curp").toUpperCase()
   const departamento = getString(formData, "departamento")
   const puesto = getString(formData, "puesto")
+  const ocupacionEspecificaClave = getString(formData, "ocupacion_especifica_clave")
+  const ocupacionEspecifica = getString(formData, "ocupacion_especifica")
   const password = getString(formData, "password")
 
   if (!nombre || !apellido || !email || !password) {
@@ -484,8 +511,11 @@ export async function createEmployeeAction(formData: FormData) {
     nombre,
     apellido,
     email,
+    curp: curp || null,
     departamento: departamento || null,
     puesto: puesto || null,
+    ocupacionEspecificaClave: ocupacionEspecificaClave || null,
+    ocupacionEspecifica: ocupacionEspecifica || null,
     password,
     actor,
   })
@@ -624,8 +654,11 @@ export async function importEmployeesCsvAction(formData: FormData) {
             nombre: employee.nombre,
             apellido: employee.apellido,
             email: employee.email,
+            curp: employee.curp,
             departamento: employee.departamento,
             puesto: employee.puesto,
+            ocupacion_especifica_clave: employee.ocupacionEspecificaClave,
+            ocupacion_especifica: employee.ocupacionEspecifica,
           })),
         })
 

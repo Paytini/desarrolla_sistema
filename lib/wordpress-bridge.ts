@@ -150,7 +150,9 @@ export type BridgeCourseDetails = {
   course_url?: string | null
   summary?: string | null
   instructor_name?: string | null
+  instructor_signature_url?: string | null
   training_agent_name?: string | null
+  training_agent_registry?: string | null
   duration_hours?: number | null
   duration_label?: string | null
   thematic_area_name?: string | null

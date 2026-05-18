@@ -1,8 +1,8 @@
-const csvTemplate = `nombre,apellido,email,departamento,puesto,password
-Ana,Perez,ana@empresa.com,Operaciones,Supervisor,Temporal123
-Luis,Lopez,luis@empresa.com,Seguridad,Supervisor,Temporal123
+const csvTemplate = `nombre,apellido,email,curp,departamento,puesto,ocupacion_especifica_clave,ocupacion_especifica,password
+Ana,Perez,ana@empresa.com,PEAA900101HBCXXX01,Operaciones,Supervisor,03.4,Instalacion y mantenimiento,Temporal123
+Luis,Lopez,luis@empresa.com,LOPL910202HBCXXX02,Seguridad,Supervisor,07.2,Supervision de seguridad,Temporal123
 `
-// un template sencillo, agregar mas campos para dc3
+
 export async function GET() {
   return new Response(csvTemplate, {
     headers: {

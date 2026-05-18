@@ -148,7 +148,21 @@ const getSuperadminPaquetesSnapshotCached = unstable_cache(
       }),
     ])
 
-    return { paquetes, empresas }
+    const courseIds = [
+      ...new Set(
+        paquetes.flatMap((paquete) => paquete.cursos.map((curso) => curso.wp_curso_id))
+      ),
+    ]
+    const dc3Metadata = courseIds.length > 0
+      ? await prisma.cursoDc3Metadata.findMany({
+          where: { wp_curso_id: { in: courseIds } },
+        })
+      : []
+    const dc3MetadataByCourseId = Object.fromEntries(
+      dc3Metadata.map((metadata) => [String(metadata.wp_curso_id), metadata])
+    )
+
+    return { paquetes, empresas, dc3MetadataByCourseId }
   },
   ["dashboard-snapshot", "superadmin", "paquetes"],
   {

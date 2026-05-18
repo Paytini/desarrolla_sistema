@@ -135,6 +135,37 @@ function ManualEmployeeForm() {
         </label>
       </div>
 
+      <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-4">
+        <p className="mb-3 text-sm font-semibold text-violet-950">Datos para constancia DC-3</p>
+        <div className="grid gap-4 md:grid-cols-3">
+          <label className="grid gap-1.5 text-sm">
+            <span className="font-medium text-slate-700">CURP</span>
+            <input
+              name="curp"
+              maxLength={18}
+              placeholder="18 caracteres"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 uppercase outline-none transition focus:border-violet-600"
+            />
+          </label>
+          <label className="grid gap-1.5 text-sm">
+            <span className="font-medium text-slate-700">Clave ocupacion</span>
+            <input
+              name="ocupacion_especifica_clave"
+              placeholder="Ej. 03.4"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none transition focus:border-violet-600"
+            />
+          </label>
+          <label className="grid gap-1.5 text-sm">
+            <span className="font-medium text-slate-700">Ocupacion especifica</span>
+            <input
+              name="ocupacion_especifica"
+              placeholder="Instalacion y mantenimiento"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none transition focus:border-violet-600"
+            />
+          </label>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium text-slate-700">Departamento</span>
@@ -167,8 +198,11 @@ function CsvEmployeeImportForm() {
     { key: "nombre", label: "nombre", required: true },
     { key: "apellido", label: "apellido", required: true },
     { key: "email", label: "email", required: true },
+    { key: "curp", label: "curp", required: false },
     { key: "departamento", label: "departamento", required: false },
     { key: "puesto", label: "puesto", required: false },
+    { key: "ocupacion_especifica_clave", label: "ocupacion_especifica_clave", required: false },
+    { key: "ocupacion_especifica", label: "ocupacion_especifica", required: false },
     { key: "password", label: "password", required: false },
   ]
   const sampleRows = [
@@ -176,16 +210,22 @@ function CsvEmployeeImportForm() {
       nombre: "Ana",
       apellido: "Perez",
       email: "ana@empresa.com",
+      curp: "PEAA900101HBCXXX01",
       departamento: "Operaciones",
       puesto: "Supervisor",
+      ocupacion_especifica_clave: "03.4",
+      ocupacion_especifica: "Instalacion y mantenimiento",
       password: "Temporal123",
     },
     {
       nombre: "Luis",
       apellido: "Lopez",
       email: "luis@empresa.com",
+      curp: "LOPL910202HBCXXX02",
       departamento: "Seguridad",
       puesto: "Supervisor",
+      ocupacion_especifica_clave: "07.2",
+      ocupacion_especifica: "Supervision de seguridad",
       password: "Temporal123",
     },
   ]
@@ -268,7 +308,7 @@ function CsvEmployeeImportForm() {
           </div>
 
           <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-inner">
-            <table className="min-w-[860px] border-separate border-spacing-0 text-sm">
+            <table className="min-w-[1280px] border-separate border-spacing-0 text-sm">
               <thead>
                 <tr className="bg-slate-100 text-center text-xs font-semibold text-slate-500">
                   <th className="w-12 border-b border-r border-slate-200 px-3 py-2" />

@@ -10,7 +10,9 @@ import {
   assignPackageToCompanyAction,
   createPackageAction,
   deletePackageAction,
+  syncCourseDc3MetadataAction,
   syncPackageToCompanyEmployeesAction,
+  updateCourseDc3MetadataAction,
 } from "./actions"
 
 const successMessages: Record<string, string> = {
@@ -18,6 +20,8 @@ const successMessages: Record<string, string> = {
   paquete_eliminado: "El paquete se elimino del catalogo correctamente.",
   paquete_asignado: "El paquete activo de la empresa se actualizo correctamente.",
   sync_ok: "Se sincronizaron los cursos del paquete con los empleados activos de la empresa.",
+  dc3_actualizado: "La ficha DC-3 del curso se actualizo correctamente.",
+  dc3_sync_ok: "La ficha DC-3 se sincronizo con datos disponibles desde WordPress/Tutor LMS.",
 }
 
 const errorMessages: Record<string, string> = {
@@ -28,6 +32,42 @@ const errorMessages: Record<string, string> = {
   paquete_asignado: "No puedes eliminar un paquete que aun esta activo en una empresa.",
   asignacion: "No fue posible asignar el paquete a la empresa.",
   sync: "No fue posible sincronizar el paquete con la empresa. Revisa que exista paquete activo y empleados con WP user ID.",
+  dc3: "No fue posible guardar la ficha DC-3 del curso.",
+  dc3_sync: "No fue posible sincronizar la ficha DC-3 desde WordPress/Tutor LMS.",
+}
+
+type Dc3MetadataView = {
+  wp_curso_id: number
+  nombre_curso: string | null
+  duracion_horas: number | null
+  area_tematica_nombre: string | null
+  area_tematica_clave: string | null
+  agente_capacitador_nombre: string | null
+  agente_capacitador_registro: string | null
+  instructor_nombre: string | null
+  instructor_firma_url: string | null
+  fuente: string
+  ultima_sincronizacion: Date | null
+}
+
+function getDc3MissingFields(metadata: Dc3MetadataView | undefined) {
+  const missingFields: string[] = []
+
+  if (!metadata?.duracion_horas) missingFields.push("duracion")
+  if (!metadata?.area_tematica_nombre) missingFields.push("area tematica")
+  if (!metadata?.agente_capacitador_nombre) missingFields.push("agente capacitador")
+  if (!metadata?.instructor_nombre) missingFields.push("instructor")
+  if (!metadata?.instructor_firma_url) missingFields.push("firma del instructor")
+
+  return missingFields
+}
+
+function formatDurationValue(value: number | null | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return ""
+  }
+
+  return String(value)
 }
 
 type PageProps = {
@@ -40,7 +80,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
   const error = readSearchParam(params, "error")
   const detail = readDecodedSearchParam(params, "detail")
 
-  const { paquetes, empresas } = await getSuperadminPaquetesSnapshot()
+  const { paquetes, empresas, dc3MetadataByCourseId } = await getSuperadminPaquetesSnapshot()
 
   const totalPackages = paquetes.length
   const totalCourses = paquetes.reduce((sum, paquete) => sum + paquete.cursos.length, 0)
@@ -361,13 +401,180 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <p className="mb-2 text-sm font-medium text-slate-800">Cursos incluidos</p>
-                  <ul className="space-y-2 text-sm text-slate-600">
-                    {paquete.cursos.map((curso) => (
-                      <li key={curso.id}>
-                        {curso.wp_curso_id} - {curso.nombre_curso}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="space-y-3">
+                    {paquete.cursos.map((curso) => {
+                      const dc3Metadata = dc3MetadataByCourseId[String(curso.wp_curso_id)] as
+                        | Dc3MetadataView
+                        | undefined
+                      const missingFields = getDc3MissingFields(dc3Metadata)
+                      const isDc3Ready = missingFields.length === 0
+
+                      return (
+                        <details
+                          key={curso.id}
+                          className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                        >
+                          <summary className="flex cursor-pointer list-none flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-slate-950">
+                                {curso.wp_curso_id} - {curso.nombre_curso}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-500">
+                                Ficha DC-3:{" "}
+                                {isDc3Ready
+                                  ? "lista para generar constancias"
+                                  : `faltan ${missingFields.join(", ")}`}
+                              </p>
+                            </div>
+                            <span
+                              className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
+                                isDc3Ready
+                                  ? "bg-teal-100 text-teal-900"
+                                  : "bg-amber-100 text-amber-900"
+                              }`}
+                            >
+                              {isDc3Ready ? "DC-3 completo" : "DC-3 pendiente"}
+                            </span>
+                          </summary>
+
+                          <div className="mt-4 border-t border-slate-200 pt-4">
+                            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                              <div className="text-xs leading-5 text-slate-500">
+                                <p>
+                                  Fuente:{" "}
+                                  <span className="font-semibold text-slate-700">
+                                    {dc3Metadata?.fuente ?? "Sin capturar"}
+                                  </span>
+                                </p>
+                                <p>
+                                  Ultima sincronizacion:{" "}
+                                  {dc3Metadata?.ultima_sincronizacion
+                                    ? formatDate(dc3Metadata.ultima_sincronizacion)
+                                    : "Sin fecha"}
+                                </p>
+                              </div>
+
+                              <form action={syncCourseDc3MetadataAction}>
+                                <input type="hidden" name="wp_curso_id" value={curso.wp_curso_id} />
+                                <input type="hidden" name="nombre_curso" value={curso.nombre_curso} />
+                                <button
+                                  type="submit"
+                                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-800 transition hover:bg-slate-100"
+                                >
+                                  Sincronizar desde Tutor
+                                </button>
+                              </form>
+                            </div>
+
+                            <form action={updateCourseDc3MetadataAction} className="grid gap-4">
+                              <input type="hidden" name="wp_curso_id" value={curso.wp_curso_id} />
+                              <input type="hidden" name="nombre_curso" value={curso.nombre_curso} />
+
+                              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                <label className="grid gap-1.5 text-sm">
+                                  <span className="font-medium text-slate-700">
+                                    Duracion en horas
+                                  </span>
+                                  <input
+                                    name="duracion_horas"
+                                    type="number"
+                                    min={0}
+                                    step="0.25"
+                                    defaultValue={formatDurationValue(dc3Metadata?.duracion_horas)}
+                                    placeholder="Ej. 12"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                  />
+                                </label>
+
+                                <label className="grid gap-1.5 text-sm">
+                                  <span className="font-medium text-slate-700">
+                                    Area tematica
+                                  </span>
+                                  <input
+                                    name="area_tematica_nombre"
+                                    defaultValue={dc3Metadata?.area_tematica_nombre ?? ""}
+                                    placeholder="Higiene y seguridad en el trabajo"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                  />
+                                </label>
+
+                                <label className="grid gap-1.5 text-sm">
+                                  <span className="font-medium text-slate-700">
+                                    Clave area tematica
+                                  </span>
+                                  <input
+                                    name="area_tematica_clave"
+                                    defaultValue={dc3Metadata?.area_tematica_clave ?? ""}
+                                    placeholder="Opcional"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                  />
+                                </label>
+
+                                <label className="grid gap-1.5 text-sm">
+                                  <span className="font-medium text-slate-700">
+                                    Agente capacitador
+                                  </span>
+                                  <input
+                                    name="agente_capacitador_nombre"
+                                    defaultValue={dc3Metadata?.agente_capacitador_nombre ?? ""}
+                                    placeholder="DesarrollaMX 360"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                  />
+                                </label>
+
+                                <label className="grid gap-1.5 text-sm">
+                                  <span className="font-medium text-slate-700">
+                                    Registro STPS / ACE
+                                  </span>
+                                  <input
+                                    name="agente_capacitador_registro"
+                                    defaultValue={dc3Metadata?.agente_capacitador_registro ?? ""}
+                                    placeholder="Si aplica"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                  />
+                                </label>
+
+                                <label className="grid gap-1.5 text-sm">
+                                  <span className="font-medium text-slate-700">
+                                    Instructor o tutor
+                                  </span>
+                                  <input
+                                    name="instructor_nombre"
+                                    defaultValue={dc3Metadata?.instructor_nombre ?? ""}
+                                    placeholder="Nombre completo"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                  />
+                                </label>
+                              </div>
+
+                              <label className="grid gap-1.5 text-sm">
+                                <span className="font-medium text-slate-700">
+                                  URL firma instructor
+                                </span>
+                                <input
+                                  name="instructor_firma_url"
+                                  defaultValue={dc3Metadata?.instructor_firma_url ?? ""}
+                                  placeholder="/assets/signatures/instructors/nanet-moreno.png"
+                                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                />
+                                <span className="text-xs leading-5 text-slate-500">
+                                  Coloca el PNG en public/assets/signatures/instructors y usa una URL como
+                                  /assets/signatures/instructors/firma.png.
+                                </span>
+                              </label>
+
+                              <button
+                                type="submit"
+                                className="inline-flex w-fit items-center rounded-full bg-teal-700 px-4 py-2 text-xs font-semibold text-white transition hover:bg-teal-800"
+                              >
+                                Guardar ficha DC-3
+                              </button>
+                            </form>
+                          </div>
+                        </details>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
