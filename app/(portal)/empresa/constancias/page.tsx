@@ -184,6 +184,14 @@ export default async function EmpresaConstanciasPage() {
                     ) : (
                       <span className="self-center text-sm text-slate-400">Sin URL publica de Tutor</span>
                     )}
+                    <a
+                      href={`/api/constancias/${constancia.id}/dc3`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-full border border-teal-600 px-4 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-50"
+                    >
+                      Ver DC-3
+                    </a>
                   </div>
                 </div>
               </article>

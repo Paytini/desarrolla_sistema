@@ -1,0 +1,210 @@
+import fs from "node:fs/promises"
+import path from "node:path"
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
+import { prisma } from "@/lib/prisma"
+
+// Coordenadas para estampar sobre el PDF oficial DC-3 (ANVERSO).
+// Hoja: US Letter 612 x 792 pt. Origen pdf-lib: esquina inferior izquierda.
+// Si una sección queda desalineada, ajusta solo los valores de este objeto.
+const POS = {
+  nombre: { x: 60, y: 600, size: 10 },
+  curpStartX: 122,
+  curpY: 559,
+  curpStep: 12.7,
+  ocupacion: { x: 355, y: 559, size: 9 },
+  puesto: { x: 60, y: 520, size: 10 },
+  razonSocial: { x: 60, y: 456, size: 10 },
+  rfcStartX: 40,
+  rfcY: 420,
+  rfcStep: 13,
+  curso: { x: 60, y: 372, size: 10 },
+  duracion: { x: 60, y: 333, size: 10 },
+  fechaInicioAnio: { x: 295, y: 333, size: 10 },
+  fechaInicioMes: { x: 335, y: 333, size: 10 },
+  fechaInicioDia: { x: 375, y: 333, size: 10 },
+  fechaFinAnio: { x: 442, y: 333, size: 10 },
+  fechaFinMes: { x: 485, y: 333, size: 10 },
+  fechaFinDia: { x: 528, y: 333, size: 10 },
+  areaTematica: { x: 60, y: 297, size: 10 },
+  agenteCapacitador: { x: 60, y: 275, size: 10 },
+  instructorFirma: { x: 95, y: 168, w: 120, h: 40 },
+  instructorNombre: { x: 95, y: 158, size: 9 },
+  folio: { x: 430, y: 60, size: 8 },
+  emision: { x: 430, y: 50, size: 8 },
+} as const
+
+export class Dc3MissingFieldsError extends Error {
+  readonly fields: string[]
+  constructor(fields: string[]) {
+    super(`Faltan campos obligatorios para emitir DC-3: ${fields.join(", ")}`)
+    this.name = "Dc3MissingFieldsError"
+    this.fields = fields
+  }
+}
+
+export type Dc3GenerateInput = {
+  constanciaId: number
+}
+
+export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promise<Uint8Array> {
+  const constancia = await prisma.constancia.findUnique({
+    where: { id: constanciaId },
+    include: {
+      empleado: { include: { empresa: true } },
+    },
+  })
+
+  if (!constancia) {
+    throw new Error(`Constancia ${constanciaId} no encontrada`)
+  }
+  const empleado = constancia.empleado
+  const empresa = empleado.empresa
+  if (!empresa) {
+    throw new Error("La constancia esta vinculada a un empleado sin empresa")
+  }
+
+  const [metadata, empleadoCurso] = await Promise.all([
+    prisma.cursoDc3Metadata.findUnique({ where: { wp_curso_id: constancia.wp_curso_id } }),
+    prisma.empleadoCurso.findUnique({
+      where: {
+        empleado_id_wp_curso_id: {
+          empleado_id: constancia.empleado_id,
+          wp_curso_id: constancia.wp_curso_id,
+        },
+      },
+    }),
+  ])
+
+  const missing: string[] = []
+  if (!empleado.nombre || !empleado.apellido) missing.push("Nombre completo del trabajador")
+  if (!empleado.curp) missing.push("CURP del trabajador")
+  if (!empleado.ocupacion_especifica) missing.push("Ocupacion especifica")
+  if (!empleado.ocupacion_especifica_clave) missing.push("Clave de ocupacion especifica")
+  if (!empresa.nombre) missing.push("Razon social de la empresa")
+  if (!empresa.rfc) missing.push("RFC de la empresa")
+  if (!metadata) {
+    missing.push("Ficha DC-3 del curso (metadata)")
+  } else {
+    if (metadata.duracion_horas == null) missing.push("Duracion del curso en horas")
+    if (!metadata.area_tematica_nombre) missing.push("Area tematica del curso")
+    if (!metadata.area_tematica_clave) missing.push("Clave del area tematica")
+    if (!metadata.agente_capacitador_nombre) missing.push("Agente capacitador")
+    if (!metadata.agente_capacitador_registro) missing.push("Registro STPS/ACE del agente")
+    if (!metadata.instructor_nombre) missing.push("Nombre del instructor")
+    if (!metadata.instructor_firma_url) missing.push("Firma del instructor (PNG)")
+  }
+  if (!empleadoCurso?.fecha_inicio_curso) missing.push("Fecha de inicio del curso")
+  if (!empleadoCurso?.fecha_completado) missing.push("Fecha de termino del curso")
+
+  if (missing.length > 0) {
+    throw new Dc3MissingFieldsError(missing)
+  }
+
+  const templatePath = path.join(process.cwd(), "public", "templates", "dc3.pdf")
+  const templateBytes = await fs.readFile(templatePath)
+  const pdf = await PDFDocument.load(templateBytes)
+  const page = pdf.getPages()[0]
+  const helvetica = await pdf.embedFont(StandardFonts.Helvetica)
+
+  const draw = (text: string, x: number, y: number, size = 10) => {
+    page.drawText(text, { x, y, size, font: helvetica, color: rgb(0, 0, 0) })
+  }
+
+  const fullName = `${empleado.apellido} ${empleado.nombre}`.replace(/\s+/g, " ").trim()
+  draw(fullName, POS.nombre.x, POS.nombre.y, POS.nombre.size)
+
+  const curp = empleado.curp!.toUpperCase().slice(0, 18)
+  for (let i = 0; i < curp.length; i++) {
+    draw(curp[i], POS.curpStartX + i * POS.curpStep, POS.curpY, 10)
+  }
+
+  draw(
+    `${empleado.ocupacion_especifica_clave} ${empleado.ocupacion_especifica}`,
+    POS.ocupacion.x,
+    POS.ocupacion.y,
+    POS.ocupacion.size,
+  )
+
+  if (empleado.puesto) {
+    draw(empleado.puesto, POS.puesto.x, POS.puesto.y, POS.puesto.size)
+  }
+
+  draw(empresa.nombre, POS.razonSocial.x, POS.razonSocial.y, POS.razonSocial.size)
+
+  const rfc = empresa.rfc!.toUpperCase().slice(0, 13)
+  for (let i = 0; i < rfc.length; i++) {
+    draw(rfc[i], POS.rfcStartX + i * POS.rfcStep, POS.rfcY, 10)
+  }
+
+  draw(metadata!.nombre_curso || constancia.nombre_curso, POS.curso.x, POS.curso.y, POS.curso.size)
+  draw(formatHoras(metadata!.duracion_horas!), POS.duracion.x, POS.duracion.y, POS.duracion.size)
+
+  const start = splitDate(empleadoCurso!.fecha_inicio_curso!)
+  const end = splitDate(empleadoCurso!.fecha_completado!)
+  draw(start.y, POS.fechaInicioAnio.x, POS.fechaInicioAnio.y, 10)
+  draw(start.m, POS.fechaInicioMes.x, POS.fechaInicioMes.y, 10)
+  draw(start.d, POS.fechaInicioDia.x, POS.fechaInicioDia.y, 10)
+  draw(end.y, POS.fechaFinAnio.x, POS.fechaFinAnio.y, 10)
+  draw(end.m, POS.fechaFinMes.x, POS.fechaFinMes.y, 10)
+  draw(end.d, POS.fechaFinDia.x, POS.fechaFinDia.y, 10)
+
+  draw(
+    `${metadata!.area_tematica_clave} ${metadata!.area_tematica_nombre}`,
+    POS.areaTematica.x,
+    POS.areaTematica.y,
+    POS.areaTematica.size,
+  )
+
+  draw(
+    `${metadata!.agente_capacitador_nombre} - ${metadata!.agente_capacitador_registro}`,
+    POS.agenteCapacitador.x,
+    POS.agenteCapacitador.y,
+    POS.agenteCapacitador.size,
+  )
+
+  await drawInstructorFirma(pdf, page, metadata!.instructor_firma_url!)
+  draw(metadata!.instructor_nombre!, POS.instructorNombre.x, POS.instructorNombre.y, POS.instructorNombre.size)
+
+  draw(`Folio: ${constancia.folio}`, POS.folio.x, POS.folio.y, POS.folio.size)
+  draw(
+    `Emision: ${constancia.fecha_emision.toISOString().slice(0, 10)}`,
+    POS.emision.x,
+    POS.emision.y,
+    POS.emision.size,
+  )
+
+  return await pdf.save()
+}
+
+function splitDate(d: Date) {
+  return {
+    y: d.getUTCFullYear().toString().padStart(4, "0"),
+    m: (d.getUTCMonth() + 1).toString().padStart(2, "0"),
+    d: d.getUTCDate().toString().padStart(2, "0"),
+  }
+}
+
+function formatHoras(horas: number) {
+  return Number.isInteger(horas) ? String(horas) : horas.toFixed(1).replace(/\.0$/, "")
+}
+
+async function drawInstructorFirma(
+  pdf: PDFDocument,
+  page: ReturnType<PDFDocument["getPages"]>[number],
+  firmaUrl: string,
+) {
+  const relative = firmaUrl.startsWith("/") ? firmaUrl.slice(1) : firmaUrl
+  const firmaPath = path.join(process.cwd(), "public", relative)
+  try {
+    const bytes = await fs.readFile(firmaPath)
+    const image = await pdf.embedPng(bytes)
+    page.drawImage(image, {
+      x: POS.instructorFirma.x,
+      y: POS.instructorFirma.y,
+      width: POS.instructorFirma.w,
+      height: POS.instructorFirma.h,
+    })
+  } catch (err) {
+    console.warn(`[dc3] no se pudo cargar firma del instructor (${firmaPath}):`, err)
+  }
+}
