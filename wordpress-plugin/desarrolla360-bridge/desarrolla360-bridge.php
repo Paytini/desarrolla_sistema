@@ -1048,6 +1048,9 @@ function d360_bridge_extract_course_thematic_area( $course_id, $category_names )
 		array(
 			'stps_area_name',
 			'd360_thematic_area_name',
+			'_thematic_area_name',
+			'thematic_area_name',
+			'area_tematica',
 		)
 	);
 
@@ -1056,11 +1059,43 @@ function d360_bridge_extract_course_thematic_area( $course_id, $category_names )
 		array(
 			'stps_area_code',
 			'd360_thematic_area_code',
+			'_thematic_area_code',
+			'thematic_area_code',
+			'area_tematica_clave',
+			'stps_area_clave',
 		)
 	);
 
+	// Fallback: tomar el nombre de la primera categoria del curso.
 	if ( ! is_string( $name ) || '' === trim( $name ) ) {
 		$name = ! empty( $category_names ) ? $category_names[0] : '';
+	}
+
+	// Fallback para el codigo: buscarlo en el term meta de las taxonomias del curso.
+	if ( ! is_scalar( $code ) || '' === trim( (string) $code ) ) {
+		$taxonomy_candidates = array( 'course-category', 'course_category', 'tutor_course_category', 'category' );
+		foreach ( $taxonomy_candidates as $taxonomy ) {
+			if ( ! taxonomy_exists( $taxonomy ) ) {
+				continue;
+			}
+			$terms = get_the_terms( $course_id, $taxonomy );
+			if ( is_wp_error( $terms ) || empty( $terms ) ) {
+				continue;
+			}
+			foreach ( $terms as $term ) {
+				$term_code = get_term_meta( $term->term_id, 'stps_area_code', true );
+				if ( '' === $term_code ) {
+					$term_code = get_term_meta( $term->term_id, 'd360_thematic_area_code', true );
+				}
+				if ( '' === $term_code ) {
+					$term_code = get_term_meta( $term->term_id, 'area_code', true );
+				}
+				if ( is_scalar( $term_code ) && '' !== trim( (string) $term_code ) ) {
+					$code = trim( (string) $term_code );
+					break 2;
+				}
+			}
+		}
 	}
 
 	return array(
@@ -1070,6 +1105,7 @@ function d360_bridge_extract_course_thematic_area( $course_id, $category_names )
 }
 
 function d360_bridge_extract_course_duration_hours( $course_id, $tutor_payload ) {
+	// Fuentes primarias: meta del post y payload de la API de Tutor LMS.
 	$duration_sources = array(
 		d360_bridge_get_first_post_meta_value(
 			$course_id,
@@ -1078,6 +1114,9 @@ function d360_bridge_extract_course_duration_hours( $course_id, $tutor_payload )
 				'course_duration',
 				'_tutor_course_duration',
 				'tutor_course_duration',
+				'_tutor_course_duration_hours',
+				'tutor_course_duration_hours',
+				'duration_hours',
 				'duration',
 			)
 		),
@@ -1093,7 +1132,94 @@ function d360_bridge_extract_course_duration_hours( $course_id, $tutor_payload )
 		}
 	}
 
-	return null;
+	// Fallback: calcular la duracion sumando los videos de todas las lecciones del curso.
+	return d360_bridge_calculate_content_duration_hours( $course_id );
+}
+
+/**
+ * Calcula la duracion total del curso sumando el playtime de los videos de sus lecciones.
+ * Intenta primero con la API de topics de Tutor LMS y luego leyendo post meta directamente.
+ */
+function d360_bridge_calculate_content_duration_hours( $course_id ) {
+	$total_seconds = 0;
+
+	// Metodo 1: API de topics de Tutor LMS (/tutor/v1/course-topic/{id}).
+	$topic_response = d360_bridge_dispatch_tutor_request( 'GET', sprintf( '/tutor/v1/course-topic/%d', $course_id ) );
+
+	if ( ! is_wp_error( $topic_response ) ) {
+		$topics = array();
+		if ( isset( $topic_response['topics'] ) && is_array( $topic_response['topics'] ) ) {
+			$topics = $topic_response['topics'];
+		} elseif ( isset( $topic_response['data']['topics'] ) && is_array( $topic_response['data']['topics'] ) ) {
+			$topics = $topic_response['data']['topics'];
+		} elseif ( isset( $topic_response['data'] ) && is_array( $topic_response['data'] ) ) {
+			$topics = $topic_response['data'];
+		}
+
+		foreach ( $topics as $topic ) {
+			$contents = isset( $topic['contents'] ) && is_array( $topic['contents'] ) ? $topic['contents'] : array();
+			foreach ( $contents as $content ) {
+				if ( isset( $content['video']['playtime'] ) && is_numeric( $content['video']['playtime'] ) ) {
+					$total_seconds += (float) $content['video']['playtime'];
+				}
+				// Algunos temas exponen duration directamente en segundos.
+				if ( isset( $content['video']['runtime']['seconds'] ) && is_numeric( $content['video']['runtime']['seconds'] ) ) {
+					$total_seconds += (float) $content['video']['runtime']['seconds'];
+				}
+			}
+		}
+
+		if ( $total_seconds > 0 ) {
+			return round( $total_seconds / 3600, 2 );
+		}
+	}
+
+	// Metodo 2: Leer _tutor_video post meta directamente de las lecciones del curso.
+	// Busca lecciones que sean hijos directos del curso.
+	$lesson_ids = get_posts( array(
+		'post_type'      => 'tutor_lesson',
+		'post_parent'    => $course_id,
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'post_status'    => array( 'publish', 'private', 'draft' ),
+	) );
+
+	// Si no hay lecciones directas, busca dentro de los topics del curso.
+	if ( empty( $lesson_ids ) ) {
+		$topic_ids = get_posts( array(
+			'post_type'      => 'topics',
+			'post_parent'    => $course_id,
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'post_status'    => array( 'publish', 'private', 'draft' ),
+		) );
+
+		foreach ( $topic_ids as $topic_id ) {
+			$topic_lesson_ids = get_posts( array(
+				'post_type'      => 'tutor_lesson',
+				'post_parent'    => $topic_id,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'post_status'    => array( 'publish', 'private', 'draft' ),
+			) );
+			$lesson_ids = array_merge( $lesson_ids, $topic_lesson_ids );
+		}
+	}
+
+	foreach ( $lesson_ids as $lesson_id ) {
+		$video_info = get_post_meta( $lesson_id, '_tutor_video', true );
+		if ( ! is_array( $video_info ) ) {
+			continue;
+		}
+		// playtime puede estar en segundos como entero, o en runtime.seconds.
+		if ( isset( $video_info['playtime'] ) && is_numeric( $video_info['playtime'] ) && (float) $video_info['playtime'] > 0 ) {
+			$total_seconds += (float) $video_info['playtime'];
+		} elseif ( isset( $video_info['runtime']['seconds'] ) && is_numeric( $video_info['runtime']['seconds'] ) ) {
+			$total_seconds += (float) $video_info['runtime']['seconds'];
+		}
+	}
+
+	return $total_seconds > 0 ? round( $total_seconds / 3600, 2 ) : null;
 }
 
 function d360_bridge_parse_duration_hours( $value ) {
