@@ -10,7 +10,7 @@ const POS = {
   curpY:            559,
   curpStep:         14,
   ocupacion:        { x: 305, y: 559, size: 9 },
-  puesto:           { x: 60,  y: 540, size: 10 },  // bajado 13pt: estaba pisando header empresa
+  puesto:           { x: 40,  y: 535, size: 10 },  // bajado 13pt: estaba pisando header empresa
   // DATOS DE LA EMPRESA
   razonSocial:      { x: 60,  y: 468, size: 10 },
   rfcStartX:        40,
