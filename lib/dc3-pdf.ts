@@ -12,7 +12,7 @@ const POS = {
   ocupacion:        { x: 305, y: 559, size: 9 },
   puesto:           { x: 40,  y: 535, size: 10 },
   // DATOS DE LA EMPRESA
-  razonSocial:      { x: 40,  y: 480, size: 10 },
+  razonSocial:      { x: 40,  y: 470, size: 10 },
   rfcStartX:        40,
   rfcY:             410,
   rfcStep:          13,
