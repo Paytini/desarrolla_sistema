@@ -8,38 +8,42 @@ import { prisma } from "@/lib/prisma"
 // Si una sección queda desalineada, ajusta solo los valores de este objeto.
 // Coordenadas calibradas sobre el PDF oficial DC-3 (ANVERSO, US Letter 612x792 pt).
 // Origen pdf-lib: esquina inferior izquierda. Y mayor = más arriba en la página.
+// Regla: si un campo aparece 1 fila abajo de donde debe, súmale ~36 a su Y.
 // Ajusta solo este objeto si algún campo queda desalineado.
 const POS = {
-  // DATOS DEL TRABAJADOR
-  nombre:          { x: 60,  y: 638, size: 10 },
-  curpStartX:      40,
-  curpY:           608,
-  curpStep:        13.1,
-  ocupacion:       { x: 340, y: 608, size: 9 },
-  puesto:          { x: 60,  y: 579, size: 10 },
-  // DATOS DE LA EMPRESA
-  razonSocial:     { x: 60,  y: 530, size: 10 },
-  rfcStartX:       40,
-  rfcY:            499,
-  rfcStep:         13,
-  // DATOS DEL PROGRAMA
-  curso:           { x: 60,  y: 452, size: 10 },
-  duracion:        { x: 60,  y: 414, size: 10 },
-  fechaInicioAnio: { x: 290, y: 414, size: 10 },
-  fechaInicioMes:  { x: 334, y: 414, size: 10 },
-  fechaInicioDia:  { x: 374, y: 414, size: 10 },
-  fechaFinAnio:    { x: 436, y: 414, size: 10 },
-  fechaFinMes:     { x: 480, y: 414, size: 10 },
-  fechaFinDia:     { x: 523, y: 414, size: 10 },
-  areaTematica:    { x: 60,  y: 376, size: 10 },
-  agenteCapacitador:{ x: 60, y: 338, size: 10 },
+  // DATOS DEL TRABAJADOR — verificados en iteración 1
+  nombre:           { x: 60,  y: 600, size: 10 },
+  curpStartX:       40,
+  curpY:            559,
+  curpStep:         12.7,
+  ocupacion:        { x: 355, y: 559, size: 9 },
+  puesto:           { x: 60,  y: 520, size: 10 },
+  // DATOS DE LA EMPRESA — razón social 36pt arriba de donde estaba (= fila RFC → fila razón social)
+  razonSocial:      { x: 60,  y: 492, size: 10 },
+  rfcStartX:        40,
+  rfcY:             456,
+  rfcStep:          13,
+  // DATOS DEL PROGRAMA — todos +36pt desde iteración 1 (nombre del curso = fila duración+36)
+  curso:            { x: 60,  y: 408, size: 10 },
+  duracion:         { x: 60,  y: 372, size: 10 },
+  fechaInicioAnio:  { x: 295, y: 372, size: 10 },
+  fechaInicioMes:   { x: 335, y: 372, size: 10 },
+  fechaInicioDia:   { x: 375, y: 372, size: 10 },
+  fechaFinAnio:     { x: 442, y: 372, size: 10 },
+  fechaFinMes:      { x: 485, y: 372, size: 10 },
+  fechaFinDia:      { x: 528, y: 372, size: 10 },
+  areaTematica:     { x: 60,  y: 336, size: 10 },
+  agenteCapacitador:{ x: 60,  y: 300, size: 10 },
   // FIRMAS
-  instructorFirma: { x: 95,  y: 210, w: 120, h: 40 },
-  instructorNombre:{ x: 95,  y: 196, size: 9 },
+  instructorFirma:  { x: 95,  y: 210, w: 120, h: 40 },
+  instructorNombre: { x: 95,  y: 204, size: 9 },
   // CONTROL INTERNO
-  folio:           { x: 430, y: 60,  size: 8 },
-  emision:         { x: 430, y: 50,  size: 8 },
+  folio:            { x: 430, y: 60,  size: 8 },
+  emision:          { x: 430, y: 50,  size: 8 },
 } as const
+
+// Color corporativo para los datos estampados
+const TEXTO_COLOR = rgb(0.04, 0.18, 0.62)
 
 export class Dc3MissingFieldsError extends Error {
   readonly fields: string[]
@@ -107,7 +111,7 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   const helvetica = await pdf.embedFont(StandardFonts.Helvetica)
 
   const draw = (text: string, x: number, y: number, size = 10) => {
-    page.drawText(text, { x, y, size, font: helvetica, color: rgb(0, 0, 0) })
+    page.drawText(text.toUpperCase(), { x, y, size, font: helvetica, color: TEXTO_COLOR })
   }
 
   // DC-3 requiere: Apellido Paterno, Apellido Materno, Nombre(s)
@@ -176,9 +180,9 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
     draw(metadata.instructor_nombre, POS.instructorNombre.x, POS.instructorNombre.y, POS.instructorNombre.size)
   }
 
-  draw(`Folio: ${constancia.folio}`, POS.folio.x, POS.folio.y, POS.folio.size)
+  draw(`FOLIO: ${constancia.folio}`, POS.folio.x, POS.folio.y, POS.folio.size)
   draw(
-    `Emision: ${constancia.fecha_emision.toISOString().slice(0, 10)}`,
+    `EMISION: ${constancia.fecha_emision.toISOString().slice(0, 10)}`,
     POS.emision.x,
     POS.emision.y,
     POS.emision.size,
