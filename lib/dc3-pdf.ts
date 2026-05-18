@@ -17,26 +17,27 @@ const POS = {
   curpY:            559,
   curpStep:         12.7,
   ocupacion:        { x: 355, y: 559, size: 9 },
-  puesto:           { x: 60,  y: 520, size: 10 },
+  puesto:           { x: 60,  y: 507, size: 10 },  // bajado 13pt: estaba pisando header empresa
   // DATOS DE LA EMPRESA
   razonSocial:      { x: 60,  y: 468, size: 10 },
   rfcStartX:        40,
-  rfcY:             432,
+  rfcY:             410,
   rfcStep:          13,
   // DATOS DEL PROGRAMA
-  curso:            { x: 60,  y: 386, size: 10 },
-  duracion:         { x: 60,  y: 350, size: 10 },
-  fechaInicioAnio:  { x: 295, y: 350, size: 10 },
-  fechaInicioMes:   { x: 335, y: 350, size: 10 },
-  fechaInicioDia:   { x: 375, y: 350, size: 10 },
-  fechaFinAnio:     { x: 442, y: 350, size: 10 },
-  fechaFinMes:      { x: 485, y: 350, size: 10 },
-  fechaFinDia:      { x: 528, y: 350, size: 10 },
-  areaTematica:     { x: 60,  y: 312, size: 10 },
-  agenteCapacitador:{ x: 60,  y: 276, size: 10 },
-  // FIRMAS
-  instructorFirma:  { x: 95,  y: 210, w: 120, h: 40 },
-  instructorNombre: { x: 95,  y: 204, size: 9 },
+  // Regla de filas: area temática = 350, cada fila = +18pt hacia arriba
+  curso:            { x: 60,  y: 374, size: 9  },   // 350+24 = label área, data 12pt abajo
+  duracion:         { x: 60,  y: 368, size: 10 },   // fila duración = 350+18
+  fechaInicioAnio:  { x: 295, y: 368, size: 10 },
+  fechaInicioMes:   { x: 335, y: 368, size: 10 },
+  fechaInicioDia:   { x: 375, y: 368, size: 10 },
+  fechaFinAnio:     { x: 442, y: 368, size: 10 },
+  fechaFinMes:      { x: 485, y: 368, size: 10 },
+  fechaFinDia:      { x: 528, y: 368, size: 10 },
+  areaTematica:     { x: 60,  y: 350, size: 10 },   // fila confirmada en iteración 4
+  agenteCapacitador:{ x: 60,  y: 332, size: 10 },   // 350-18
+  // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
+  instructorFirma:  { x: 95,  y: 175, w: 120, h: 40 },
+  instructorNombre: { x: 95,  y: 168, size: 9 },
   // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },
   emision:          { x: 430, y: 50,  size: 8 },
@@ -111,7 +112,9 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   const helvetica = await pdf.embedFont(StandardFonts.Helvetica)
 
   const draw = (text: string, x: number, y: number, size = 10) => {
-    page.drawText(text.toUpperCase(), { x, y, size, font: helvetica, color: TEXTO_COLOR })
+    const clean = sanitizeText(text).toUpperCase()
+    if (!clean) return
+    page.drawText(clean, { x, y, size, font: helvetica, color: TEXTO_COLOR })
   }
 
   // DC-3 requiere: Apellido Paterno, Apellido Materno, Nombre(s)
@@ -144,7 +147,7 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
     draw(rfc[i], POS.rfcStartX + i * POS.rfcStep, POS.rfcY, 10)
   }
 
-  draw(metadata?.nombre_curso || constancia.nombre_curso, POS.curso.x, POS.curso.y, POS.curso.size)
+  draw(truncate(metadata?.nombre_curso || constancia.nombre_curso, 90), POS.curso.x, POS.curso.y, POS.curso.size)
 
   if (metadata?.duracion_horas != null) {
     draw(formatHoras(metadata.duracion_horas), POS.duracion.x, POS.duracion.y, POS.duracion.size)
@@ -189,6 +192,25 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   )
 
   return await pdf.save()
+}
+
+function sanitizeText(text: string): string {
+  return text
+    .replace(/&#8211;|&#x2013;|–/g, "-")
+    .replace(/&#8212;|&#x2014;|—/g, "-")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#\d+;/g, "")    // elimina entidades numéricas restantes
+    .replace(/&[a-z]+;/gi, "") // elimina entidades con nombre restantes
+    .replace(/[^\x00-\xFF]/g, "") // elimina caracteres fuera de Latin-1 (WinAnsi)
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function truncate(text: string, maxChars: number): string {
+  return text.length > maxChars ? text.slice(0, maxChars - 1) + "…" : text
 }
 
 function splitDate(d: Date) {
