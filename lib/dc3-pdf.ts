@@ -12,7 +12,7 @@ import { prisma } from "@/lib/prisma"
 // Ajusta solo este objeto si algún campo queda desalineado.
 const POS = {
   // DATOS DEL TRABAJADOR — verificados en iteración 1
-  nombre:           { x: 60,  y: 800, size: 10 },
+  nombre:           { x: 60,  y: 400, size: 10 },
   curpStartX:       40,
   curpY:            559,
   curpStep:         12.7,
