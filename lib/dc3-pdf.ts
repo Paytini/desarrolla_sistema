@@ -82,23 +82,15 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   if (!empleado.ocupacion_especifica_clave) missing.push("Clave de ocupacion especifica")
   if (!empresa.nombre) missing.push("Razon social de la empresa")
   if (!empresa.rfc) missing.push("RFC de la empresa")
-  if (!metadata) {
-    missing.push("Ficha DC-3 del curso (metadata)")
-  } else {
-    if (metadata.duracion_horas == null) missing.push("Duracion del curso en horas")
-    if (!metadata.area_tematica_nombre) missing.push("Area tematica del curso")
-    if (!metadata.area_tematica_clave) missing.push("Clave del area tematica")
-    if (!metadata.agente_capacitador_nombre) missing.push("Agente capacitador")
-    if (!metadata.agente_capacitador_registro) missing.push("Registro STPS/ACE del agente")
-    if (!metadata.instructor_nombre) missing.push("Nombre del instructor")
-    if (!metadata.instructor_firma_url) missing.push("Firma del instructor (PNG)")
-  }
-  if (!empleadoCurso?.fecha_inicio_curso) missing.push("Fecha de inicio del curso")
-  if (!empleadoCurso?.fecha_completado) missing.push("Fecha de termino del curso")
 
   if (missing.length > 0) {
     throw new Dc3MissingFieldsError(missing)
   }
+
+  // Fecha de termino: usa fecha_completado del empleado-curso; si no existe, cae a fecha_emision de la constancia.
+  const fechaTermino = empleadoCurso?.fecha_completado ?? constancia.fecha_emision
+  // Fecha de inicio: usa fecha_inicio_curso; si no existe, cae a fecha_emision.
+  const fechaInicio = empleadoCurso?.fecha_inicio_curso ?? constancia.fecha_emision
 
   const templatePath = path.join(process.cwd(), "public", "templates", "dc3.pdf")
   const templateBytes = await fs.readFile(templatePath)
@@ -136,11 +128,14 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
     draw(rfc[i], POS.rfcStartX + i * POS.rfcStep, POS.rfcY, 10)
   }
 
-  draw(metadata!.nombre_curso || constancia.nombre_curso, POS.curso.x, POS.curso.y, POS.curso.size)
-  draw(formatHoras(metadata!.duracion_horas!), POS.duracion.x, POS.duracion.y, POS.duracion.size)
+  draw(metadata?.nombre_curso || constancia.nombre_curso, POS.curso.x, POS.curso.y, POS.curso.size)
 
-  const start = splitDate(empleadoCurso!.fecha_inicio_curso!)
-  const end = splitDate(empleadoCurso!.fecha_completado!)
+  if (metadata?.duracion_horas != null) {
+    draw(formatHoras(metadata.duracion_horas), POS.duracion.x, POS.duracion.y, POS.duracion.size)
+  }
+
+  const start = splitDate(fechaInicio)
+  const end = splitDate(fechaTermino)
   draw(start.y, POS.fechaInicioAnio.x, POS.fechaInicioAnio.y, 10)
   draw(start.m, POS.fechaInicioMes.x, POS.fechaInicioMes.y, 10)
   draw(start.d, POS.fechaInicioDia.x, POS.fechaInicioDia.y, 10)
@@ -148,22 +143,26 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   draw(end.m, POS.fechaFinMes.x, POS.fechaFinMes.y, 10)
   draw(end.d, POS.fechaFinDia.x, POS.fechaFinDia.y, 10)
 
-  draw(
-    `${metadata!.area_tematica_clave} ${metadata!.area_tematica_nombre}`,
-    POS.areaTematica.x,
-    POS.areaTematica.y,
-    POS.areaTematica.size,
-  )
+  if (metadata?.area_tematica_nombre) {
+    const area = metadata.area_tematica_clave
+      ? `${metadata.area_tematica_clave} ${metadata.area_tematica_nombre}`
+      : metadata.area_tematica_nombre
+    draw(area, POS.areaTematica.x, POS.areaTematica.y, POS.areaTematica.size)
+  }
 
-  draw(
-    `${metadata!.agente_capacitador_nombre} - ${metadata!.agente_capacitador_registro}`,
-    POS.agenteCapacitador.x,
-    POS.agenteCapacitador.y,
-    POS.agenteCapacitador.size,
-  )
+  if (metadata?.agente_capacitador_nombre) {
+    const agente = metadata.agente_capacitador_registro
+      ? `${metadata.agente_capacitador_nombre} - ${metadata.agente_capacitador_registro}`
+      : metadata.agente_capacitador_nombre
+    draw(agente, POS.agenteCapacitador.x, POS.agenteCapacitador.y, POS.agenteCapacitador.size)
+  }
 
-  await drawInstructorFirma(pdf, page, metadata!.instructor_firma_url!)
-  draw(metadata!.instructor_nombre!, POS.instructorNombre.x, POS.instructorNombre.y, POS.instructorNombre.size)
+  if (metadata?.instructor_firma_url) {
+    await drawInstructorFirma(pdf, page, metadata.instructor_firma_url)
+  }
+  if (metadata?.instructor_nombre) {
+    draw(metadata.instructor_nombre, POS.instructorNombre.x, POS.instructorNombre.y, POS.instructorNombre.size)
+  }
 
   draw(`Folio: ${constancia.folio}`, POS.folio.x, POS.folio.y, POS.folio.size)
   draw(
