@@ -3,17 +3,10 @@ import path from "node:path"
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
 import { prisma } from "@/lib/prisma"
 
-// Coordenadas para estampar sobre el PDF oficial DC-3 (ANVERSO).
-// Hoja: US Letter 612 x 792 pt. Origen pdf-lib: esquina inferior izquierda.
-// Si una sección queda desalineada, ajusta solo los valores de este objeto.
-// Coordenadas calibradas sobre el PDF oficial DC-3 (ANVERSO, US Letter 612x792 pt).
-// Origen pdf-lib: esquina inferior izquierda. Y mayor = más arriba en la página.
-// Regla: si un campo aparece 1 fila abajo de donde debe, súmale ~36 a su Y.
-// Ajusta solo este objeto si algún campo queda desalineado.
 const POS = {
   // DATOS DEL TRABAJADOR — verificados en iteración 1
   nombre:           { x: 40,  y: 590, size: 10 },
-  curpStartX:       40,
+  curpStartX:       20,
   curpY:            559,
   curpStep:         12.7,
   ocupacion:        { x: 355, y: 559, size: 9 },
@@ -24,17 +17,16 @@ const POS = {
   rfcY:             410,
   rfcStep:          13,
   // DATOS DEL PROGRAMA
-  // Regla de filas: area temática = 350, cada fila = +18pt hacia arriba
-  curso:            { x: 60,  y: 374, size: 9  },   // 350+24 = label área, data 12pt abajo
-  duracion:         { x: 60,  y: 368, size: 10 },   // fila duración = 350+18
+  curso:            { x: 60,  y: 374, size: 9  },  
+  duracion:         { x: 60,  y: 368, size: 10 },  
   fechaInicioAnio:  { x: 295, y: 368, size: 10 },
   fechaInicioMes:   { x: 335, y: 368, size: 10 },
   fechaInicioDia:   { x: 375, y: 368, size: 10 },
   fechaFinAnio:     { x: 442, y: 368, size: 10 },
   fechaFinMes:      { x: 485, y: 368, size: 10 },
   fechaFinDia:      { x: 528, y: 368, size: 10 },
-  areaTematica:     { x: 60,  y: 350, size: 10 },   // fila confirmada en iteración 4
-  agenteCapacitador:{ x: 60,  y: 332, size: 10 },   // 350-18
+  areaTematica:     { x: 60,  y: 350, size: 10 },
+  agenteCapacitador:{ x: 60,  y: 332, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
   instructorFirma:  { x: 95,  y: 175, w: 120, h: 40 },
   instructorNombre: { x: 95,  y: 168, size: 9 },
