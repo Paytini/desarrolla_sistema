@@ -12,7 +12,7 @@ import { prisma } from "@/lib/prisma"
 // Ajusta solo este objeto si algún campo queda desalineado.
 const POS = {
   // DATOS DEL TRABAJADOR — verificados en iteración 1
-  nombre:           { x: 60,  y: 600, size: 10 },
+  nombre:           { x: 60,  y: 800, size: 10 },
   curpStartX:       40,
   curpY:            559,
   curpStep:         12.7,
@@ -100,9 +100,7 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
     throw new Dc3MissingFieldsError(missing)
   }
 
-  // Fecha de termino: usa fecha_completado del empleado-curso; si no existe, cae a fecha_emision de la constancia.
   const fechaTermino = empleadoCurso?.fecha_completado ?? constancia.fecha_emision
-  // Fecha de inicio: usa fecha_inicio_curso; si no existe, cae a fecha_emision.
   const fechaInicio = empleadoCurso?.fecha_inicio_curso ?? constancia.fecha_emision
 
   const templatePath = path.join(process.cwd(), "public", "templates", "dc3.pdf")
@@ -117,7 +115,6 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
     page.drawText(clean, { x, y, size, font: helvetica, color: TEXTO_COLOR })
   }
 
-  // DC-3 requiere: Apellido Paterno, Apellido Materno, Nombre(s)
   const fullName = [empleado.apellido, empleado.apellido_materno, empleado.nombre]
     .filter(Boolean)
     .join(" ")
