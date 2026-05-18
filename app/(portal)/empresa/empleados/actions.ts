@@ -66,6 +66,7 @@ type EmployeeProvisioningInput = {
   empresaId: number
   nombre: string
   apellido: string
+  apellidoMaterno?: string | null
   email: string
   curp?: string | null
   departamento?: string | null
@@ -171,6 +172,7 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
         empresa_id: input.empresaId,
         nombre: input.nombre,
         apellido: input.apellido,
+        apellido_materno: input.apellidoMaterno || null,
         email,
         curp: input.curp || null,
         departamento: input.departamento || null,
@@ -309,6 +311,7 @@ function csvField(
 type NormalizedCsvEmployeeRow = {
   nombre: string
   apellido: string
+  apellidoMaterno: string | null
   email: string
   curp: string | null
   departamento: string | null
@@ -363,7 +366,8 @@ function normalizeCsvEmployees(
     )
 
     const nombre = csvField(row, ["nombre", "first_name", "nombres"])
-    const apellido = csvField(row, ["apellido", "apellidos", "last_name", "lastname"])
+    const apellido = csvField(row, ["apellido", "apellido_paterno", "last_name", "lastname"])
+    const apellidoMaterno = csvField(row, ["apellido_materno", "segundo_apellido"]) || null
     const email = csvField(row, ["email", "correo", "correo_electronico"]).toLowerCase()
     const curp = csvField(row, ["curp"]) || null
     const departamento = csvField(row, ["departamento", "department"]) || null
@@ -399,6 +403,7 @@ function normalizeCsvEmployees(
     employees.push({
       nombre,
       apellido,
+      apellidoMaterno,
       email,
       curp,
       departamento,
@@ -494,6 +499,7 @@ export async function createEmployeeAction(formData: FormData) {
   const empresaId = session.user.empresa_id as number
   const nombre = getString(formData, "nombre")
   const apellido = getString(formData, "apellido")
+  const apellidoMaterno = getString(formData, "apellido_materno")
   const email = getString(formData, "email").toLowerCase()
   const curp = getString(formData, "curp").toUpperCase()
   const departamento = getString(formData, "departamento")
@@ -510,6 +516,7 @@ export async function createEmployeeAction(formData: FormData) {
     empresaId,
     nombre,
     apellido,
+    apellidoMaterno: apellidoMaterno || null,
     email,
     curp: curp || null,
     departamento: departamento || null,
@@ -653,6 +660,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
             empresa_id: empresaId,
             nombre: employee.nombre,
             apellido: employee.apellido,
+            apellido_materno: employee.apellidoMaterno,
             email: employee.email,
             curp: employee.curp,
             departamento: employee.departamento,

@@ -94,19 +94,26 @@ function buildEmployeeListPath(query: string, status: string) {
 function ManualEmployeeForm() {
   return (
     <form action={createEmployeeAction} className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <label className="grid gap-1.5 text-sm">
-          <span className="font-medium text-slate-700">Nombre</span>
+          <span className="font-medium text-slate-700">Apellido paterno</span>
           <input
-            name="nombre"
+            name="apellido"
             required
             className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
           />
         </label>
         <label className="grid gap-1.5 text-sm">
-          <span className="font-medium text-slate-700">Apellido</span>
+          <span className="font-medium text-slate-700">Apellido materno</span>
           <input
-            name="apellido"
+            name="apellido_materno"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+          />
+        </label>
+        <label className="grid gap-1.5 text-sm">
+          <span className="font-medium text-slate-700">Nombre(s)</span>
+          <input
+            name="nombre"
             required
             className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
           />

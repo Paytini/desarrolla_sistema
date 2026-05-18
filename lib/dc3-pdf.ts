@@ -6,31 +6,39 @@ import { prisma } from "@/lib/prisma"
 // Coordenadas para estampar sobre el PDF oficial DC-3 (ANVERSO).
 // Hoja: US Letter 612 x 792 pt. Origen pdf-lib: esquina inferior izquierda.
 // Si una sección queda desalineada, ajusta solo los valores de este objeto.
+// Coordenadas calibradas sobre el PDF oficial DC-3 (ANVERSO, US Letter 612x792 pt).
+// Origen pdf-lib: esquina inferior izquierda. Y mayor = más arriba en la página.
+// Ajusta solo este objeto si algún campo queda desalineado.
 const POS = {
-  nombre: { x: 60, y: 600, size: 10 },
-  curpStartX: 122,
-  curpY: 559,
-  curpStep: 12.7,
-  ocupacion: { x: 355, y: 559, size: 9 },
-  puesto: { x: 60, y: 520, size: 10 },
-  razonSocial: { x: 60, y: 456, size: 10 },
-  rfcStartX: 40,
-  rfcY: 420,
-  rfcStep: 13,
-  curso: { x: 60, y: 372, size: 10 },
-  duracion: { x: 60, y: 333, size: 10 },
-  fechaInicioAnio: { x: 295, y: 333, size: 10 },
-  fechaInicioMes: { x: 335, y: 333, size: 10 },
-  fechaInicioDia: { x: 375, y: 333, size: 10 },
-  fechaFinAnio: { x: 442, y: 333, size: 10 },
-  fechaFinMes: { x: 485, y: 333, size: 10 },
-  fechaFinDia: { x: 528, y: 333, size: 10 },
-  areaTematica: { x: 60, y: 297, size: 10 },
-  agenteCapacitador: { x: 60, y: 275, size: 10 },
-  instructorFirma: { x: 95, y: 168, w: 120, h: 40 },
-  instructorNombre: { x: 95, y: 158, size: 9 },
-  folio: { x: 430, y: 60, size: 8 },
-  emision: { x: 430, y: 50, size: 8 },
+  // DATOS DEL TRABAJADOR
+  nombre:          { x: 60,  y: 638, size: 10 },
+  curpStartX:      40,
+  curpY:           608,
+  curpStep:        13.1,
+  ocupacion:       { x: 340, y: 608, size: 9 },
+  puesto:          { x: 60,  y: 579, size: 10 },
+  // DATOS DE LA EMPRESA
+  razonSocial:     { x: 60,  y: 530, size: 10 },
+  rfcStartX:       40,
+  rfcY:            499,
+  rfcStep:         13,
+  // DATOS DEL PROGRAMA
+  curso:           { x: 60,  y: 452, size: 10 },
+  duracion:        { x: 60,  y: 414, size: 10 },
+  fechaInicioAnio: { x: 290, y: 414, size: 10 },
+  fechaInicioMes:  { x: 334, y: 414, size: 10 },
+  fechaInicioDia:  { x: 374, y: 414, size: 10 },
+  fechaFinAnio:    { x: 436, y: 414, size: 10 },
+  fechaFinMes:     { x: 480, y: 414, size: 10 },
+  fechaFinDia:     { x: 523, y: 414, size: 10 },
+  areaTematica:    { x: 60,  y: 376, size: 10 },
+  agenteCapacitador:{ x: 60, y: 338, size: 10 },
+  // FIRMAS
+  instructorFirma: { x: 95,  y: 210, w: 120, h: 40 },
+  instructorNombre:{ x: 95,  y: 196, size: 9 },
+  // CONTROL INTERNO
+  folio:           { x: 430, y: 60,  size: 8 },
+  emision:         { x: 430, y: 50,  size: 8 },
 } as const
 
 export class Dc3MissingFieldsError extends Error {
@@ -102,7 +110,11 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
     page.drawText(text, { x, y, size, font: helvetica, color: rgb(0, 0, 0) })
   }
 
-  const fullName = `${empleado.apellido} ${empleado.nombre}`.replace(/\s+/g, " ").trim()
+  // DC-3 requiere: Apellido Paterno, Apellido Materno, Nombre(s)
+  const fullName = [empleado.apellido, empleado.apellido_materno, empleado.nombre]
+    .filter(Boolean)
+    .join(" ")
+    .trim()
   draw(fullName, POS.nombre.x, POS.nombre.y, POS.nombre.size)
 
   const curp = empleado.curp!.toUpperCase().slice(0, 18)

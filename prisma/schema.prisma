@@ -183,6 +183,7 @@ model Empleado {
   wp_user_id                 Int?     @unique // ID en WordPress, único si ya está vinculado
   nombre                     String
   apellido                   String
+  apellido_materno           String?
   email                      String   @unique
   curp                       String?
   departamento               String?
