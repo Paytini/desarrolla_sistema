@@ -33,8 +33,8 @@ const POS = {
   areaTematica:     { x: 32,  y: 339, size: 10 },
   agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
-  instructorFirma:  { x: 75,  y: 175, w: 120, h: 40 },
-  instructorNombre: { x: 80,  y: 217, size: 9 },
+  instructorFirma:  { x: 75,  y: 178, w: 80,  h: 25 },
+  instructorNombre: { x: 75,  y: 175, size: 7 },
   // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },
   emision:          { x: 430, y: 50,  size: 8 },
@@ -190,6 +190,11 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
     POS.emision.y,
     POS.emision.size,
   )
+
+  // Eliminar el REVERSO (página 2 con catálogos); solo se entrega el ANVERSO
+  while (pdf.getPageCount() > 1) {
+    pdf.removePage(pdf.getPageCount() - 1)
+  }
 
   return await pdf.save()
 }
