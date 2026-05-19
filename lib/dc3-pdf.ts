@@ -13,9 +13,9 @@ const POS = {
   puesto:           { x: 40,  y: 535, size: 10 },
   // DATOS DE LA EMPRESA
   razonSocial:      { x: 40,  y: 475, size: 10 },
-  rfcStartX:        40,
-  rfcY:             410,
-  rfcStep:          13,
+  rfcStartX:        32,
+  rfcY:             425,
+  rfcStep:          14,
   // DATOS DEL PROGRAMA
   curso:            { x: 60,  y: 374, size: 9  },  
   duracion:         { x: 60,  y: 368, size: 10 },  
