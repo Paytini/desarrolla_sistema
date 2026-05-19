@@ -14,10 +14,10 @@ const POS = {
   // DATOS DE LA EMPRESA
   razonSocial:      { x: 40,  y: 475, size: 10 },
   rfcStartX:        32,
-  rfcY:             445,
+  rfcY:             442,
   rfcStep:          14,
   // DATOS DEL PROGRAMA
-  curso:            { x: 60,  y: 374, size: 9  },  
+  curso:            { x: 32,  y: 390, size: 9  },  
   duracion:         { x: 60,  y: 368, size: 10 },  
   fechaInicioAnio:  { x: 295, y: 368, size: 10 },
   fechaInicioMes:   { x: 335, y: 368, size: 10 },
