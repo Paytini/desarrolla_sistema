@@ -17,14 +17,20 @@ const POS = {
   rfcY:             442,
   rfcStep:          14,
   // DATOS DEL PROGRAMA
-  curso:            { x: 32,  y: 390, size: 9  },  
-  duracion:         { x: 32,  y: 364, size: 10 },  
-  fechaInicioAnio:  { x: 295, y: 368, size: 10 },
-  fechaInicioMes:   { x: 335, y: 368, size: 10 },
-  fechaInicioDia:   { x: 375, y: 368, size: 10 },
-  fechaFinAnio:     { x: 442, y: 368, size: 10 },
-  fechaFinMes:      { x: 485, y: 368, size: 10 },
-  fechaFinDia:      { x: 528, y: 368, size: 10 },
+  curso:            { x: 32,  y: 390, size: 9  },
+  duracion:         { x: 32,  y: 364, size: 10 },
+  // Fechas: dígito por dígito igual que CURP/RFC
+  // step = ancho por caja (~9.5 pt); ajusta si los dígitos quedan fuera de sus casillas
+  fechas: {
+    y: 368,
+    step: 9.5,
+    inicioAnioX: 295,  // primer dígito del año de inicio (4 cajas)
+    inicioMesX:  335,  // primer dígito del mes de inicio (2 cajas)
+    inicioDiaX:  375,  // primer dígito del día de inicio (2 cajas)
+    finAnioX:    442,  // primer dígito del año de fin (4 cajas)
+    finMesX:     485,  // primer dígito del mes de fin (2 cajas)
+    finDiaX:     528,  // primer dígito del día de fin (2 cajas)
+  },
   areaTematica:     { x: 32,  y: 339, size: 10 },
   agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
@@ -144,12 +150,18 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
 
   const start = splitDate(fechaInicio)
   const end = splitDate(fechaTermino)
-  draw(start.y, POS.fechaInicioAnio.x, POS.fechaInicioAnio.y, 10)
-  draw(start.m, POS.fechaInicioMes.x, POS.fechaInicioMes.y, 10)
-  draw(start.d, POS.fechaInicioDia.x, POS.fechaInicioDia.y, 10)
-  draw(end.y, POS.fechaFinAnio.x, POS.fechaFinAnio.y, 10)
-  draw(end.m, POS.fechaFinMes.x, POS.fechaFinMes.y, 10)
-  draw(end.d, POS.fechaFinDia.x, POS.fechaFinDia.y, 10)
+  const { y: fy, step: dateStep, inicioAnioX, inicioMesX, inicioDiaX, finAnioX, finMesX, finDiaX } = POS.fechas
+  const drawDigits = (digits: string, startX: number) => {
+    for (let i = 0; i < digits.length; i++) {
+      draw(digits[i], startX + i * dateStep, fy, 10)
+    }
+  }
+  drawDigits(start.y, inicioAnioX)
+  drawDigits(start.m, inicioMesX)
+  drawDigits(start.d, inicioDiaX)
+  drawDigits(end.y, finAnioX)
+  drawDigits(end.m, finMesX)
+  drawDigits(end.d, finDiaX)
 
   if (metadata?.area_tematica_nombre) {
     const area = metadata.area_tematica_clave
