@@ -22,10 +22,10 @@ const POS = {
   fechas: {
     y: 362,
     step: 17,
-    inicioAnioX: 250,  // primer dígito del año de inicio (4 cajas)
-    inicioMesX:  322,  // primer dígito del mes de inicio (2 cajas)
-    inicioDiaX:  363,  // primer dígito del día de inicio (2 cajas)
-    finAnioX:    425,
+    inicioAnioX: 250,
+    inicioMesX:  322,
+    inicioDiaX:  363,
+    finAnioX:    426,
     finMesX:     505,
     finDiaX:     545, 
   },
