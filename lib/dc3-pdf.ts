@@ -35,6 +35,11 @@ const POS = {
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
   instructorFirma:  { x: 85,  y: 220, w: 90,  h: 27 },
   instructorNombre: { x: 90,  y: 215, size: 7 },
+  // LOGO DESARROLLA360 (cabecera — cubre el texto de instrucción del PDF original)
+  // Aspect ratio logo_desarrolla_cropped: 1554:461 ≈ 3.37 — a 140pt de ancho → 41.5pt de alto
+  logoFirma: { x: 236, y: 735, w: 140, h: 42 },
+  // Rectángulo blanco que tapa el texto "En este espacio la empresa..." del template
+  logoMask: { x: 0, y: 715, w: 612, h: 78 },
   // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },
   emision:          { x: 430, y: 50,  size: 8 },
@@ -105,6 +110,9 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   const pdf = await PDFDocument.load(templateBytes)
   const page = pdf.getPages()[0]
   const helvetica = await pdf.embedFont(StandardFonts.Helvetica)
+
+  // Tapar el texto de instrucción original y reemplazar con el logo de Desarrolla360
+  await drawLogoDesarrolla(pdf, page)
 
   const draw = (text: string, x: number, y: number, size = 10) => {
     const clean = sanitizeText(text).toUpperCase()
@@ -228,6 +236,29 @@ function splitDate(d: Date) {
 
 function formatHoras(horas: number) {
   return Number.isInteger(horas) ? String(horas) : horas.toFixed(1).replace(/\.0$/, "")
+}
+
+async function drawLogoDesarrolla(
+  pdf: PDFDocument,
+  page: ReturnType<PDFDocument["getPages"]>[number],
+) {
+  const logoPath = path.join(process.cwd(), "public", "assets", "logo_desarrolla_cropped.png")
+  try {
+    const rawBytes = await fs.readFile(logoPath)
+    const pngBytes = await sharp(rawBytes)
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
+      .png()
+      .toBuffer()
+    const image = await pdf.embedPng(pngBytes)
+
+    const { x: mx, y: my, w: mw, h: mh } = POS.logoMask
+    page.drawRectangle({ x: mx, y: my, width: mw, height: mh, color: rgb(1, 1, 1) })
+
+    const { x, y, w, h } = POS.logoFirma
+    page.drawImage(image, { x, y, width: w, height: h, opacity: 1 })
+  } catch (err) {
+    console.warn("[dc3] no se pudo dibujar el logo:", err)
+  }
 }
 
 async function drawInstructorFirma(
