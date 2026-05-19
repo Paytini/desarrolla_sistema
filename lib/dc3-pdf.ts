@@ -4,7 +4,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
 import { prisma } from "@/lib/prisma"
 
 const POS = {
-  // DATOS DEL TRABAJADOR — verificados en iteración 1
+  // DATOS DEL TRABAJADOR
   nombre:           { x: 40,  y: 590, size: 10 },
   curpStartX:       32,
   curpY:            559,
@@ -19,14 +19,12 @@ const POS = {
   // DATOS DEL PROGRAMA
   curso:            { x: 32,  y: 390, size: 9  },
   duracion:         { x: 32,  y: 364, size: 10 },
-  // Fechas: dígito por dígito igual que CURP/RFC
-  // step = ancho por caja (~9.5 pt); ajusta si los dígitos quedan fuera de sus casillas
   fechas: {
     y: 362,
     step: 9.5,
-    inicioAnioX: 295,  // primer dígito del año de inicio (4 cajas)
-    inicioMesX:  335,  // primer dígito del mes de inicio (2 cajas)
-    inicioDiaX:  375,  // primer dígito del día de inicio (2 cajas)
+    inicioAnioX: 275,  // primer dígito del año de inicio (4 cajas)
+    inicioMesX:  320,  // primer dígito del mes de inicio (2 cajas)
+    inicioDiaX:  350,  // primer dígito del día de inicio (2 cajas)
     finAnioX:    442,  // primer dígito del año de fin (4 cajas)
     finMesX:     485,  // primer dígito del mes de fin (2 cajas)
     finDiaX:     528,  // primer dígito del día de fin (2 cajas)
