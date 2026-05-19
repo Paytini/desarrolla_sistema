@@ -34,11 +34,8 @@ const POS = {
   agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
   instructorFirma:  { x: 85,  y: 220, w: 90,  h: 27 },
-  instructorNombre: { x: 90,  y: 215, size: 7 },
-  // LOGO DESARROLLA360 (cabecera — cubre el texto de instrucción del PDF original)
-  // Aspect ratio logo_desarrolla_cropped: 1554:461 ≈ 3.37 — a 140pt de ancho → 41.5pt de alto
+  instructorNombre: { x: 90,  y: 216, size: 7 },
   logoFirma: { x: 236, y: 735, w: 140, h: 42 },
-  // Rectángulo blanco que tapa el texto "En este espacio la empresa..." del template
   logoMask: { x: 0, y: 715, w: 612, h: 78 },
   // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },
