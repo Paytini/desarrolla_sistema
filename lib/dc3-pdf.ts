@@ -1,6 +1,6 @@
 import fs from "node:fs/promises"
 import path from "node:path"
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
+import { PDFDocument, PDFImage, StandardFonts, rgb } from "pdf-lib"
 import { prisma } from "@/lib/prisma"
 
 const POS = {
@@ -33,7 +33,7 @@ const POS = {
   agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
   instructorFirma:  { x: 75,  y: 175, w: 120, h: 40 },
-  instructorNombre: { x: 80,  y: 215, size: 9 },
+  instructorNombre: { x: 80,  y: 217, size: 9 },
   // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },
   emision:          { x: 430, y: 50,  size: 8 },
@@ -231,16 +231,34 @@ async function drawInstructorFirma(
 ) {
   const relative = firmaUrl.startsWith("/") ? firmaUrl.slice(1) : firmaUrl
   const firmaPath = path.join(process.cwd(), "public", relative)
+
+  let bytes: Buffer
   try {
-    const bytes = await fs.readFile(firmaPath)
-    const image = await pdf.embedPng(bytes)
-    page.drawImage(image, {
-      x: POS.instructorFirma.x,
-      y: POS.instructorFirma.y,
-      width: POS.instructorFirma.w,
-      height: POS.instructorFirma.h,
-    })
+    bytes = await fs.readFile(firmaPath)
   } catch (err) {
-    console.warn(`[dc3] no se pudo cargar firma del instructor (${firmaPath}):`, err)
+    console.warn(`[dc3] archivo de firma no encontrado: ${firmaPath}`, err)
+    return
   }
+
+  let image: PDFImage | null = null
+
+  // Intenta PNG primero (soporta transparencia con canal alpha)
+  try {
+    image = await pdf.embedPng(bytes)
+  } catch {
+    // El archivo no es PNG válido o tiene un sub-formato no soportado; intenta como JPEG
+  }
+
+  // Fallback a JPEG (sin transparencia, fondo blanco)
+  if (!image) {
+    try {
+      image = await pdf.embedJpg(bytes)
+    } catch (err) {
+      console.error(`[dc3] no se pudo embeber la firma ni como PNG ni como JPEG: ${firmaPath}`, err)
+      return
+    }
+  }
+
+  const { x, y, w, h } = POS.instructorFirma
+  page.drawImage(image, { x, y, width: w, height: h, opacity: 1 })
 }
