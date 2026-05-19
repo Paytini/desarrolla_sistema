@@ -1,3 +1,24 @@
+export function decodeHtmlEntities(text: string): string {
+  if (!text) return text
+  return text
+    .replace(/&#8211;|&#x2013;/g, "–")
+    .replace(/&#8212;|&#x2014;/g, "—")
+    .replace(/&#8216;|&#x2018;/g, "‘")
+    .replace(/&#8217;|&#x2019;/g, "’")
+    .replace(/&#8220;|&#x201C;/g, "“")
+    .replace(/&#8221;|&#x201D;/g, "”")
+    .replace(/&#8230;|&#x2026;/g, "…")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .trim()
+}
+
 const PORTAL_TIME_ZONE =
   process.env.PORTAL_TIME_ZONE ||
   process.env.NEXT_PUBLIC_PORTAL_TIME_ZONE ||

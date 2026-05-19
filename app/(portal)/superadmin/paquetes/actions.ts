@@ -6,6 +6,7 @@ import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
+import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import {
   bridgeCreateBundle,
@@ -129,7 +130,7 @@ export async function createPackageAction(formData: FormData) {
     parsedCourses = payload
       .map((course) => ({
         wpCourseId: Number(course.wp_course_id),
-        nombreCurso: String(course.nombre_curso ?? "").trim(),
+        nombreCurso: decodeHtmlEntities(String(course.nombre_curso ?? "").trim()),
       }))
       .filter((course) => Number.isInteger(course.wpCourseId) && course.nombreCurso)
   } catch {
@@ -235,7 +236,7 @@ export async function syncCourseDc3MetadataAction(formData: FormData) {
     await prisma.cursoDc3Metadata.upsert({
       where: { wp_curso_id: wpCourseId },
       update: {
-        nombre_curso: details.title || nombreCurso || existingMetadata?.nombre_curso || null,
+        nombre_curso: decodeHtmlEntities(details.title || nombreCurso || existingMetadata?.nombre_curso || "") || null,
         duracion_horas: preferBridgeValue(
           details.duration_hours,
           existingMetadata?.duracion_horas
@@ -269,7 +270,7 @@ export async function syncCourseDc3MetadataAction(formData: FormData) {
       },
       create: {
         wp_curso_id: wpCourseId,
-        nombre_curso: details.title || nombreCurso || null,
+        nombre_curso: decodeHtmlEntities(details.title || nombreCurso || "") || null,
         duracion_horas: details.duration_hours ?? null,
         area_tematica_nombre: details.thematic_area_name || null,
         area_tematica_clave: details.thematic_area_code || null,

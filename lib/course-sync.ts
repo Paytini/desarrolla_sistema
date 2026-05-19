@@ -1,3 +1,4 @@
+import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import {
   assertAccessConfirmationSucceeded,
@@ -208,7 +209,7 @@ export async function syncCompanyPackageEnrollments(empresaId: number) {
               },
             },
             update: {
-              nombre_curso: course.title,
+              nombre_curso: decodeHtmlEntities(course.title),
               progreso_pct: course.progress_pct,
               completado: course.completed,
               acceso_estado: "ACTIVE",
@@ -222,7 +223,7 @@ export async function syncCompanyPackageEnrollments(empresaId: number) {
             create: {
               empleado_id: empleado.id,
               wp_curso_id: course.wp_course_id,
-              nombre_curso: course.title,
+              nombre_curso: decodeHtmlEntities(course.title),
               progreso_pct: course.progress_pct,
               completado: course.completed,
               acceso_estado: "ACTIVE",
