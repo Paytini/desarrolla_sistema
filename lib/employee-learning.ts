@@ -114,7 +114,7 @@ async function upsertEmployeeCoursesFromBridge(
           },
         },
         update: {
-          nombre_curso: course.title,
+          nombre_curso: decodeHtmlEntities(course.title),
           progreso_pct: course.progress_pct,
           completado: course.completed,
           acceso_estado: "ACTIVE",
@@ -126,7 +126,7 @@ async function upsertEmployeeCoursesFromBridge(
         create: {
           empleado_id: empleadoId,
           wp_curso_id: course.wp_course_id,
-          nombre_curso: course.title,
+          nombre_curso: decodeHtmlEntities(course.title),
           progreso_pct: course.progress_pct,
           completado: course.completed,
           acceso_estado: "ACTIVE",
@@ -169,7 +169,7 @@ async function upsertEmployeeCertificatesFromBridge(
         return prisma.constancia.update({
           where: { id: existingCertificate.id },
           data: {
-            nombre_curso: certificate.title,
+            nombre_curso: decodeHtmlEntities(certificate.title),
             wp_cert_url: certificateUrl ?? existingCertificate.wp_cert_url,
             fecha_emision: fechaEmision,
           },
@@ -184,7 +184,7 @@ async function upsertEmployeeCertificatesFromBridge(
         data: {
           empleado_id: empleadoId,
           wp_curso_id: certificate.wp_course_id,
-          nombre_curso: certificate.title,
+          nombre_curso: decodeHtmlEntities(certificate.title),
           folio: buildCertificateFolio(empleadoId, certificate.wp_course_id, fechaEmision.toISOString()),
           wp_cert_url: certificateUrl,
           fecha_emision: fechaEmision,
@@ -631,7 +631,7 @@ function mergeEmployeeCoursesWithBridgeData(
 
       return {
         ...curso,
-        nombre_curso: bridgeCourse.title || curso.nombre_curso,
+        nombre_curso: decodeHtmlEntities(bridgeCourse.title || curso.nombre_curso),
         progreso_pct: bridgeCourse.progress_pct,
         completado: bridgeCourse.completed,
         fecha_inicio_curso: parseBridgeDate(bridgeCourse.started_at) ?? curso.fecha_inicio_curso,

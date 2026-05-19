@@ -4,7 +4,7 @@ import PackageCourseSelector from "@/components/portal/PackageCourseSelector"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
 import { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
-import { formatDate } from "@/lib/format"
+import { decodeHtmlEntities, formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import {
   assignPackageToCompanyAction,
@@ -417,7 +417,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                           <summary className="flex cursor-pointer list-none flex-col gap-3 md:flex-row md:items-center md:justify-between">
                             <div className="min-w-0">
                               <p className="text-sm font-semibold text-slate-950">
-                                {curso.wp_curso_id} - {curso.nombre_curso}
+                                {curso.wp_curso_id} - {decodeHtmlEntities(curso.nombre_curso ?? "")}
                               </p>
                               <p className="mt-1 text-xs text-slate-500">
                                 Ficha DC-3:{" "}
