@@ -25,9 +25,9 @@ const POS = {
     inicioAnioX: 255,  // primer dígito del año de inicio (4 cajas)
     inicioMesX:  322,  // primer dígito del mes de inicio (2 cajas)
     inicioDiaX:  363,  // primer dígito del día de inicio (2 cajas)
-    finAnioX:    442,  // primer dígito del año de fin (4 cajas)
-    finMesX:     485,  // primer dígito del mes de fin (2 cajas)
-    finDiaX:     528,  // primer dígito del día de fin (2 cajas)
+    finAnioX:    430,  // primer dígito del año de fin (4 cajas)
+    finMesX:     495,  // primer dígito del mes de fin (2 cajas)
+    finDiaX:     540,  // primer dígito del día de fin (2 cajas)
   },
   areaTematica:     { x: 32,  y: 339, size: 10 },
   agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
