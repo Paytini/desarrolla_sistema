@@ -18,15 +18,15 @@ const POS = {
   rfcStep:          14,
   // DATOS DEL PROGRAMA
   curso:            { x: 32,  y: 390, size: 9  },  
-  duracion:         { x: 60,  y: 368, size: 10 },  
+  duracion:         { x: 32,  y: 364, size: 10 },  
   fechaInicioAnio:  { x: 295, y: 368, size: 10 },
   fechaInicioMes:   { x: 335, y: 368, size: 10 },
   fechaInicioDia:   { x: 375, y: 368, size: 10 },
   fechaFinAnio:     { x: 442, y: 368, size: 10 },
   fechaFinMes:      { x: 485, y: 368, size: 10 },
   fechaFinDia:      { x: 528, y: 368, size: 10 },
-  areaTematica:     { x: 60,  y: 350, size: 10 },
-  agenteCapacitador:{ x: 60,  y: 332, size: 10 },  
+  areaTematica:     { x: 32,  y: 350, size: 10 },
+  agenteCapacitador:{ x: 32,  y: 332, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
   instructorFirma:  { x: 95,  y: 175, w: 120, h: 40 },
   instructorNombre: { x: 95,  y: 168, size: 9 },
@@ -137,7 +137,6 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   }
 
   draw(truncate(metadata?.nombre_curso || constancia.nombre_curso, 90), POS.curso.x, POS.curso.y, POS.curso.size)
-  console.log("[Nombre del curso para DC-3]", { original: constancia.nombre_curso, truncated: truncate(metadata?.nombre_curso || constancia.nombre_curso, 90) })
 
   if (metadata?.duracion_horas != null) {
     draw(formatHoras(metadata.duracion_horas), POS.duracion.x, POS.duracion.y, POS.duracion.size)
@@ -192,9 +191,9 @@ function sanitizeText(text: string): string {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
-    .replace(/&#\d+;/g, "")    // elimina entidades numéricas restantes
-    .replace(/&[a-z]+;/gi, "") // elimina entidades con nombre restantes
-    .replace(/[^\x00-\xFF]/g, "") // elimina caracteres fuera de Latin-1 (WinAnsi)
+    .replace(/&#\d+;/g, "")
+    .replace(/&[a-z]+;/gi, "")
+    .replace(/[^\x00-\xFF]/g, "")
     .replace(/\s+/g, " ")
     .trim()
 }
