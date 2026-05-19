@@ -21,8 +21,8 @@ const POS = {
   duracion:         { x: 32,  y: 364, size: 10 },
   fechas: {
     y: 362,
-    step: 13,
-    inicioAnioX: 260,  // primer dígito del año de inicio (4 cajas)
+    step: 15,
+    inicioAnioX: 250,  // primer dígito del año de inicio (4 cajas)
     inicioMesX:  320,  // primer dígito del mes de inicio (2 cajas)
     inicioDiaX:  360,  // primer dígito del día de inicio (2 cajas)
     finAnioX:    442,  // primer dígito del año de fin (4 cajas)
