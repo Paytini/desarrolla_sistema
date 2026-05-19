@@ -1,5 +1,6 @@
 import fs from "node:fs/promises"
 import path from "node:path"
+import sharp from "sharp"
 import { PDFDocument, PDFImage, StandardFonts, rgb } from "pdf-lib"
 import { prisma } from "@/lib/prisma"
 
@@ -232,31 +233,34 @@ async function drawInstructorFirma(
   const relative = firmaUrl.startsWith("/") ? firmaUrl.slice(1) : firmaUrl
   const firmaPath = path.join(process.cwd(), "public", relative)
 
-  let bytes: Buffer
+  let rawBytes: Buffer
   try {
-    bytes = await fs.readFile(firmaPath)
+    rawBytes = await fs.readFile(firmaPath)
   } catch (err) {
     console.warn(`[dc3] archivo de firma no encontrado: ${firmaPath}`, err)
     return
   }
 
-  let image: PDFImage | null = null
-
-  // Intenta PNG primero (soporta transparencia con canal alpha)
+  // sharp aplana el canal alpha sobre fondo blanco y normaliza el formato PNG.
+  // Esto resuelve: transparencia, entrelazado (interlacing), 16-bit y otros sub-formatos
+  // que pdf-lib no soporta directamente.
+  let pngBytes: Buffer
   try {
-    image = await pdf.embedPng(bytes)
-  } catch {
-    // El archivo no es PNG válido o tiene un sub-formato no soportado; intenta como JPEG
+    pngBytes = await sharp(rawBytes)
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
+      .png()
+      .toBuffer()
+  } catch (err) {
+    console.error(`[dc3] sharp no pudo procesar la firma: ${firmaPath}`, err)
+    return
   }
 
-  // Fallback a JPEG (sin transparencia, fondo blanco)
-  if (!image) {
-    try {
-      image = await pdf.embedJpg(bytes)
-    } catch (err) {
-      console.error(`[dc3] no se pudo embeber la firma ni como PNG ni como JPEG: ${firmaPath}`, err)
-      return
-    }
+  let image: PDFImage
+  try {
+    image = await pdf.embedPng(pngBytes)
+  } catch (err) {
+    console.error(`[dc3] pdf-lib no pudo embeber la firma procesada: ${firmaPath}`, err)
+    return
   }
 
   const { x, y, w, h } = POS.instructorFirma
