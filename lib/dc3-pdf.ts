@@ -33,8 +33,8 @@ const POS = {
   areaTematica:     { x: 32,  y: 339, size: 10 },
   agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
-  instructorFirma:  { x: 80,  y: 228, w: 80,  h: 25 },
-  instructorNombre: { x: 80,  y: 208, size: 7 },
+  instructorFirma:  { x: 80,  y: 235, w: 80,  h: 20 },
+  instructorNombre: { x: 80,  y: 220, size: 5 },
   // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },
   emision:          { x: 430, y: 50,  size: 8 },
