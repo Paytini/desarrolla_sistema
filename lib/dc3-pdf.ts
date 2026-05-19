@@ -25,11 +25,11 @@ const POS = {
   fechaFinAnio:     { x: 442, y: 368, size: 10 },
   fechaFinMes:      { x: 485, y: 368, size: 10 },
   fechaFinDia:      { x: 528, y: 368, size: 10 },
-  areaTematica:     { x: 32,  y: 340, size: 10 },
-  agenteCapacitador:{ x: 32,  y: 315, size: 10 },  
+  areaTematica:     { x: 32,  y: 339, size: 10 },
+  agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
-  instructorFirma:  { x: 95,  y: 175, w: 120, h: 40 },
-  instructorNombre: { x: 95,  y: 168, size: 9 },
+  instructorFirma:  { x: 85,  y: 175, w: 120, h: 40 },
+  instructorNombre: { x: 85,  y: 168, size: 9 },
   // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },
   emision:          { x: 430, y: 50,  size: 8 },
