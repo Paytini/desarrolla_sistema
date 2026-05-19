@@ -22,7 +22,7 @@ const POS = {
   // Fechas: dígito por dígito igual que CURP/RFC
   // step = ancho por caja (~9.5 pt); ajusta si los dígitos quedan fuera de sus casillas
   fechas: {
-    y: 368,
+    y: 362,
     step: 9.5,
     inicioAnioX: 295,  // primer dígito del año de inicio (4 cajas)
     inicioMesX:  335,  // primer dígito del mes de inicio (2 cajas)
