@@ -137,6 +137,7 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   }
 
   draw(truncate(metadata?.nombre_curso || constancia.nombre_curso, 90), POS.curso.x, POS.curso.y, POS.curso.size)
+  console.log("[Nombre del curso para DC-3]", { original: constancia.nombre_curso, truncated: truncate(metadata?.nombre_curso || constancia.nombre_curso, 90) })
 
   if (metadata?.duracion_horas != null) {
     draw(formatHoras(metadata.duracion_horas), POS.duracion.x, POS.duracion.y, POS.duracion.size)
