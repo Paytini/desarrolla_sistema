@@ -26,7 +26,7 @@ const POS = {
   fechaFinMes:      { x: 485, y: 368, size: 10 },
   fechaFinDia:      { x: 528, y: 368, size: 10 },
   areaTematica:     { x: 32,  y: 340, size: 10 },
-  agenteCapacitador:{ x: 32,  y: 320, size: 10 },  
+  agenteCapacitador:{ x: 32,  y: 315, size: 10 },  
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
   instructorFirma:  { x: 95,  y: 175, w: 120, h: 40 },
   instructorNombre: { x: 95,  y: 168, size: 9 },
