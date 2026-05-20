@@ -2,6 +2,15 @@
 
 import { useRef, useState } from "react"
 
+// Convierte una URL de blob privado a la ruta del proxy para mostrar en <img>
+function toPreviewUrl(rawUrl: string): string {
+  if (!rawUrl) return ""
+  if (rawUrl.includes("blob.vercel-storage.com")) {
+    return `/api/upload/firma-proxy?url=${encodeURIComponent(rawUrl)}`
+  }
+  return rawUrl
+}
+
 type Props = {
   defaultUrl?: string | null
   name?: string
@@ -12,7 +21,7 @@ export default function FirmaInstructorUpload({
   name = "instructor_firma_url",
 }: Props) {
   const [url, setUrl] = useState(defaultUrl ?? "")
-  const [preview, setPreview] = useState(defaultUrl ?? "")
+  const [preview, setPreview] = useState(toPreviewUrl(defaultUrl ?? ""))
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -35,7 +44,7 @@ export default function FirmaInstructorUpload({
         setError(data.error ?? "Error al subir el archivo")
       } else {
         setUrl(data.url)
-        setPreview(data.url)
+        setPreview(toPreviewUrl(data.url))
       }
     } catch {
       setError("Error de red al subir el archivo")

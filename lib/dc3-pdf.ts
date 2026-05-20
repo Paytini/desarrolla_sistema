@@ -239,7 +239,13 @@ function formatHoras(horas: number) {
  */
 async function fetchImageBytes(urlOrPath: string): Promise<Buffer> {
   if (urlOrPath.startsWith("http://") || urlOrPath.startsWith("https://")) {
-    const res = await fetch(urlOrPath)
+    const headers: HeadersInit = {}
+    // Los blobs privados de Vercel requieren autenticación
+    if (urlOrPath.includes("blob.vercel-storage.com")) {
+      const token = process.env.BLOB_READ_WRITE_TOKEN
+      if (token) headers["Authorization"] = `Bearer ${token}`
+    }
+    const res = await fetch(urlOrPath, { headers })
     if (!res.ok) throw new Error(`HTTP ${res.status} al obtener imagen: ${urlOrPath}`)
     return Buffer.from(await res.arrayBuffer())
   }
