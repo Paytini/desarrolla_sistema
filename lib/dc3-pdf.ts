@@ -9,7 +9,7 @@ const POS = {
   nombre:           { x: 40,  y: 590, size: 10 },
   curpStartX:       32,
   curpY:            559,
-  curpStep:         14,
+  curpStep:         16,
   ocupacion:        { x: 305, y: 559, size: 9 },
   puesto:           { x: 40,  y: 535, size: 10 },
   // DATOS DE LA EMPRESA
@@ -108,7 +108,6 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   const page = pdf.getPages()[0]
   const helvetica = await pdf.embedFont(StandardFonts.Helvetica)
 
-  // Tapar el texto de instrucción original y reemplazar con el logo de Desarrolla360
   await drawLogoDesarrolla(pdf, page)
 
   const draw = (text: string, x: number, y: number, size = 10) => {
@@ -196,9 +195,8 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
     POS.emision.size,
   )
 
-  // Eliminar el REVERSO (página 2 con catálogos); solo se entrega el ANVERSO
   while (pdf.getPageCount() > 1) {
-    pdf.removePage(pdf.getPageCount() - 1)
+    pdf.removePage(pdf.getPageCount() - 1) // elimino la pagina 2
   }
 
   return await pdf.save()
@@ -274,9 +272,6 @@ async function drawInstructorFirma(
     return
   }
 
-  // sharp aplana el canal alpha sobre fondo blanco y normaliza el formato PNG.
-  // Esto resuelve: transparencia, entrelazado (interlacing), 16-bit y otros sub-formatos
-  // que pdf-lib no soporta directamente.
   let pngBytes: Buffer
   try {
     pngBytes = await sharp(rawBytes)
