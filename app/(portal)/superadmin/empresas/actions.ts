@@ -29,8 +29,6 @@ export async function createCompanyAction(formData: FormData) {
   const emailRh = getString(formData, "email_rh").toLowerCase()
   const telefono = getString(formData, "telefono")
   const rfc = getString(formData, "rfc")
-  const representanteLegal = getString(formData, "representante_legal")
-  const representanteLaboral = getString(formData, "representante_laboral")
   const asientosContratados = getPositiveInt(formData, "asientos_contratados")
   const nombreRh = getString(formData, "nombre_rh")
   const passwordRh = getString(formData, "password_rh")
@@ -71,8 +69,6 @@ export async function createCompanyAction(formData: FormData) {
         email_rh: emailRh,
         telefono: telefono || null,
         rfc: rfc || null,
-        representante_legal: representanteLegal || null,
-        representante_laboral: representanteLaboral || null,
         asientos_contratados: asientosContratados,
         notas: notas || null,
       },

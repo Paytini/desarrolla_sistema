@@ -35,7 +35,7 @@ const POS = {
   // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
   instructorFirma:  { x: 85,  y: 220, w: 90,  h: 27 },
   instructorNombre: { x: 90,  y: 216, size: 7 },
-  logoFirma: { x: 236, y: 735, w: 140, h: 42 },
+  logoFirma: { x: 32, y: 735, w: 140, h: 42 },
   logoMask: { x: 0, y: 715, w: 612, h: 78 },
   // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },

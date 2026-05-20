@@ -62,8 +62,6 @@ model Empresa {
   email_rh              String   @unique // correo del encargado de RH
   telefono              String?
   rfc                   String?
-  representante_legal   String?
-  representante_laboral String?
   asientos_contratados  Int // máximo de empleados permitidos
   asientos_usados       Int      @default(0)
   activo                Boolean  @default(true)
