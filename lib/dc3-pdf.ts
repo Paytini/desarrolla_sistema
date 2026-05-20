@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma"
 const POS = {
   // DATOS DEL TRABAJADOR
   nombre:           { x: 40,  y: 590, size: 10 },
-  curpStartX:       29,
+  curpStartX:       28,
   curpY:            559,
   curpStep:         14.9,
   ocupacion:        { x: 305, y: 559, size: 9 },
