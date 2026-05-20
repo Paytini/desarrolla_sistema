@@ -6,7 +6,7 @@ import { getSession } from "@/lib/session"
 export const runtime = "nodejs"
 
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
-const MAX_SIZE_BYTES = 2 * 1024 * 1024 // 2 MB
+const MAX_SIZE_BYTES = 2 * 1024 * 1024 // 2 MB. que no sea pesado
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
   const arrayBuffer = await file.arrayBuffer()
   const rawBuffer = Buffer.from(arrayBuffer)
 
-  // Normalizar a PNG estándar (aplana alpha a blanco, elimina interlacing)
   const pngBuffer = await sharp(rawBuffer)
     .flatten({ background: { r: 255, g: 255, b: 255 } })
     .png()
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Nombre de archivo inválido" }, { status: 400 })
   }
 
-  const filename = `signatures/instructors/${base}.png`
+  const filename = `signatures/instructors/${base}-${Date.now()}.png`
   const blob = await put(filename, pngBuffer, {
     access: "private",
     contentType: "image/png",

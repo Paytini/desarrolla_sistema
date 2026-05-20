@@ -32,9 +32,10 @@ const POS = {
   },
   areaTematica:     { x: 32,  y: 339, size: 10 },
   agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
-  // FIRMAS — instructor solo (patrón y representante laboral se firman en papel)
+  // FIRMAS
   instructorFirma:  { x: 85,  y: 220, w: 90,  h: 27 },
   instructorNombre: { x: 90,  y: 216, size: 7 },
+  // LOGO
   logoFirma: { x: 32, y: 735, w: 140, h: 42 },
   logoMask: { x: 0, y: 715, w: 612, h: 78 },
   // CONTROL INTERNO

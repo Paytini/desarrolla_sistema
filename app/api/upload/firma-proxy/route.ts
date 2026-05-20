@@ -3,9 +3,6 @@ import { getSession } from "@/lib/session"
 
 export const runtime = "nodejs"
 
-// Proxy autenticado para blobs privados de Vercel.
-// El cliente no puede cargar una URL private.blob.vercel-storage.com directamente
-// porque requiere Authorization: Bearer {BLOB_READ_WRITE_TOKEN}.
 export async function GET(request: NextRequest) {
   const session = await getSession()
   if (!session?.user) {
