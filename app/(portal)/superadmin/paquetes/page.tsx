@@ -1,3 +1,4 @@
+import FirmaInstructorUpload from "@/components/portal/FirmaInstructorUpload"
 import InfoCard from "@/components/portal/InfoCard"
 import DeletePackageButton from "@/components/portal/DeletePackageButton"
 import PackageCourseSelector from "@/components/portal/PackageCourseSelector"
@@ -547,21 +548,10 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                 </label>
                               </div>
 
-                              <label className="grid gap-1.5 text-sm">
-                                <span className="font-medium text-slate-700">
-                                  URL firma instructor
-                                </span>
-                                <input
-                                  name="instructor_firma_url"
-                                  defaultValue={dc3Metadata?.instructor_firma_url ?? ""}
-                                  placeholder="/assets/signatures/instructors/nanet-moreno.png"
-                                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
-                                />
-                                <span className="text-xs leading-5 text-slate-500">
-                                  Coloca el PNG en public/assets/signatures/instructors y usa una URL como
-                                  /assets/signatures/instructors/firma.png.
-                                </span>
-                              </label>
+                              <FirmaInstructorUpload
+                                defaultUrl={dc3Metadata?.instructor_firma_url ?? ""}
+                                name="instructor_firma_url"
+                              />
 
                               <button
                                 type="submit"

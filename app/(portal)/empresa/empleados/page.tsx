@@ -1,3 +1,4 @@
+import CnoSelect from "@/components/portal/CnoSelect"
 import DeleteEmployeeButton from "@/components/portal/DeleteEmployeeButton"
 import EmployeeOnboardingTabs from "@/components/portal/EmployeeOnboardingTabs"
 import InfoCard from "@/components/portal/InfoCard"
@@ -144,7 +145,7 @@ function ManualEmployeeForm() {
 
       <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-4">
         <p className="mb-3 text-sm font-semibold text-violet-950">Datos para constancia DC-3</p>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4">
           <label className="grid gap-1.5 text-sm">
             <span className="font-medium text-slate-700">CURP</span>
             <input
@@ -154,22 +155,7 @@ function ManualEmployeeForm() {
               className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 uppercase outline-none transition focus:border-violet-600"
             />
           </label>
-          <label className="grid gap-1.5 text-sm">
-            <span className="font-medium text-slate-700">Clave ocupacion</span>
-            <input
-              name="ocupacion_especifica_clave"
-              placeholder="Ej. 03.4"
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none transition focus:border-violet-600"
-            />
-          </label>
-          <label className="grid gap-1.5 text-sm">
-            <span className="font-medium text-slate-700">Ocupacion especifica</span>
-            <input
-              name="ocupacion_especifica"
-              placeholder="Instalacion y mantenimiento"
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none transition focus:border-violet-600"
-            />
-          </label>
+          <CnoSelect />
         </div>
       </div>
 
@@ -205,11 +191,11 @@ function CsvEmployeeImportForm() {
     { key: "nombre", label: "nombre", required: true },
     { key: "apellido", label: "apellido", required: true },
     { key: "email", label: "email", required: true },
-    { key: "curp", label: "curp", required: false },
-    { key: "departamento", label: "departamento", required: false },
-    { key: "puesto", label: "puesto", required: false },
-    { key: "ocupacion_especifica_clave", label: "ocupacion_especifica_clave", required: false },
-    { key: "ocupacion_especifica", label: "ocupacion_especifica", required: false },
+    { key: "curp", label: "curp", required: true },
+    { key: "departamento", label: "departamento", required: true },
+    { key: "puesto", label: "puesto", required: true },
+    { key: "ocupacion_especifica_clave", label: "ocupacion_especifica_clave", required: true },
+    { key: "ocupacion_especifica", label: "ocupacion_especifica", required: true },
     { key: "password", label: "password", required: false },
   ]
   const sampleRows = [
