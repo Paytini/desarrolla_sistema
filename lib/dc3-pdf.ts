@@ -9,7 +9,7 @@ const POS = {
   nombre:           { x: 40,  y: 590, size: 10 },
   curpStartX:       28,
   curpY:            559,
-  curpStep:         16,
+  curpStep:         15,
   ocupacion:        { x: 305, y: 559, size: 9 },
   puesto:           { x: 40,  y: 535, size: 10 },
   // DATOS DE LA EMPRESA
