@@ -233,22 +233,36 @@ function formatHoras(horas: number) {
   return Number.isInteger(horas) ? String(horas) : horas.toFixed(1).replace(/\.0$/, "")
 }
 
+/**
+ * Lee bytes de imagen desde una URL externa (https://) o desde el filesystem local (/ruta...).
+ * Permite que las firmas guardadas en Vercel Blob funcionen igual que las locales.
+ */
+async function fetchImageBytes(urlOrPath: string): Promise<Buffer> {
+  if (urlOrPath.startsWith("http://") || urlOrPath.startsWith("https://")) {
+    const res = await fetch(urlOrPath)
+    if (!res.ok) throw new Error(`HTTP ${res.status} al obtener imagen: ${urlOrPath}`)
+    return Buffer.from(await res.arrayBuffer())
+  }
+  const relative = urlOrPath.startsWith("/") ? urlOrPath.slice(1) : urlOrPath
+  return fs.readFile(path.join(process.cwd(), "public", relative))
+}
+
+async function processImage(rawBytes: Buffer): Promise<Buffer> {
+  return sharp(rawBytes)
+    .flatten({ background: { r: 255, g: 255, b: 255 } })
+    .png()
+    .toBuffer()
+}
+
 async function drawLogoDesarrolla(
   pdf: PDFDocument,
   page: ReturnType<PDFDocument["getPages"]>[number],
 ) {
-  const logoPath = path.join(process.cwd(), "public", "assets", "logo_desarrolla_cropped.png")
   try {
-    const rawBytes = await fs.readFile(logoPath)
-    const pngBytes = await sharp(rawBytes)
-      .flatten({ background: { r: 255, g: 255, b: 255 } })
-      .png()
-      .toBuffer()
-    const image = await pdf.embedPng(pngBytes)
-
+    const rawBytes = await fetchImageBytes("/assets/logo_desarrolla_cropped.png")
+    const image = await pdf.embedPng(await processImage(rawBytes))
     const { x: mx, y: my, w: mw, h: mh } = POS.logoMask
     page.drawRectangle({ x: mx, y: my, width: mw, height: mh, color: rgb(1, 1, 1) })
-
     const { x, y, w, h } = POS.logoFirma
     page.drawImage(image, { x, y, width: w, height: h, opacity: 1 })
   } catch (err) {
@@ -261,25 +275,19 @@ async function drawInstructorFirma(
   page: ReturnType<PDFDocument["getPages"]>[number],
   firmaUrl: string,
 ) {
-  const relative = firmaUrl.startsWith("/") ? firmaUrl.slice(1) : firmaUrl
-  const firmaPath = path.join(process.cwd(), "public", relative)
-
   let rawBytes: Buffer
   try {
-    rawBytes = await fs.readFile(firmaPath)
+    rawBytes = await fetchImageBytes(firmaUrl)
   } catch (err) {
-    console.warn(`[dc3] archivo de firma no encontrado: ${firmaPath}`, err)
+    console.warn(`[dc3] no se pudo obtener la firma (${firmaUrl}):`, err)
     return
   }
 
   let pngBytes: Buffer
   try {
-    pngBytes = await sharp(rawBytes)
-      .flatten({ background: { r: 255, g: 255, b: 255 } })
-      .png()
-      .toBuffer()
+    pngBytes = await processImage(rawBytes)
   } catch (err) {
-    console.error(`[dc3] sharp no pudo procesar la firma: ${firmaPath}`, err)
+    console.error(`[dc3] sharp no pudo procesar la firma (${firmaUrl}):`, err)
     return
   }
 
@@ -287,7 +295,7 @@ async function drawInstructorFirma(
   try {
     image = await pdf.embedPng(pngBytes)
   } catch (err) {
-    console.error(`[dc3] pdf-lib no pudo embeber la firma procesada: ${firmaPath}`, err)
+    console.error(`[dc3] pdf-lib no pudo embeber la firma (${firmaUrl}):`, err)
     return
   }
 

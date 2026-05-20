@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import fs from "node:fs/promises"
-import path from "node:path"
 import sharp from "sharp"
+import { put } from "@vercel/blob"
 import { getSession } from "@/lib/session"
 
 export const runtime = "nodejs"
@@ -40,18 +39,17 @@ export async function POST(request: NextRequest) {
   const arrayBuffer = await file.arrayBuffer()
   const rawBuffer = Buffer.from(arrayBuffer)
 
-  // Normalizar a PNG estándar (sin alpha problemático, sin interlacing)
+  // Normalizar a PNG estándar (aplana alpha a blanco, elimina interlacing)
   const pngBuffer = await sharp(rawBuffer)
     .flatten({ background: { r: 255, g: 255, b: 255 } })
     .png()
     .toBuffer()
 
-  // Nombre de archivo: usa el nombre proporcionado o el original, sanitizado
   const base = (nombreRaw || file.name.replace(/\.[^.]+$/, ""))
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")   // quitar acentos
-    .replace(/[^a-z0-9-_]/g, "-")      // solo alfanumérico y guiones
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9-_]/g, "-")
     .replace(/-{2,}/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 60)
@@ -60,12 +58,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Nombre de archivo inválido" }, { status: 400 })
   }
 
-  const filename = `${base}.png`
-  const signaturesDir = path.join(process.cwd(), "public", "assets", "signatures", "instructors")
+  const filename = `signatures/instructors/${base}.png`
+  const blob = await put(filename, pngBuffer, {
+    access: "public",
+    contentType: "image/png",
+    addRandomSuffix: false,
+  })
 
-  await fs.mkdir(signaturesDir, { recursive: true })
-  await fs.writeFile(path.join(signaturesDir, filename), pngBuffer)
-
-  const url = `/assets/signatures/instructors/${filename}`
-  return NextResponse.json({ url })
+  return NextResponse.json({ url: blob.url })
 }
