@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
   const filename = `signatures/instructors/${base}.png`
   const blob = await put(filename, pngBuffer, {
-    access: "public",
+    access: "private",
     contentType: "image/png",
     addRandomSuffix: false,
   })
