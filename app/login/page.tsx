@@ -112,8 +112,8 @@ export default function LoginPage() {
             <Image
               src="/assets/logo_desarrolla_blanco.png"
               alt="Desarrolla360"
-              width={130}
-              height={40}
+              width={260}
+              height={80}
               className="h-7 w-auto object-contain opacity-40 mb-3"
               priority
             />
