@@ -123,7 +123,6 @@ export default function LoginPage() {
   return (
     <div className="login-root">
 
-      {/* ── PANEL IZQUIERDO: quotes ── */}
       <aside className="login-quotes-panel">
         <div className="login-bg-orb login-bg-orb--blue" />
         <div className="login-bg-orb login-bg-orb--purple" />
@@ -135,11 +134,11 @@ export default function LoginPage() {
 
           <div className="login-ql-top">
             <Image
-              src="/assets/logo_desarrolla_blanco.png"
+              src="/assets/logo_desarrolla_cropped.png"
               alt="Desarrolla360"
-              width={200}
-              height={60}
-              className="h-9 w-auto object-contain"
+              width={240}
+              height={72}
+              className="h-12 w-auto object-contain"
               priority
             />
           </div>
@@ -177,7 +176,6 @@ export default function LoginPage() {
         </div>
       </aside>
 
-      {/* ── PANEL DERECHO: form ── */}
       <main className="login-form-panel">
         <div className="login-card">
 
