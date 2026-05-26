@@ -40,12 +40,6 @@ function AlertIcon() {
   )
 }
 
-const ROLES = [
-  { tag: "SuperAdmin", tagClass: "login-role-tag--superadmin", desc: "Alta de empresas y control global" },
-  { tag: "RH",         tagClass: "login-role-tag--rh",         desc: "Empleados, asignaciones y constancias" },
-  { tag: "Empleado",   tagClass: "login-role-tag--empleado",   desc: "Mis cursos y mi progreso" },
-]
-
 const FEATURES = [
   { n: "01", label: "Constancias DC-3 automáticas STPS" },
   { n: "02", label: "Dashboard de progreso por empleado" },
@@ -85,10 +79,6 @@ export default function LoginPage() {
 
   return (
     <div className="login-root">
-
-      {/* ══════════════════════════════════
-          PANEL IZQUIERDO — Marca
-          ══════════════════════════════════ */}
       <aside className="login-panel-brand">
         <div className="login-brand-orb login-brand-orb--teal" />
         <div className="login-brand-orb login-brand-orb--orange" />
@@ -97,14 +87,7 @@ export default function LoginPage() {
 
         <div className="login-brand-content">
 
-          {/* Top: chip de estado */}
-          <div>
-            <div className="login-brand-chip">Portal Empresarial</div>
-          </div>
-
-          {/* Centro: titular + copy */}
           <div className="login-brand-center">
-            <p className="login-brand-eyebrow">Desarrolla360</p>
             <h1 className="login-brand-headline">
               Capacitación que cumple.<br />
               <em>Equipos que crecen.</em>
@@ -115,7 +98,6 @@ export default function LoginPage() {
 
             <div className="login-brand-divider" />
 
-            {/* Features */}
             <div className="login-brand-features">
               {FEATURES.map((f) => (
                 <div key={f.n} className="login-feature-row">
@@ -126,10 +108,9 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Logo + copyright */}
           <div className="login-brand-bottom">
             <Image
-              src="/assets/logo_desarrolla_cropped.png"
+              src="/assets/logo_desarrolla_blanco.png"
               alt="Desarrolla360"
               width={130}
               height={40}
@@ -142,12 +123,8 @@ export default function LoginPage() {
         </div>
       </aside>
 
-      {/* ══════════════════════════════════
-          PANEL DERECHO — Formulario
-          ══════════════════════════════════ */}
       <main className="login-panel-form">
 
-        {/* Logo mobile */}
         <div className="login-mobile-logo">
           <Image
             src="/assets/logo_desarrolla_cropped.png"
@@ -161,7 +138,6 @@ export default function LoginPage() {
 
         <div className="login-form-shell">
 
-          {/* Header */}
           <header className="login-form-head">
             <p className="login-form-eyebrow">Bienvenido</p>
             <h2 className="login-form-title">Entra a tu panel</h2>
@@ -170,7 +146,6 @@ export default function LoginPage() {
             </p>
           </header>
 
-          {/* Formulario */}
           <form onSubmit={handleSubmit} className="login-form-body">
 
             <div className="login-field-group">
@@ -239,19 +214,6 @@ export default function LoginPage() {
             </button>
 
           </form>
-
-          {/* Guía de roles */}
-          <div className="login-role-guide">
-            <p className="login-role-guide-title">Accesos del portal</p>
-            <div className="login-role-list">
-              {ROLES.map((r) => (
-                <div key={r.tag} className="login-role-item">
-                  <span className={`login-role-tag ${r.tagClass}`}>{r.tag}</span>
-                  <span className="login-role-item-desc">{r.desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
         </div>
       </main>
