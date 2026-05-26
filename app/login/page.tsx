@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 
@@ -40,13 +40,60 @@ function AlertIcon() {
   )
 }
 
+const QUOTES = [
+  {
+    text: "La capacitación es el puente entre el talento que ya tienes y los resultados que todavía no has alcanzado.",
+    author: "Peter Drucker",
+    role: "Padre de la administración moderna",
+  },
+  {
+    text: "Invertir en el conocimiento de tu equipo es la única inversión que ninguna crisis puede quitarte.",
+    author: "Benjamin Franklin",
+    role: "Empresario y estadista",
+  },
+  {
+    text: "Los equipos que aprenden juntos son los que construyen empresas que perduran.",
+    author: "Peter Senge",
+    role: "La Quinta Disciplina",
+  },
+  {
+    text: "La diferencia entre una empresa ordinaria y una extraordinaria está en el desarrollo de su gente.",
+    author: "Jack Welch",
+    role: "Ex CEO de General Electric",
+  },
+  {
+    text: "El cumplimiento normativo no es una carga: es la base sobre la que se construye una empresa confiable.",
+    author: "Desarrolla360",
+    role: "Portal Empresarial",
+  },
+]
+
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail]       = useState("")
-  const [password, setPassword] = useState("")
-  const [showPw, setShowPw]     = useState(false)
-  const [error, setError]       = useState("")
-  const [loading, setLoading]   = useState(false)
+  const [email, setEmail]           = useState("")
+  const [password, setPassword]     = useState("")
+  const [showPw, setShowPw]         = useState(false)
+  const [error, setError]           = useState("")
+  const [loading, setLoading]       = useState(false)
+  const [activeIdx, setActiveIdx]   = useState(0)
+  const [quoteVisible, setQuoteVisible] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setQuoteVisible(false)
+      setTimeout(() => {
+        setActiveIdx(i => (i + 1) % QUOTES.length)
+        setQuoteVisible(true)
+      }, 600)
+    }, 6500)
+    return () => clearInterval(interval)
+  }, [])
+
+  function jumpTo(i: number) {
+    if (i === activeIdx) return
+    setQuoteVisible(false)
+    setTimeout(() => { setActiveIdx(i); setQuoteVisible(true) }, 350)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -71,110 +118,163 @@ export default function LoginPage() {
     else                          setError("Rol no reconocido")
   }
 
+  const quote = QUOTES[activeIdx]
+
   return (
     <div className="login-root">
 
-      {/* Orbs de fondo animados */}
-      <div className="login-bg-orb login-bg-orb--blue" />
-      <div className="login-bg-orb login-bg-orb--purple" />
-      <div className="login-bg-orb login-bg-orb--cyan" />
-      <div className="login-bg-grid" />
+      {/* ── PANEL IZQUIERDO: quotes ── */}
+      <aside className="login-quotes-panel">
+        <div className="login-bg-orb login-bg-orb--blue" />
+        <div className="login-bg-orb login-bg-orb--purple" />
+        <div className="login-bg-orb login-bg-orb--cyan" />
+        <div className="login-bg-grid" />
+        <div className="login-ql-edge" />
 
-      {/* Tarjeta centrada */}
-      <div className="login-card">
+        <div className="login-ql-inner">
 
-        <div className="login-card-logo">
-          <Image
-            src="/assets/logo_desarrolla_cropped.png"
-            alt="Desarrolla360"
-            width={220}
-            height={66}
-            className="h-11 w-auto object-contain"
-            priority
-          />
-        </div>
-
-        <header className="login-form-head">
-          <h2 className="login-form-title">Bienvenido de nuevo</h2>
-          <p className="login-form-subtitle">
-            Ingresa tus credenciales para acceder a tu panel
-          </p>
-        </header>
-
-        <form onSubmit={handleSubmit} className="login-form-body">
-
-          <div className="login-field-group">
-            <label className="login-field-label" htmlFor="lp-email">
-              Correo electrónico
-            </label>
-            <input
-              id="lp-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="correo@empresa.com"
-              required
-              autoComplete="email"
-              className="login-field-input"
+          <div className="login-ql-top">
+            <Image
+              src="/assets/logo_desarrolla_blanco.png"
+              alt="Desarrolla360"
+              width={200}
+              height={60}
+              className="h-9 w-auto object-contain"
+              priority
             />
           </div>
 
-          <div className="login-field-group">
-            <label className="login-field-label" htmlFor="lp-password">
-              Contraseña
-            </label>
-            <div className="login-pw-wrap">
-              <input
-                id="lp-password"
-                type={showPw ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                autoComplete="current-password"
-                className="login-field-input login-field-input--pw"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="login-pw-toggle"
-                tabIndex={-1}
-                aria-label={showPw ? "Ocultar contraseña" : "Ver contraseña"}
-              >
-                <EyeIcon open={showPw} />
-              </button>
+          <div className="login-ql-body">
+            <span className="login-ql-mark">&ldquo;</span>
+
+            <div
+              style={{
+                opacity:    quoteVisible ? 1 : 0,
+                transform:  quoteVisible ? "translateY(0)" : "translateY(1.25rem)",
+                transition: "opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1)",
+              }}
+            >
+              <p className="login-ql-text">{quote.text}</p>
+              <div className="login-ql-author">
+                <span className="login-ql-name">— {quote.author}</span>
+                <span className="login-ql-role">{quote.role}</span>
+              </div>
+            </div>
+
+            <div className="login-ql-dots">
+              {QUOTES.map((_, i) => (
+                <button
+                  key={i}
+                  className={`login-ql-dot${i === activeIdx ? " login-ql-dot--active" : ""}`}
+                  onClick={() => jumpTo(i)}
+                  aria-label={`Quote ${i + 1}`}
+                />
+              ))}
             </div>
           </div>
 
-          {error ? (
-            <div className="login-error-box" role="alert">
-              <AlertIcon />
-              <span>{error}</span>
+          <p className="login-ql-footer">© 2026 Desarrolla360 · Portal Empresarial</p>
+        </div>
+      </aside>
+
+      {/* ── PANEL DERECHO: form ── */}
+      <main className="login-form-panel">
+        <div className="login-card">
+
+          <div className="login-card-logo">
+            <Image
+              src="/assets/logo_desarrolla_cropped.png"
+              alt="Desarrolla360"
+              width={220}
+              height={66}
+              className="h-11 w-auto object-contain"
+              priority
+            />
+          </div>
+
+          <header className="login-form-head">
+            <h2 className="login-form-title">Bienvenido de nuevo</h2>
+            <p className="login-form-subtitle">
+              Ingresa tus credenciales para acceder a tu panel
+            </p>
+          </header>
+
+          <form onSubmit={handleSubmit} className="login-form-body">
+
+            <div className="login-field-group">
+              <label className="login-field-label" htmlFor="lp-email">
+                Correo electrónico
+              </label>
+              <input
+                id="lp-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="correo@empresa.com"
+                required
+                autoComplete="email"
+                className="login-field-input"
+              />
             </div>
-          ) : null}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="login-submit-btn"
-          >
-            {loading ? (
-              <span className="login-btn-spinner" aria-hidden />
-            ) : (
-              <>
-                <span>Entrar al portal</span>
-                <ArrowIcon />
-              </>
-            )}
-          </button>
+            <div className="login-field-group">
+              <label className="login-field-label" htmlFor="lp-password">
+                Contraseña
+              </label>
+              <div className="login-pw-wrap">
+                <input
+                  id="lp-password"
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                  className="login-field-input login-field-input--pw"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="login-pw-toggle"
+                  tabIndex={-1}
+                  aria-label={showPw ? "Ocultar contraseña" : "Ver contraseña"}
+                >
+                  <EyeIcon open={showPw} />
+                </button>
+              </div>
+            </div>
 
-        </form>
+            {error ? (
+              <div className="login-error-box" role="alert">
+                <AlertIcon />
+                <span>{error}</span>
+              </div>
+            ) : null}
 
-        <p className="login-card-footer">
-          © 2026 Desarrolla360 · Portal Empresarial
-        </p>
+            <button
+              type="submit"
+              disabled={loading}
+              className="login-submit-btn"
+            >
+              {loading ? (
+                <span className="login-btn-spinner" aria-hidden />
+              ) : (
+                <>
+                  <span>Entrar al portal</span>
+                  <ArrowIcon />
+                </>
+              )}
+            </button>
 
-      </div>
+          </form>
+
+          <p className="login-card-footer">
+            © 2026 Desarrolla360 · Portal Empresarial
+          </p>
+
+        </div>
+      </main>
+
     </div>
   )
 }
