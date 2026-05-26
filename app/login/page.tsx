@@ -40,12 +40,6 @@ function AlertIcon() {
   )
 }
 
-const FEATURES = [
-  { n: "01", label: "Constancias DC-3 automáticas STPS" },
-  { n: "02", label: "Dashboard de progreso por empleado" },
-  { n: "03", label: "Cumplimiento normativo integrado" },
-]
-
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail]       = useState("")
@@ -79,145 +73,108 @@ export default function LoginPage() {
 
   return (
     <div className="login-root">
-      <aside className="login-panel-brand">
-        <div className="login-brand-orb login-brand-orb--teal" />
-        <div className="login-brand-orb login-brand-orb--orange" />
-        <div className="login-brand-dots" />
-        <div className="login-brand-edge" />
 
-        <div className="login-brand-content">
+      {/* Orbs de fondo animados */}
+      <div className="login-bg-orb login-bg-orb--blue" />
+      <div className="login-bg-orb login-bg-orb--purple" />
+      <div className="login-bg-orb login-bg-orb--cyan" />
+      <div className="login-bg-grid" />
 
-          <div className="login-brand-center">
-            <h1 className="login-brand-headline">
-              Capacitación que cumple.<br />
-              <em>Equipos que crecen.</em>
-            </h1>
-            <p className="login-brand-body">
-              Administra la capacitación corporativa de tu empresa: cursos, progreso y constancias DC&#8209;3 en un solo lugar.
-            </p>
+      {/* Tarjeta centrada */}
+      <div className="login-card">
 
-            <div className="login-brand-divider" />
-
-            <div className="login-brand-features">
-              {FEATURES.map((f) => (
-                <div key={f.n} className="login-feature-row">
-                  <span className="login-feature-num">{f.n}</span>
-                  <span className="login-feature-text">{f.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="login-brand-bottom">
-            <Image
-              src="/assets/logo_desarrolla_blanco.png"
-              alt="Desarrolla360"
-              width={260}
-              height={80}
-              className="h-7 w-auto object-contain opacity-40 mb-3"
-              priority
-            />
-            <p>© 2026 Desarrolla360 · Portal Empresarial</p>
-          </div>
-
-        </div>
-      </aside>
-
-      <main className="login-panel-form">
-
-        <div className="login-mobile-logo">
+        <div className="login-card-logo">
           <Image
             src="/assets/logo_desarrolla_cropped.png"
             alt="Desarrolla360"
-            width={160}
-            height={48}
-            className="h-9 w-auto object-contain"
+            width={220}
+            height={66}
+            className="h-11 w-auto object-contain"
             priority
           />
         </div>
 
-        <div className="login-form-shell">
+        <header className="login-form-head">
+          <h2 className="login-form-title">Bienvenido de nuevo</h2>
+          <p className="login-form-subtitle">
+            Ingresa tus credenciales para acceder a tu panel
+          </p>
+        </header>
 
-          <header className="login-form-head">
-            <p className="login-form-eyebrow">Bienvenido</p>
-            <h2 className="login-form-title">Entra a tu panel</h2>
-            <p className="login-form-subtitle">
-              Ingresa tus credenciales para continuar
-            </p>
-          </header>
+        <form onSubmit={handleSubmit} className="login-form-body">
 
-          <form onSubmit={handleSubmit} className="login-form-body">
+          <div className="login-field-group">
+            <label className="login-field-label" htmlFor="lp-email">
+              Correo electrónico
+            </label>
+            <input
+              id="lp-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="correo@empresa.com"
+              required
+              autoComplete="email"
+              className="login-field-input"
+            />
+          </div>
 
-            <div className="login-field-group">
-              <label className="login-field-label" htmlFor="lp-email">
-                Correo electrónico
-              </label>
+          <div className="login-field-group">
+            <label className="login-field-label" htmlFor="lp-password">
+              Contraseña
+            </label>
+            <div className="login-pw-wrap">
               <input
-                id="lp-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="correo@empresa.com"
+                id="lp-password"
+                type={showPw ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
                 required
-                autoComplete="email"
-                className="login-field-input"
+                autoComplete="current-password"
+                className="login-field-input login-field-input--pw"
               />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="login-pw-toggle"
+                tabIndex={-1}
+                aria-label={showPw ? "Ocultar contraseña" : "Ver contraseña"}
+              >
+                <EyeIcon open={showPw} />
+              </button>
             </div>
+          </div>
 
-            <div className="login-field-group">
-              <label className="login-field-label" htmlFor="lp-password">
-                Contraseña
-              </label>
-              <div className="login-pw-wrap">
-                <input
-                  id="lp-password"
-                  type={showPw ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                  className="login-field-input login-field-input--pw"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((v) => !v)}
-                  className="login-pw-toggle"
-                  tabIndex={-1}
-                  aria-label={showPw ? "Ocultar contraseña" : "Ver contraseña"}
-                >
-                  <EyeIcon open={showPw} />
-                </button>
-              </div>
+          {error ? (
+            <div className="login-error-box" role="alert">
+              <AlertIcon />
+              <span>{error}</span>
             </div>
+          ) : null}
 
-            {error ? (
-              <div className="login-error-box" role="alert">
-                <AlertIcon />
-                <span>{error}</span>
-              </div>
-            ) : null}
+          <button
+            type="submit"
+            disabled={loading}
+            className="login-submit-btn"
+          >
+            {loading ? (
+              <span className="login-btn-spinner" aria-hidden />
+            ) : (
+              <>
+                <span>Entrar al portal</span>
+                <ArrowIcon />
+              </>
+            )}
+          </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="login-submit-btn"
-            >
-              {loading ? (
-                <span className="login-btn-spinner" aria-hidden />
-              ) : (
-                <>
-                  <span>Entrar al portal</span>
-                  <ArrowIcon />
-                </>
-              )}
-            </button>
+        </form>
 
-          </form>
+        <p className="login-card-footer">
+          © 2026 Desarrolla360 · Portal Empresarial
+        </p>
 
-        </div>
-      </main>
-
+      </div>
     </div>
   )
 }
