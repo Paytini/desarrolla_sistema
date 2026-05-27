@@ -84,46 +84,30 @@ body {
   }
 }
 
-/* Orbs suaves sobre fondo claro */
-.login-bg-orb {
+/* Imagen de fondo B&W (una por quote, transiciona con el texto) */
+.login-ql-bg-image {
   position: absolute;
-  border-radius: 9999px;
-  pointer-events: none;
-  filter: blur(90px);
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(100%) contrast(1.08);
 }
 
-.login-bg-orb--blue {
-  width: 44rem;
-  height: 44rem;
-  top: -16rem;
-  right: -10rem;
-  background: radial-gradient(circle, rgba(199, 107, 47, 0.18) 0%, transparent 65%);
-  animation: login-orb-float 24s ease-in-out infinite alternate;
-}
-
-.login-bg-orb--purple {
-  width: 40rem;
-  height: 40rem;
-  bottom: -14rem;
-  left: -12rem;
-  background: radial-gradient(circle, rgba(234, 108, 10, 0.15) 0%, transparent 65%);
-  animation: login-orb-float 30s ease-in-out infinite alternate-reverse;
-}
-
-.login-bg-orb--cyan {
-  width: 26rem;
-  height: 26rem;
-  top: 42%;
-  left: 30%;
-  background: radial-gradient(circle, rgba(251, 146, 60, 0.1) 0%, transparent 65%);
-  animation: login-orb-float 20s ease-in-out infinite alternate;
+/* Overlay cálido encima de la imagen para legibilidad del texto */
+.login-ql-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(250, 240, 222, 0.62);
 }
 
 .login-bg-grid {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.045) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
   background-size: 2.25rem 2.25rem;
   mask-image: radial-gradient(ellipse 95% 90% at 50% 50%, black 5%, transparent 72%);
 }
@@ -135,6 +119,7 @@ body {
   right: 0;
   bottom: 0;
   width: 1px;
+  z-index: 3;
   background: linear-gradient(
     to bottom,
     transparent 0%,
@@ -402,8 +387,6 @@ body {
   font-weight: 500;
 }
 
-/* ── SUBMIT ── */
-
 .login-submit-btn {
   display: flex;
   align-items: center;
@@ -412,7 +395,7 @@ body {
   width: 100%;
   padding: 0.875rem 1.5rem;
   border-radius: 0.75rem;
-  background: linear-gradient(135deg, #C76B2F 0%, #EA6C0A 100%);
+  background: #f99655;
   color: #fff;
   font-size: 0.88rem;
   font-weight: 700;
@@ -453,11 +436,6 @@ body {
 }
 
 /* ── ANIMACIONES ── */
-
-@keyframes login-orb-float {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to   { transform: translate3d(2rem, 3rem, 0) scale(1.1); }
-}
 
 @keyframes login-fade-up {
   from {

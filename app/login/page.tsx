@@ -45,26 +45,36 @@ const QUOTES = [
     text: "La capacitación es el puente entre el talento que ya tienes y los resultados que todavía no has alcanzado.",
     author: "Peter Drucker",
     role: "Padre de la administración moderna",
+    // Unsplash: collaborative team meeting, hands around table
+    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=960&q=75",
   },
   {
     text: "Invertir en el conocimiento de tu equipo es la única inversión que ninguna crisis puede quitarte.",
     author: "Benjamin Franklin",
     role: "Empresario y estadista",
+    // Unsplash: person studying at laptop in professional setting
+    image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=960&q=75",
   },
   {
     text: "Los equipos que aprenden juntos son los que construyen empresas que perduran.",
     author: "Peter Senge",
     role: "La Quinta Disciplina",
+    // Unsplash: team brainstorming / group collaboration
+    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=960&q=75",
   },
   {
     text: "La diferencia entre una empresa ordinaria y una extraordinaria está en el desarrollo de su gente.",
     author: "Jack Welch",
     role: "Ex CEO de General Electric",
+    // Unsplash: confident business professional at work
+    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=960&q=75",
   },
   {
     text: "El cumplimiento normativo no es una carga: es la base sobre la que se construye una empresa confiable.",
     author: "Desarrolla360",
     role: "Portal Empresarial",
+    // Unsplash: professional training / classroom setting
+    image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=960&q=75",
   },
 ]
 
@@ -124,9 +134,17 @@ export default function LoginPage() {
     <div className="login-root">
 
       <aside className="login-quotes-panel">
-        <div className="login-bg-orb login-bg-orb--blue" />
-        <div className="login-bg-orb login-bg-orb--purple" />
-        <div className="login-bg-orb login-bg-orb--cyan" />
+        {/* Imagen B&W de fondo — cambia con cada quote */}
+        <div
+          className="login-ql-bg-image"
+          style={{
+            backgroundImage: `url(${quote.image})`,
+            opacity: quoteVisible ? 1 : 0,
+            transition: "opacity 1s ease",
+          }}
+        />
+        {/* Overlay cálido para legibilidad */}
+        <div className="login-ql-overlay" />
         <div className="login-bg-grid" />
         <div className="login-ql-edge" />
 
@@ -171,8 +189,6 @@ export default function LoginPage() {
               ))}
             </div>
           </div>
-
-          <p className="login-ql-footer">© 2026 Desarrolla360 · Portal Empresarial</p>
         </div>
       </aside>
 
