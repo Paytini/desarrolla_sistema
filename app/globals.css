@@ -94,12 +94,12 @@ body {
   filter: grayscale(100%) contrast(1.08);
 }
 
-/* Overlay cálido encima de la imagen para legibilidad del texto */
+/* Overlay cálido — más transparente para dejar respirar la imagen */
 .login-ql-overlay {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(250, 240, 222, 0.62);
+  background: rgba(250, 240, 222, 0.44);
 }
 
 .login-bg-grid {
@@ -154,27 +154,42 @@ body {
   padding-block: 3rem;
 }
 
-/* Comilla decorativa grande */
+/* Comilla decorativa — flota encima de la tarjeta */
 .login-ql-mark {
   display: block;
   font-family: "Fraunces", Georgia, serif;
   font-size: 7rem;
   line-height: 0.55;
-  color: rgba(199, 107, 47, 0.4);
-  margin-bottom: 2rem;
+  color: #C76B2F;
+  margin-bottom: 1.25rem;
   user-select: none;
+  filter: drop-shadow(0 2px 8px rgba(199, 107, 47, 0.35));
+}
+
+/* Tarjeta de vidrio esmerilado que enmarca la quote */
+.login-ql-quote-card {
+  background: rgba(255, 251, 246, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 1.25rem;
+  padding: 1.75rem 1.75rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-left: 3.5px solid #C76B2F;
+  box-shadow:
+    0 6px 40px rgba(0, 0, 0, 0.1),
+    0 1px 6px rgba(0, 0, 0, 0.06);
 }
 
 /* Texto de la quote */
 .login-ql-text {
   font-family: "Fraunces", Georgia, serif;
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
-  font-weight: 400;
+  font-size: clamp(1.15rem, 1.9vw, 1.5rem);
+  font-weight: 500;
   font-style: italic;
-  color: #2D1F12;
-  line-height: 1.6;
+  color: #1A0E05;
+  line-height: 1.65;
   letter-spacing: -0.02em;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 /* Autor */
@@ -202,7 +217,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  margin-top: 2.5rem;
+  margin-top: 1.5rem;
 }
 
 .login-ql-dot {

@@ -164,29 +164,32 @@ export default function LoginPage() {
           <div className="login-ql-body">
             <span className="login-ql-mark">&ldquo;</span>
 
-            <div
-              style={{
-                opacity:    quoteVisible ? 1 : 0,
-                transform:  quoteVisible ? "translateY(0)" : "translateY(1.25rem)",
-                transition: "opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1)",
-              }}
-            >
-              <p className="login-ql-text">{quote.text}</p>
-              <div className="login-ql-author">
-                <span className="login-ql-name">— {quote.author}</span>
-                <span className="login-ql-role">{quote.role}</span>
+            {/* Tarjeta de vidrio que enmarca el texto */}
+            <div className="login-ql-quote-card">
+              <div
+                style={{
+                  opacity:    quoteVisible ? 1 : 0,
+                  transform:  quoteVisible ? "translateY(0)" : "translateY(1rem)",
+                  transition: "opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1)",
+                }}
+              >
+                <p className="login-ql-text">{quote.text}</p>
+                <div className="login-ql-author">
+                  <span className="login-ql-name">— {quote.author}</span>
+                  <span className="login-ql-role">{quote.role}</span>
+                </div>
               </div>
-            </div>
 
-            <div className="login-ql-dots">
-              {QUOTES.map((_, i) => (
-                <button
-                  key={i}
-                  className={`login-ql-dot${i === activeIdx ? " login-ql-dot--active" : ""}`}
-                  onClick={() => jumpTo(i)}
-                  aria-label={`Quote ${i + 1}`}
-                />
-              ))}
+              <div className="login-ql-dots">
+                {QUOTES.map((_, i) => (
+                  <button
+                    key={i}
+                    className={`login-ql-dot${i === activeIdx ? " login-ql-dot--active" : ""}`}
+                    onClick={() => jumpTo(i)}
+                    aria-label={`Quote ${i + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
