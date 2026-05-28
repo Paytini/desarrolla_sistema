@@ -60,7 +60,11 @@ export async function createCompanyAction(formData: FormData) {
 
   const passwordHash = await bcrypt.hash(passwordRh, 12)
   const paqueteId = paqueteIdRaw ? Number.parseInt(paqueteIdRaw, 10) : NaN
-  const fechaVencimiento = fechaVencimientoRaw ? new Date(fechaVencimientoRaw) : null
+  const fechaVencimiento = (() => {
+    if (!fechaVencimientoRaw) return null
+    const d = new Date(fechaVencimientoRaw)
+    return isNaN(d.getTime()) ? null : d
+  })()
 
   const createdResult = await prisma.$transaction(async (tx) => {
     const empresa = await tx.empresa.create({

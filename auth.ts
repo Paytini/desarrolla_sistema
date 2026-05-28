@@ -3,9 +3,14 @@ import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
+if (!authSecret) {
+  throw new Error("AUTH_SECRET (o NEXTAUTH_SECRET) es requerida. Configura la variable de entorno antes de iniciar.")
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
-  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  secret: authSecret,
   trustHost: true,
   pages: { signIn: "/login" },
   callbacks: {

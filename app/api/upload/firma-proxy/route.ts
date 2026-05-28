@@ -10,7 +10,19 @@ export async function GET(request: NextRequest) {
   }
 
   const blobUrl = request.nextUrl.searchParams.get("url")
-  if (!blobUrl || !blobUrl.includes("blob.vercel-storage.com")) {
+  if (!blobUrl) {
+    return new NextResponse("URL inválida", { status: 400 })
+  }
+
+  try {
+    const parsed = new URL(blobUrl)
+    const isVercelBlob =
+      parsed.hostname === "blob.vercel-storage.com" ||
+      parsed.hostname.endsWith(".vercel-storage.com")
+    if (!isVercelBlob) {
+      return new NextResponse("URL inválida", { status: 400 })
+    }
+  } catch {
     return new NextResponse("URL inválida", { status: 400 })
   }
 

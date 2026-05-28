@@ -9,9 +9,9 @@ export async function changePasswordAction(formData: FormData) {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
-  const current = (formData.get("current_password") as string | null)?.trim() ?? ""
-  const next    = (formData.get("new_password")     as string | null)?.trim() ?? ""
-  const confirm = (formData.get("confirm_password") as string | null)?.trim() ?? ""
+  const current = (formData.get("current_password") as string | null) ?? ""
+  const next    = (formData.get("new_password")     as string | null) ?? ""
+  const confirm = (formData.get("confirm_password") as string | null) ?? ""
 
   if (!current || !next || !confirm) {
     redirect("/superadmin/perfil?error=missing_fields")

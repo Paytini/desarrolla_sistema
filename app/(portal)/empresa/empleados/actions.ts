@@ -138,15 +138,7 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     }
   }
 
-  const [beforeSeatSnapshot, activeEmployees] = await Promise.all([
-    getCompanySeatSnapshot(input.empresaId),
-    prisma.empleado.count({
-      where: {
-        empresa_id: input.empresaId,
-        activo: true,
-      },
-    }),
-  ])
+  const beforeSeatSnapshot = await getCompanySeatSnapshot(input.empresaId)
 
   if (!beforeSeatSnapshot) {
     return {
@@ -155,51 +147,60 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     }
   }
 
-  if (activeEmployees >= empresaContext.asientos_contratados) {
-    return {
-      ok: false as const,
-      code: "cupos",
-    }
-  }
-
   const passwordHash = await bcrypt.hash(input.password, 12)
   const activePackage = empresaContext.paquetes[0]
   const hasActivePackage = Boolean(activePackage)
 
-  const createdEmployee = await prisma.$transaction(async (tx) => {
-    const empleado = await tx.empleado.create({
-      data: {
-        empresa_id: input.empresaId,
-        nombre: input.nombre,
-        apellido: input.apellido,
-        apellido_materno: input.apellidoMaterno || null,
-        email,
-        curp: input.curp || null,
-        departamento: input.departamento || null,
-        puesto: input.puesto || null,
-        ocupacion_especifica_clave: input.ocupacionEspecificaClave || null,
-        ocupacion_especifica: input.ocupacionEspecifica || null,
-      },
-    })
+  let createdEmployee: Awaited<ReturnType<typeof prisma.empleado.create>>
+  try {
+    createdEmployee = await prisma.$transaction(async (tx) => {
+      const activeEmployees = await tx.empleado.count({
+        where: { empresa_id: input.empresaId, activo: true },
+      })
 
-    await tx.usuario.create({
-      data: {
-        email,
-        password_hash: passwordHash,
-        nombre: `${input.nombre} ${input.apellido}`.trim(),
-        rol: "EMPLEADO",
-        empresa_id: input.empresaId,
-        activo: true,
-      },
-    })
+      if (activeEmployees >= empresaContext.asientos_contratados) {
+        throw Object.assign(new Error("cupos"), { code: "cupos" })
+      }
 
-    await tx.empresa.update({
-      where: { id: input.empresaId },
-      data: { asientos_usados: activeEmployees + 1 },
-    })
+      const empleado = await tx.empleado.create({
+        data: {
+          empresa_id: input.empresaId,
+          nombre: input.nombre,
+          apellido: input.apellido,
+          apellido_materno: input.apellidoMaterno || null,
+          email,
+          curp: input.curp || null,
+          departamento: input.departamento || null,
+          puesto: input.puesto || null,
+          ocupacion_especifica_clave: input.ocupacionEspecificaClave || null,
+          ocupacion_especifica: input.ocupacionEspecifica || null,
+        },
+      })
 
-    return empleado
-  })
+      await tx.usuario.create({
+        data: {
+          email,
+          password_hash: passwordHash,
+          nombre: `${input.nombre} ${input.apellido}`.trim(),
+          rol: "EMPLEADO",
+          empresa_id: input.empresaId,
+          activo: true,
+        },
+      })
+
+      await tx.empresa.update({
+        where: { id: input.empresaId },
+        data: { asientos_usados: activeEmployees + 1 },
+      })
+
+      return empleado
+    })
+  } catch (err) {
+    if (err instanceof Error && (err as NodeJS.ErrnoException & { code?: string }).code === "cupos") {
+      return { ok: false as const, code: "cupos" }
+    }
+    throw err
+  }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(input.empresaId)
   if (afterSeatSnapshot) {

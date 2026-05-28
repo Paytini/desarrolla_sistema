@@ -437,7 +437,11 @@ export async function assignPackageToCompanyAction(formData: FormData) {
         empresa_id: empresaId,
         paquete_id: paqueteId,
         activo: true,
-        fecha_vencimiento: fechaVencimientoRaw ? new Date(fechaVencimientoRaw) : null,
+        fecha_vencimiento: (() => {
+          if (!fechaVencimientoRaw) return null
+          const d = new Date(fechaVencimientoRaw)
+          return isNaN(d.getTime()) ? null : d
+        })(),
       },
     }),
   ])

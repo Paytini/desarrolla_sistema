@@ -136,7 +136,10 @@ export async function deleteEmployeeRecord({
   return empleado
 }
 
-export async function togglePortalUserStatus(userId: number) {
+export async function togglePortalUserStatus(
+  userId: number,
+  callerRole: "SUPERADMIN" | "RH" | "SYSTEM" = "SYSTEM"
+) {
   const usuario = await prisma.usuario.findUnique({
     where: { id: userId },
     select: {
@@ -148,6 +151,11 @@ export async function togglePortalUserStatus(userId: number) {
 
   if (!usuario) {
     throw new Error("Usuario no encontrado")
+  }
+
+  // Only SUPERADMIN can toggle other SUPERADMIN accounts
+  if (usuario.rol === "SUPERADMIN" && callerRole !== "SUPERADMIN") {
+    throw new Error("No autorizado para modificar una cuenta de SUPERADMIN")
   }
 
   await prisma.usuario.update({

@@ -24,7 +24,7 @@ export async function toggleRhUserStatusAction(formData: FormData) {
   }
 
   try {
-    const usuario = await togglePortalUserStatus(userId)
+    const usuario = await togglePortalUserStatus(userId, "SUPERADMIN")
 
     await createAuditEvent({
       actor,

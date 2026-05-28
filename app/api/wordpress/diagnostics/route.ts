@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import { prisma } from "@/lib/prisma"
 import { bridgeGetStudentDiagnostics, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -31,6 +32,16 @@ export async function GET(request: NextRequest) {
       { message: "Debes enviar `studentId` en el query string." },
       { status: 400 }
     )
+  }
+
+  if (session.user.rol === "RH" && session.user.empresa_id) {
+    const belongs = await prisma.empleado.findFirst({
+      where: { wp_user_id: studentId, empresa_id: session.user.empresa_id },
+      select: { id: true },
+    })
+    if (!belongs) {
+      return NextResponse.json({ message: "No autorizado" }, { status: 403 })
+    }
   }
 
   try {

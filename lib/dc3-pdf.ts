@@ -240,12 +240,25 @@ function formatHoras(horas: number) {
  */
 async function fetchImageBytes(urlOrPath: string): Promise<Buffer> {
   if (urlOrPath.startsWith("http://") || urlOrPath.startsWith("https://")) {
-    const headers: HeadersInit = {}
-    // Los blobs privados de Vercel requieren autenticación
-    if (urlOrPath.includes("blob.vercel-storage.com")) {
-      const token = process.env.BLOB_READ_WRITE_TOKEN
-      if (token) headers["Authorization"] = `Bearer ${token}`
+    let parsed: URL
+    try {
+      parsed = new URL(urlOrPath)
+    } catch {
+      throw new Error(`URL de imagen inválida: ${urlOrPath}`)
     }
+
+    const isVercelBlob =
+      parsed.hostname === "blob.vercel-storage.com" ||
+      parsed.hostname.endsWith(".vercel-storage.com")
+
+    if (!isVercelBlob) {
+      throw new Error(`URL de imagen no permitida. Solo se aceptan imágenes de Vercel Blob: ${urlOrPath}`)
+    }
+
+    const headers: HeadersInit = {}
+    const token = process.env.BLOB_READ_WRITE_TOKEN
+    if (token) headers["Authorization"] = `Bearer ${token}`
+
     const res = await fetch(urlOrPath, { headers })
     if (!res.ok) throw new Error(`HTTP ${res.status} al obtener imagen: ${urlOrPath}`)
     return Buffer.from(await res.arrayBuffer())
