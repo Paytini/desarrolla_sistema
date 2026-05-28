@@ -1,6 +1,9 @@
+import EmpleadoSearchBar from "@/components/portal/EmpleadoSearchBar"
+import RhSearchBar from "@/components/portal/RhSearchBar"
+import SuperadminSearchBar from "@/components/portal/SuperadminSearchBar"
+import Sidebar from "@/components/Sidebar"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
-import Sidebar from "@/components/Sidebar"
 
 export default async function PortalLayout({
   children,
@@ -17,9 +20,16 @@ export default async function PortalLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       <Sidebar rol={rol} nombre={nombre} empresa={empresa} />
-      <main className="flex-1 overflow-y-auto p-8">
-        {children}
-      </main>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-14 shrink-0 items-center border-b border-slate-200 bg-white px-6">
+          {rol === "SUPERADMIN" && <SuperadminSearchBar />}
+          {rol === "RH" && <RhSearchBar />}
+          {rol === "EMPLEADO" && <EmpleadoSearchBar />}
+        </header>
+        <main className="flex-1 overflow-y-auto p-8">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

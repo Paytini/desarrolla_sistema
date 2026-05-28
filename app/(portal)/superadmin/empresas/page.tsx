@@ -4,6 +4,7 @@ import StatusNotice from "@/components/portal/StatusNotice"
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
+import Link from "next/link"
 import {
   createCompanyAction,
   toggleCompanyStatusAction,
@@ -291,6 +292,13 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                     </div>
 
                     <div className="flex flex-wrap justify-end gap-2">
+                      <Link
+                        href={`/superadmin/empresas/${empresa.id}`}
+                        className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Ver detalle →
+                      </Link>
+
                       <form action={updateCompanySeatsAction} className="flex items-center gap-2">
                         <input type="hidden" name="empresa_id" value={empresa.id} />
                         <input
