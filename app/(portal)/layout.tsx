@@ -29,8 +29,10 @@ export default async function PortalLayout({
             {rol === "EMPLEADO" && <EmpleadoSearchBar />}
           </div>
           <button
+            type="button"
             aria-label="Notificaciones"
-            className="relative flex size-9 items-center justify-center rounded-lg border border-[#e2e8f0] bg-white transition hover:bg-slate-50"
+            title="Próximamente: Notificaciones"
+            className="relative flex size-9 items-center justify-center rounded-lg border border-[#e2e8f0] bg-white cursor-default"
           >
             <Bell size={16} strokeWidth={1.8} className="text-[#64748b]" />
           </button>
