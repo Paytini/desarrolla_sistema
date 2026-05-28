@@ -1,8 +1,15 @@
-import type { Metadata } from "next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Suspense } from "react";
-import GlobalLoadingController from "@/components/portal/GlobalLoadingController";
-import "./globals.css";
+import type { Metadata } from "next"
+import { DM_Sans } from "next/font/google"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Suspense } from "react"
+import GlobalLoadingController from "@/components/portal/GlobalLoadingController"
+import "./globals.css"
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+})
 
 export const metadata: Metadata = {
   title: "Desarrolla360 Portal Empresarial",
@@ -11,16 +18,16 @@ export const metadata: Metadata = {
     icon: "/assets/logo_desarrolla_cropped.png",
     apple: "/assets/logo_desarrolla_cropped.png",
   },
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">
+    <html lang="es" className={`h-full antialiased ${dmSans.variable}`}>
+      <body className={`min-h-full flex flex-col font-[family-name:var(--font-dm-sans)]`}>
         <Suspense fallback={null}>
           <GlobalLoadingController />
         </Suspense>
@@ -28,5 +35,5 @@ export default function RootLayout({
         <SpeedInsights />
       </body>
     </html>
-  );
+  )
 }
