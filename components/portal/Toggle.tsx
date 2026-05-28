@@ -4,14 +4,16 @@ type ToggleProps = {
   checked?: boolean
   onChange?: (checked: boolean) => void
   disabled?: boolean
+  ariaLabel?: string
 }
 
-export default function Toggle({ checked = false, onChange, disabled }: ToggleProps) {
+export default function Toggle({ checked = false, onChange, disabled, ariaLabel }: ToggleProps) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={ariaLabel}
       disabled={disabled}
       onClick={() => !disabled && onChange?.(!checked)}
       className={`relative h-5 w-9 rounded-full transition-colors ${

@@ -15,6 +15,8 @@ export default function FilterBar({ searchPlaceholder = "Buscar…", selects = [
       <div className="flex flex-1 items-center gap-2 rounded-lg border border-[#e2e8f0] bg-white px-3 py-2">
         <Search size={15} strokeWidth={2} className="shrink-0 text-[#94a3b8]" />
         <input
+          type="search"
+          aria-label={searchPlaceholder}
           placeholder={searchPlaceholder}
           className="flex-1 border-none bg-transparent text-[13.5px] text-[#1a1a1a] outline-none placeholder:text-[#cbd5e1]"
         />
@@ -22,6 +24,7 @@ export default function FilterBar({ searchPlaceholder = "Buscar…", selects = [
       {selects.map((s, i) => (
         <select
           key={i}
+          aria-label={s.placeholder}
           className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-2 text-[13.5px] text-[#1a1a1a] outline-none"
         >
           <option value="">{s.placeholder}</option>

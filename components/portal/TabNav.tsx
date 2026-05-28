@@ -19,10 +19,12 @@ export default function TabNav({ tabs, defaultValue, onChange }: TabNavProps) {
   }
 
   return (
-    <div className="flex gap-1 rounded-[10px] border border-[#f0f0f0] bg-[#f8fafc] p-1">
+    <div role="tablist" className="flex gap-1 rounded-[10px] border border-[#f0f0f0] bg-[#f8fafc] p-1">
       {tabs.map((tab) => (
         <button
           key={tab.value}
+          role="tab"
+          aria-selected={active === tab.value}
           type="button"
           onClick={() => handleClick(tab.value)}
           className={`rounded-[7px] px-4 py-1.5 text-[13px] font-semibold transition-all ${
