@@ -834,12 +834,14 @@ function d360_bridge_courses() {
 	$all_courses = array();
 
 	foreach ( $query->posts as $course_id ) {
+		$thumbnail = get_the_post_thumbnail_url( $course_id, 'large' );
 		$all_courses[] = array(
-			'wp_course_id' => (int) $course_id,
-			'title'        => get_the_title( $course_id ),
-			'status'       => get_post_status( $course_id ),
-			'post_type'    => $post_type,
-			'course_url'   => get_permalink( $course_id ),
+			'wp_course_id'  => (int) $course_id,
+			'title'         => get_the_title( $course_id ),
+			'status'        => get_post_status( $course_id ),
+			'post_type'     => $post_type,
+			'course_url'    => get_permalink( $course_id ),
+			'thumbnail_url' => $thumbnail ? $thumbnail : null,
 		);
 	}
 

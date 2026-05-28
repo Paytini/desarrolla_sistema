@@ -1,137 +1,101 @@
 "use client"
 
+import {
+  Award,
+  BarChart3,
+  BookOpen,
+  Building2,
+  ChevronLeft,
+  ClipboardList,
+  Home,
+  LogOut,
+  Package,
+  Plug,
+  Settings,
+  ShieldCheck,
+  User,
+  Users,
+  type LucideIcon,
+} from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
+import { useEffect, useState } from "react"
 
-type IconName =
-  | "home"
-  | "building"
-  | "package"
-  | "chart"
-  | "plug"
-  | "shield"
-  | "users"
-  | "clipboard"
-  | "certificate"
-  | "book"
+// ── Nav definitions ────────────────────────────────────────────────
 
-type NavItem = {
-  label: string
-  href: string
-  icon: IconName
-}
+type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean }
+type Rol     = "SUPERADMIN" | "RH" | "EMPLEADO"
 
 const navSuperAdmin: NavItem[] = [
-  { label: "Empresas", href: "/superadmin/empresas", icon: "building" },
-  { label: "Paquetes", href: "/superadmin/paquetes", icon: "package" },
-  { label: "Reportes globales", href: "/superadmin/reportes", icon: "chart" },
-  { label: "Integración", href: "/superadmin/integracion", icon: "plug" },
-  { label: "Accesos", href: "/superadmin/accesos", icon: "shield" },
+  { label: "Inicio",            href: "/superadmin",             icon: Home,         exact: true },
+  { label: "Empresas",          href: "/superadmin/empresas",    icon: Building2 },
+  { label: "Paquetes",          href: "/superadmin/paquetes",    icon: Package },
+  { label: "Reportes globales", href: "/superadmin/reportes",    icon: BarChart3 },
+  { label: "Integración",       href: "/superadmin/integracion", icon: Plug },
+  { label: "Accesos",           href: "/superadmin/accesos",     icon: ShieldCheck },
 ]
-
 const navRH: NavItem[] = [
-  { label: "Inicio", href: "/empresa/inicio", icon: "home" },
-  { label: "Empleados", href: "/empresa/empleados", icon: "users" },
-  { label: "Asignaciones", href: "/empresa/asignaciones", icon: "clipboard" },
-  { label: "Progreso", href: "/empresa/progreso", icon: "chart" },
-  { label: "Constancias", href: "/empresa/constancias", icon: "certificate" },
+  { label: "Inicio",        href: "/empresa/inicio",       icon: Home,         exact: true },
+  { label: "Empleados",     href: "/empresa/empleados",    icon: Users },
+  { label: "Asignaciones",  href: "/empresa/asignaciones", icon: ClipboardList },
+  { label: "Progreso",      href: "/empresa/progreso",     icon: BarChart3 },
+  { label: "Constancias",   href: "/empresa/constancias",  icon: Award },
 ]
-
 const navEmpleado: NavItem[] = [
-  { label: "Mis cursos", href: "/empleado/cursos", icon: "book" },
-  { label: "Mis constancias", href: "/empleado/constancias", icon: "certificate" },
+  { label: "Mis cursos",      href: "/empleado/cursos",      icon: BookOpen },
+  { label: "Mis constancias", href: "/empleado/constancias", icon: Award },
 ]
-
-type Rol = "SUPERADMIN" | "RH" | "EMPLEADO"
 
 const navByRol: Record<Rol, NavItem[]> = {
   SUPERADMIN: navSuperAdmin,
-  RH: navRH,
-  EMPLEADO: navEmpleado,
+  RH:         navRH,
+  EMPLEADO:   navEmpleado,
 }
 
-const badgeByRol: Record<Rol, { label: string; className: string }> = {
-  SUPERADMIN: { label: "SuperAdmin", className: "bg-teal-50 text-teal-800 ring-teal-200" },
-  RH: { label: "RH / Empresa", className: "bg-violet-50 text-violet-800 ring-violet-200" },
-  EMPLEADO: { label: "Empleado", className: "bg-amber-50 text-amber-800 ring-amber-200" },
+const roleLabel: Record<Rol, string> = {
+  SUPERADMIN: "SuperAdmin",
+  RH:         "RH / Empresa",
+  EMPLEADO:   "Empleado",
 }
 
-const iconPaths: Record<IconName, string[]> = {
-  home: [
-    "M3 11.5 12 4l9 7.5",
-    "M5 10.5V20h5v-5h4v5h5v-9.5",
-  ],
-  building: [
-    "M4 20h16",
-    "M6 20V5.5A1.5 1.5 0 0 1 7.5 4h9A1.5 1.5 0 0 1 18 5.5V20",
-    "M9 8h2M13 8h2M9 12h2M13 12h2M9 16h2M13 16h2",
-  ],
-  package: [
-    "M4 8.5 12 4l8 4.5-8 4.5L4 8.5Z",
-    "M4 8.5V16l8 4 8-4V8.5",
-    "M12 13v7",
-  ],
-  chart: [
-    "M4 19V5",
-    "M4 19h16",
-    "M8 16v-5",
-    "M12 16V8",
-    "M16 16v-9",
-  ],
-  plug: [
-    "M9 7V3",
-    "M15 7V3",
-    "M7 7h10v4a5 5 0 0 1-10 0V7Z",
-    "M12 16v5",
-  ],
-  shield: [
-    "M12 3 20 6v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6l8-3Z",
-    "M9 12l2 2 4-5",
-  ],
-  users: [
-    "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
-    "M3 21a6 6 0 0 1 12 0",
-    "M17 11a3 3 0 1 0 0-6",
-    "M16 15a5 5 0 0 1 5 5",
-  ],
-  clipboard: [
-    "M9 4h6l1 2h3v15H5V6h3l1-2Z",
-    "M9 11h6",
-    "M9 15h6",
-  ],
-  certificate: [
-    "M5 4h14v11H5V4Z",
-    "M8 8h8",
-    "M8 12h5",
-    "M10 15l-1 6 3-2 3 2-1-6",
-  ],
-  book: [
-    "M5 5.5A2.5 2.5 0 0 1 7.5 3H20v16H7.5A2.5 2.5 0 0 0 5 21V5.5Z",
-    "M5 5.5V21",
-    "M9 7h7",
-  ],
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
 }
 
-function NavIcon({ name }: { name: IconName }) {
+function IconLink({
+  href,
+  icon: Icon,
+  label,
+  active,
+}: {
+  href: string
+  icon: LucideIcon
+  label: string
+  active: boolean
+}) {
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="size-6 shrink-0"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.9"
-    >
-      {iconPaths[name].map((path) => (
-        <path key={path} d={path} />
-      ))}
-    </svg>
+    <div className="group relative">
+      <Link
+        href={href}
+        className={`flex items-center justify-center rounded-xl px-3 py-2.5 transition-colors ${
+          active ? "bg-teal-50 text-teal-700" : "text-slate-400 hover:bg-slate-50 hover:text-slate-800"
+        }`}
+      >
+        <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
+      </Link>
+      <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+        {label}
+      </span>
+    </div>
   )
 }
+
 
 export default function Sidebar({
   rol,
@@ -142,81 +106,212 @@ export default function Sidebar({
   nombre: string
   empresa?: string
 }) {
-  const pathname = usePathname()
-  const items = navByRol[rol]
-  const badge = badgeByRol[rol]
+  const pathname  = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
+  const items     = navByRol[rol]
+  const initials  = getInitials(nombre)
+
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem("sidebar-collapsed") === "true")
+    } catch {}
+  }, [])
+
+  function toggle() {
+    setCollapsed((prev) => {
+      const next = !prev
+      try { localStorage.setItem("sidebar-collapsed", String(next)) } catch {}
+      return next
+    })
+  }
+
+  const homeHref =
+    rol === "SUPERADMIN" ? "/superadmin"
+    : rol === "RH"       ? "/empresa/inicio"
+    :                      "/empleado/cursos"
 
   return (
-    <aside className="sticky top-0 h-screen w-72 shrink-0 overflow-hidden border-r border-orange-900/20 bg-[#fff7ef] text-slate-950 shadow-2xl">
-      <div className="flex h-full flex-col">
-        <div className="px-6 pb-6 pt-7">
-          <Link href="/" className="grid gap-2 rounded-3xl border border-orange-100 bg-white p-4 shadow-sm">
-            <span className="flex h-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white to-orange-50 px-4">
+    <aside
+      className={`
+        sticky top-0 flex h-screen shrink-0 flex-col
+        border-r border-slate-200 bg-white
+        transition-[width] duration-300 ease-in-out
+        ${collapsed ? "w-[68px]" : "w-[240px]"}
+      `}
+    >
+      <div
+        className={`flex h-16 shrink-0 items-center border-b border-slate-100 ${
+          collapsed ? "justify-center px-3" : "justify-between px-5"
+        }`}
+      >
+        {collapsed ? (
+          /* Collapsed: logo doubles as expand button */
+          <button
+            onClick={toggle}
+            aria-label="Expandir menú"
+            className="flex items-center justify-center rounded-xl transition-opacity hover:opacity-75"
+          >
+            <Image
+              src="/assets/logo_corta.png"
+              alt="D360"
+              width={36}
+              height={36}
+              className="size-9 object-contain"
+            />
+          </button>
+        ) : (
+          <>
+            <Link href={homeHref} className="block">
               <Image
                 src="/assets/logo_desarrolla_cropped.png"
-                alt="DesarrollaMX 360"
-                width={220}
-                height={80}
-                className="h-14 w-full object-contain"
+                alt="Desarrolla360"
+                width={150}
+                height={36}
+                className="h-8 w-auto object-contain"
                 priority
               />
-            </span>
-            <span className="text-center text-xs font-semibold text-slate-500">Portal empresarial</span>
-          </Link>
-        </div>
+            </Link>
+            <button
+              onClick={toggle}
+              aria-label="Contraer menú"
+              className="flex size-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            >
+              <ChevronLeft size={15} strokeWidth={2} />
+            </button>
+          </>
+        )}
+      </div>
 
-        <nav className="flex-1 space-y-2 overflow-y-auto px-4 pb-4">
-          {items.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+      {/* ── Navigation ──────────────────────────── */}
+      <nav className="flex flex-col gap-0.5 px-2 py-3">
+        {items.map((item) => {
+          const Icon  = item.icon
+          const active =
+            pathname === item.href ||
+            (!item.exact && pathname.startsWith(`${item.href}/`))
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch
-                className={`group flex items-center gap-4 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
-                  active
-                    ? "bg-slate-950 text-white shadow-lg shadow-orange-950/10"
-                    : "text-slate-600 hover:bg-white hover:text-slate-950 hover:shadow-sm"
-                }`}
-              >
-                <NavIcon name={item.icon} />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
+          return collapsed ? (
+            <IconLink key={item.href} href={item.href} icon={Icon} label={item.label} active={active} />
+          ) : (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                active
+                  ? "bg-teal-50 text-teal-700"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              }`}
+            >
+              <Icon size={18} strokeWidth={active ? 2.2 : 1.8} className="shrink-0" />
+              <span className="truncate">{item.label}</span>
+              {active && (
+                <span className="ml-auto size-1.5 shrink-0 rounded-full bg-teal-500" />
+              )}
+            </Link>
+          )
+        })}
+      </nav>
 
-        <div className="border-t border-orange-100 p-5">
-          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ${badge.className}`}>
-            {badge.label}
-          </span>
+      {/* ── Spacer ──────────────────────────────── */}
+      <div className="flex-1" />
 
-          <div className="mt-4 rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
-            <p className="truncate text-sm font-semibold text-slate-950">{nombre}</p>
-            {empresa ? <p className="mt-1 truncate text-xs text-slate-500">{empresa}</p> : null}
+      {/* ── Bottom section ──────────────────────── */}
+      <div className="shrink-0 border-t border-slate-100 px-2 py-2">
+        {/* Perfil + Configuración — solo SUPERADMIN */}
+        {rol === "SUPERADMIN" && (
+          <div className={`mb-1 ${collapsed ? "flex flex-col gap-0.5" : "grid grid-cols-2 gap-1"}`}>
+            {collapsed ? (
+              <>
+                <IconLink
+                  href="/superadmin/perfil"
+                  icon={User}
+                  label="Perfil"
+                  active={pathname === "/superadmin/perfil"}
+                />
+                <IconLink
+                  href="/superadmin/configuracion"
+                  icon={Settings}
+                  label="Configuración"
+                  active={pathname === "/superadmin/configuracion"}
+                />
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/superadmin/perfil"
+                  className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] font-medium transition ${
+                    pathname === "/superadmin/perfil"
+                      ? "bg-teal-50 text-teal-700"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  }`}
+                >
+                  <User size={12} strokeWidth={2} />
+                  Perfil
+                </Link>
+                <Link
+                  href="/superadmin/configuracion"
+                  className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] font-medium transition ${
+                    pathname === "/superadmin/configuracion"
+                      ? "bg-teal-50 text-teal-700"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  }`}
+                >
+                  <Settings size={12} strokeWidth={2} />
+                  Config.
+                </Link>
+              </>
+            )}
           </div>
+        )}
 
+        {/* Logout */}
+        {collapsed ? (
+          <div className="group relative">
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="flex w-full items-center justify-center rounded-xl px-3 py-2.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+              aria-label="Cerrar sesión"
+            >
+              <LogOut size={17} strokeWidth={1.8} />
+            </button>
+            <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+              Cerrar sesión
+            </span>
+          </div>
+        ) : (
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="mt-4 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-500 transition hover:bg-white hover:text-slate-950 hover:shadow-sm"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-rose-50 hover:text-rose-500"
           >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              className="size-5"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="1.9"
-            >
-              <path d="M10 17l5-5-5-5" />
-              <path d="M15 12H3" />
-              <path d="M14 4h5v16h-5" />
-            </svg>
-            Cerrar sesión
+            <LogOut size={17} strokeWidth={1.8} className="shrink-0" />
+            <span>Cerrar sesión</span>
           </button>
+        )}
+
+        {/* User identity */}
+        <div className={`mt-2 border-t border-slate-100 pt-3 ${collapsed ? "flex justify-center" : "px-1"}`}>
+          {collapsed ? (
+            <div className="group relative">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-teal-600 text-[11px] font-bold text-white">
+                {initials}
+              </div>
+              <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+                {nombre}
+                <span className="block text-[10px] font-normal text-slate-300">{roleLabel[rol]}</span>
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-[11px] font-bold text-white">
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-slate-900">{nombre}</p>
+                <p className="text-[10px] text-slate-400">{roleLabel[rol]}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </aside>

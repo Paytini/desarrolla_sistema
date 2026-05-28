@@ -140,6 +140,7 @@ export type BridgeCourseOption = {
   status?: string | null
   post_type?: string | null
   course_url?: string | null
+  thumbnail_url?: string | null
 }
 
 export type BridgeCourseDetails = {

@@ -15,9 +15,9 @@ export default async function PortalLayout({
   const empresa = session.user.empresa as string | undefined
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-slate-50">
       <Sidebar rol={rol} nombre={nombre} empresa={empresa} />
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 overflow-y-auto p-8">
         {children}
       </main>
     </div>

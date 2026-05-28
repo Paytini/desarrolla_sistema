@@ -119,18 +119,20 @@ export async function createPackageAction(formData: FormData) {
     redirect("/superadmin/paquetes?error=datos")
   }
 
-  let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string }> = []
+  let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> = []
 
   try {
     const payload = JSON.parse(selectedCoursesRaw) as Array<{
       wp_course_id?: number
       nombre_curso?: string
+      portada_url?: string | null
     }>
 
     parsedCourses = payload
       .map((course) => ({
         wpCourseId: Number(course.wp_course_id),
         nombreCurso: decodeHtmlEntities(String(course.nombre_curso ?? "").trim()),
+        portadaUrl: course.portada_url ? String(course.portada_url) : null,
       }))
       .filter((course) => Number.isInteger(course.wpCourseId) && course.nombreCurso)
   } catch {
@@ -182,6 +184,7 @@ export async function createPackageAction(formData: FormData) {
         create: parsedCourses.map((course) => ({
           wp_curso_id: course.wpCourseId,
           nombre_curso: course.nombreCurso,
+          portada_url: course.portadaUrl,
         })),
       },
     },

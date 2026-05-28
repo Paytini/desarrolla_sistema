@@ -107,10 +107,11 @@ model Paquete {
 // ─────────────────────────────────────────────────────────────
 
 model PaqueteCurso {
-  id           Int    @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   paquete_id   Int
   wp_curso_id  Int // ID del curso en Tutor LMS Pro
   nombre_curso String // nombre cacheado para no consultar WP siempre
+  portada_url  String? // URL de la imagen destacada del curso en WordPress
 
   paquete Paquete @relation(fields: [paquete_id], references: [id])
 

@@ -1,9 +1,8 @@
 import CnoSelect from "@/components/portal/CnoSelect"
 import DeleteEmployeeButton from "@/components/portal/DeleteEmployeeButton"
 import EmployeeOnboardingTabs from "@/components/portal/EmployeeOnboardingTabs"
-import InfoCard from "@/components/portal/InfoCard"
-import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
+import { AlertCircle, Package, ShieldCheck, Users, UserX, type LucideIcon } from "lucide-react"
 import {
   matchesEmployeeFilters,
   normalizeEmployeeFilterStatus,
@@ -61,35 +60,60 @@ function getSuccessMessage(
   success: string | undefined,
   params: Record<string, string | string[] | undefined> | undefined
 ) {
-  if (!success) {
-    return null
-  }
-
+  if (!success) return null
   if (success === "csv_imported") {
     const created = readSearchParam(params, "created") ?? "0"
     const synced = readSearchParam(params, "synced") ?? "0"
     const warnings = readSearchParam(params, "warnings") ?? "0"
     const skipped = readSearchParam(params, "skipped") ?? "0"
-
     return `Importacion completada. Creados: ${created}. Sincronizados con WordPress/Tutor: ${synced}. Con advertencia de bridge: ${warnings}. Omitidos: ${skipped}.`
   }
-
   return successMessages[success] ?? success
 }
 
 function buildEmployeeListPath(query: string, status: string) {
   const searchParams = new URLSearchParams()
-
-  if (query) {
-    searchParams.set("q", query)
-  }
-
-  if (status !== "all") {
-    searchParams.set("status", status)
-  }
-
+  if (query) searchParams.set("q", query)
+  if (status !== "all") searchParams.set("status", status)
   const serialized = searchParams.toString()
   return serialized ? `/empresa/empleados?${serialized}` : "/empresa/empleados"
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
+}
+
+function KpiCard({
+  label,
+  value,
+  sub,
+  Icon,
+  iconCls,
+}: {
+  label: string
+  value: string
+  sub?: string
+  Icon: LucideIcon
+  iconCls: string
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="text-2xl font-bold tracking-tight text-slate-950">{value}</p>
+          {sub && <p className="text-xs text-slate-400">{sub}</p>}
+        </div>
+        <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
+          <Icon size={16} strokeWidth={2} />
+        </span>
+      </div>
+    </div>
+  )
 }
 
 function ManualEmployeeForm() {
@@ -268,7 +292,7 @@ function CsvEmployeeImportForm() {
           />
         </label>
 
-        <div className="max-w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-violet-50/40 p-4 shadow-sm">
+        <div className="max-w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -390,9 +414,7 @@ function CsvEmployeeImportForm() {
 
 export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
-    redirect("/login")
-  }
+  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
   const params = await searchParams
   const success = readSearchParam(params, "success")
@@ -402,92 +424,93 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
 
   const empresa = await getRhEmpleadosSnapshot(session.user.empresa_id)
+  if (!empresa) redirect("/login")
 
-  if (!empresa) {
-    redirect("/login")
-  }
-
-  const empleadosActivos = empresa.empleados.filter((empleado) => empleado.activo).length
+  const empleadosActivos = empresa.empleados.filter((e) => e.activo).length
   const empleadosInactivos = empresa.empleados.length - empleadosActivos
   const cuposDisponibles = Math.max(empresa.asientos_contratados - empleadosActivos, 0)
-  const paqueteActivo = empresa.paquetes[0]?.paquete?.nombre ?? "Sin paquete activo"
-  const employeesWithAccessIssues = empresa.empleados.filter((empleado) =>
-    empleado.cursos.some((curso) => curso.acceso_estado === "ERROR")
+  const paqueteActivo = empresa.paquetes[0]?.paquete?.nombre ?? "Sin paquete"
+  const employeesWithAccessIssues = empresa.empleados.filter((e) =>
+    e.cursos.some((c) => c.acceso_estado === "ERROR")
   ).length
-  const filteredEmployees = empresa.empleados.filter((empleado) =>
-    matchesEmployeeFilters(empleado, {
-      query,
-      status,
-    })
+  const filteredEmployees = empresa.empleados.filter((e) =>
+    matchesEmployeeFilters(e, { query, status })
   )
   const currentListPath = buildEmployeeListPath(searchQuery, status)
   const exportHref = `/api/empresa/empleados/export${
-    currentListPath === "/empresa/empleados" ? "" : currentListPath.replace("/empresa/empleados", "")
+    currentListPath === "/empresa/empleados"
+      ? ""
+      : currentListPath.replace("/empresa/empleados", "")
   }`
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        eyebrow="Empresa / RH"
-        title="Gestion de empleados y cupos"
-        description="Aqui el area RH ya puede registrar empleados reales, controlar cupos y activar o suspender accesos sin depender del equipo de Desarrolla360."
-      />
+    <div className="space-y-6">
+      <header className="space-y-0.5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-600">
+          RH / Empresa
+        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Empleados</h1>
+      </header>
 
-      {success ? <StatusNotice tone="success" message={getSuccessMessage(success, params) ?? success} /> : null}
-      {error ? <StatusNotice tone="error" message={errorMessages[error] ?? error} /> : null}
+      {success ? (
+        <StatusNotice tone="success" message={getSuccessMessage(success, params) ?? success} />
+      ) : null}
+      {error ? (
+        <StatusNotice tone="error" message={errorMessages[error] ?? error} />
+      ) : null}
 
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-slate-950">Sincronizacion academica</h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Actualiza cursos, progreso y constancias de tus empleados activos en segundo plano, sin frenar la navegacion del portal.
-            </p>
-          </div>
-
-          <form action={triggerCompanyLearningSyncAction}>
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
-            >
-              Actualizar ahora
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-5">
-        <InfoCard
-          title="Paquete activo"
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <KpiCard
+          label="Paquete activo"
           value={paqueteActivo}
-          description="Paquete corporativo actual vinculado a la empresa."
-          accent="violet"
+          Icon={Package}
+          iconCls="bg-violet-50 text-violet-600"
         />
-        <InfoCard
-          title="Empleados activos"
+        <KpiCard
+          label="Activos"
           value={String(empleadosActivos)}
-          description="Colaboradores con acceso vigente al portal."
-          accent="teal"
+          sub="Con acceso vigente"
+          Icon={Users}
+          iconCls="bg-teal-50 text-teal-600"
         />
-        <InfoCard
-          title="Cupos disponibles"
+        <KpiCard
+          label="Cupos disponibles"
           value={String(cuposDisponibles)}
-          description="Lugares restantes antes de alcanzar el limite contratado."
-          accent="amber"
+          sub="Antes del límite"
+          Icon={ShieldCheck}
+          iconCls="bg-blue-50 text-blue-600"
         />
-        <InfoCard
-          title="Suspendidos"
+        <KpiCard
+          label="Suspendidos"
           value={String(empleadosInactivos)}
-          description="Empleados dados de baja logica dentro del portal."
-          accent="slate"
+          Icon={UserX}
+          iconCls="bg-slate-100 text-slate-500"
         />
-        <InfoCard
-          title="Con alertas de acceso"
+        <KpiCard
+          label="Con alertas"
           value={String(employeesWithAccessIssues)}
-          description="Empleados cuyos cursos reportan error de acceso academico."
-          accent="amber"
+          sub="Error de acceso"
+          Icon={AlertCircle}
+          iconCls="bg-amber-50 text-amber-600"
         />
-      </section>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-950">Sincronización académica</p>
+          <p className="text-xs text-slate-400">
+            Actualiza cursos, progreso y constancias en segundo plano.
+          </p>
+        </div>
+        <form action={triggerCompanyLearningSyncAction}>
+          <button
+            type="submit"
+            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+          >
+            Actualizar
+          </button>
+        </form>
+      </div>
 
       <section>
         <EmployeeOnboardingTabs
@@ -496,167 +519,151 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
         />
       </section>
 
-      <section className="grid gap-6">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-slate-950">Plantilla actual</h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Estado actual de los empleados dentro del portal y consumo de lugares contratados.
-              </p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base font-semibold text-slate-950">
+            Plantilla actual
+            <span className="ml-2 text-sm font-normal text-slate-400">
+              {filteredEmployees.length} de {empresa.empleados.length}
+            </span>
+          </h2>
+          <a
+            href={exportHref}
+            className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Exportar CSV
+          </a>
+        </div>
+
+        <form className="mb-4 flex flex-wrap gap-2">
+          <input
+            name="q"
+            defaultValue={searchQuery}
+            placeholder="Nombre, correo, área o puesto..."
+            className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-violet-600"
+          />
+          <select
+            name="status"
+            defaultValue={status}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-violet-600"
+          >
+            <option value="all">Todos</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Suspendidos</option>
+          </select>
+          <button
+            type="submit"
+            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+          >
+            Filtrar
+          </button>
+          {(searchQuery || status !== "all") ? (
+            <a
+              href="/empresa/empleados"
+              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Limpiar
+            </a>
+          ) : null}
+        </form>
+
+        <div className="space-y-2">
+          {empresa.empleados.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              Aún no hay empleados registrados para esta empresa.
             </div>
+          ) : null}
 
-            <div className="flex flex-wrap gap-2">
-              <a
-                href={exportHref}
-                className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-              >
-                Exportar CSV
-              </a>
+          {empresa.empleados.length > 0 && filteredEmployees.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              No encontramos empleados que coincidan con ese filtro.
             </div>
-          </div>
+          ) : null}
 
-          <form className="mb-5 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-[minmax(0,1.5fr)_220px_auto]">
-            <label className="grid gap-1.5 text-sm">
-              <span className="font-medium text-slate-700">Buscar empleado</span>
-                <input
-                  name="q"
-                  defaultValue={searchQuery}
-                  placeholder="Nombre, apellido, correo, departamento o puesto"
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none transition focus:border-violet-600"
-                />
-            </label>
+          {filteredEmployees.map((empleado) => {
+            const activeCourseCount = empleado.cursos.filter(
+              (c) => c.acceso_estado === "ACTIVE"
+            ).length
+            const errorCourseCount = empleado.cursos.filter(
+              (c) => c.acceso_estado === "ERROR"
+            ).length
+            const initials = getInitials(`${empleado.nombre} ${empleado.apellido}`)
 
-            <label className="grid gap-1.5 text-sm">
-              <span className="font-medium text-slate-700">Estado</span>
-              <select
-                name="status"
-                defaultValue={status}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none transition focus:border-violet-600"
+            return (
+              <div
+                key={empleado.id}
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:bg-slate-50/50"
               >
-                <option value="all">Todos</option>
-                <option value="active">Activos</option>
-                <option value="inactive">Suspendidos</option>
-              </select>
-            </label>
-
-            <div className="flex flex-wrap items-end gap-2">
-              <button
-                type="submit"
-                className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
-              >
-                Filtrar
-              </button>
-              {(searchQuery || status !== "all") ? (
-                <a
-                  href="/empresa/empleados"
-                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                <div
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+                    errorCourseCount > 0
+                      ? "bg-rose-50 text-rose-700"
+                      : empleado.activo
+                        ? "bg-violet-50 text-violet-700"
+                        : "bg-slate-100 text-slate-500"
+                  }`}
                 >
-                  Limpiar
-                </a>
-              ) : null}
-            </div>
-          </form>
-
-          <div className="mb-4 text-sm text-slate-600">
-            Mostrando {filteredEmployees.length} de {empresa.empleados.length} empleados registrados.
-          </div>
-
-          <div className="space-y-4">
-            {empresa.empleados.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                Aun no hay empleados registrados para esta empresa.
-              </div>
-            ) : null}
-
-            {empresa.empleados.length > 0 && filteredEmployees.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                No encontramos empleados que coincidan con ese filtro.
-              </div>
-            ) : null}
-
-            {filteredEmployees.map((empleado) => (
-              <div key={empleado.id} className="rounded-3xl border border-slate-200 bg-slate-50/60 p-5">
-                {(() => {
-                  const activeCourseCount = empleado.cursos.filter((curso) => curso.acceso_estado === "ACTIVE").length
-                  const pendingCourseCount = empleado.cursos.filter((curso) => curso.acceso_estado === "PENDING").length
-                  const errorCourseCount = empleado.cursos.filter((curso) => curso.acceso_estado === "ERROR").length
-
-                  return (
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-base font-semibold text-slate-950">
-                        {empleado.nombre} {empleado.apellido}
-                      </h3>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          empleado.activo
-                            ? "bg-teal-100 text-teal-900"
-                            : "bg-slate-200 text-slate-700"
-                        }`}
-                      >
-                        {empleado.activo ? "Activo" : "Suspendido"}
-                      </span>
-                    </div>
-
-                    <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2">
-                      <p>
-                        <span className="font-medium text-slate-800">Correo:</span> {empleado.email}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Alta:</span>{" "}
-                        {formatDate(empleado.created_at)}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Departamento:</span>{" "}
-                        {empleado.departamento || "Sin capturar"}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Puesto:</span>{" "}
-                        {empleado.puesto || "Sin capturar"}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">WP user ID:</span>{" "}
-                        {empleado.wp_user_id ?? "Pendiente de sincronizar"}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Acceso cursos:</span>{" "}
-                        {activeCourseCount} activos, {pendingCourseCount} pendientes, {errorCourseCount} con error
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <form action={toggleEmployeeStatusAction}>
-                      <input type="hidden" name="empleado_id" value={empleado.id} />
-                      <input type="hidden" name="return_to" value={currentListPath} />
-                      <button
-                        type="submit"
-                        className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                          empleado.activo
-                            ? "bg-slate-900 text-white hover:bg-slate-700"
-                            : "bg-violet-700 text-white hover:bg-violet-800"
-                        }`}
-                      >
-                        {empleado.activo ? "Suspender" : "Reactivar"}
-                      </button>
-                    </form>
-
-                    <DeleteEmployeeButton
-                      action={deleteEmployeeAction}
-                      empleadoId={empleado.id}
-                      employeeName={`${empleado.nombre} ${empleado.apellido}`.trim()}
-                      returnTo={currentListPath}
-                    />
-                  </div>
+                  {initials}
                 </div>
-                  )
-                })()}
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="truncate text-sm font-semibold text-slate-950">
+                      {empleado.nombre} {empleado.apellido}
+                    </p>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        empleado.activo
+                          ? "bg-teal-100 text-teal-800"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {empleado.activo ? "Activo" : "Suspendido"}
+                    </span>
+                    {errorCourseCount > 0 && (
+                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800">
+                        {errorCourseCount} error{errorCourseCount > 1 ? "es" : ""}
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-xs text-slate-500">
+                    {empleado.email}
+                    {empleado.departamento ? ` · ${empleado.departamento}` : ""}
+                    {empleado.puesto ? ` · ${empleado.puesto}` : ""}
+                  </p>
+                </div>
+
+                <div className="hidden text-right text-xs text-slate-500 md:block">
+                  <p className="font-medium text-slate-700">{activeCourseCount} cursos activos</p>
+                  <p>Alta: {formatDate(empleado.created_at)}</p>
+                </div>
+
+                <div className="flex shrink-0 gap-1.5">
+                  <form action={toggleEmployeeStatusAction}>
+                    <input type="hidden" name="empleado_id" value={empleado.id} />
+                    <input type="hidden" name="return_to" value={currentListPath} />
+                    <button
+                      type="submit"
+                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                        empleado.activo
+                          ? "bg-slate-900 text-white hover:bg-slate-700"
+                          : "bg-violet-700 text-white hover:bg-violet-800"
+                      }`}
+                    >
+                      {empleado.activo ? "Suspender" : "Reactivar"}
+                    </button>
+                  </form>
+                  <DeleteEmployeeButton
+                    action={deleteEmployeeAction}
+                    empleadoId={empleado.id}
+                    employeeName={`${empleado.nombre} ${empleado.apellido}`.trim()}
+                    returnTo={currentListPath}
+                  />
+                </div>
               </div>
-            ))}
-          </div>
-        </article>
+            )
+          })}
+        </div>
       </section>
     </div>
   )

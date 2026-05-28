@@ -29,4 +29,5 @@ export type PortalPackageCourseRecord = {
   paquete_id?: number
   wp_curso_id: number
   nombre_curso: string
+  portada_url?: string | null
 }

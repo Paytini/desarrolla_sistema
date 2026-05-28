@@ -7,6 +7,7 @@ type CourseOption = {
   wp_course_id: number
   title: string
   status?: string | null
+  thumbnail_url?: string | null
 }
 
 type PackageCourseSelectorProps = {
@@ -85,6 +86,7 @@ export default function PackageCourseSelector({
         .map((course) => ({
           wp_course_id: course.wp_course_id,
           nombre_curso: course.title,
+          portada_url: course.thumbnail_url ?? null,
         }))
     )
   }, [courses, selectedIds])

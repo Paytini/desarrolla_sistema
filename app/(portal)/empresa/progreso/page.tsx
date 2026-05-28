@@ -1,15 +1,49 @@
-import InfoCard from "@/components/portal/InfoCard"
-import PageHeader from "@/components/portal/PageHeader"
+import { AlertCircle, BarChart3, BookOpen, CheckCircle, type LucideIcon } from "lucide-react"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 
+function KpiCard({
+  label,
+  value,
+  sub,
+  Icon,
+  iconCls,
+}: {
+  label: string
+  value: string
+  sub?: string
+  Icon: LucideIcon
+  iconCls: string
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="text-2xl font-bold tracking-tight text-slate-950">{value}</p>
+          {sub && <p className="text-xs text-slate-400">{sub}</p>}
+        </div>
+        <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
+          <Icon size={16} strokeWidth={2} />
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
+}
+
 export default async function EmpresaProgresoPage() {
   const session = await getSession()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
-    redirect("/login")
-  }
+  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
   const empresa = await prisma.empresa.findUnique({
     where: { id: session.user.empresa_id },
@@ -17,32 +51,45 @@ export default async function EmpresaProgresoPage() {
       empleados: {
         where: { activo: true },
         include: {
-          cursos: {
-            orderBy: [{ progreso_pct: "desc" }, { nombre_curso: "asc" }],
-          },
+          cursos: { orderBy: [{ progreso_pct: "desc" }, { nombre_curso: "asc" }] },
         },
         orderBy: { nombre: "asc" },
+      },
+      paquetes: {
+        where: { activo: true },
+        include: {
+          paquete: {
+            include: {
+              cursos: { select: { wp_curso_id: true, portada_url: true } },
+            },
+          },
+        },
+        take: 1,
       },
     },
   })
 
-  if (!empresa) {
-    redirect("/login")
-  }
+  if (!empresa) redirect("/login")
+
+  const packageCourses = empresa.paquetes[0]?.paquete?.cursos ?? []
+  const thumbnailMap = new Map<number, string>(
+    packageCourses
+      .filter((c) => c.portada_url)
+      .map((c) => [c.wp_curso_id, c.portada_url as string])
+  )
 
   const empleados = empresa.empleados
-  const allCourses = empleados.flatMap((empleado) => empleado.cursos)
+  const allCourses = empleados.flatMap((e) => e.cursos)
   const averageProgress = allCourses.length
-    ? Math.round(allCourses.reduce((sum, course) => sum + course.progreso_pct, 0) / allCourses.length)
+    ? Math.round(allCourses.reduce((sum, c) => sum + c.progreso_pct, 0) / allCourses.length)
     : 0
-  const employeesWithDelay = empleados.filter((empleado) => {
-    if (empleado.cursos.length === 0) return false
-    const employeeAverage =
-      empleado.cursos.reduce((sum, course) => sum + course.progreso_pct, 0) / empleado.cursos.length
-    return employeeAverage < 25 || empleado.cursos.some((course) => course.acceso_estado === "ERROR")
+  const employeesWithDelay = empleados.filter((e) => {
+    if (e.cursos.length === 0) return false
+    const avg = e.cursos.reduce((s, c) => s + c.progreso_pct, 0) / e.cursos.length
+    return avg < 25 || e.cursos.some((c) => c.acceso_estado === "ERROR")
   }).length
-  const completedCourses = allCourses.filter((course) => course.completado).length
-  const startedCourses = allCourses.filter((course) => course.progreso_pct > 0).length
+  const completedCourses = allCourses.filter((c) => c.completado).length
+  const startedCourses = allCourses.filter((c) => c.progreso_pct > 0).length
 
   const courseMap = new Map<
     number,
@@ -65,18 +112,11 @@ export default async function EmpresaProgresoPage() {
       notStarted: 0,
       totalProgress: 0,
     }
-
     current.assigned += 1
     current.totalProgress += course.progreso_pct
-
-    if (course.completado) {
-      current.completed += 1
-    } else if (course.progreso_pct > 0) {
-      current.inProgress += 1
-    } else {
-      current.notStarted += 1
-    }
-
+    if (course.completado) current.completed += 1
+    else if (course.progreso_pct > 0) current.inProgress += 1
+    else current.notStarted += 1
     courseMap.set(course.wp_curso_id, current)
   }
 
@@ -84,222 +124,214 @@ export default async function EmpresaProgresoPage() {
     .map(([courseId, summary]) => ({
       courseId,
       ...summary,
-      averageProgress: summary.assigned ? Math.round(summary.totalProgress / summary.assigned) : 0,
+      averageProgress: summary.assigned
+        ? Math.round(summary.totalProgress / summary.assigned)
+        : 0,
     }))
-    .sort((left, right) => {
-      if (left.completed !== right.completed) {
-        return right.completed - left.completed
-      }
-      return left.nombre.localeCompare(right.nombre, "es-MX")
+    .sort((a, b) => {
+      if (a.completed !== b.completed) return b.completed - a.completed
+      return a.nombre.localeCompare(b.nombre, "es-MX")
     })
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        eyebrow="Empresa / RH"
-        title="Progreso y trayectorias"
-        description="Aqui RH puede revisar el avance real por empleado y por curso, detectar rezago y dar seguimiento antes de que impacte el cumplimiento."
-      />
+    <div className="space-y-6">
+      <header className="space-y-0.5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-600">
+          RH / Empresa
+        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Progreso</h1>
+      </header>
 
-      <section className="grid gap-4 lg:grid-cols-4">
-        <InfoCard
-          title="Avance promedio"
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          label="Avance promedio"
           value={`${averageProgress}%`}
-          description="Promedio agregado entre todos los cursos sincronizados de la empresa."
-          accent="violet"
+          sub="Todos los cursos"
+          Icon={BarChart3}
+          iconCls="bg-violet-50 text-violet-600"
         />
-        <InfoCard
-          title="Empleados con rezago"
+        <KpiCard
+          label="Con rezago"
           value={String(employeesWithDelay)}
-          description="Colaboradores con avance bajo o cursos marcados con error de acceso."
-          accent="amber"
+          sub="Avance < 25% o con error"
+          Icon={AlertCircle}
+          iconCls="bg-amber-50 text-amber-600"
         />
-        <InfoCard
-          title="Cursos iniciados"
+        <KpiCard
+          label="Cursos iniciados"
           value={String(startedCourses)}
-          description="Asignaciones que ya registran actividad real dentro de Tutor LMS."
-          accent="teal"
+          sub="Con actividad real"
+          Icon={BookOpen}
+          iconCls="bg-teal-50 text-teal-600"
         />
-        <InfoCard
-          title="Cursos completados"
+        <KpiCard
+          label="Cursos completados"
           value={String(completedCourses)}
-          description="Cursos ya cerrados por los empleados activos de la empresa."
-          accent="slate"
+          sub="Cerrados por empleados"
+          Icon={CheckCircle}
+          iconCls="bg-blue-50 text-blue-600"
         />
-      </section>
+      </div>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 space-y-1">
-            <h2 className="text-lg font-semibold text-slate-950">Avance por empleado</h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Vista consolidada por colaborador para ubicar a quien necesita seguimiento puntual.
-            </p>
-          </div>
+      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        {/* Employee progress */}
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="mb-4 text-base font-semibold text-slate-950">
+            Avance por empleado
+            <span className="ml-2 text-sm font-normal text-slate-400">{empleados.length}</span>
+          </h2>
 
-          <div className="space-y-4">
-            {empleados.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                No hay empleados activos con progreso para mostrar.
-              </div>
-            ) : null}
-
-            {empleados.map((empleado) => {
-              const employeeCourses = empleado.cursos
-              const employeeAverage = employeeCourses.length
-                ? Math.round(
-                    employeeCourses.reduce((sum, course) => sum + course.progreso_pct, 0) /
-                      employeeCourses.length
-                  )
-                : 0
-              const completed = employeeCourses.filter((course) => course.completado).length
-              const inProgress = employeeCourses.filter(
-                (course) => !course.completado && course.progreso_pct > 0
-              ).length
-              const notStarted = employeeCourses.filter((course) => course.progreso_pct === 0).length
-              const accessErrors = employeeCourses.filter((course) => course.acceso_estado === "ERROR").length
-              const lastSync = [...employeeCourses]
-                .sort(
-                  (left, right) =>
-                    new Date(right.ultima_sincronizacion).getTime() -
-                    new Date(left.ultima_sincronizacion).getTime()
+          {empleados.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              No hay empleados activos con progreso para mostrar.
+            </div>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {empleados.map((empleado) => {
+                const courses = empleado.cursos
+                const avg = courses.length
+                  ? Math.round(courses.reduce((s, c) => s + c.progreso_pct, 0) / courses.length)
+                  : 0
+                const completed = courses.filter((c) => c.completado).length
+                const inProgress = courses.filter((c) => !c.completado && c.progreso_pct > 0).length
+                const errors = courses.filter((c) => c.acceso_estado === "ERROR").length
+                const lastSync = [...courses].sort(
+                  (a, b) =>
+                    new Date(b.ultima_sincronizacion).getTime() -
+                    new Date(a.ultima_sincronizacion).getTime()
                 )[0]?.ultima_sincronizacion
 
-              return (
-                <article
-                  key={empleado.id}
-                  className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5"
-                >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="text-base font-semibold text-slate-950">
+                const statusColor =
+                  errors > 0
+                    ? "bg-rose-100 text-rose-800"
+                    : avg >= 75
+                      ? "bg-teal-100 text-teal-800"
+                      : avg > 0
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-slate-100 text-slate-600"
+
+                const statusLabel =
+                  errors > 0
+                    ? "Requiere revisión"
+                    : avg >= 75
+                      ? "Buen ritmo"
+                      : avg > 0
+                        ? "En seguimiento"
+                        : "Sin actividad"
+
+                const barColor =
+                  errors > 0
+                    ? "bg-rose-500"
+                    : avg >= 75
+                      ? "bg-teal-600"
+                      : avg > 0
+                        ? "bg-amber-500"
+                        : "bg-slate-300"
+
+                const initials = getInitials(`${empleado.nombre} ${empleado.apellido}`)
+
+                return (
+                  <div
+                    key={empleado.id}
+                    className="rounded-2xl border border-slate-200 bg-slate-50/40 p-4"
+                  >
+                    <div className="mb-3 flex items-center gap-2.5">
+                      <div
+                        className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
+                          errors > 0
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-violet-100 text-violet-700"
+                        }`}
+                      >
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-slate-950">
                           {empleado.nombre} {empleado.apellido}
-                        </h3>
+                        </p>
                         <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            accessErrors > 0
-                              ? "bg-rose-100 text-rose-900"
-                              : employeeAverage >= 75
-                                ? "bg-teal-100 text-teal-900"
-                                : employeeAverage > 0
-                                  ? "bg-amber-100 text-amber-900"
-                                  : "bg-slate-200 text-slate-700"
-                          }`}
+                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor}`}
                         >
-                          {accessErrors > 0
-                            ? "Requiere revision"
-                            : employeeAverage >= 75
-                              ? "Buen ritmo"
-                              : employeeAverage > 0
-                                ? "En seguimiento"
-                                : "Sin actividad"}
+                          {statusLabel}
                         </span>
                       </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm text-slate-600">
-                          <span>Avance promedio del colaborador</span>
-                          <span className="font-medium text-slate-900">{employeeAverage}%</span>
-                        </div>
-                        <div className="h-3 overflow-hidden rounded-full bg-slate-200">
-                          <div
-                            className="h-full rounded-full bg-violet-600"
-                            style={{ width: `${employeeAverage}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2">
-                        <p>
-                          <span className="font-medium text-slate-800">Correo:</span> {empleado.email}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">Ultima sincronizacion:</span>{" "}
-                          {formatDateTime(lastSync)}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">Completados:</span> {completed}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">En progreso:</span> {inProgress}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">Sin iniciar:</span> {notStarted}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">Alertas de acceso:</span> {accessErrors}
-                        </p>
-                      </div>
+                      <p className="shrink-0 text-sm font-bold text-slate-950">{avg}%</p>
                     </div>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        </article>
 
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 space-y-1">
-            <h2 className="text-lg font-semibold text-slate-950">Resumen por curso</h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Asi puede ver RH que cursos avanzan bien y cuales siguen rezagados dentro de la empresa.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {courseSummaries.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                Aun no hay cursos sincronizados en la empresa.
-              </div>
-            ) : null}
-
-            {courseSummaries.map((course) => (
-              <article
-                key={course.courseId}
-                className="rounded-3xl border border-slate-200 bg-slate-50/70 p-5"
-              >
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="text-base font-semibold text-slate-950">{course.nombre}</h3>
-                    <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      Curso ID {course.courseId}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm text-slate-600">
-                      <span>Avance promedio del curso</span>
-                      <span className="font-medium text-slate-900">{course.averageProgress}%</span>
-                    </div>
-                    <div className="h-3 overflow-hidden rounded-full bg-slate-200">
+                    <div className="mb-3 h-2 overflow-hidden rounded-full bg-slate-200">
                       <div
-                        className="h-full rounded-full bg-teal-600"
-                        style={{ width: `${course.averageProgress}%` }}
+                        className={`h-full rounded-full ${barColor}`}
+                        style={{ width: `${avg}%` }}
                       />
                     </div>
-                  </div>
 
-                  <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-2">
-                    <p>
-                      <span className="font-medium text-slate-800">Asignados:</span> {course.assigned}
-                    </p>
-                    <p>
-                      <span className="font-medium text-slate-800">Completados:</span> {course.completed}
-                    </p>
-                    <p>
-                      <span className="font-medium text-slate-800">En progreso:</span> {course.inProgress}
-                    </p>
-                    <p>
-                      <span className="font-medium text-slate-800">Sin iniciar:</span> {course.notStarted}
-                    </p>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span>{completed} completados · {inProgress} en curso</span>
+                      {lastSync && (
+                        <span className="text-right">{formatDateTime(lastSync)}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </article>
-      </section>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Course summaries */}
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h2 className="mb-4 text-base font-semibold text-slate-950">
+            Resumen por curso
+            <span className="ml-2 text-sm font-normal text-slate-400">{courseSummaries.length}</span>
+          </h2>
+
+          {courseSummaries.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              Aún no hay cursos sincronizados.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {courseSummaries.map((course) => {
+                const thumb = thumbnailMap.get(course.courseId)
+                return (
+                  <div key={course.courseId} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    {thumb ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={thumb} alt="" className="h-[90px] w-full object-cover" />
+                    ) : (
+                      <div className="flex h-[56px] items-center justify-center bg-teal-50">
+                        <span className="text-xl font-bold text-teal-200">
+                          {course.nombre.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="p-3">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold leading-snug text-slate-950">{course.nombre}</p>
+                        <span className="shrink-0 text-sm font-bold text-slate-950">
+                          {course.averageProgress}%
+                        </span>
+                      </div>
+                      <div className="mb-2 h-2 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className="h-full rounded-full bg-teal-600"
+                          style={{ width: `${course.averageProgress}%` }}
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                        <span>{course.assigned} asignados</span>
+                        <span className="text-teal-700">{course.completed} completados</span>
+                        <span>{course.inProgress} en curso</span>
+                        <span>{course.notStarted} sin iniciar</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }
