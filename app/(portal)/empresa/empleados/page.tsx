@@ -1,8 +1,11 @@
 import CnoSelect from "@/components/portal/CnoSelect"
 import DeleteEmployeeButton from "@/components/portal/DeleteEmployeeButton"
 import EmployeeOnboardingTabs from "@/components/portal/EmployeeOnboardingTabs"
+import KpiCard from "@/components/portal/KpiCard"
+import PageHeader from "@/components/portal/PageHeader"
+import StatusBadge from "@/components/portal/StatusBadge"
 import StatusNotice from "@/components/portal/StatusNotice"
-import { AlertCircle, Package, ShieldCheck, Users, UserX, type LucideIcon } from "lucide-react"
+import { AlertCircle, Package, ShieldCheck, Users, UserX } from "lucide-react"
 import {
   matchesEmployeeFilters,
   normalizeEmployeeFilterStatus,
@@ -87,35 +90,6 @@ function getInitials(name: string) {
     .join("")
 }
 
-function KpiCard({
-  label,
-  value,
-  sub,
-  Icon,
-  iconCls,
-}: {
-  label: string
-  value: string
-  sub?: string
-  Icon: LucideIcon
-  iconCls: string
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-0.5">
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-2xl font-bold tracking-tight text-slate-950">{value}</p>
-          {sub && <p className="text-xs text-slate-400">{sub}</p>}
-        </div>
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
-          <Icon size={16} strokeWidth={2} />
-        </span>
-      </div>
-    </div>
-  )
-}
-
 function ManualEmployeeForm() {
   return (
     <form action={createEmployeeAction} className="grid gap-4">
@@ -125,14 +99,14 @@ function ManualEmployeeForm() {
           <input
             name="apellido"
             required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
           />
         </label>
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium text-slate-700">Apellido materno</span>
           <input
             name="apellido_materno"
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
           />
         </label>
         <label className="grid gap-1.5 text-sm">
@@ -140,7 +114,7 @@ function ManualEmployeeForm() {
           <input
             name="nombre"
             required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
           />
         </label>
       </div>
@@ -152,7 +126,7 @@ function ManualEmployeeForm() {
             name="email"
             type="email"
             required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
           />
         </label>
         <label className="grid gap-1.5 text-sm">
@@ -162,13 +136,13 @@ function ManualEmployeeForm() {
             type="password"
             minLength={8}
             required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
           />
         </label>
       </div>
 
-      <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-4">
-        <p className="mb-3 text-sm font-semibold text-violet-950">Datos para constancia DC-3</p>
+      <div className="rounded-xl border border-[#f0f0f0] bg-[#f8fafc] p-4">
+        <p className="mb-3 text-sm font-semibold text-[#1a1a1a]">Datos para constancia DC-3</p>
         <div className="grid gap-4">
           <label className="grid gap-1.5 text-sm">
             <span className="font-medium text-slate-700">CURP</span>
@@ -176,7 +150,7 @@ function ManualEmployeeForm() {
               name="curp"
               maxLength={18}
               placeholder="18 caracteres"
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 uppercase outline-none transition focus:border-violet-600"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 uppercase outline-none transition focus:border-[#E8761A]"
             />
           </label>
           <CnoSelect />
@@ -188,21 +162,21 @@ function ManualEmployeeForm() {
           <span className="font-medium text-slate-700">Departamento</span>
           <input
             name="departamento"
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
           />
         </label>
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium text-slate-700">Puesto</span>
           <input
             name="puesto"
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
           />
         </label>
       </div>
 
       <button
         type="submit"
-        className="inline-flex w-fit items-center rounded-full bg-violet-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-800"
+        className="inline-flex w-fit items-center rounded-full bg-[#E8761A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#C45F0A]"
       >
         Crear empleado
       </button>
@@ -255,7 +229,7 @@ function CsvEmployeeImportForm() {
             key={column.key}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
               column.required
-                ? "border-violet-200 bg-violet-50 text-violet-900"
+                ? "border-[#E8761A]/30 bg-[#fff5ed] text-[#C45F0A]"
                 : "border-slate-200 bg-slate-50 text-slate-700"
             }`}
           >
@@ -288,11 +262,11 @@ function CsvEmployeeImportForm() {
             type="text"
             minLength={8}
             placeholder="Recomendado si tu CSV no incluye columna password"
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
           />
         </label>
 
-        <div className="max-w-full overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="max-w-full overflow-hidden rounded-xl border border-[#f0f0f0] bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -305,8 +279,8 @@ function CsvEmployeeImportForm() {
                 Copia estos encabezados exactamente. Las columnas marcadas como obligatorias deben venir llenas.
               </p>
               <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium">
-                <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1 text-violet-900">
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-600" />
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#fff5ed] px-2.5 py-1 text-[#C45F0A]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#E8761A]" />
                   Obligatorio
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
@@ -324,7 +298,7 @@ function CsvEmployeeImportForm() {
             </a>
           </div>
 
-          <div className="mt-4 max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-inner">
+          <div className="mt-4 max-w-full overflow-x-auto rounded-xl border border-[#f0f0f0] bg-white shadow-inner">
             <table className="min-w-[1280px] border-separate border-spacing-0 text-sm">
               <thead>
                 <tr className="bg-slate-100 text-center text-xs font-semibold text-slate-500">
@@ -352,7 +326,7 @@ function CsvEmployeeImportForm() {
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                             column.required
-                              ? "bg-violet-100 text-violet-900"
+                              ? "bg-[#fff5ed] text-[#C45F0A]"
                               : "bg-slate-100 text-slate-600"
                           }`}
                         >
@@ -365,7 +339,7 @@ function CsvEmployeeImportForm() {
               </thead>
               <tbody className="text-slate-700">
                 {sampleRows.map((row, rowIndex) => (
-                  <tr key={row.email} className="transition hover:bg-violet-50/50">
+                  <tr key={row.email} className="transition hover:bg-[#fff5ed]/40">
                     <td className="border-b border-r border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-500">
                       {rowIndex + 2}
                     </td>
@@ -403,7 +377,7 @@ function CsvEmployeeImportForm() {
 
         <button
           type="submit"
-          className="inline-flex w-fit items-center rounded-full bg-violet-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-800"
+          className="inline-flex w-fit items-center rounded-full bg-[#E8761A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#C45F0A]"
         >
           Importar empleados
         </button>
@@ -445,12 +419,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
 
   return (
     <div className="space-y-6">
-      <header className="space-y-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-600">
-          RH / Empresa
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Empleados</h1>
-      </header>
+      <PageHeader eyebrow="RH / Empresa" title="Empleados" description="Gestión de la plantilla de colaboradores" />
 
       {success ? (
         <StatusNotice tone="success" message={getSuccessMessage(success, params) ?? success} />
@@ -460,42 +429,14 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <KpiCard
-          label="Paquete activo"
-          value={paqueteActivo}
-          Icon={Package}
-          iconCls="bg-violet-50 text-violet-600"
-        />
-        <KpiCard
-          label="Activos"
-          value={String(empleadosActivos)}
-          sub="Con acceso vigente"
-          Icon={Users}
-          iconCls="bg-teal-50 text-teal-600"
-        />
-        <KpiCard
-          label="Cupos disponibles"
-          value={String(cuposDisponibles)}
-          sub="Antes del límite"
-          Icon={ShieldCheck}
-          iconCls="bg-blue-50 text-blue-600"
-        />
-        <KpiCard
-          label="Suspendidos"
-          value={String(empleadosInactivos)}
-          Icon={UserX}
-          iconCls="bg-slate-100 text-slate-500"
-        />
-        <KpiCard
-          label="Con alertas"
-          value={String(employeesWithAccessIssues)}
-          sub="Error de acceso"
-          Icon={AlertCircle}
-          iconCls="bg-amber-50 text-amber-600"
-        />
+        <KpiCard label="Paquete activo" value={paqueteActivo} icon={Package} borderColor="amber" />
+        <KpiCard label="Activos" value={String(empleadosActivos)} sub="Con acceso vigente" icon={Users} borderColor="orange" />
+        <KpiCard label="Cupos disponibles" value={String(cuposDisponibles)} sub="Antes del límite" icon={ShieldCheck} borderColor="charcoal" />
+        <KpiCard label="Suspendidos" value={String(empleadosInactivos)} icon={UserX} borderColor="rose" />
+        <KpiCard label="Con alertas" value={String(employeesWithAccessIssues)} sub="Error de acceso" icon={AlertCircle} borderColor="amber" />
       </div>
 
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-[#f0f0f0] bg-white px-5 py-4">
         <div>
           <p className="text-sm font-semibold text-slate-950">Sincronización académica</p>
           <p className="text-xs text-slate-400">
@@ -519,7 +460,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
         />
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5">
+      <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold text-slate-950">
             Plantilla actual
@@ -540,12 +481,12 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
             name="q"
             defaultValue={searchQuery}
             placeholder="Nombre, correo, área o puesto..."
-            className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-violet-600"
+            className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#E8761A]"
           />
           <select
             name="status"
             defaultValue={status}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-violet-600"
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#E8761A]"
           >
             <option value="all">Todos</option>
             <option value="active">Activos</option>
@@ -569,13 +510,13 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
 
         <div className="space-y-2">
           {empresa.empleados.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               Aún no hay empleados registrados para esta empresa.
             </div>
           ) : null}
 
           {empresa.empleados.length > 0 && filteredEmployees.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               No encontramos empleados que coincidan con ese filtro.
             </div>
           ) : null}
@@ -592,14 +533,14 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
             return (
               <div
                 key={empleado.id}
-                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:bg-slate-50/50"
+                className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3 transition hover:bg-slate-50/50"
               >
                 <div
                   className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
                     errorCourseCount > 0
                       ? "bg-rose-50 text-rose-700"
                       : empleado.activo
-                        ? "bg-violet-50 text-violet-700"
+                        ? "bg-[#fff5ed] text-[#E8761A]"
                         : "bg-slate-100 text-slate-500"
                   }`}
                 >
@@ -611,15 +552,9 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
                     <p className="truncate text-sm font-semibold text-slate-950">
                       {empleado.nombre} {empleado.apellido}
                     </p>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                        empleado.activo
-                          ? "bg-teal-100 text-teal-800"
-                          : "bg-slate-200 text-slate-600"
-                      }`}
-                    >
+                    <StatusBadge variant={empleado.activo ? "green" : "slate"} dot>
                       {empleado.activo ? "Activo" : "Suspendido"}
-                    </span>
+                    </StatusBadge>
                     {errorCourseCount > 0 && (
                       <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800">
                         {errorCourseCount} error{errorCourseCount > 1 ? "es" : ""}
@@ -646,8 +581,8 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
                       type="submit"
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                         empleado.activo
-                          ? "bg-slate-900 text-white hover:bg-slate-700"
-                          : "bg-violet-700 text-white hover:bg-violet-800"
+                          ? "bg-[#1a1a1a] text-white hover:bg-[#333]"
+                          : "bg-[#E8761A] text-white hover:bg-[#C45F0A]"
                       }`}
                     >
                       {empleado.activo ? "Suspender" : "Reactivar"}
