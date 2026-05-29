@@ -1,37 +1,11 @@
-import { AlertCircle, BarChart3, BookOpen, CheckCircle, type LucideIcon } from "lucide-react"
+import KpiCard from "@/components/portal/KpiCard"
+import PageHeader from "@/components/portal/PageHeader"
+import StatusBadge from "@/components/portal/StatusBadge"
+import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
-
-function KpiCard({
-  label,
-  value,
-  sub,
-  Icon,
-  iconCls,
-}: {
-  label: string
-  value: string
-  sub?: string
-  Icon: LucideIcon
-  iconCls: string
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-0.5">
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-2xl font-bold tracking-tight text-slate-950">{value}</p>
-          {sub && <p className="text-xs text-slate-400">{sub}</p>}
-        </div>
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
-          <Icon size={16} strokeWidth={2} />
-        </span>
-      </div>
-    </div>
-  )
-}
 
 function getInitials(name: string) {
   return name
@@ -135,54 +109,25 @@ export default async function EmpresaProgresoPage() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-600">
-          RH / Empresa
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-950">Progreso</h1>
-      </header>
+      <PageHeader eyebrow="RH / Empresa" title="Progreso" description="Avance y actividad de cursos por colaborador" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Avance promedio"
-          value={`${averageProgress}%`}
-          sub="Todos los cursos"
-          Icon={BarChart3}
-          iconCls="bg-violet-50 text-violet-600"
-        />
-        <KpiCard
-          label="Con rezago"
-          value={String(employeesWithDelay)}
-          sub="Avance < 25% o con error"
-          Icon={AlertCircle}
-          iconCls="bg-amber-50 text-amber-600"
-        />
-        <KpiCard
-          label="Cursos iniciados"
-          value={String(startedCourses)}
-          sub="Con actividad real"
-          Icon={BookOpen}
-          iconCls="bg-teal-50 text-teal-600"
-        />
-        <KpiCard
-          label="Cursos completados"
-          value={String(completedCourses)}
-          sub="Cerrados por empleados"
-          Icon={CheckCircle}
-          iconCls="bg-blue-50 text-blue-600"
-        />
+        <KpiCard label="Avance promedio" value={`${averageProgress}%`} sub="Todos los cursos" icon={BarChart3} borderColor="orange" />
+        <KpiCard label="Con rezago" value={String(employeesWithDelay)} sub="Avance < 25% o con error" icon={AlertCircle} borderColor="amber" />
+        <KpiCard label="Cursos iniciados" value={String(startedCourses)} sub="Con actividad real" icon={BookOpen} borderColor="charcoal" />
+        <KpiCard label="Cursos completados" value={String(completedCourses)} sub="Cerrados por empleados" icon={CheckCircle} borderColor="green" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         {/* Employee progress */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+        <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
           <h2 className="mb-4 text-base font-semibold text-slate-950">
             Avance por empleado
             <span className="ml-2 text-sm font-normal text-slate-400">{empleados.length}</span>
           </h2>
 
           {empleados.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               No hay empleados activos con progreso para mostrar.
             </div>
           ) : (
@@ -201,14 +146,14 @@ export default async function EmpresaProgresoPage() {
                     new Date(a.ultima_sincronizacion).getTime()
                 )[0]?.ultima_sincronizacion
 
-                const statusColor =
+                const statusVariant: "red" | "green" | "amber" | "slate" =
                   errors > 0
-                    ? "bg-rose-100 text-rose-800"
+                    ? "red"
                     : avg >= 75
-                      ? "bg-teal-100 text-teal-800"
+                      ? "green"
                       : avg > 0
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-slate-100 text-slate-600"
+                        ? "amber"
+                        : "slate"
 
                 const statusLabel =
                   errors > 0
@@ -223,7 +168,7 @@ export default async function EmpresaProgresoPage() {
                   errors > 0
                     ? "bg-rose-500"
                     : avg >= 75
-                      ? "bg-teal-600"
+                      ? "bg-[#E8761A]"
                       : avg > 0
                         ? "bg-amber-500"
                         : "bg-slate-300"
@@ -233,14 +178,14 @@ export default async function EmpresaProgresoPage() {
                 return (
                   <div
                     key={empleado.id}
-                    className="rounded-2xl border border-slate-200 bg-slate-50/40 p-4"
+                    className="rounded-xl border border-[#f0f0f0] bg-slate-50/40 p-4"
                   >
                     <div className="mb-3 flex items-center gap-2.5">
                       <div
                         className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
                           errors > 0
                             ? "bg-rose-100 text-rose-700"
-                            : "bg-violet-100 text-violet-700"
+                            : "bg-[#fff5ed] text-[#E8761A]"
                         }`}
                       >
                         {initials}
@@ -249,11 +194,9 @@ export default async function EmpresaProgresoPage() {
                         <p className="truncate text-sm font-semibold text-slate-950">
                           {empleado.nombre} {empleado.apellido}
                         </p>
-                        <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor}`}
-                        >
+                        <StatusBadge variant={statusVariant}>
                           {statusLabel}
-                        </span>
+                        </StatusBadge>
                       </div>
                       <p className="shrink-0 text-sm font-bold text-slate-950">{avg}%</p>
                     </div>
@@ -279,14 +222,14 @@ export default async function EmpresaProgresoPage() {
         </section>
 
         {/* Course summaries */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+        <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
           <h2 className="mb-4 text-base font-semibold text-slate-950">
             Resumen por curso
             <span className="ml-2 text-sm font-normal text-slate-400">{courseSummaries.length}</span>
           </h2>
 
           {courseSummaries.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               Aún no hay cursos sincronizados.
             </div>
           ) : (
@@ -294,13 +237,13 @@ export default async function EmpresaProgresoPage() {
               {courseSummaries.map((course) => {
                 const thumb = thumbnailMap.get(course.courseId)
                 return (
-                  <div key={course.courseId} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                  <div key={course.courseId} className="overflow-hidden rounded-xl border border-[#f0f0f0] bg-white">
                     {thumb ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={thumb} alt="" className="h-[90px] w-full object-cover" />
                     ) : (
-                      <div className="flex h-[56px] items-center justify-center bg-teal-50">
-                        <span className="text-xl font-bold text-teal-200">
+                      <div className="flex h-[56px] items-center justify-center bg-[#fff5ed]">
+                        <span className="text-xl font-bold text-[#E8761A]/20">
                           {course.nombre.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -314,13 +257,13 @@ export default async function EmpresaProgresoPage() {
                       </div>
                       <div className="mb-2 h-2 overflow-hidden rounded-full bg-slate-200">
                         <div
-                          className="h-full rounded-full bg-teal-600"
+                          className="h-full rounded-full bg-[#E8761A]"
                           style={{ width: `${course.averageProgress}%` }}
                         />
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
                         <span>{course.assigned} asignados</span>
-                        <span className="text-teal-700">{course.completed} completados</span>
+                        <span className="text-[#E8761A]">{course.completed} completados</span>
                         <span>{course.inProgress} en curso</span>
                         <span>{course.notStarted} sin iniciar</span>
                       </div>
