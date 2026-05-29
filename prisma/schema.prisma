@@ -350,7 +350,7 @@ model HistorialCupo {
 model RutaAprendizaje {
   id          Int         @id @default(autoincrement())
   nombre      String
-  descripcion String?
+  descripcion String?     @db.Text
   activo      Boolean     @default(true)
   created_at  DateTime    @default(now())
   updated_at  DateTime    @updatedAt
@@ -371,5 +371,6 @@ model RutaCurso {
   ruta RutaAprendizaje @relation(fields: [ruta_id], references: [id], onDelete: Cascade)
 
   @@index([ruta_id])
+  @@unique([ruta_id, wp_curso_id])
   @@map("ruta_cursos")
 }
