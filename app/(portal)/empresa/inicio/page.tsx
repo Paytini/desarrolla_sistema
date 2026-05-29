@@ -1,43 +1,16 @@
+import KpiCard from "@/components/portal/KpiCard"
+import PageHeader from "@/components/portal/PageHeader"
 import { Award, BarChart3, ChevronRight, ClipboardList, Package, Users, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 
-function KpiCard({
-  label,
-  value,
-  sub,
-  Icon,
-  iconCls,
-}: {
-  label: string
-  value: string
-  sub?: string
-  Icon: LucideIcon
-  iconCls: string
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-0.5">
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-2xl font-bold tracking-tight text-slate-950">{value}</p>
-          {sub && <p className="text-xs text-slate-400">{sub}</p>}
-        </div>
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
-          <Icon size={16} strokeWidth={2} />
-        </span>
-      </div>
-    </div>
-  )
-}
-
 function RingChart({ pct }: { pct: number }) {
   const r = 38
   const circ = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 80 ? "#0d9488" : pct >= 50 ? "#f59e0b" : "#f43f5e"
+  const color = pct >= 80 ? "#E8761A" : pct >= 50 ? "#f59e0b" : "#f43f5e"
   return (
     <svg width={96} height={96} viewBox="0 0 96 96" aria-hidden="true">
       <circle cx={48} cy={48} r={r} fill="none" stroke="#e2e8f0" strokeWidth={9} />
@@ -74,7 +47,7 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 transition hover:border-slate-300 hover:shadow-sm"
+      className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3.5 transition hover:border-[#E8761A]/30 hover:shadow-sm"
     >
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
         <Icon size={15} strokeWidth={2} />
@@ -120,59 +93,43 @@ export default async function EmpresaInicio() {
 
   return (
     <div className="space-y-6">
-      <header className="space-y-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-600">
-          RH / Empresa
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-950">{empresa.nombre}</h1>
-        <p className="text-sm text-slate-400">Panel de operación académica</p>
-      </header>
+      <PageHeader eyebrow="RH / Empresa" title={empresa.nombre} description="Panel de operación académica" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Paquete activo"
           value={paqueteActivo?.nombre ?? "Sin paquete"}
           sub={`${paqueteActivo?.cursos.length ?? 0} cursos`}
-          Icon={Package}
-          iconCls="bg-violet-50 text-violet-600"
+          icon={Package}
+          borderColor="amber"
         />
         <KpiCard
           label="Avance promedio"
           value={`${averageProgress}%`}
           sub="Todos los cursos"
-          Icon={BarChart3}
-          iconCls="bg-teal-50 text-teal-600"
+          icon={BarChart3}
+          borderColor="orange"
         />
         <KpiCard
           label="Empleados activos"
           value={String(empleadosActivos)}
           sub="Accesos vigentes"
-          Icon={Users}
-          iconCls="bg-blue-50 text-blue-600"
+          icon={Users}
+          borderColor="charcoal"
         />
         <KpiCard
           label="Constancias emitidas"
           value={String(totalConstancias)}
           sub="Total acumulado"
-          Icon={Award}
-          iconCls="bg-amber-50 text-amber-600"
+          icon={Award}
+          borderColor="green"
         />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
         <div className="grid gap-3 sm:grid-cols-2">
-          <QuickLink
-            href="/empresa/empleados"
-            label="Gestión de empleados"
-            Icon={Users}
-            iconCls="bg-violet-50 text-violet-600"
-          />
-          <QuickLink
-            href="/empresa/asignaciones"
-            label="Asignación de cursos"
-            Icon={ClipboardList}
-            iconCls="bg-teal-50 text-teal-600"
-          />
+          <QuickLink href="/empresa/empleados" label="Gestión de empleados" Icon={Users} iconCls="bg-[#fff5ed] text-[#E8761A]" />
+          <QuickLink href="/empresa/asignaciones" label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#fff5ed] text-[#E8761A]" />
           <QuickLink
             href="/empresa/progreso"
             label="Progreso y trayectorias"
@@ -187,7 +144,7 @@ export default async function EmpresaInicio() {
           />
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-10 py-6">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-10 py-6">
           <RingChart pct={averageProgress} />
           <p className="text-xs font-medium text-slate-500">Avance global</p>
         </div>
