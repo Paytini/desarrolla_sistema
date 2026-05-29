@@ -176,6 +176,12 @@ Todos ya existen — no se crean nuevos:
 
 ---
 
+## Restricciones de estilo
+
+- **Sin gradientes** — ningún `background: linear-gradient(...)` ni `bg-gradient-*` en ninguna de las 5 páginas. Los fondos de secciones, banners y cards usan colores sólidos (`#E8761A`, `#f8fafc`, `white`, etc.).
+
+---
+
 ## Criterios de aceptación
 
 - `npx tsc --noEmit` sin errores tras los cambios
