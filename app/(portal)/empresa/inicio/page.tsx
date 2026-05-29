@@ -134,13 +134,13 @@ export default async function EmpresaInicio() {
             href="/empresa/progreso"
             label="Progreso y trayectorias"
             Icon={BarChart3}
-            iconCls="bg-slate-100 text-slate-600"
+            iconCls="bg-[#fff5ed] text-[#E8761A]"
           />
           <QuickLink
             href="/empresa/constancias"
             label="Constancias DC-3"
             Icon={Award}
-            iconCls="bg-amber-50 text-amber-600"
+            iconCls="bg-[#fff5ed] text-[#E8761A]"
           />
         </div>
 
