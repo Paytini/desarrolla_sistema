@@ -1,6 +1,8 @@
 import { auth } from "@/auth"
+import KpiCard from "@/components/portal/KpiCard"
+import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
-import { BookOpen, Package, Users, type LucideIcon } from "lucide-react"
+import { BookOpen, Package, Users } from "lucide-react"
 import { getRhAsignacionesSnapshot } from "@/lib/dashboard-cache"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { readSearchParam } from "@/lib/search-params"
@@ -39,35 +41,6 @@ type AssignmentEmployee = {
   cursos: Array<{ wp_curso_id: number }>
 }
 
-function KpiCard({
-  label,
-  value,
-  sub,
-  Icon,
-  iconCls,
-}: {
-  label: string
-  value: string
-  sub?: string
-  Icon: LucideIcon
-  iconCls: string
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-0.5">
-          <p className="text-xs font-medium text-slate-500">{label}</p>
-          <p className="text-2xl font-bold tracking-tight text-slate-950">{value}</p>
-          {sub && <p className="text-xs text-slate-400">{sub}</p>}
-        </div>
-        <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
-          <Icon size={16} strokeWidth={2} />
-        </span>
-      </div>
-    </div>
-  )
-}
-
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -93,14 +66,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
 
   return (
     <div className="space-y-6">
-      <header className="space-y-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-600">
-          RH / Empresa
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-950">
-          Asignación de cursos
-        </h1>
-      </header>
+      <PageHeader eyebrow="RH / Empresa" title="Asignación de cursos" description="Asigna cursos del paquete activo a cada colaborador" />
 
       {success ? (
         <StatusNotice tone="success" message={successMessages[success] ?? success} />
@@ -110,27 +76,9 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <KpiCard
-          label="Paquete activo"
-          value={activePackage?.nombre ?? "Sin paquete"}
-          sub="Catálogo disponible"
-          Icon={Package}
-          iconCls="bg-violet-50 text-violet-600"
-        />
-        <KpiCard
-          label="Cursos disponibles"
-          value={String(packageCourses.length)}
-          sub="Para asignar a empleados"
-          Icon={BookOpen}
-          iconCls="bg-teal-50 text-teal-600"
-        />
-        <KpiCard
-          label="Empleados activos"
-          value={String(empleados.length)}
-          sub="Elegibles para asignación"
-          Icon={Users}
-          iconCls="bg-blue-50 text-blue-600"
-        />
+        <KpiCard label="Paquete activo" value={activePackage?.nombre ?? "Sin paquete"} sub="Catálogo disponible" icon={Package} borderColor="amber" />
+        <KpiCard label="Cursos disponibles" value={String(packageCourses.length)} sub="Para asignar a empleados" icon={BookOpen} borderColor="orange" />
+        <KpiCard label="Empleados activos" value={String(empleados.length)} sub="Elegibles para asignación" icon={Users} borderColor="charcoal" />
       </div>
 
       {!activePackage ? (
@@ -150,7 +98,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
           </div>
 
           {empleados.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-white px-4 py-8 text-center text-sm text-slate-500">
               No hay empleados activos para asignar cursos.
             </div>
           ) : null}
@@ -163,14 +111,14 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
             return (
               <article
                 key={empleado.id}
-                className="rounded-2xl border border-slate-200 bg-white p-5"
+                className="rounded-xl border border-[#f0f0f0] bg-white p-5"
               >
                 <form action={assignEmployeeCoursesAction} className="space-y-4">
                   <input type="hidden" name="empleado_id" value={empleado.id} />
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-xs font-bold text-violet-700">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff5ed] text-xs font-bold text-[#E8761A]">
                         {initials}
                       </div>
                       <div className="min-w-0">
@@ -190,7 +138,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                       </span>
                       <button
                         type="submit"
-                        className="rounded-full bg-violet-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-800"
+                        className="rounded-full bg-[#E8761A] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#C45F0A]"
                       >
                         Guardar
                       </button>
@@ -201,7 +149,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                     {packageCourses.map((course) => (
                       <label
                         key={`${empleado.id}-${course.wp_curso_id}`}
-                        className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-white transition hover:border-violet-200 hover:bg-violet-50/30"
+                        className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-[#f0f0f0] bg-white transition hover:border-[#E8761A]/30 hover:bg-[#fff5ed]/30"
                       >
                         {course.portada_url ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
@@ -211,8 +159,8 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                             className="h-[75px] w-[130px] shrink-0 rounded-l-xl object-cover"
                           />
                         ) : (
-                          <div className="flex h-[60px] w-[107px] shrink-0 items-center justify-center rounded-l-xl bg-violet-50">
-                            <span className="text-lg font-bold text-violet-300">
+                          <div className="flex h-[60px] w-[107px] shrink-0 items-center justify-center rounded-l-xl bg-[#fff5ed]">
+                            <span className="text-lg font-bold text-[#E8761A]/30">
                               {course.nombre_curso.charAt(0).toUpperCase()}
                             </span>
                           </div>
@@ -223,7 +171,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                             name="course_ids"
                             value={course.wp_curso_id}
                             defaultChecked={assignedSet.has(course.wp_curso_id)}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-violet-700"
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#E8761A]"
                           />
                           <span className="text-sm text-slate-700">
                             {course.nombre_curso}
