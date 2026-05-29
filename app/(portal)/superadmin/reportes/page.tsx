@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation"
+import { RefreshCw } from "lucide-react"
 import InfoCard from "@/components/portal/InfoCard"
+import KpiCard from "@/components/portal/KpiCard"
 import PageHeader from "@/components/portal/PageHeader"
+import StatusBadge from "@/components/portal/StatusBadge"
 import StatusNotice from "@/components/portal/StatusNotice"
 import { getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
@@ -181,225 +184,112 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
   const syncErrorCompanies = companyStats.filter((item) => item.syncStatus === "ERROR").length
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="SuperAdmin"
-        title="Centro de control global"
-        description="Vista ejecutiva para vencimientos, semaforo de sincronizacion, salud academica, trazabilidad y seguimiento operativo por empresa."
-      />
-
-      {success ? (
-        <StatusNotice
-          tone="success"
-          message={detail ? `${successMessages[success] ?? success} Detalle: ${detail}` : successMessages[success] ?? success}
-        />
-      ) : null}
-      {error ? <StatusNotice tone="error" message={errorMessages[error] ?? error} /> : null}
-
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-slate-950">Sincronizacion global</h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Ejecuta un refresh en segundo plano para mantener cursos, avances y constancias al dia.
-            </p>
-          </div>
-
+        eyebrow="Operaciones"
+        title="Reportes globales"
+        description="Vista ejecutiva para vencimientos, sincronización y salud académica por empresa."
+        actions={
           <form action={triggerGlobalLearningSyncAction}>
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
-            >
-              Actualizar ahora
+            <button type="submit" className="inline-flex items-center gap-2 rounded-lg bg-[#E8761A] px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-[#C45F0A]">
+              <RefreshCw size={14} strokeWidth={2} />
+              Sincronizar todo
             </button>
           </form>
-        </div>
+        }
+      />
+
+      {success ? <StatusNotice tone="success" message={detail ? `${successMessages[success] ?? success} Detalle: ${detail}` : successMessages[success] ?? success} /> : null}
+      {error ? <StatusNotice tone="error" message={errorMessages[error] ?? error} /> : null}
+
+      {/* KPI strip global */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard label="Avance promedio global" value={`${averageProgress}%`} sub="Promedio ponderado de cursos activos" borderColor="orange" />
+        <KpiCard label="Renovaciones 30 días" value={String(renewalsIn30Days)} sub="Empresas activas por vencer" borderColor="amber" />
+        <KpiCard label="Empresas con error sync" value={String(companiesWithAccessIssues)} sub="Requieren atención" borderColor="rose" />
+        <KpiCard label="Empleados activos" value={String(totalEmpleadosActivos)} sub="Base laboral activa" borderColor="charcoal" />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-4">
-        <InfoCard
-          title="Avance promedio global"
-          value={`${averageProgress}%`}
-          description="Promedio ponderado entre todos los cursos activos del ecosistema B2B."
-          accent="teal"
-        />
-        <InfoCard
-          title="Renovaciones 30 dias"
-          value={String(renewalsIn30Days)}
-          description="Empresas activas con paquete por vencer dentro de los proximos 30 dias."
-          accent="amber"
-        />
-        <InfoCard
-          title="Empresas con error sync"
-          value={String(companiesWithAccessIssues)}
-          description="Empresas con al menos un curso en estado de error de acceso."
-          accent="violet"
-        />
-        <InfoCard
-          title="Empleados activos"
-          value={String(totalEmpleadosActivos)}
-          description="Base laboral activa que actualmente consume rutas de aprendizaje."
-          accent="slate"
-        />
-      </section>
-
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 space-y-1">
-          <h2 className="text-lg font-semibold text-slate-950">Control de vencimientos</h2>
-          <p className="text-sm leading-6 text-slate-600">
-            Alertas por tramos para anticipar renovaciones comerciales y evitar interrupciones de acceso.
-          </p>
-        </div>
+      {/* Control de vencimientos */}
+      <section className="rounded-xl border border-[#f0f0f0] bg-white p-6">
+        <h2 className="mb-1 text-[15px] font-bold text-[#1a1a1a]">Control de vencimientos</h2>
+        <p className="mb-5 text-sm text-[#64748b]">Alertas por tramos para anticipar renovaciones comerciales.</p>
 
         <div className="mb-5 grid gap-4 md:grid-cols-4">
-          <InfoCard
-            title="Vencidos"
-            value={String(renewalsOverdue)}
-            description="Empresas que ya superaron su fecha de vigencia."
-            accent="violet"
-          />
-          <InfoCard
-            title="0-7 dias"
-            value={String(renewalsIn7)}
-            description="Requieren atencion prioritaria de renovacion."
-            accent="amber"
-          />
-          <InfoCard
-            title="8-15 dias"
-            value={String(renewalsIn15)}
-            description="Ventana de seguimiento comercial activa."
-            accent="teal"
-          />
-          <InfoCard
-            title="16-30 dias"
-            value={String(renewalsIn30)}
-            description="Pipeline temprano de renovaciones proximas."
-            accent="slate"
-          />
+          <InfoCard title="Vencidos" value={String(renewalsOverdue)} description="Ya superaron su fecha de vigencia." accent="rose" />
+          <InfoCard title="0–7 días" value={String(renewalsIn7)} description="Requieren atención prioritaria." accent="amber" />
+          <InfoCard title="8–15 días" value={String(renewalsIn15)} description="Ventana de seguimiento activa." accent="orange" />
+          <InfoCard title="16–30 días" value={String(renewalsIn30)} description="Pipeline temprano de renovaciones." accent="slate" />
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {renewalAlerts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-              No hay empresas con vencimiento en los proximos 30 dias.
+            <div className="rounded-xl border border-dashed border-[#e2e8f0] bg-[#f8fafc] px-4 py-6 text-sm text-[#94a3b8]">
+              No hay empresas con vencimiento en los próximos 30 días.
             </div>
           ) : null}
-
           {renewalAlerts.map((item) => {
             const remainingDays = item.remainingDays as number
-            const toneClass =
-              remainingDays < 0
-                ? "bg-rose-100 text-rose-900"
-                : remainingDays <= 7
-                  ? "bg-amber-100 text-amber-900"
-                  : "bg-sky-100 text-sky-900"
-
+            const badgeCls =
+              remainingDays < 0 ? "bg-rose-100 text-rose-700"
+              : remainingDays <= 7 ? "bg-amber-100 text-amber-700"
+              : "bg-[#fff5ed] text-[#C45F0A]"
             return (
-              <div key={item.empresa.id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-slate-950">{item.empresa.nombre}</p>
-                    <p className="text-sm text-slate-600">
-                      Paquete: {item.activePackage?.paquete.nombre ?? "Sin paquete activo"} · Vigencia:{" "}
-                      {formatDate(item.activePackage?.fecha_vencimiento)}
-                    </p>
-                  </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${toneClass}`}>
-                    {remainingDays < 0
-                      ? `Vencido hace ${Math.abs(remainingDays)} dia(s)`
-                      : `Vence en ${remainingDays} dia(s)`}
-                  </span>
+              <div key={item.empresa.id} className="flex items-center justify-between rounded-xl border border-[#f0f0f0] bg-[#f8fafc] px-4 py-3">
+                <div>
+                  <p className="text-[13.5px] font-semibold text-[#1a1a1a]">{item.empresa.nombre}</p>
+                  <p className="text-[12px] text-[#64748b]">
+                    {item.activePackage?.paquete.nombre ?? "Sin paquete"} · {formatDate(item.activePackage?.fecha_vencimiento)}
+                  </p>
                 </div>
+                <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${badgeCls}`}>
+                  {remainingDays < 0 ? `Vencido hace ${Math.abs(remainingDays)}d` : `Vence en ${remainingDays}d`}
+                </span>
               </div>
             )
           })}
         </div>
       </section>
 
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 space-y-1">
-          <h2 className="text-lg font-semibold text-slate-950">Estado de sincronizacion WP/Tutor</h2>
-          <p className="text-sm leading-6 text-slate-600">
-            Semaforo operativo por empresa con reintento directo para recuperar accesos y datos de aprendizaje.
-          </p>
-        </div>
+      {/* Estado de sync WP */}
+      <section className="rounded-xl border border-[#f0f0f0] bg-white p-6">
+        <h2 className="mb-1 text-[15px] font-bold text-[#1a1a1a]">Estado de sincronización WP/Tutor</h2>
+        <p className="mb-5 text-sm text-[#64748b]">Semáforo operativo por empresa con reintento directo.</p>
 
         <div className="mb-5 grid gap-4 md:grid-cols-3">
-          <InfoCard
-            title="Estado OK"
-            value={String(syncOkCompanies)}
-            description="Empresas sin alertas de acceso ni pendientes de sincronizacion."
-            accent="teal"
-          />
-          <InfoCard
-            title="Estado parcial"
-            value={String(syncPartialCompanies)}
-            description="Empresas con pendientes, datos vencidos o usuarios aun sin WP user ID."
-            accent="amber"
-          />
-          <InfoCard
-            title="Estado error"
-            value={String(syncErrorCompanies)}
-            description="Empresas con errores de acceso academico que requieren atencion."
-            accent="violet"
-          />
+          <InfoCard title="Estado OK" value={String(syncOkCompanies)} description="Sin alertas ni pendientes de sync." accent="orange" />
+          <InfoCard title="Estado parcial" value={String(syncPartialCompanies)} description="Con pendientes o datos vencidos." accent="amber" />
+          <InfoCard title="Estado error" value={String(syncErrorCompanies)} description="Errores de acceso académico." accent="rose" />
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {companyStats.map((item) => {
-            const badgeClass =
-              item.syncStatus === "OK"
-                ? "bg-teal-100 text-teal-900"
-                : item.syncStatus === "PARCIAL"
-                  ? "bg-amber-100 text-amber-900"
-                  : item.syncStatus === "ERROR"
-                    ? "bg-rose-100 text-rose-900"
-                    : "bg-slate-200 text-slate-700"
+            const badgeVariant =
+              item.syncStatus === "OK" ? "green"
+              : item.syncStatus === "PARCIAL" ? "amber"
+              : item.syncStatus === "ERROR" ? "red"
+              : "slate"
 
             return (
-              <div key={item.empresa.id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+              <div key={item.empresa.id} className="rounded-xl border border-[#f0f0f0] bg-[#f8fafc] p-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-950">{item.empresa.nombre}</p>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${badgeClass}`}>
-                        {item.syncStatus}
-                      </span>
+                      <p className="text-[13.5px] font-bold text-[#1a1a1a]">{item.empresa.nombre}</p>
+                      <StatusBadge variant={badgeVariant}>{item.syncStatus}</StatusBadge>
                     </div>
-                    <div className="grid gap-2 text-sm text-slate-600 md:grid-cols-3">
-                      <p>
-                        <span className="font-medium text-slate-800">Errores:</span>{" "}
-                        {item.errorCourses}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Pendientes:</span>{" "}
-                        {item.pendingCourses}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Datos vencidos:</span>{" "}
-                        {item.staleCourses}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Sin WP user ID:</span>{" "}
-                        {item.employeesWithoutWpUser}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Cursos activos:</span>{" "}
-                        {item.totalCourses}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Empleados activos:</span>{" "}
-                        {item.empleadosActivos}
-                      </p>
+                    <div className="grid gap-1.5 text-[13px] text-[#64748b] md:grid-cols-3">
+                      <p><span className="font-semibold text-[#1a1a1a]">Errores:</span> {item.errorCourses}</p>
+                      <p><span className="font-semibold text-[#1a1a1a]">Pendientes:</span> {item.pendingCourses}</p>
+                      <p><span className="font-semibold text-[#1a1a1a]">Datos vencidos:</span> {item.staleCourses}</p>
+                      <p><span className="font-semibold text-[#1a1a1a]">Sin WP user ID:</span> {item.employeesWithoutWpUser}</p>
+                      <p><span className="font-semibold text-[#1a1a1a]">Cursos activos:</span> {item.totalCourses}</p>
+                      <p><span className="font-semibold text-[#1a1a1a]">Empleados activos:</span> {item.empleadosActivos}</p>
                     </div>
                   </div>
-
                   <form action={retryCompanySyncAction}>
                     <input type="hidden" name="empresa_id" value={item.empresa.id} />
-                    <button
-                      type="submit"
-                      className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
-                    >
+                    <button type="submit" className="rounded-lg bg-[#1a1a1a] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#333]">
                       Reintentar sync
                     </button>
                   </form>
@@ -409,7 +299,6 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
           })}
         </div>
       </section>
-
     </div>
   )
 }
