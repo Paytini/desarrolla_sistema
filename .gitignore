@@ -38,3 +38,6 @@ Thumbs.db
 .agents/
 skills/
 .claude/
+
+.superpowers/
+docs/
