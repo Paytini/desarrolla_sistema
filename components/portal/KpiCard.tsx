@@ -40,7 +40,7 @@ export default function KpiCard({
       className={`relative overflow-hidden rounded-xl border-l-4 bg-white p-5 shadow-none ${borderMap[borderColor]}`}
       style={{ border: "1px solid #f0f0f0", borderLeftWidth: "4px" }}
     >
-      <p className="text-[11px] font-700 uppercase tracking-[0.6px] text-[#94a3b8]">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.6px] text-[#94a3b8]">{label}</p>
       <p className="mt-1 text-[28px] font-bold leading-none text-[#1a1a1a]">{value}</p>
       {sub && <p className="mt-1 text-xs text-[#64748b]">{sub}</p>}
       {Icon && (
