@@ -1,5 +1,4 @@
 import KpiCard from "@/components/portal/KpiCard"
-import StatusBadge from "@/components/portal/StatusBadge"
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { getSession } from "@/lib/session"
