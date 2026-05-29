@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { type ReactNode } from "react"
 import { redirect } from "next/navigation"
+import AlertBanner from "@/components/portal/AlertBanner"
 
 type InfoRowProps = { label: string; value: string; mono?: boolean }
 
@@ -43,7 +44,7 @@ function SectionCard({
   children: ReactNode
 }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white">
+    <article className="rounded-xl border border-slate-200 bg-white">
       <div className="flex items-start gap-4 border-b border-slate-100 p-6">
         <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>
           <Icon size={16} strokeWidth={2} />
@@ -78,7 +79,7 @@ export default async function ConfiguracionPage() {
     <div className="space-y-7">
       {/* Header */}
       <header className="space-y-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-600">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#E8761A]">
           SuperAdmin
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Configuración</h1>
@@ -86,6 +87,12 @@ export default async function ConfiguracionPage() {
           Parámetros del portal, integraciones y límites operativos.
         </p>
       </header>
+
+      <AlertBanner
+        tone="blue"
+        title="Configuración de solo lectura"
+        description="Estos valores vienen de variables de entorno en Vercel. Para modificarlos, edita el proyecto en el dashboard de Vercel."
+      />
 
       <div className="grid gap-5 xl:grid-cols-2">
         {/* Sistema */}
@@ -107,7 +114,7 @@ export default async function ConfiguracionPage() {
           title="Zona horaria"
           description="Usada para fechas en DC-3, reportes y auditorías."
           Icon={Clock}
-          iconCls="bg-teal-50 text-teal-600"
+          iconCls="bg-[#fff5ed] text-[#E8761A]"
         >
           <InfoRow label="Zona horaria activa" value={timezone} mono />
           <InfoRow
@@ -164,7 +171,7 @@ export default async function ConfiguracionPage() {
               Diagnóstico detallado disponible en{" "}
               <a
                 href="/superadmin/integracion"
-                className="font-semibold text-teal-600 hover:underline"
+                className="font-semibold text-[#E8761A] hover:underline"
               >
                 Integración →
               </a>
@@ -195,7 +202,7 @@ export default async function ConfiguracionPage() {
           title="Constancias DC-3"
           description="Motor de generación de constancias oficiales STPS."
           Icon={ShieldCheck}
-          iconCls="bg-teal-50 text-teal-600"
+          iconCls="bg-[#fff5ed] text-[#E8761A]"
         >
           <InfoRow label="Generador" value="pdf-lib (portal)" />
           <InfoRow label="Plantilla" value="Oficial STPS" />
@@ -223,7 +230,7 @@ export default async function ConfiguracionPage() {
       </div>
 
       {/* Nota de versión */}
-      <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4">
+      <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4">
         <Info size={15} className="mt-0.5 shrink-0 text-slate-400" strokeWidth={2} />
         <p className="text-xs leading-relaxed text-slate-500">
           Esta página es de solo lectura. Para modificar variables de entorno, accede al panel de

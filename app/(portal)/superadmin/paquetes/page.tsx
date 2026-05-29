@@ -109,7 +109,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
           title="Paquetes registrados"
           value={String(totalPackages)}
           description="Catalogo disponible para ventas y operaciones corporativas."
-          accent="teal"
+          accent="orange"
         />
         <InfoCard
           title="Cursos definidos"
@@ -121,7 +121,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
           title="Empresas con paquete activo"
           value={String(assignedCompanies)}
           description="Empresas que ya tienen paquete corporativo vigente y listo para sincronizar."
-          accent="violet"
+          accent="slate"
         />
         <InfoCard
           title="Con bundle privado"
@@ -132,7 +132,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_1.35fr]">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 space-y-1">
             <h2 className="text-lg font-semibold text-slate-950">Crear paquete</h2>
             <p className="text-sm leading-6 text-slate-600">
@@ -146,7 +146,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               <input
                 name="nombre"
                 required
-                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
               />
             </label>
 
@@ -155,7 +155,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               <textarea
                 name="descripcion"
                 rows={3}
-                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
               />
             </label>
 
@@ -164,7 +164,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               <select
                 name="modo_entrega"
                 defaultValue="DIRECT_ENROLLMENT"
-                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
               >
                 <option value="DIRECT_ENROLLMENT">Matricula directa por curso (Recomendado)</option>
                 <option value="PRIVATE_BUNDLE_REFERENCE">Bundle privado como referencia operativa</option>
@@ -179,7 +179,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                   type="number"
                   min={1}
                   placeholder="Opcional si quieres reutilizar uno existente"
-                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
                 />
               </label>
               <label className="grid gap-1.5 text-sm">
@@ -187,12 +187,12 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 <input
                   name="nombre_bundle"
                   placeholder="Se llena automaticamente si el bundle se crea desde el portal"
-                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                  className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
                 />
               </label>
             </div>
 
-            <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-4 text-sm leading-6 text-teal-950">
+            <div className="rounded-xl border border-teal-200 bg-[#fff5ed]/70 p-4 text-sm leading-6 text-teal-950">
               Si dejas vacio <span className="font-semibold">WP Bundle ID</span>, el portal intentara crear
               automaticamente un <span className="font-semibold">bundle privado</span> en Tutor LMS con los
               cursos seleccionados y guardara su referencia en este paquete.
@@ -203,7 +203,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               <textarea
                 name="notas_operativas"
                 rows={3}
-                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
               />
             </label>
 
@@ -214,14 +214,14 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
             <button
               type="submit"
-              className="inline-flex w-fit items-center rounded-full bg-teal-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-800"
+              className="inline-flex w-fit items-center rounded-full bg-[#E8761A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#C45F0A]"
             >
               Guardar paquete
             </button>
           </form>
         </article>
 
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 space-y-1">
             <h2 className="text-lg font-semibold text-slate-950">Asignar paquete a empresa</h2>
             <p className="text-sm leading-6 text-slate-600">
@@ -236,7 +236,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 name="empresa_id"
                 required
                 defaultValue=""
-                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
               >
                 <option value="">Selecciona una empresa</option>
                 {empresas.map((empresa) => (
@@ -253,7 +253,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 name="paquete_id"
                 required
                 defaultValue=""
-                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
               >
                 <option value="">Selecciona un paquete</option>
                 {paquetes.map((paquete) => (
@@ -269,7 +269,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               <input
                 name="fecha_vencimiento"
                 type="date"
-                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-violet-600"
+                className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
               />
             </label>
 
@@ -289,7 +289,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               return (
                 <div
                   key={empresa.id}
-                  className="rounded-3xl border border-slate-200 bg-slate-50/60 p-5"
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-5"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-2">
@@ -331,7 +331,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
         </article>
       </section>
 
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-5 space-y-1">
           <h2 className="text-lg font-semibold text-slate-950">Catalogo de paquetes</h2>
           <p className="text-sm leading-6 text-slate-600">
@@ -341,18 +341,18 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
         <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-2">
           {paquetes.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
               Aun no hay paquetes registrados.
             </div>
           ) : null}
 
           {paquetes.map((paquete) => (
-            <div key={paquete.id} className="rounded-3xl border border-slate-200 bg-slate-50/60 p-5">
+            <div key={paquete.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-5">
               <div className="space-y-3">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex flex-wrap items-center gap-3">
                     <h3 className="text-base font-semibold text-slate-950">{paquete.nombre}</h3>
-                    <span className="rounded-full bg-teal-100 px-2.5 py-1 text-xs font-semibold text-teal-900">
+                    <span className="rounded-full bg-[#fff5ed] px-2.5 py-1 text-xs font-semibold text-teal-900">
                       {paquete.cursos.length} cursos
                     </span>
                   </div>
@@ -395,12 +395,12 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 </div>
 
                 {paquete.notas_operativas ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-sm leading-6 text-amber-950">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-sm leading-6 text-amber-950">
                     <span className="font-medium">Notas operativas:</span> {paquete.notas_operativas}
                   </div>
                 ) : null}
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="mb-2 text-sm font-medium text-slate-800">Cursos incluidos</p>
                   <div className="space-y-3">
                     {paquete.cursos.map((curso) => {
@@ -413,7 +413,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                       return (
                         <details
                           key={curso.id}
-                          className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                          className="group rounded-xl border border-slate-200 bg-slate-50/70 p-4"
                         >
                           <summary className="flex cursor-pointer list-none flex-col gap-3 md:flex-row md:items-center md:justify-between">
                             <div className="min-w-0">
@@ -430,7 +430,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                             <span
                               className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
                                 isDc3Ready
-                                  ? "bg-teal-100 text-teal-900"
+                                  ? "bg-[#fff5ed] text-teal-900"
                                   : "bg-amber-100 text-amber-900"
                               }`}
                             >
@@ -483,7 +483,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                     step="0.25"
                                     defaultValue={formatDurationValue(dc3Metadata?.duracion_horas)}
                                     placeholder="Ej. 12"
-                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
                                   />
                                 </label>
 
@@ -495,7 +495,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                     name="area_tematica_nombre"
                                     defaultValue={dc3Metadata?.area_tematica_nombre ?? ""}
                                     placeholder="Higiene y seguridad en el trabajo"
-                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
                                   />
                                 </label>
 
@@ -507,7 +507,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                     name="area_tematica_clave"
                                     defaultValue={dc3Metadata?.area_tematica_clave ?? ""}
                                     placeholder="Opcional"
-                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
                                   />
                                 </label>
 
@@ -519,7 +519,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                     name="agente_capacitador_nombre"
                                     defaultValue={dc3Metadata?.agente_capacitador_nombre ?? ""}
                                     placeholder="DesarrollaMX 360"
-                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
                                   />
                                 </label>
 
@@ -531,7 +531,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                     name="agente_capacitador_registro"
                                     defaultValue={dc3Metadata?.agente_capacitador_registro ?? ""}
                                     placeholder="Si aplica"
-                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
                                   />
                                 </label>
 
@@ -543,7 +543,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                     name="instructor_nombre"
                                     defaultValue={dc3Metadata?.instructor_nombre ?? ""}
                                     placeholder="Nombre completo"
-                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-teal-600"
+                                    className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#E8761A]"
                                   />
                                 </label>
                               </div>
@@ -555,7 +555,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
                               <button
                                 type="submit"
-                                className="inline-flex w-fit items-center rounded-full bg-teal-700 px-4 py-2 text-xs font-semibold text-white transition hover:bg-teal-800"
+                                className="inline-flex w-fit items-center rounded-full bg-[#E8761A] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#C45F0A]"
                               >
                                 Guardar ficha DC-3
                               </button>

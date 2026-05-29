@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 
+import AlertBanner from "@/components/portal/AlertBanner"
 import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import { formatDateTime } from "@/lib/format"
@@ -42,23 +43,37 @@ export default async function SuperAdminIntegracionPage() {
         description="Diagnóstico rápido del bridge, del webhook académico y del último evento recibido por el portal."
       />
 
+      {bridgeReachable ? (
+        <AlertBanner
+          tone="green"
+          title="Bridge conectado correctamente"
+          description={`desarrolla360-bridge · WordPress · Tutor LMS Pro`}
+        />
+      ) : (
+        <AlertBanner
+          tone="red"
+          title="Bridge inaccesible"
+          description={bridgeError ?? "No se pudo establecer conexión con el plugin WordPress."}
+        />
+      )}
+
       <section className="grid gap-4 lg:grid-cols-4">
         <InfoCard
           title="Bridge configurado"
           value={formatBooleanStatus(diagnostics.bridgeConfigured)}
           description="Confirma que el portal tiene base URL y credenciales para hablar con WordPress."
-          accent={diagnostics.bridgeConfigured ? "teal" : "violet"}
+          accent={diagnostics.bridgeConfigured ? "orange" : "slate"}
         />
         <InfoCard
           title="Bridge responde"
           value={formatBooleanStatus(bridgeReachable)}
           description="Valida si el health check del bridge responde correctamente desde el portal."
-          accent={bridgeReachable ? "teal" : "violet"}
+          accent={bridgeReachable ? "orange" : "slate"}
         />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="space-y-2">
             <h2 className="text-lg font-semibold text-slate-950">Estado del bridge</h2>
             <p className="text-sm leading-6 text-slate-600">
@@ -67,7 +82,7 @@ export default async function SuperAdminIntegracionPage() {
           </div>
 
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Plugin</p>
               <p className="mt-2 text-sm text-slate-700">
                 Versión: <span className="font-semibold text-slate-950">{bridgeHealth?.plugin_version || "Sin dato"}</span>
@@ -80,7 +95,7 @@ export default async function SuperAdminIntegracionPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Configuración</p>
               <p className="mt-2 text-sm text-slate-700">
                 Service user: <span className="font-semibold text-slate-950">{formatBooleanStatus(Boolean(bridgeHealth?.service_user_configured))}</span>
@@ -95,7 +110,7 @@ export default async function SuperAdminIntegracionPage() {
           </div>
 
           {bridgeError ? (
-            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
               No pudimos consultar el health del bridge. Detalle: {bridgeError}
             </div>
           ) : null}

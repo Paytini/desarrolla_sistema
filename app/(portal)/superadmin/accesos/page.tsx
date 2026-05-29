@@ -62,7 +62,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
           title="Usuarios RH activos"
           value={String(rhActivos)}
           description="Responsables de empresa que hoy pueden administrar su tenant."
-          accent="teal"
+          accent="orange"
         />
         <InfoCard
           title="Empleados activos"
@@ -74,7 +74,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
           title="Usuarios suspendidos"
           value={String(usuariosSuspendidos)}
           description="Cuentas RH o empleado que hoy estan inhabilitadas."
-          accent="violet"
+          accent="slate"
         />
         <InfoCard
           title="Usuarios empleado"
@@ -85,7 +85,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold text-slate-950">Usuarios RH por empresa</h2>
@@ -100,7 +100,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
 
           <div className="max-h-[42rem] space-y-3 overflow-y-auto pr-2">
             {rhUsers.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
                 Aun no hay usuarios RH registrados.
               </div>
             ) : null}
@@ -108,7 +108,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
             {rhUsers.map((user) => (
               <div
                 key={user.id}
-                className="rounded-3xl border border-slate-200 bg-slate-50/60 p-4"
+                className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="space-y-3">
@@ -117,7 +117,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                           user.activo
-                            ? "bg-teal-100 text-teal-900"
+                            ? "bg-[#fff5ed] text-teal-900"
                             : "bg-slate-200 text-slate-700"
                         }`}
                       >
@@ -163,7 +163,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
                       type="submit"
                       className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                         user.activo
-                          ? "bg-slate-900 text-white hover:bg-slate-700"
+                          ? "bg-[#1a1a1a] text-white hover:bg-slate-700"
                           : "bg-violet-700 text-white hover:bg-violet-800"
                       }`}
                     >
@@ -176,7 +176,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
           </div>
         </article>
 
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold text-slate-950">Empleados del portal</h2>
@@ -191,7 +191,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
 
           <div className="max-h-[42rem] space-y-3 overflow-y-auto pr-2">
             {employees.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
                 Aun no hay empleados registrados.
               </div>
             ) : null}
@@ -202,7 +202,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
               return (
                 <div
                   key={empleado.id}
-                  className="rounded-3xl border border-slate-200 bg-slate-50/60 p-4"
+                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-3">
@@ -213,7 +213,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
                         <span
                           className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                             empleado.activo
-                              ? "bg-teal-100 text-teal-900"
+                              ? "bg-[#fff5ed] text-teal-900"
                               : "bg-slate-200 text-slate-700"
                           }`}
                         >
