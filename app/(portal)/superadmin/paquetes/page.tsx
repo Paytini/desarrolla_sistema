@@ -192,7 +192,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               </label>
             </div>
 
-            <div className="rounded-xl border border-teal-200 bg-[#fff5ed]/70 p-4 text-sm leading-6 text-teal-950">
+            <div className="rounded-xl border border-[#E8761A]/30 bg-[#fff5ed]/70 p-4 text-sm leading-6 text-[#1a1a1a]">
               Si dejas vacio <span className="font-semibold">WP Bundle ID</span>, el portal intentara crear
               automaticamente un <span className="font-semibold">bundle privado</span> en Tutor LMS con los
               cursos seleccionados y guardara su referencia en este paquete.
@@ -352,7 +352,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div className="flex flex-wrap items-center gap-3">
                     <h3 className="text-base font-semibold text-slate-950">{paquete.nombre}</h3>
-                    <span className="rounded-full bg-[#fff5ed] px-2.5 py-1 text-xs font-semibold text-teal-900">
+                    <span className="rounded-full bg-[#fff5ed] px-2.5 py-1 text-xs font-semibold text-[#1a1a1a]">
                       {paquete.cursos.length} cursos
                     </span>
                   </div>
@@ -430,7 +430,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                             <span
                               className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
                                 isDc3Ready
-                                  ? "bg-[#fff5ed] text-teal-900"
+                                  ? "bg-[#fff5ed] text-[#1a1a1a]"
                                   : "bg-amber-100 text-amber-900"
                               }`}
                             >

@@ -117,7 +117,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                           user.activo
-                            ? "bg-[#fff5ed] text-teal-900"
+                            ? "bg-[#fff5ed] text-[#1a1a1a]"
                             : "bg-slate-200 text-slate-700"
                         }`}
                       >
@@ -213,7 +213,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
                         <span
                           className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                             empleado.activo
-                              ? "bg-[#fff5ed] text-teal-900"
+                              ? "bg-[#fff5ed] text-[#1a1a1a]"
                               : "bg-slate-200 text-slate-700"
                           }`}
                         >

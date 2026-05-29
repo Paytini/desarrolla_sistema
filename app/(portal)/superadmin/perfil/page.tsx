@@ -83,7 +83,7 @@ export default async function PerfilPage({ searchParams }: PageProps) {
             <div className="w-full space-y-4">
               <div className="space-y-1 text-center">
                 <p className="text-xl font-semibold text-slate-950">{usuario.nombre}</p>
-                <span className="inline-flex rounded-full bg-[#fff5ed] px-3 py-1 text-xs font-semibold text-[#C45F0A] ring-1 ring-teal-200">
+                <span className="inline-flex rounded-full bg-[#fff5ed] px-3 py-1 text-xs font-semibold text-[#C45F0A] ring-1 ring-[#E8761A]/30">
                   SuperAdmin
                 </span>
               </div>
@@ -145,7 +145,7 @@ export default async function PerfilPage({ searchParams }: PageProps) {
                 type="password"
                 required
                 autoComplete="current-password"
-                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#E8761A] focus:ring-2 focus:ring-teal-100"
+                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#E8761A] focus:ring-2 focus:ring-[#fff5ed]"
               />
             </label>
 
@@ -157,7 +157,7 @@ export default async function PerfilPage({ searchParams }: PageProps) {
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#E8761A] focus:ring-2 focus:ring-teal-100"
+                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#E8761A] focus:ring-2 focus:ring-[#fff5ed]"
               />
             </label>
 
@@ -169,7 +169,7 @@ export default async function PerfilPage({ searchParams }: PageProps) {
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#E8761A] focus:ring-2 focus:ring-teal-100"
+                className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#E8761A] focus:ring-2 focus:ring-[#fff5ed]"
               />
             </label>
 
