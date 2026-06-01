@@ -153,16 +153,10 @@ export default async function EmpresaConstanciasPage() {
     <div className="space-y-6">
       <PageHeader eyebrow="RH / Empresa" title="Constancias DC-3" description="Constancias de habilidades laborales para cumplimiento STPS" />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard label="Constancias emitidas" value={String(constancias.length)} sub="Total registradas" icon={Award} borderColor="orange" />
         <KpiCard label="Empleados con constancia" value={String(employeesWithCertificates)} sub="Al menos una emitida" icon={Users} borderColor="charcoal" />
         <KpiCard label="Pendientes" value={String(pendingCertificates.length)} sub="Cursos sin constancia aún" icon={Clock} borderColor="amber" />
-        <KpiCard
-          label="Última emisión"
-          value={latestCertificate ? formatDateTime(latestCertificate.fecha_emision) : "Sin constancias"}
-          icon={FileText}
-          borderColor="charcoal"
-        />
       </div>
 
       {/* DC-3 preview of latest + main content */}
