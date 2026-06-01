@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import JSZip from "jszip"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { generateDc3Pdf } from "@/lib/dc3-pdf"
+import { generateDc3Pdf, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
 
 export const runtime = "nodejs"
 
@@ -59,7 +59,11 @@ export async function GET() {
       const pdfBytes = await generateDc3Pdf({ constanciaId: id })
       zip.file(`${folio}.pdf`, pdfBytes)
     } catch (err) {
-      console.error(`[constancias/zip] Error en constancia ${id}:`, err)
+      if (err instanceof Dc3MissingFieldsError) {
+        console.error(`[constancias/zip] Constancia ${id} (folio: ${folio}) omitida — campos DC-3 faltantes:`, err.fields)
+      } else {
+        console.error(`[constancias/zip] Error generando PDF para constancia ${id}:`, err)
+      }
     }
   }
 
