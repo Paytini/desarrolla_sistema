@@ -1,6 +1,5 @@
 import KpiCard from "@/components/portal/KpiCard"
 import PageHeader from "@/components/portal/PageHeader"
-import StatusBadge from "@/components/portal/StatusBadge"
 import { Award, Clock, FileText, Users } from "lucide-react"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"

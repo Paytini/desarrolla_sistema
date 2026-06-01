@@ -73,6 +73,7 @@ export async function GET() {
 
   const zipBuffer = await zip.generateAsync({ type: "nodebuffer" })
 
+  // Buffer is valid BodyInit at runtime in Node.js; cast needed due to Web Streams type mismatch
   return new NextResponse(zipBuffer as unknown as BodyInit, {
     headers: {
       "Content-Type": "application/zip",
