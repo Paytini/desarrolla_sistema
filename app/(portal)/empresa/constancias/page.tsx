@@ -1,6 +1,6 @@
 import KpiCard from "@/components/portal/KpiCard"
 import PageHeader from "@/components/portal/PageHeader"
-import { Award, Clock, FileText, Users } from "lucide-react"
+import { Award, Clock, Users } from "lucide-react"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
@@ -56,55 +56,6 @@ function getInitials(name: string) {
     .join("")
 }
 
-function Dc3Preview({ constancia }: { constancia: CompanyCertificate }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-[#f0f0f0] bg-white">
-      <div className="bg-[#E8761A] px-5 py-3 text-center">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/70">
-          Secretaría del Trabajo y Previsión Social
-        </p>
-        <p className="text-sm font-bold text-white">Constancia de Habilidades Laborales</p>
-        <p className="text-[10px] text-white/70">DC-3 Oficial STPS</p>
-      </div>
-      <div className="space-y-4 p-5">
-        <div className="text-center">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Empleado</p>
-          <p className="mt-0.5 text-base font-bold text-slate-950">{constancia.empleadoNombre}</p>
-          <p className="text-xs text-slate-500">{constancia.empleadoEmail}</p>
-        </div>
-
-        <div className="text-center">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Curso</p>
-          <p className="mt-0.5 text-sm font-semibold text-slate-800">{constancia.nombre_curso}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-3 text-center text-xs">
-          <div>
-            <p className="font-medium text-slate-400">Folio</p>
-            <p className="mt-0.5 font-mono font-semibold text-slate-800">{constancia.folio}</p>
-          </div>
-          <div>
-            <p className="font-medium text-slate-400">Emisión</p>
-            <p className="mt-0.5 font-semibold text-slate-800">
-              {formatDateTime(constancia.fecha_emision)}
-            </p>
-          </div>
-        </div>
-
-        <a
-          href={`/api/constancias/${constancia.id}/dc3`}
-          target="_blank"
-          rel="noreferrer"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E8761A] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#C45F0A]"
-        >
-          <FileText size={14} strokeWidth={2} />
-          Descargar DC-3
-        </a>
-      </div>
-    </div>
-  )
-}
-
 export default async function EmpresaConstanciasPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
@@ -141,10 +92,6 @@ export default async function EmpresaConstanciasPage() {
     }
   )
 
-  const latestCertificate = [...constancias].sort(
-    (a, b) =>
-      new Date(b.fecha_emision).getTime() - new Date(a.fecha_emision).getTime()
-  )[0]
   const employeesWithCertificates = new Set(
     constancias.map((c: CompanyCertificate) => c.empleadoEmail)
   ).size
@@ -159,140 +106,120 @@ export default async function EmpresaConstanciasPage() {
         <KpiCard label="Pendientes" value={String(pendingCertificates.length)} sub="Cursos sin constancia aún" icon={Clock} borderColor="amber" />
       </div>
 
-      {/* DC-3 preview of latest + main content */}
-      <div className="grid gap-5 xl:grid-cols-[1fr_280px]">
-        {/* Main lists */}
-        <div className="space-y-5">
-          {/* Issued */}
-          <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
-            <div className="mb-4 flex items-center justify-between gap-2">
-              <h2 className="text-base font-semibold text-[#1a1a1a]">
-                Constancias emitidas
-                <span className="ml-2 text-sm font-normal text-[#94a3b8]">{constancias.length}</span>
-              </h2>
-              {constancias.length > 0 ? (
-                <a
-                  href="/api/constancias/zip"
-                  download
-                  className="rounded-xl border border-[#f0f0f0] px-3 py-1.5 text-xs font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]"
-                >
-                  Descargar ZIP
-                </a>
-              ) : null}
-            </div>
-
-            {constancias.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                Aún no hay constancias emitidas para los empleados activos.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {constancias.map((constancia: CompanyCertificate) => {
-                  const initials = getInitials(constancia.empleadoNombre)
-                  return (
-                    <div
-                      key={constancia.id}
-                      className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3 transition hover:bg-slate-50/50"
-                    >
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff5ed] text-xs font-bold text-[#E8761A]">
-                        {initials}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-slate-950">
-                          {constancia.nombre_curso}
-                        </p>
-                        <p className="truncate text-xs text-slate-500">
-                          {constancia.empleadoNombre} · Folio:{" "}
-                          <span className="font-mono">{constancia.folio}</span>
-                        </p>
-                      </div>
-                      <p className="hidden shrink-0 text-xs text-slate-400 sm:block">
-                        {formatDateTime(constancia.fecha_emision)}
-                      </p>
-                      <div className="flex shrink-0 gap-1.5">
-                        {constancia.wp_cert_url ? (
-                          <a
-                            href={constancia.wp_cert_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-                          >
-                            Ver
-                          </a>
-                        ) : null}
-                        <a
-                          href={`/api/constancias/${constancia.id}/dc3`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-full bg-[#E8761A] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#C45F0A]"
-                        >
-                          DC-3
-                        </a>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </section>
-
-          {/* Pending */}
-          <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
-            <h2 className="mb-4 text-base font-semibold text-slate-950">
-              Pendientes por aparecer
-              <span className="ml-2 text-sm font-normal text-slate-400">
-                {pendingCertificates.length}
-              </span>
+      <div className="space-y-5">
+        <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-[#1a1a1a]">
+              Constancias emitidas
+              <span className="ml-2 text-sm font-normal text-[#94a3b8]">{constancias.length}</span>
             </h2>
+            {constancias.length > 0 ? (
+              <a
+                href="/api/constancias/zip"
+                download
+                className="rounded-xl border border-[#f0f0f0] px-3 py-1.5 text-xs font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]"
+              >
+                Descargar ZIP
+              </a>
+            ) : null}
+          </div>
 
-            {pendingCertificates.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-[#f8fafc] px-4 py-5 text-center text-sm text-[#64748b]">
-                Todo lo emitido ya está reflejado. No hay pendientes.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {pendingCertificates.map((item: PendingCertificate) => (
+          {constancias.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-[#f8fafc] px-4 py-8 text-center text-sm text-[#94a3b8]">
+              Aún no hay constancias emitidas para los empleados activos.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {constancias.map((constancia: CompanyCertificate) => {
+                const initials = getInitials(constancia.empleadoNombre)
+                return (
                   <div
-                    key={item.id}
-                    className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-3"
+                    key={constancia.id}
+                    className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3 transition hover:bg-[#f8fafc]"
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-xs font-bold text-amber-700">
-                      {getInitials(item.empleadoNombre)}
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff5ed] text-xs font-bold text-[#E8761A]">
+                      {initials}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-amber-950">
-                        {item.courseName}
+                      <p className="truncate text-sm font-semibold text-[#1a1a1a]">
+                        {constancia.nombre_curso}
                       </p>
-                      <p className="truncate text-xs text-amber-700">
-                        {item.empleadoNombre}
-                        {item.completedAt
-                          ? ` · Completado: ${formatDateTime(item.completedAt)}`
-                          : ""}
+                      <p className="truncate text-xs text-[#64748b]">
+                        {constancia.empleadoNombre} · Folio:{" "}
+                        <span className="font-mono">{constancia.folio}</span>
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
-                      Pendiente
-                    </span>
+                    <p className="hidden shrink-0 text-xs text-[#94a3b8] sm:block">
+                      {formatDateTime(constancia.fecha_emision)}
+                    </p>
+                    <div className="flex shrink-0 gap-1.5">
+                      {constancia.wp_cert_url ? (
+                        <a
+                          href={constancia.wp_cert_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-xl border border-[#f0f0f0] px-3 py-1.5 text-xs font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]"
+                        >
+                          Ver
+                        </a>
+                      ) : null}
+                      <a
+                        href={`/api/constancias/${constancia.id}/dc3`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-xl bg-[#E8761A] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#C45F0A]"
+                      >
+                        DC-3
+                      </a>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-
-        {/* DC-3 Preview panel */}
-        <aside className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Última DC-3 emitida
-          </p>
-          {latestCertificate ? (
-            <Dc3Preview constancia={latestCertificate} />
-          ) : (
-            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-white px-5 py-8 text-center text-sm text-slate-400">
-              Sin constancias aún
+                )
+              })}
             </div>
           )}
-        </aside>
+        </section>
+
+        <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
+          <h2 className="mb-4 text-base font-semibold text-[#1a1a1a]">
+            Pendientes por aparecer
+            <span className="ml-2 text-sm font-normal text-[#94a3b8]">
+              {pendingCertificates.length}
+            </span>
+          </h2>
+
+          {pendingCertificates.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-[#f8fafc] px-4 py-5 text-center text-sm text-[#64748b]">
+              Todo lo emitido ya está reflejado. No hay pendientes.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {pendingCertificates.map((item: PendingCertificate) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-3"
+                >
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-xs font-bold text-amber-700">
+                    {getInitials(item.empleadoNombre)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-amber-950">
+                      {item.courseName}
+                    </p>
+                    <p className="truncate text-xs text-amber-700">
+                      {item.empleadoNombre}
+                      {item.completedAt
+                        ? ` · Completado: ${formatDateTime(item.completedAt)}`
+                        : ""}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                    Pendiente
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )
