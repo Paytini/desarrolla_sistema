@@ -172,10 +172,21 @@ export default async function EmpresaConstanciasPage() {
         <div className="space-y-5">
           {/* Issued */}
           <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
-            <h2 className="mb-4 text-base font-semibold text-slate-950">
-              Constancias emitidas
-              <span className="ml-2 text-sm font-normal text-slate-400">{constancias.length}</span>
-            </h2>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h2 className="text-base font-semibold text-[#1a1a1a]">
+                Constancias emitidas
+                <span className="ml-2 text-sm font-normal text-[#94a3b8]">{constancias.length}</span>
+              </h2>
+              {constancias.length > 0 ? (
+                <a
+                  href="/api/constancias/zip"
+                  download
+                  className="rounded-xl border border-[#f0f0f0] px-3 py-1.5 text-xs font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]"
+                >
+                  Descargar ZIP
+                </a>
+              ) : null}
+            </div>
 
             {constancias.length === 0 ? (
               <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
