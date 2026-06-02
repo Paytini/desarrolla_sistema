@@ -1,25 +1,25 @@
 // app/(portal)/superadmin/_components/OcupacionCard.tsx
 
-function RingChart({ pct, label }: { pct: number; label: string }) {
-  const r = 34
+function RingChart({ pct }: { pct: number }) {
+  const r = 36
   const circ = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
   const color = pct >= 90 ? "#f43f5e" : pct >= 70 ? "#f59e0b" : "#F5853F"
   return (
-    <div className="flex flex-col items-center gap-1">
-      <svg viewBox="0 0 84 84" className="size-20">
-        <circle cx="42" cy="42" r={r} fill="none" stroke="#f1f5f9" strokeWidth="9" />
+    <div className="relative flex items-center justify-center">
+      <svg viewBox="0 0 88 88" className="size-[88px] -rotate-90">
+        <circle cx="44" cy="44" r={r} fill="none" stroke="#f1f5f9" strokeWidth="8" />
         <circle
-          cx="42" cy="42" r={r} fill="none"
-          stroke={color} strokeWidth="9"
-          strokeDasharray={`${circ}`} strokeDashoffset={`${offset}`}
-          strokeLinecap="round" transform="rotate(-90 42 42)"
+          cx="44" cy="44" r={r} fill="none"
+          stroke={color} strokeWidth="8"
+          strokeDasharray={circ} strokeDashoffset={offset}
+          strokeLinecap="round"
         />
-        <text x="42" y="46" textAnchor="middle" fontSize="15" fontWeight="700" fill="#130303">
-          {pct}%
-        </text>
       </svg>
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
+      <div className="absolute text-center">
+        <p className="text-[18px] font-bold leading-none" style={{ color: "#130303" }}>{pct}%</p>
+        <p className="text-[9px] text-slate-400 mt-0.5">global</p>
+      </div>
     </div>
   )
 }
@@ -28,14 +28,16 @@ function CompanyBar({ nombre, usados, contratados }: { nombre: string; usados: n
   const pct = contratados ? Math.round((usados / contratados) * 100) : 0
   const color = pct >= 90 ? "#f43f5e" : pct >= 70 ? "#f59e0b" : "#F5853F"
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <p className="max-w-[60%] truncate text-[12px] font-medium text-slate-700">{nombre}</p>
-        <p className="text-[11px] text-slate-400">{usados}/{contratados}</p>
+    <div className="flex items-center gap-3">
+      <p className="w-32 shrink-0 truncate text-[12px] text-slate-600">{nombre}</p>
+      <div className="flex-1">
+        <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+        </div>
       </div>
-      <div className="h-1 overflow-hidden rounded-full bg-slate-100">
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-      </div>
+      <p className="w-10 shrink-0 text-right text-[11px] tabular-nums text-slate-400">
+        {usados}/{contratados}
+      </p>
     </div>
   )
 }
@@ -47,25 +49,31 @@ interface OcupacionCardProps {
 
 export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
   return (
-    <div>
-      <p className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-        Ocupación de cupos
-      </p>
-      <div className="flex items-center gap-8">
-        <RingChart pct={ocupacionPct} label="Global" />
-        <div className="min-w-0 flex-1 space-y-3">
-          {empresas.slice(0, 6).map((e) => (
-            <CompanyBar
-              key={e.id}
-              nombre={e.nombre}
-              usados={e.asientos_usados}
-              contratados={e.asientos_contratados}
-            />
-          ))}
-          {empresas.length === 0 && (
-            <p className="text-xs text-slate-400">Sin empresas registradas.</p>
-          )}
-        </div>
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="border-b border-slate-100 px-5 py-4">
+        <p className="text-[13px] font-semibold" style={{ color: "#130303" }}>Ocupación de cupos</p>
+        <p className="text-[12px] text-slate-400">Cupos usados vs contratados</p>
+      </div>
+      <div className="p-5">
+        {empresas.length === 0 ? (
+          <p className="text-center text-sm text-slate-400">Sin empresas registradas.</p>
+        ) : (
+          <div className="flex items-start gap-5">
+            <div className="shrink-0">
+              <RingChart pct={ocupacionPct} />
+            </div>
+            <div className="flex-1 space-y-3 pt-1">
+              {empresas.slice(0, 6).map((e) => (
+                <CompanyBar
+                  key={e.id}
+                  nombre={e.nombre}
+                  usados={e.asientos_usados}
+                  contratados={e.asientos_contratados}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

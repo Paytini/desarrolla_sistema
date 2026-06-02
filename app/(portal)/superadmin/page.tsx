@@ -42,8 +42,7 @@ export default async function SuperadminDashboardPage() {
   const nombre = session.user.nombre as string
 
   return (
-    <div className="space-y-8">
-      {/* Header + metrics */}
+    <div className="space-y-5">
       <DashboardTopBar nombre={nombre} />
       <KpiStrip
         empresasActivas={empresasActivas}
@@ -54,9 +53,7 @@ export default async function SuperadminDashboardPage() {
         totalContratados={totalContratados}
         renovacionesCount={renewals.length}
       />
-
-      {/* 3-column content — no card wrappers, just sections on white bg */}
-      <div className="grid gap-8 border-t border-slate-100 pt-8 xl:grid-cols-[1.5fr_1fr_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr_1fr]">
         <OcupacionCard ocupacionPct={ocupacionPct} empresas={empresas} />
         <RenovacionesTable renewals={renewals} />
         <AccesoEmpresasPanel empresas={empresas} />
