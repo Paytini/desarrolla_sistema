@@ -1,5 +1,4 @@
 // app/(portal)/superadmin/_components/KpiStrip.tsx
-import { Card, CardContent } from "@/components/ui/card"
 import {
   AlertTriangle,
   BarChart3,
@@ -13,27 +12,43 @@ interface KpiCardItemProps {
   value: string
   sub: string
   Icon: LucideIcon
-  iconCls: string
+  accent: string
+  iconBg: string
 }
 
-function KpiCardItem({ label, value, sub, Icon, iconCls }: KpiCardItemProps) {
+function KpiCardItem({ label, value, sub, Icon, accent, iconBg }: KpiCardItemProps) {
   return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs text-slate-500">{label}</p>
-            <p className="mt-1 text-3xl font-bold text-slate-950">{value}</p>
-            <p className="mt-1 text-xs text-slate-500">{sub}</p>
-          </div>
-          <span
-            className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}
+    <div
+      className="relative overflow-hidden rounded-2xl bg-white p-5"
+      style={{ boxShadow: "0 1px 3px rgba(0,0,34,0.06), 0 1px 2px rgba(0,0,34,0.04)" }}
+    >
+      {/* Accent bar top */}
+      <div
+        className="absolute left-0 top-0 h-[3px] rounded-tl-2xl rounded-tr-2xl"
+        style={{ background: accent, width: "100%" }}
+      />
+
+      <div className="flex items-start justify-between pt-1">
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.8px] text-slate-400">
+            {label}
+          </p>
+          <p
+            className="mt-2 text-[36px] font-bold leading-none tracking-tight"
+            style={{ color: "#130303" }}
           >
-            <Icon size={16} strokeWidth={2} />
-          </span>
+            {value}
+          </p>
+          <p className="mt-2 text-[12px] text-slate-400">{sub}</p>
         </div>
-      </CardContent>
-    </Card>
+        <span
+          className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: iconBg }}
+        >
+          <Icon size={18} strokeWidth={2} style={{ color: accent }} />
+        </span>
+      </div>
+    </div>
   )
 }
 
@@ -61,34 +76,34 @@ export function KpiStrip({
       <KpiCardItem
         label="Empresas activas"
         value={String(empresasActivas)}
-        sub={`${totalEmpresas} registrada${totalEmpresas !== 1 ? "s" : ""} en total`}
+        sub={`${totalEmpresas} registradas en total`}
         Icon={Building2}
-        iconCls="bg-[#fff2eb] text-[#F5853F]"
+        accent="#F5853F"
+        iconBg="rgba(245,133,63,0.1)"
       />
       <KpiCardItem
         label="Empleados activos"
         value={String(totalEmpleadosActivos)}
-        sub="Colaboradores con acceso al LMS"
+        sub="Con acceso al LMS"
         Icon={Users}
-        iconCls="bg-slate-100 text-slate-600"
+        accent="#000022"
+        iconBg="rgba(0,0,34,0.07)"
       />
       <KpiCardItem
         label="Ocupación global"
         value={`${ocupacionPct}%`}
-        sub={`${totalUsados} de ${totalContratados} cupos en uso`}
+        sub={`${totalUsados} de ${totalContratados} cupos`}
         Icon={BarChart3}
-        iconCls="bg-amber-50 text-amber-600"
+        accent="#f59e0b"
+        iconBg="rgba(245,158,11,0.1)"
       />
       <KpiCardItem
-        label="Renovaciones próximas"
+        label="Renovaciones"
         value={String(renovacionesCount)}
-        sub="Paquetes que vencen en 30 días"
+        sub="Paquetes por vencer en 30 días"
         Icon={AlertTriangle}
-        iconCls={
-          renovacionesCount > 0
-            ? "bg-rose-50 text-rose-500"
-            : "bg-slate-100 text-slate-500"
-        }
+        accent={renovacionesCount > 0 ? "#f43f5e" : "#94a3b8"}
+        iconBg={renovacionesCount > 0 ? "rgba(244,63,94,0.1)" : "rgba(148,163,184,0.1)"}
       />
     </div>
   )

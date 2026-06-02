@@ -93,19 +93,21 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
       <div className="group relative">
         <Link
           href={item.href}
-          className={`flex items-center justify-center rounded-xl px-3 py-2.5 transition-all duration-150 ${
+          className="flex items-center justify-center rounded-xl p-2.5 transition-all duration-150"
+          style={
             active
-              ? "bg-[#F5853F]/15 text-[#F5853F]"
-              : "text-white/55 hover:bg-white/8 hover:text-white/90"
-          }`}
-          style={active ? {} : undefined}
+              ? { background: "#F5853F", color: "#fff" }
+              : { color: "rgba(255,255,255,0.45)" }
+          }
+          onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.85)" }}
+          onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)" }}
         >
           <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
         </Link>
-        {active && (
-          <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-[#F5853F]" />
-        )}
-        <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#000022] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
+        <span
+          className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100"
+          style={{ background: "#000022", border: "1px solid rgba(255,255,255,0.1)" }}
+        >
           {item.label}
         </span>
       </div>
@@ -116,16 +118,21 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
     <Link
       href={item.href}
       prefetch
-      className={`relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150 ${
+      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150"
+      style={
         active
-          ? "bg-[#F5853F]/12 text-[#F5853F]"
-          : "text-white/55 hover:bg-white/6 hover:text-white/90"
-      }`}
+          ? { background: "#F5853F", color: "#fff", fontWeight: 600 }
+          : { color: "rgba(255,255,255,0.45)" }
+      }
+      onMouseEnter={(e) => { if (!active) { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.85)"; (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)" } }}
+      onMouseLeave={(e) => { if (!active) { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; (e.currentTarget as HTMLElement).style.background = "transparent" } }}
     >
-      {active && (
-        <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-[#F5853F]" />
-      )}
-      <Icon size={16} strokeWidth={active ? 2.2 : 1.8} className="shrink-0" />
+      <span
+        className="flex size-7 shrink-0 items-center justify-center rounded-lg"
+        style={active ? { background: "rgba(255,255,255,0.2)" } : { background: "rgba(255,255,255,0.06)" }}
+      >
+        <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
+      </span>
       <span className="truncate">{item.label}</span>
     </Link>
   )
@@ -166,88 +173,81 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`sticky top-0 flex h-screen shrink-0 flex-col transition-[width] duration-300 ease-in-out ${
-        collapsed ? "w-[68px]" : "w-[240px]"
-      }`}
-      style={{ background: "#000022" }}
+      className={`sticky top-0 flex h-screen shrink-0 flex-col transition-[width] duration-300 ease-in-out`}
+      style={{
+        background: "#000022",
+        width: collapsed ? 68 : 240,
+      }}
     >
       {/* Logo area */}
       <div
-        className={`flex h-16 shrink-0 items-center ${
-          collapsed ? "justify-center px-3" : "justify-between px-5"
-        }`}
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        className={`flex h-[60px] shrink-0 items-center ${collapsed ? "justify-center px-3" : "justify-between px-4"}`}
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
       >
         {collapsed ? (
           <button
             type="button"
             onClick={toggle}
             aria-label="Expandir menú"
-            className="flex items-center justify-center rounded-xl transition-opacity hover:opacity-75"
+            className="rounded-xl p-1 transition-opacity hover:opacity-75"
           >
             <Image
               src="/assets/logo_corta.png"
               alt="D360"
-              width={36}
-              height={36}
-              className="size-9 object-contain"
+              width={34}
+              height={34}
+              className="size-[34px] object-contain"
             />
           </button>
         ) : (
           <>
-            <Link href={homeHref} className="flex flex-col gap-1">
+            <Link href={homeHref} className="flex min-w-0 items-center gap-2.5">
               <Image
-                src="/assets/logo_desarrolla_cropped.png"
-                alt="Desarrolla360"
-                width={150}
-                height={32}
-                className="h-8 w-auto object-contain brightness-0 invert"
-                priority
+                src="/assets/logo_corta.png"
+                alt="D360"
+                width={30}
+                height={30}
+                className="size-[30px] shrink-0 object-contain"
               />
-              {rol === "SUPERADMIN" && (
-                <span
-                  className="inline-block w-fit rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[1px] text-white/80"
-                  style={{ background: "rgba(245,133,63,0.25)", border: "1px solid rgba(245,133,63,0.4)" }}
-                >
-                  SuperAdmin
-                </span>
-              )}
-              {rol === "RH" && (
-                <span
-                  className="inline-block w-fit rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[1px] text-white/80"
-                  style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}
-                >
-                  RH / Empresa
-                </span>
-              )}
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-bold text-white leading-tight">Desarrolla360</p>
+                <p className="text-[10px] font-medium leading-tight" style={{ color: "#F5853F" }}>
+                  {roleLabel[rol]}
+                </p>
+              </div>
             </Link>
             <button
               type="button"
               onClick={toggle}
               aria-label="Contraer menú"
-              className="flex size-7 items-center justify-center rounded-lg text-white/35 transition hover:bg-white/8 hover:text-white/80"
+              className="flex size-7 shrink-0 items-center justify-center rounded-lg transition"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)"; (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)" }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)"; (e.currentTarget as HTMLElement).style.background = "transparent" }}
             >
-              <ChevronLeft size={15} strokeWidth={2} />
+              <ChevronLeft size={14} strokeWidth={2} />
             </button>
           </>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3">
+      <nav className="flex-1 overflow-y-auto px-2 py-3">
         {rol === "SUPERADMIN" ? (
-          navSuperAdminSections.map((section) => (
-            <div key={section.heading} className="mb-1">
+          navSuperAdminSections.map((section, si) => (
+            <div key={section.heading} className={si > 0 ? "mt-1" : ""}>
               {!collapsed && (
                 <p
-                  className="mb-0.5 px-4 pt-3 text-[9.5px] font-bold uppercase tracking-[1.4px]"
-                  style={{ color: "rgba(255,255,255,0.28)" }}
+                  className="mb-1 mt-4 px-2 text-[9.5px] font-bold uppercase tracking-[1.5px]"
+                  style={{ color: "rgba(255,255,255,0.22)" }}
                 >
                   {section.heading}
                 </p>
               )}
-              {collapsed && <div className="mx-3 my-2" style={{ height: "1px", background: "rgba(255,255,255,0.07)" }} />}
-              <div className="flex flex-col gap-0.5 px-2">
+              {collapsed && si > 0 && (
+                <div className="my-3 mx-2" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
+              )}
+              <div className="flex flex-col gap-0.5">
                 {section.items.map((item) => (
                   <NavItemRow key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
                 ))}
@@ -255,7 +255,7 @@ export default function Sidebar({
             </div>
           ))
         ) : (
-          <div className="flex flex-col gap-0.5 px-2">
+          <div className="flex flex-col gap-0.5">
             {(rol === "RH" ? navRH : navEmpleado).map((item) => (
               <NavItemRow key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
             ))}
@@ -263,57 +263,50 @@ export default function Sidebar({
         )}
       </nav>
 
-      {/* Bottom: perfil + config + logout + user */}
+      {/* Bottom */}
       <div
-        className="shrink-0 px-2 py-2"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+        className="shrink-0 px-2 pb-3 pt-2"
+        style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
       >
+        {/* Perfil + Configuración links for SUPERADMIN */}
         {rol === "SUPERADMIN" && (
           <div className={`mb-1 ${collapsed ? "flex flex-col gap-0.5" : "grid grid-cols-2 gap-1"}`}>
-            {collapsed ? (
-              <>
-                {[
-                  { href: "/superadmin/perfil", icon: User, label: "Perfil" },
-                  { href: "/superadmin/configuracion", icon: Settings, label: "Configuración" },
-                ].map(({ href, icon: Icon, label }) => (
+            {[
+              { href: "/superadmin/perfil", icon: User, label: "Perfil" },
+              { href: "/superadmin/configuracion", icon: Settings, label: collapsed ? "Config." : "Config." },
+            ].map(({ href, icon: Icon, label }) => {
+              const isItemActive = pathname === href
+              if (collapsed) {
+                return (
                   <div key={href} className="group relative">
                     <Link
                       href={href}
-                      className={`flex items-center justify-center rounded-xl px-3 py-2.5 transition-all duration-150 ${
-                        pathname === href
-                          ? "bg-[#F5853F]/15 text-[#F5853F]"
-                          : "text-white/55 hover:bg-white/8 hover:text-white/90"
-                      }`}
+                      className="flex items-center justify-center rounded-xl p-2.5 transition-all duration-150"
+                      style={isItemActive ? { background: "#F5853F", color: "#fff" } : { color: "rgba(255,255,255,0.4)" }}
                     >
                       <Icon size={16} strokeWidth={2} />
                     </Link>
-                    <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#000022] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
+                    <span
+                      className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100"
+                      style={{ background: "#000022", border: "1px solid rgba(255,255,255,0.1)" }}
+                    >
                       {label}
                     </span>
                   </div>
-                ))}
-              </>
-            ) : (
-              <>
-                {[
-                  { href: "/superadmin/perfil", icon: User, label: "Perfil" },
-                  { href: "/superadmin/configuracion", icon: Settings, label: "Config." },
-                ].map(({ href, icon: Icon, label }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] font-medium transition-all duration-150 ${
-                      pathname === href
-                        ? "bg-[#F5853F]/15 text-[#F5853F]"
-                        : "text-white/55 hover:bg-white/8 hover:text-white/90"
-                    }`}
-                  >
-                    <Icon size={12} strokeWidth={2} />
-                    {label}
-                  </Link>
-                ))}
-              </>
-            )}
+                )
+              }
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] font-medium transition-all duration-150"
+                  style={isItemActive ? { background: "#F5853F", color: "#fff" } : { color: "rgba(255,255,255,0.4)" }}
+                >
+                  <Icon size={12} strokeWidth={2} />
+                  {label}
+                </Link>
+              )
+            })}
           </div>
         )}
 
@@ -323,12 +316,16 @@ export default function Sidebar({
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex w-full items-center justify-center rounded-xl px-3 py-2.5 text-white/40 transition-all duration-150 hover:bg-rose-500/15 hover:text-rose-400"
+              className="flex w-full items-center justify-center rounded-xl p-2.5 transition-all duration-150"
+              style={{ color: "rgba(255,255,255,0.35)" }}
               aria-label="Cerrar sesión"
             >
-              <LogOut size={17} strokeWidth={1.8} />
+              <LogOut size={16} strokeWidth={1.8} />
             </button>
-            <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#000022] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
+            <span
+              className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100"
+              style={{ background: "#000022", border: "1px solid rgba(255,255,255,0.1)" }}
+            >
               Cerrar sesión
             </span>
           </div>
@@ -336,9 +333,10 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-white/40 transition-all duration-150 hover:bg-rose-500/12 hover:text-rose-400"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[12px] font-medium transition-all duration-150"
+            style={{ color: "rgba(255,255,255,0.35)" }}
           >
-            <LogOut size={16} strokeWidth={1.8} className="shrink-0" />
+            <LogOut size={15} strokeWidth={1.8} className="shrink-0" />
             <span>Cerrar sesión</span>
           </button>
         )}
@@ -346,7 +344,7 @@ export default function Sidebar({
         {/* User identity */}
         <div
           className={`mt-2 pt-2.5 ${collapsed ? "flex justify-center" : "px-1"}`}
-          style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
         >
           {collapsed ? (
             <div className="group relative">
@@ -356,9 +354,14 @@ export default function Sidebar({
               >
                 {initials}
               </div>
-              <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#000022] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
+              <span
+                className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100"
+                style={{ background: "#000022", border: "1px solid rgba(255,255,255,0.1)" }}
+              >
                 {nombre}
-                <span className="block text-[10px] font-normal text-white/50">{roleLabel[rol]}</span>
+                <span className="block text-[10px] font-normal" style={{ color: "rgba(255,255,255,0.45)" }}>
+                  {roleLabel[rol]}
+                </span>
               </span>
             </div>
           ) : (
@@ -370,8 +373,12 @@ export default function Sidebar({
                 {initials}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-white/90">{nombre}</p>
-                <p className="text-[10px] text-white/40">{roleLabel[rol]}</p>
+                <p className="truncate text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.85)" }}>
+                  {nombre}
+                </p>
+                <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  {roleLabel[rol]}
+                </p>
               </div>
             </div>
           )}
