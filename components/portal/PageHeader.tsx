@@ -1,23 +1,27 @@
 type PageHeaderProps = {
   eyebrow?: string
   title: string
-  description: string
+  description?: string
   actions?: React.ReactNode
 }
 
 export default function PageHeader({ eyebrow, title, description, actions }: PageHeaderProps) {
   return (
-    <header className="flex items-start justify-between gap-4">
-      <div className="space-y-1">
+    <div className="flex items-end justify-between gap-4">
+      <div>
         {eyebrow && (
-          <p className="text-[11px] font-bold uppercase tracking-[1px] text-[#F5853F]">
+          <p className="text-[10.5px] font-bold uppercase tracking-[1.5px]" style={{ color: "#F5853F" }}>
             {eyebrow}
           </p>
         )}
-        <h1 className="text-[24px] font-bold tracking-tight text-[#1a1a1a]">{title}</h1>
-        <p className="text-[14px] text-[#64748b]">{description}</p>
+        <h1 className="mt-0.5 text-[26px] font-bold leading-tight" style={{ color: "#130303" }}>
+          {title}
+        </h1>
+        {description && (
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
+        )}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
-    </header>
+    </div>
   )
 }
