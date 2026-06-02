@@ -19,10 +19,10 @@ export default async function PortalLayout({
   const empresa = session.user.empresa as string | undefined
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f6f6f6]">
+    <div className="flex h-screen overflow-hidden" style={{ background: "#f5f6f8" }}>
       <Sidebar rol={rol} nombre={nombre} empresa={empresa} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 shrink-0 items-center border-b border-[#f0f0f0] bg-white px-8 gap-3">
+        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200/70 bg-white px-8">
           <div className="flex-1">
             {rol === "SUPERADMIN" && <SuperadminSearchBar />}
             {rol === "RH" && <RhSearchBar />}
@@ -32,12 +32,12 @@ export default async function PortalLayout({
             type="button"
             aria-label="Notificaciones"
             title="Próximamente: Notificaciones"
-            className="relative flex size-9 items-center justify-center rounded-lg border border-[#e2e8f0] bg-white cursor-default"
+            className="relative flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-white cursor-default hover:bg-slate-50"
           >
-            <Bell size={16} strokeWidth={1.8} className="text-[#64748b]" />
+            <Bell size={16} strokeWidth={1.8} className="text-slate-400" />
           </button>
         </header>
-        <main className="flex-1 overflow-y-auto py-7 px-8">
+        <main className="flex-1 overflow-y-auto px-8 py-7">
           {children}
         </main>
       </div>

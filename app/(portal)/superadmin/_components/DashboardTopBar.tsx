@@ -20,7 +20,7 @@ export function DashboardTopBar({ nombre }: DashboardTopBarProps) {
           Bienvenido, {nombre}
         </h1>
       </div>
-      <Badge className="gap-1.5 bg-[#E8761A] px-3 py-1 text-white hover:bg-[#C45F0A]">
+      <Badge className="gap-1.5 bg-[#F5853F] px-3 py-1 text-white hover:bg-[#D96B20]">
         <span className="size-1.5 animate-pulse rounded-full bg-white" />
         SUPERADMIN
       </Badge>

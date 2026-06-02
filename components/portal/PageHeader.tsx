@@ -10,7 +10,7 @@ export default function PageHeader({ eyebrow, title, description, actions }: Pag
     <header className="flex items-start justify-between gap-4">
       <div className="space-y-1">
         {eyebrow && (
-          <p className="text-[11px] font-bold uppercase tracking-[1px] text-[#E8761A]">
+          <p className="text-[11px] font-bold uppercase tracking-[1px] text-[#F5853F]">
             {eyebrow}
           </p>
         )}

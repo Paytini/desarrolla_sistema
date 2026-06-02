@@ -99,7 +99,7 @@ export default async function SuperAdminIntegracionPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <Plug size={16} className="text-[#E8761A]" />
+            <Plug size={16} className="text-[#F5853F]" />
             <CardTitle className="text-[15px]">Estado del bridge</CardTitle>
           </div>
           <CardDescription>

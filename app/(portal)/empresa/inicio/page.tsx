@@ -10,7 +10,7 @@ function RingChart({ pct }: { pct: number }) {
   const r = 38
   const circ = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 80 ? "#E8761A" : pct >= 50 ? "#f59e0b" : "#f43f5e"
+  const color = pct >= 80 ? "#F5853F" : pct >= 50 ? "#f59e0b" : "#f43f5e"
   return (
     <svg width={96} height={96} viewBox="0 0 96 96" aria-hidden="true">
       <circle cx={48} cy={48} r={r} fill="none" stroke="#e2e8f0" strokeWidth={9} />
@@ -47,7 +47,7 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3.5 transition hover:border-[#E8761A]/30 hover:shadow-sm"
+      className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3.5 transition hover:border-[#F5853F]/30 hover:shadow-sm"
     >
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
         <Icon size={15} strokeWidth={2} />
@@ -128,19 +128,19 @@ export default async function EmpresaInicio() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
         <div className="grid gap-3 sm:grid-cols-2">
-          <QuickLink href="/empresa/empleados" label="Gestión de empleados" Icon={Users} iconCls="bg-[#fff5ed] text-[#E8761A]" />
-          <QuickLink href="/empresa/asignaciones" label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#fff5ed] text-[#E8761A]" />
+          <QuickLink href="/empresa/empleados" label="Gestión de empleados" Icon={Users} iconCls="bg-[#fff2eb] text-[#F5853F]" />
+          <QuickLink href="/empresa/asignaciones" label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#fff2eb] text-[#F5853F]" />
           <QuickLink
             href="/empresa/progreso"
             label="Progreso y trayectorias"
             Icon={BarChart3}
-            iconCls="bg-[#fff5ed] text-[#E8761A]"
+            iconCls="bg-[#fff2eb] text-[#F5853F]"
           />
           <QuickLink
             href="/empresa/constancias"
             label="Constancias DC-3"
             Icon={Award}
-            iconCls="bg-[#fff5ed] text-[#E8761A]"
+            iconCls="bg-[#fff2eb] text-[#F5853F]"
           />
         </div>
 

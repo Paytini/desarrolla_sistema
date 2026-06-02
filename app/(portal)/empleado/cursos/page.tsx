@@ -33,7 +33,7 @@ function RingChart({ pct }: { pct: number }) {
   const r = 28
   const circ = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 80 ? "#E8761A" : pct >= 40 ? "#f59e0b" : "#f43f5e"
+  const color = pct >= 80 ? "#F5853F" : pct >= 40 ? "#f59e0b" : "#f43f5e"
   return (
     <svg width={72} height={72} viewBox="0 0 72 72" aria-hidden="true">
       <circle cx={36} cy={36} r={r} fill="none" stroke="#e2e8f0" strokeWidth={7} />
@@ -228,7 +228,7 @@ export default async function EmpleadoCursos() {
         {/* Avance global: inline para mostrar RingChart visible */}
         <article
           className="relative overflow-hidden rounded-xl bg-white p-5"
-          style={{ border: "1px solid #f0f0f0", borderLeft: "4px solid #E8761A" }}
+          style={{ border: "1px solid #f0f0f0", borderLeft: "4px solid #F5853F" }}
         >
           <p className="text-[11px] font-bold uppercase tracking-[0.6px] text-[#94a3b8]">
             Avance global
@@ -262,7 +262,7 @@ export default async function EmpleadoCursos() {
         <div className="rounded-xl border border-[#f0f0f0] bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#E8761A]">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#F5853F]">
                 Tu ruta de aprendizaje
               </p>
               <p className="text-sm font-bold text-[#1a1a1a]">{ruta.nombre}</p>
@@ -285,7 +285,7 @@ export default async function EmpleadoCursos() {
                         completado
                           ? "bg-[#22c55e]"
                           : enProgreso
-                          ? "bg-[#E8761A]"
+                          ? "bg-[#F5853F]"
                           : "bg-[#e2e8f0]"
                       }`}
                     >
@@ -296,7 +296,7 @@ export default async function EmpleadoCursos() {
                         completado
                           ? "text-[#1a1a1a]"
                           : enProgreso
-                          ? "text-[#E8761A]"
+                          ? "text-[#F5853F]"
                           : "text-[#94a3b8]"
                       }`}
                     >
@@ -338,7 +338,7 @@ export default async function EmpleadoCursos() {
             const enProgreso = !curso.completado && curso.progreso_pct > 0
             const isRutaActive = rutaActiveCourseId === curso.wp_curso_id
             const barColor =
-              curso.completado || enProgreso ? "bg-[#E8761A]" : "bg-[#94a3b8]"
+              curso.completado || enProgreso ? "bg-[#F5853F]" : "bg-[#94a3b8]"
             const duracionLabel = dc3Meta?.duracion_horas
               ? `${Math.round(dc3Meta.duracion_horas)}h`
               : null
@@ -349,7 +349,7 @@ export default async function EmpleadoCursos() {
                 key={curso.id}
                 className="flex flex-col overflow-hidden rounded-xl bg-white"
                 style={{
-                  border: `1px solid ${isRutaActive ? "#E8761A" : "#f0f0f0"}`,
+                  border: `1px solid ${isRutaActive ? "#F5853F" : "#f0f0f0"}`,
                 }}
               >
                 {/* Thumbnail / placeholder */}
@@ -364,8 +364,8 @@ export default async function EmpleadoCursos() {
                     )}
                   </div>
                 ) : (
-                  <div className="relative flex h-24 items-center justify-center bg-[#fff5ed]">
-                    <span className="text-3xl font-extrabold text-[#E8761A] opacity-40">
+                  <div className="relative flex h-24 items-center justify-center bg-[#fff2eb]">
+                    <span className="text-3xl font-extrabold text-[#F5853F] opacity-40">
                       {curso.nombre_curso.charAt(0).toUpperCase()}
                     </span>
                     {duracionLabel && (
@@ -411,7 +411,7 @@ export default async function EmpleadoCursos() {
                         </span>
                       )}
                       {hasDc3 && (
-                        <span className="text-[11px] font-semibold text-[#E8761A]">
+                        <span className="text-[11px] font-semibold text-[#F5853F]">
                           🏅 DC-3
                         </span>
                       )}
@@ -453,7 +453,7 @@ export default async function EmpleadoCursos() {
                         rel="noreferrer"
                         className={`flex w-full items-center justify-center rounded-xl py-2.5 text-sm font-semibold transition ${
                           curso.completado
-                            ? "bg-[#E8761A] text-white hover:bg-[#C45F0A]"
+                            ? "bg-[#F5853F] text-white hover:bg-[#D96B20]"
                             : "bg-[#1a1a1a] text-white hover:bg-[#333]"
                         }`}
                       >
@@ -475,7 +475,7 @@ export default async function EmpleadoCursos() {
       {/* Constancias banner */}
       {cursosCompletados > 0 ? (
         <div className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-5 py-4">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff5ed] text-[#E8761A]">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-[#F5853F]">
             <Award size={16} strokeWidth={2} />
           </span>
           <div className="flex-1">
@@ -489,7 +489,7 @@ export default async function EmpleadoCursos() {
           </div>
           <a
             href="/empleado/constancias"
-            className="shrink-0 rounded-xl bg-[#E8761A] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#C45F0A]"
+            className="shrink-0 rounded-xl bg-[#F5853F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#D96B20]"
           >
             Ver constancias
           </a>

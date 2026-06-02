@@ -137,7 +137,7 @@ export default async function EmpresaConstanciasPage() {
                     key={constancia.id}
                     className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3 transition hover:bg-[#f8fafc]"
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff5ed] text-xs font-bold text-[#E8761A]">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-xs font-bold text-[#F5853F]">
                       {initials}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -167,7 +167,7 @@ export default async function EmpresaConstanciasPage() {
                         href={`/api/constancias/${constancia.id}/dc3`}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded-xl bg-[#E8761A] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#C45F0A]"
+                        className="rounded-xl bg-[#F5853F] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#D96B20]"
                       >
                         DC-3
                       </a>

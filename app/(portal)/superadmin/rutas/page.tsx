@@ -46,7 +46,7 @@ export default async function SuperadminRutasPage({ searchParams }: PageProps) {
         </div>
         <Link
           href="/superadmin/rutas/nueva"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#E8761A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#C45F0A]"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#F5853F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#D96B20]"
         >
           <Plus size={14} strokeWidth={2.5} />
           Nueva ruta
@@ -63,7 +63,7 @@ export default async function SuperadminRutasPage({ searchParams }: PageProps) {
       {/* KPI Strip */}
       <div className="grid gap-4 sm:grid-cols-2">
         {[
-          { label: "Total rutas", value: totalRutas, sub: "Plantillas de aprendizaje creadas", icon: Map, cls: "bg-[#fff5ed] text-[#E8761A]" },
+          { label: "Total rutas", value: totalRutas, sub: "Plantillas de aprendizaje creadas", icon: Map, cls: "bg-[#fff2eb] text-[#F5853F]" },
           { label: "Asignadas a empresas", value: asignadas, sub: "Con al menos una empresa asignada", icon: Map, cls: "bg-teal-50 text-teal-600" },
         ].map(({ label, value, sub, icon: Icon, cls }) => (
           <Card key={label}>
@@ -95,7 +95,7 @@ export default async function SuperadminRutasPage({ searchParams }: PageProps) {
               <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-10 text-center">
                 <Map size={28} className="mx-auto mb-2 text-slate-300" />
                 <p className="text-sm text-slate-400">No hay rutas creadas aún.</p>
-                <Link href="/superadmin/rutas/nueva" className="mt-2 inline-block text-sm font-semibold text-[#E8761A] hover:underline">
+                <Link href="/superadmin/rutas/nueva" className="mt-2 inline-block text-sm font-semibold text-[#F5853F] hover:underline">
                   Crear primera ruta →
                 </Link>
               </div>
@@ -147,7 +147,7 @@ export default async function SuperadminRutasPage({ searchParams }: PageProps) {
                             key={c.id}
                             className="flex items-center gap-1 rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-600 border border-slate-200"
                           >
-                            <span className={`inline-block size-1.5 rounded-full ${i === 0 ? "bg-green-500" : i === ruta.cursos.length - 1 ? "bg-slate-300" : "bg-[#E8761A]"}`} />
+                            <span className={`inline-block size-1.5 rounded-full ${i === 0 ? "bg-green-500" : i === ruta.cursos.length - 1 ? "bg-slate-300" : "bg-[#F5853F]"}`} />
                             {i + 1}. {c.nombre_curso}
                           </span>
                         ))}

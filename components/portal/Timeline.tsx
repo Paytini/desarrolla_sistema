@@ -11,7 +11,7 @@ type TimelineProps = {
 }
 
 const dotMap: Record<DotColor, string> = {
-  orange: "bg-[#E8761A]",
+  orange: "bg-[#F5853F]",
   green:  "bg-[#22c55e]",
   amber:  "bg-[#f59e0b]",
   red:    "bg-[#ef4444]",

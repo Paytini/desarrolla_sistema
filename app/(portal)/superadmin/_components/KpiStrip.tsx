@@ -63,7 +63,7 @@ export function KpiStrip({
         value={String(empresasActivas)}
         sub={`${totalEmpresas} registrada${totalEmpresas !== 1 ? "s" : ""} en total`}
         Icon={Building2}
-        iconCls="bg-[#fff5ed] text-[#E8761A]"
+        iconCls="bg-[#fff2eb] text-[#F5853F]"
       />
       <KpiCardItem
         label="Empleados activos"

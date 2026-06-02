@@ -28,7 +28,7 @@ function SectionCard({
     amber: "bg-amber-50 text-amber-700",
     slate: "bg-slate-50 text-slate-500",
     violet: "bg-violet-50 text-violet-700",
-    orange: "bg-[#fff5ed] text-[#C45F0A]",
+    orange: "bg-[#fff2eb] text-[#D96B20]",
   }
   return (
     <Card>
@@ -96,7 +96,7 @@ export default async function ConfiguracionPage() {
           title="Zona horaria"
           description="Usada para fechas en DC-3, reportes y auditorías."
           Icon={Clock}
-          iconCls="bg-[#fff5ed] text-[#E8761A]"
+          iconCls="bg-[#fff2eb] text-[#F5853F]"
           note={{
             tone: "amber",
             text: <>Para cambiar la zona horaria, actualiza <code className="font-mono font-semibold">PORTAL_TIME_ZONE</code> en Vercel.</>,
@@ -118,10 +118,10 @@ export default async function ConfiguracionPage() {
           title="Integración WordPress"
           description="Configuración del bridge con Tutor LMS Pro."
           Icon={Link2}
-          iconCls="bg-[#fff5ed] text-[#E8761A]"
+          iconCls="bg-[#fff2eb] text-[#F5853F]"
           note={{
             tone: "slate",
-            text: <Link href="/superadmin/integracion" className="font-semibold text-[#E8761A] hover:underline">Ver diagnóstico detallado →</Link>,
+            text: <Link href="/superadmin/integracion" className="font-semibold text-[#F5853F] hover:underline">Ver diagnóstico detallado →</Link>,
           }}
         >
           <InfoRow label="Dominio del bridge" value={bridgeBase} mono />
@@ -146,7 +146,7 @@ export default async function ConfiguracionPage() {
           <InfoRow label="Importación masiva CSV" value="Incluida" />
         </SectionCard>
 
-        <SectionCard title="Constancias DC-3" description="Motor de generación de constancias oficiales STPS." Icon={ShieldCheck} iconCls="bg-[#fff5ed] text-[#E8761A]">
+        <SectionCard title="Constancias DC-3" description="Motor de generación de constancias oficiales STPS." Icon={ShieldCheck} iconCls="bg-[#fff2eb] text-[#F5853F]">
           <InfoRow label="Generador" value="pdf-lib (portal)" />
           <InfoRow label="Plantilla" value="Oficial STPS" />
           <InfoRow label="Storage firmas" value="Vercel Blob" />

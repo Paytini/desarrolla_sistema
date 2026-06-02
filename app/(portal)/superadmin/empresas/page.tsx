@@ -81,7 +81,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
       {/* KPI Strip */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Empresas activas", value: empresasActivas, sub: `${empresas.length} registradas en total`, icon: Building2, cls: "bg-[#fff5ed] text-[#E8761A]" },
+          { label: "Empresas activas", value: empresasActivas, sub: `${empresas.length} registradas en total`, icon: Building2, cls: "bg-[#fff2eb] text-[#F5853F]" },
           { label: "Cupos vendidos", value: cuposVendidos, sub: "Capacidad comprometida total", icon: Users, cls: "bg-slate-100 text-slate-600" },
           { label: "Cupos en uso", value: `${cuposUsados} · ${occupancyPct}%`, sub: "Ocupación global de la plataforma", icon: Clock, cls: "bg-amber-50 text-amber-600" },
           { label: "Colaboradores suspendidos", value: colaboradoresSuspendidos, sub: "Sin acceso activo", icon: AlertCircle, cls: colaboradoresSuspendidos > 0 ? "bg-rose-50 text-rose-500" : "bg-slate-100 text-slate-500" },
@@ -174,7 +174,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                 <Textarea id="notas" name="notas" rows={3} placeholder="Observaciones o acuerdos comerciales…" />
               </div>
               <div>
-                <Button type="submit" className="gap-2 bg-[#E8761A] hover:bg-[#C45F0A]">
+                <Button type="submit" className="gap-2 bg-[#F5853F] hover:bg-[#D96B20]">
                   <Plus size={14} strokeWidth={2.5} />
                   Crear empresa y acceso RH
                 </Button>
@@ -221,7 +221,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                     const ocupacionPct = empresa.asientos_contratados
                       ? Math.round((empleadosActivos / empresa.asientos_contratados) * 100)
                       : 0
-                    const barColor = ocupacionPct >= 80 ? "bg-rose-400" : ocupacionPct >= 60 ? "bg-amber-400" : "bg-[#E8761A]"
+                    const barColor = ocupacionPct >= 80 ? "bg-rose-400" : ocupacionPct >= 60 ? "bg-amber-400" : "bg-[#F5853F]"
 
                     return (
                       <TableRow key={empresa.id}>
@@ -275,7 +275,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                                 variant={empresa.activo ? "destructive" : "default"}
                                 size="sm"
                                 type="submit"
-                                className={empresa.activo ? "" : "bg-[#E8761A] hover:bg-[#C45F0A]"}
+                                className={empresa.activo ? "" : "bg-[#F5853F] hover:bg-[#D96B20]"}
                               >
                                 {empresa.activo ? "Suspender" : "Reactivar"}
                               </Button>

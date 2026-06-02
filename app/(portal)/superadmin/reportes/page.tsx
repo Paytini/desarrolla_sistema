@@ -138,7 +138,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
           </p>
         </div>
         <form action={triggerGlobalLearningSyncAction}>
-          <Button type="submit" className="gap-2 bg-[#E8761A] hover:bg-[#C45F0A]">
+          <Button type="submit" className="gap-2 bg-[#F5853F] hover:bg-[#D96B20]">
             <RefreshCw size={14} strokeWidth={2} />
             Sincronizar todo
           </Button>
@@ -164,7 +164,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
       {/* KPI Strip */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Avance promedio global", value: `${averageProgress}%`, sub: "Promedio ponderado de cursos", icon: TrendingUp, cls: "bg-[#fff5ed] text-[#E8761A]" },
+          { label: "Avance promedio global", value: `${averageProgress}%`, sub: "Promedio ponderado de cursos", icon: TrendingUp, cls: "bg-[#fff2eb] text-[#F5853F]" },
           { label: "Renovaciones en 30 días", value: String(renewalsIn30Days), sub: "Empresas activas por vencer", icon: Clock, cls: "bg-amber-50 text-amber-600" },
           { label: "Empresas con error", value: String(companiesWithErrors), sub: "Requieren atención de sync", icon: Zap, cls: companiesWithErrors > 0 ? "bg-rose-50 text-rose-500" : "bg-slate-100 text-slate-500" },
           { label: "Empleados activos", value: String(totalEmpleadosActivos), sub: "Base laboral activa total", icon: Users, cls: "bg-slate-100 text-slate-600" },
@@ -200,7 +200,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
               {[
                 { label: "Vencidos", value: renewalsOverdue, cls: "bg-rose-50 text-rose-700 border-rose-200" },
                 { label: "0–7 días", value: renewalsIn7, cls: "bg-amber-50 text-amber-700 border-amber-200" },
-                { label: "8–15 días", value: renewalsIn15, cls: "bg-[#fff5ed] text-[#C45F0A] border-orange-200" },
+                { label: "8–15 días", value: renewalsIn15, cls: "bg-[#fff2eb] text-[#D96B20] border-orange-200" },
                 { label: "16–30 días", value: renewalsIn30, cls: "bg-slate-50 text-slate-600 border-slate-200" },
               ].map(({ label, value, cls }) => (
                 <div key={label} className={`rounded-lg border p-3 text-center ${cls}`}>
@@ -232,7 +232,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
                       ? "bg-rose-100 text-rose-700 hover:bg-rose-100"
                       : days <= 7
                       ? "bg-amber-100 text-amber-700 hover:bg-amber-100"
-                      : "bg-[#fff5ed] text-[#C45F0A] hover:bg-[#fff5ed]"
+                      : "bg-[#fff2eb] text-[#D96B20] hover:bg-[#fff2eb]"
                     return (
                       <TableRow key={item.empresa.id}>
                         <TableCell className="font-medium">{item.empresa.nombre}</TableCell>

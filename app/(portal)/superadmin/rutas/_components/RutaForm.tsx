@@ -95,7 +95,7 @@ export default function RutaForm({
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           required
-          className="w-full rounded-xl border border-[#e2e8f0] px-3 py-2.5 text-sm text-[#1a1a1a] outline-none focus:border-[#E8761A]"
+          className="w-full rounded-xl border border-[#e2e8f0] px-3 py-2.5 text-sm text-[#1a1a1a] outline-none focus:border-[#F5853F]"
           placeholder="Ej: Operador de planta"
         />
       </div>
@@ -110,7 +110,7 @@ export default function RutaForm({
           value={descripcion}
           onChange={(e) => setDescripcion(e.target.value)}
           rows={2}
-          className="w-full rounded-xl border border-[#e2e8f0] px-3 py-2.5 text-sm text-[#1a1a1a] outline-none focus:border-[#E8761A]"
+          className="w-full rounded-xl border border-[#e2e8f0] px-3 py-2.5 text-sm text-[#1a1a1a] outline-none focus:border-[#F5853F]"
           placeholder="Ruta para operadores en área de producción"
         />
       </div>
@@ -163,7 +163,7 @@ export default function RutaForm({
           <select
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(Number(e.target.value) || "")}
-            className="flex-1 rounded-xl border border-[#e2e8f0] px-3 py-2 text-sm text-[#1a1a1a] outline-none focus:border-[#E8761A]"
+            className="flex-1 rounded-xl border border-[#e2e8f0] px-3 py-2 text-sm text-[#1a1a1a] outline-none focus:border-[#F5853F]"
           >
             <option value="">Seleccionar curso…</option>
             {availableToAdd.map((c) => (
@@ -176,7 +176,7 @@ export default function RutaForm({
             type="button"
             onClick={addCourse}
             disabled={!selectedCourseId}
-            className="rounded-xl border border-[#E8761A] px-4 py-2 text-sm font-semibold text-[#E8761A] hover:bg-[#fff5ed] disabled:opacity-40"
+            className="rounded-xl border border-[#F5853F] px-4 py-2 text-sm font-semibold text-[#F5853F] hover:bg-[#fff2eb] disabled:opacity-40"
           >
             Agregar
           </button>
@@ -199,7 +199,7 @@ export default function RutaForm({
                 onClick={() => toggleEmpresa(e.id)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                   empresaIds.includes(e.id)
-                    ? "border border-[#E8761A] bg-[#fff5ed] text-[#E8761A]"
+                    ? "border border-[#F5853F] bg-[#fff2eb] text-[#F5853F]"
                     : "border border-transparent bg-[#f1f5f9] text-[#64748b] hover:border-[#e2e8f0]"
                 }`}
               >
@@ -219,7 +219,7 @@ export default function RutaForm({
             id="activo-toggle"
             checked={activo}
             onChange={(e) => setActivo(e.target.checked)}
-            className="size-4 accent-[#E8761A]"
+            className="size-4 accent-[#F5853F]"
           />
           <label htmlFor="activo-toggle" className="text-sm text-[#1a1a1a]">
             Ruta activa
@@ -242,7 +242,7 @@ export default function RutaForm({
         </div>
         <button
           type="submit"
-          className="rounded-xl bg-[#E8761A] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#C45F0A]"
+          className="rounded-xl bg-[#F5853F] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#D96B20]"
         >
           {submitLabel}
         </button>

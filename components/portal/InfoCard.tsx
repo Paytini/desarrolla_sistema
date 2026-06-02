@@ -14,7 +14,7 @@ type InfoCardProps = {
 
 const iconStyle: Record<Accent, string> = {
   teal:   "bg-teal-50 text-teal-600",
-  orange: "bg-[#fff5ed] text-[#E8761A]",
+  orange: "bg-[#fff2eb] text-[#F5853F]",
   amber:  "bg-amber-50 text-amber-600",
   violet: "bg-violet-50 text-violet-600",
   slate:  "bg-slate-100 text-slate-500",

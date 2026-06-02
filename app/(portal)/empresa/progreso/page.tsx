@@ -168,7 +168,7 @@ export default async function EmpresaProgresoPage() {
                   errors > 0
                     ? "bg-rose-500"
                     : avg >= 75
-                      ? "bg-[#E8761A]"
+                      ? "bg-[#F5853F]"
                       : avg > 0
                         ? "bg-amber-500"
                         : "bg-slate-300"
@@ -185,7 +185,7 @@ export default async function EmpresaProgresoPage() {
                         className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
                           errors > 0
                             ? "bg-rose-100 text-rose-700"
-                            : "bg-[#fff5ed] text-[#E8761A]"
+                            : "bg-[#fff2eb] text-[#F5853F]"
                         }`}
                       >
                         {initials}
@@ -242,8 +242,8 @@ export default async function EmpresaProgresoPage() {
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={thumb} alt="" className="h-[90px] w-full object-cover" />
                     ) : (
-                      <div className="flex h-[56px] items-center justify-center bg-[#fff5ed]">
-                        <span className="text-xl font-bold text-[#E8761A]/20">
+                      <div className="flex h-[56px] items-center justify-center bg-[#fff2eb]">
+                        <span className="text-xl font-bold text-[#F5853F]/20">
                           {course.nombre.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -257,13 +257,13 @@ export default async function EmpresaProgresoPage() {
                       </div>
                       <div className="mb-2 h-2 overflow-hidden rounded-full bg-slate-200">
                         <div
-                          className="h-full rounded-full bg-[#E8761A]"
+                          className="h-full rounded-full bg-[#F5853F]"
                           style={{ width: `${course.averageProgress}%` }}
                         />
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
                         <span>{course.assigned} asignados</span>
-                        <span className="text-[#E8761A]">{course.completed} completados</span>
+                        <span className="text-[#F5853F]">{course.completed} completados</span>
                         <span>{course.inProgress} en curso</span>
                         <span>{course.notStarted} sin iniciar</span>
                       </div>

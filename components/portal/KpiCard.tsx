@@ -11,7 +11,7 @@ type KpiCardProps = {
 }
 
 const borderMap: Record<KpiBorderColor, string> = {
-  orange:  "border-l-[#E8761A]",
+  orange:  "border-l-[#F5853F]",
   charcoal:"border-l-[#1a1a1a]",
   amber:   "border-l-[#f59e0b]",
   rose:    "border-l-[#f43f5e]",
@@ -20,7 +20,7 @@ const borderMap: Record<KpiBorderColor, string> = {
 }
 
 const iconOpacityMap: Record<KpiBorderColor, string> = {
-  orange:  "text-[#E8761A]",
+  orange:  "text-[#F5853F]",
   charcoal:"text-[#1a1a1a]",
   amber:   "text-[#f59e0b]",
   rose:    "text-[#f43f5e]",

@@ -80,7 +80,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
       {/* KPI Strip */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Usuarios RH activos", value: rhActivos, sub: "Administradores de empresa", icon: ShieldCheck, cls: "bg-[#fff5ed] text-[#E8761A]" },
+          { label: "Usuarios RH activos", value: rhActivos, sub: "Administradores de empresa", icon: ShieldCheck, cls: "bg-[#fff2eb] text-[#F5853F]" },
           { label: "Empleados activos", value: empleadosActivos, sub: "Con acceso vigente al portal", icon: Users, cls: "bg-teal-50 text-teal-600" },
           { label: "Cuentas suspendidas", value: usuariosSuspendidos, sub: "RH + empleados inhabilitados", icon: UserX, cls: usuariosSuspendidos > 0 ? "bg-rose-50 text-rose-500" : "bg-slate-100 text-slate-500" },
           { label: "Cuentas empleado", value: employeeUsers.length, sub: "Registradas en el portal", icon: Users, cls: "bg-slate-100 text-slate-600" },
@@ -199,7 +199,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
                               variant={user.activo ? "destructive" : "default"}
                               size="sm"
                               type="submit"
-                              className={user.activo ? "" : "bg-[#E8761A] hover:bg-[#C45F0A]"}
+                              className={user.activo ? "" : "bg-[#F5853F] hover:bg-[#D96B20]"}
                             >
                               {user.activo ? "Suspender" : "Reactivar"}
                             </Button>

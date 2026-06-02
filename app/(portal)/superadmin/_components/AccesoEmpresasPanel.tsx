@@ -36,7 +36,7 @@ const QUICK_LINKS: {
     label: "Empresas",
     href: "/superadmin/empresas",
     Icon: Building2,
-    iconCls: "bg-[#fff5ed] text-[#E8761A]",
+    iconCls: "bg-[#fff2eb] text-[#F5853F]",
   },
   {
     label: "Paquetes",
@@ -54,7 +54,7 @@ const QUICK_LINKS: {
     label: "Integración",
     href: "/superadmin/integracion",
     Icon: Plug,
-    iconCls: "bg-[#fff5ed] text-[#E8761A]",
+    iconCls: "bg-[#fff2eb] text-[#F5853F]",
   },
   {
     label: "Accesos",
@@ -89,7 +89,7 @@ export function AccesoEmpresasPanel({ empresas }: AccesoEmpresasPanelProps) {
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-2.5 rounded-lg p-2.5 transition hover:bg-[#fff5ed]"
+              className="flex items-center gap-2.5 rounded-lg p-2.5 transition hover:bg-[#fff2eb]"
             >
               <span
                 className={`flex size-7 shrink-0 items-center justify-center rounded-lg ${iconCls}`}
@@ -142,7 +142,7 @@ export function AccesoEmpresasPanel({ empresas }: AccesoEmpresasPanelProps) {
             <div className="text-right">
               <Link
                 href="/superadmin/empresas"
-                className="text-xs font-semibold text-[#E8761A] transition hover:text-[#C45F0A]"
+                className="text-xs font-semibold text-[#F5853F] transition hover:text-[#D96B20]"
               >
                 Ver todas →
               </Link>

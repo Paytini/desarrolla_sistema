@@ -31,17 +31,17 @@ const navSuperAdminSections: NavSection[] = [
   {
     heading: "Principal",
     items: [
-      { label: "Dashboard",  href: "/superadmin",             icon: LayoutDashboard, exact: true },
-      { label: "Empresas",   href: "/superadmin/empresas",    icon: Building2 },
+      { label: "Dashboard",  href: "/superadmin",              icon: LayoutDashboard, exact: true },
+      { label: "Empresas",   href: "/superadmin/empresas",     icon: Building2 },
     ],
   },
   {
     heading: "Operaciones",
     items: [
-      { label: "Paquetes",       href: "/superadmin/paquetes",    icon: Package },
-      { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText },
-      { label: "Reportes",       href: "/superadmin/reportes",    icon: BarChart3 },
-      { label: "Accesos",        href: "/superadmin/accesos",     icon: Users },
+      { label: "Paquetes",       href: "/superadmin/paquetes",     icon: Package },
+      { label: "Editor DC-3",    href: "/superadmin/dc3",          icon: FileText },
+      { label: "Reportes",       href: "/superadmin/reportes",     icon: BarChart3 },
+      { label: "Accesos",        href: "/superadmin/accesos",      icon: Users },
     ],
   },
   {
@@ -93,13 +93,19 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
       <div className="group relative">
         <Link
           href={item.href}
-          className={`flex items-center justify-center rounded-xl px-3 py-2.5 transition-colors ${
-            active ? "bg-[#fff5ed] text-[#C45F0A]" : "text-[#64748b] hover:bg-[#f8f8f8] hover:text-[#1a1a1a]"
+          className={`flex items-center justify-center rounded-xl px-3 py-2.5 transition-all duration-150 ${
+            active
+              ? "bg-[#F5853F]/15 text-[#F5853F]"
+              : "text-white/55 hover:bg-white/8 hover:text-white/90"
           }`}
+          style={active ? {} : undefined}
         >
           <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
         </Link>
-        <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+        {active && (
+          <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-[#F5853F]" />
+        )}
+        <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#000022] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
           {item.label}
         </span>
       </div>
@@ -110,14 +116,14 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
     <Link
       href={item.href}
       prefetch
-      className={`relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-colors ${
+      className={`relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150 ${
         active
-          ? "bg-[#fff5ed] font-semibold text-[#C45F0A]"
-          : "text-[#64748b] hover:bg-[#f8f8f8] hover:text-[#1a1a1a]"
+          ? "bg-[#F5853F]/12 text-[#F5853F]"
+          : "text-white/55 hover:bg-white/6 hover:text-white/90"
       }`}
     >
       {active && (
-        <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-sm bg-[#E8761A]" />
+        <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-[#F5853F]" />
       )}
       <Icon size={16} strokeWidth={active ? 2.2 : 1.8} className="shrink-0" />
       <span className="truncate">{item.label}</span>
@@ -160,15 +166,17 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`sticky top-0 flex h-screen shrink-0 flex-col border-r border-[#e8e8e8] bg-white transition-[width] duration-300 ease-in-out ${
+      className={`sticky top-0 flex h-screen shrink-0 flex-col transition-[width] duration-300 ease-in-out ${
         collapsed ? "w-[68px]" : "w-[240px]"
       }`}
+      style={{ background: "#000022" }}
     >
       {/* Logo area */}
       <div
-        className={`flex h-16 shrink-0 items-center border-b border-[#f0f0f0] ${
+        className={`flex h-16 shrink-0 items-center ${
           collapsed ? "justify-center px-3" : "justify-between px-5"
         }`}
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
       >
         {collapsed ? (
           <button
@@ -187,28 +195,37 @@ export default function Sidebar({
           </button>
         ) : (
           <>
-            <div className="flex flex-col gap-1">
-              <Link href={homeHref} className="block">
-                <Image
-                  src="/assets/logo_desarrolla_cropped.png"
-                  alt="Desarrolla360"
-                  width={150}
-                  height={32}
-                  className="h-8 w-auto object-contain"
-                  priority
-                />
-              </Link>
+            <Link href={homeHref} className="flex flex-col gap-1">
+              <Image
+                src="/assets/logo_desarrolla_cropped.png"
+                alt="Desarrolla360"
+                width={150}
+                height={32}
+                className="h-8 w-auto object-contain brightness-0 invert"
+                priority
+              />
               {rol === "SUPERADMIN" && (
-                <span className="inline-block w-fit rounded-full bg-[#E8761A] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.8px] text-white">
+                <span
+                  className="inline-block w-fit rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[1px] text-white/80"
+                  style={{ background: "rgba(245,133,63,0.25)", border: "1px solid rgba(245,133,63,0.4)" }}
+                >
                   SuperAdmin
                 </span>
               )}
-            </div>
+              {rol === "RH" && (
+                <span
+                  className="inline-block w-fit rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[1px] text-white/80"
+                  style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)" }}
+                >
+                  RH / Empresa
+                </span>
+              )}
+            </Link>
             <button
               type="button"
               onClick={toggle}
               aria-label="Contraer menú"
-              className="flex size-7 items-center justify-center rounded-lg text-[#64748b] transition hover:bg-[#f8f8f8] hover:text-[#1a1a1a]"
+              className="flex size-7 items-center justify-center rounded-lg text-white/35 transition hover:bg-white/8 hover:text-white/80"
             >
               <ChevronLeft size={15} strokeWidth={2} />
             </button>
@@ -217,15 +234,19 @@ export default function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-2">
+      <nav className="flex-1 overflow-y-auto py-3">
         {rol === "SUPERADMIN" ? (
           navSuperAdminSections.map((section) => (
             <div key={section.heading} className="mb-1">
               {!collapsed && (
-                <p className="mb-0.5 px-4 pt-3 text-[10px] font-bold uppercase tracking-[1.2px] text-[#aaa]">
+                <p
+                  className="mb-0.5 px-4 pt-3 text-[9.5px] font-bold uppercase tracking-[1.4px]"
+                  style={{ color: "rgba(255,255,255,0.28)" }}
+                >
                   {section.heading}
                 </p>
               )}
+              {collapsed && <div className="mx-3 my-2" style={{ height: "1px", background: "rgba(255,255,255,0.07)" }} />}
               <div className="flex flex-col gap-0.5 px-2">
                 {section.items.map((item) => (
                   <NavItemRow key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
@@ -242,8 +263,11 @@ export default function Sidebar({
         )}
       </nav>
 
-      {/* Bottom: perfil + config links for SUPERADMIN + logout + user identity */}
-      <div className="shrink-0 border-t border-[#f0f0f0] px-2 py-2">
+      {/* Bottom: perfil + config + logout + user */}
+      <div
+        className="shrink-0 px-2 py-2"
+        style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+      >
         {rol === "SUPERADMIN" && (
           <div className={`mb-1 ${collapsed ? "flex flex-col gap-0.5" : "grid grid-cols-2 gap-1"}`}>
             {collapsed ? (
@@ -255,15 +279,15 @@ export default function Sidebar({
                   <div key={href} className="group relative">
                     <Link
                       href={href}
-                      className={`flex items-center justify-center rounded-xl px-3 py-2.5 transition-colors ${
+                      className={`flex items-center justify-center rounded-xl px-3 py-2.5 transition-all duration-150 ${
                         pathname === href
-                          ? "bg-[#fff5ed] text-[#C45F0A]"
-                          : "text-[#64748b] hover:bg-[#f8f8f8] hover:text-[#1a1a1a]"
+                          ? "bg-[#F5853F]/15 text-[#F5853F]"
+                          : "text-white/55 hover:bg-white/8 hover:text-white/90"
                       }`}
                     >
                       <Icon size={16} strokeWidth={2} />
                     </Link>
-                    <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+                    <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#000022] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
                       {label}
                     </span>
                   </div>
@@ -278,10 +302,10 @@ export default function Sidebar({
                   <Link
                     key={href}
                     href={href}
-                    className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] font-medium transition ${
+                    className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] font-medium transition-all duration-150 ${
                       pathname === href
-                        ? "bg-[#fff5ed] text-[#C45F0A]"
-                        : "text-[#64748b] hover:bg-[#f8f8f8] hover:text-[#1a1a1a]"
+                        ? "bg-[#F5853F]/15 text-[#F5853F]"
+                        : "text-white/55 hover:bg-white/8 hover:text-white/90"
                     }`}
                   >
                     <Icon size={12} strokeWidth={2} />
@@ -299,12 +323,12 @@ export default function Sidebar({
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex w-full items-center justify-center rounded-xl px-3 py-2.5 text-[#64748b] transition hover:bg-rose-50 hover:text-rose-500"
+              className="flex w-full items-center justify-center rounded-xl px-3 py-2.5 text-white/40 transition-all duration-150 hover:bg-rose-500/15 hover:text-rose-400"
               aria-label="Cerrar sesión"
             >
               <LogOut size={17} strokeWidth={1.8} />
             </button>
-            <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+            <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#000022] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
               Cerrar sesión
             </span>
           </div>
@@ -312,33 +336,42 @@ export default function Sidebar({
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#64748b] transition hover:bg-rose-50 hover:text-rose-500"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-white/40 transition-all duration-150 hover:bg-rose-500/12 hover:text-rose-400"
           >
-            <LogOut size={17} strokeWidth={1.8} className="shrink-0" />
+            <LogOut size={16} strokeWidth={1.8} className="shrink-0" />
             <span>Cerrar sesión</span>
           </button>
         )}
 
         {/* User identity */}
-        <div className={`mt-2 border-t border-[#f0f0f0] pt-2.5 ${collapsed ? "flex justify-center" : "px-1"}`}>
+        <div
+          className={`mt-2 pt-2.5 ${collapsed ? "flex justify-center" : "px-1"}`}
+          style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
+        >
           {collapsed ? (
             <div className="group relative">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-[#E8761A] text-[11px] font-bold text-white">
+              <div
+                className="flex size-8 items-center justify-center rounded-lg text-[11px] font-bold text-white"
+                style={{ background: "#F5853F" }}
+              >
                 {initials}
               </div>
-              <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#1a1a1a] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+              <span className="pointer-events-none absolute left-full top-1/2 z-[9999] ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#000022] px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
                 {nombre}
-                <span className="block text-[10px] font-normal text-slate-300">{roleLabel[rol]}</span>
+                <span className="block text-[10px] font-normal text-white/50">{roleLabel[rol]}</span>
               </span>
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#E8761A] text-[11px] font-bold text-white">
+              <div
+                className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold text-white"
+                style={{ background: "#F5853F" }}
+              >
                 {initials}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-semibold text-[#1a1a1a]">{nombre}</p>
-                <p className="text-[10px] text-[#94a3b8]">{roleLabel[rol]}</p>
+                <p className="truncate text-[13px] font-semibold text-white/90">{nombre}</p>
+                <p className="text-[10px] text-white/40">{roleLabel[rol]}</p>
               </div>
             </div>
           )}

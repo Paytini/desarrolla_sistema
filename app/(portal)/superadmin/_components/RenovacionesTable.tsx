@@ -47,7 +47,7 @@ function RenewalBadge({ days }: { days: number }) {
       </Badge>
     )
   return (
-    <Badge className="bg-[#fff5ed] text-[#C45F0A] hover:bg-[#fff5ed]">
+    <Badge className="bg-[#fff2eb] text-[#D96B20] hover:bg-[#fff2eb]">
       {days}d
     </Badge>
   )
@@ -77,7 +77,7 @@ export function RenovacionesTable({ renewals }: RenovacionesTableProps) {
           {renewals.length > 5 && (
             <Link
               href="/superadmin/reportes"
-              className="text-xs font-semibold text-[#E8761A] transition hover:text-[#C45F0A]"
+              className="text-xs font-semibold text-[#F5853F] transition hover:text-[#D96B20]"
             >
               Ver todos →
             </Link>

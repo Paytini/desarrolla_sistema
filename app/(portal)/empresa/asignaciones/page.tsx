@@ -118,7 +118,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
 
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff5ed] text-xs font-bold text-[#E8761A]">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-xs font-bold text-[#F5853F]">
                         {initials}
                       </div>
                       <div className="min-w-0">
@@ -138,7 +138,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                       </span>
                       <button
                         type="submit"
-                        className="rounded-full bg-[#E8761A] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#C45F0A]"
+                        className="rounded-full bg-[#F5853F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#D96B20]"
                       >
                         Guardar
                       </button>
@@ -149,7 +149,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                     {packageCourses.map((course) => (
                       <label
                         key={`${empleado.id}-${course.wp_curso_id}`}
-                        className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-[#f0f0f0] bg-white transition hover:border-[#E8761A]/30 hover:bg-[#fff5ed]/30"
+                        className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-[#f0f0f0] bg-white transition hover:border-[#F5853F]/30 hover:bg-[#fff2eb]/30"
                       >
                         {course.portada_url ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
@@ -159,8 +159,8 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                             className="h-[75px] w-[130px] shrink-0 rounded-l-xl object-cover"
                           />
                         ) : (
-                          <div className="flex h-[60px] w-[107px] shrink-0 items-center justify-center rounded-l-xl bg-[#fff5ed]">
-                            <span className="text-lg font-bold text-[#E8761A]/30">
+                          <div className="flex h-[60px] w-[107px] shrink-0 items-center justify-center rounded-l-xl bg-[#fff2eb]">
+                            <span className="text-lg font-bold text-[#F5853F]/30">
                               {course.nombre_curso.charAt(0).toUpperCase()}
                             </span>
                           </div>
@@ -171,7 +171,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                             name="course_ids"
                             value={course.wp_curso_id}
                             defaultChecked={assignedSet.has(course.wp_curso_id)}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#E8761A]"
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#F5853F]"
                           />
                           <span className="text-sm text-slate-700">
                             {course.nombre_curso}

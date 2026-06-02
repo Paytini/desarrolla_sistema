@@ -11,7 +11,7 @@ function RingChart({ pct, label }: { pct: number; label: string }) {
   const r = 34
   const circ = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 90 ? "#f43f5e" : pct >= 70 ? "#f59e0b" : "#E8761A"
+  const color = pct >= 90 ? "#f43f5e" : pct >= 70 ? "#f59e0b" : "#F5853F"
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -56,7 +56,7 @@ function CompanyBar({
 }) {
   const pct = contratados ? Math.round((usados / contratados) * 100) : 0
   const barColor =
-    pct >= 90 ? "bg-rose-400" : pct >= 70 ? "bg-amber-400" : "bg-[#E8761A]"
+    pct >= 90 ? "bg-rose-400" : pct >= 70 ? "bg-amber-400" : "bg-[#F5853F]"
 
   return (
     <div className="space-y-1">

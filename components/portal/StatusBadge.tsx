@@ -12,7 +12,7 @@ const styles: Record<BadgeVariant, string> = {
   red:    "bg-[#fce7e7] text-[#dc2626]",
   slate:  "bg-[#f1f5f9] text-[#475569]",
   blue:   "bg-[#eff6ff] text-[#2563eb]",
-  orange: "bg-[#fff5ed] text-[#C45F0A]",
+  orange: "bg-[#fff2eb] text-[#D96B20]",
 }
 
 const dotColors: Record<BadgeVariant, string> = {
@@ -21,7 +21,7 @@ const dotColors: Record<BadgeVariant, string> = {
   red:    "bg-[#dc2626]",
   slate:  "bg-[#94a3b8]",
   blue:   "bg-[#2563eb]",
-  orange: "bg-[#E8761A]",
+  orange: "bg-[#F5853F]",
 }
 
 export default function StatusBadge({ variant, children, dot }: StatusBadgeProps) {

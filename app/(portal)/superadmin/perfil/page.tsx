@@ -64,7 +64,7 @@ export default async function PerfilPage({ searchParams }: PageProps) {
       </div>
 
       {/* Hero banner */}
-      <div className="flex items-center gap-5 rounded-xl bg-[#E8761A] px-8 py-6">
+      <div className="flex items-center gap-5 rounded-xl bg-[#F5853F] px-8 py-6">
         <div className="flex size-16 shrink-0 items-center justify-center rounded-xl border-2 border-white/30 bg-white/20 text-2xl font-bold text-white">
           {initials}
         </div>
@@ -94,12 +94,12 @@ export default async function PerfilPage({ searchParams }: PageProps) {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex flex-col items-center gap-3 pb-2">
-              <div className="flex size-20 items-center justify-center rounded-full bg-[#E8761A] text-2xl font-bold text-white">
+              <div className="flex size-20 items-center justify-center rounded-full bg-[#F5853F] text-2xl font-bold text-white">
                 {initials}
               </div>
               <div className="text-center">
                 <p className="font-semibold text-slate-950">{usuario.nombre}</p>
-                <Badge className="mt-1 bg-[#fff5ed] text-[#C45F0A] hover:bg-[#fff5ed]">SuperAdmin</Badge>
+                <Badge className="mt-1 bg-[#fff2eb] text-[#D96B20] hover:bg-[#fff2eb]">SuperAdmin</Badge>
               </div>
             </div>
             <Separator />
@@ -167,7 +167,7 @@ export default async function PerfilPage({ searchParams }: PageProps) {
                 />
               </div>
               <div className="pt-2">
-                <Button type="submit" className="gap-2 bg-[#E8761A] hover:bg-[#C45F0A]">
+                <Button type="submit" className="gap-2 bg-[#F5853F] hover:bg-[#D96B20]">
                   <KeyRound size={14} strokeWidth={2} />
                   Actualizar contraseña
                 </Button>

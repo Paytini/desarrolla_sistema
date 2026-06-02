@@ -120,7 +120,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
       {/* KPI Strip */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Paquetes registrados", value: totalPackages, sub: "Catálogo disponible", icon: Package, cls: "bg-[#fff5ed] text-[#E8761A]" },
+          { label: "Paquetes registrados", value: totalPackages, sub: "Catálogo disponible", icon: Package, cls: "bg-[#fff2eb] text-[#F5853F]" },
           { label: "Cursos definidos", value: totalCourses, sub: "Incluidos en paquetes", icon: BookOpen, cls: "bg-amber-50 text-amber-600" },
           { label: "Empresas con paquete", value: assignedCompanies, sub: "Con paquete vigente", icon: Building2, cls: "bg-teal-50 text-teal-600" },
           { label: "Con bundle privado", value: packagesWithBundle, sub: "Referencia a bundle WP", icon: Package, cls: "bg-slate-100 text-slate-600" },
@@ -184,7 +184,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                   <Input id="nombre_bundle" name="nombre_bundle" placeholder="Auto si se crea desde el portal" />
                 </div>
               </div>
-              <div className="rounded-lg border border-[#E8761A]/30 bg-[#fff5ed]/70 p-3 text-xs leading-5 text-slate-700">
+              <div className="rounded-lg border border-[#F5853F]/30 bg-[#fff2eb]/70 p-3 text-xs leading-5 text-slate-700">
                 Si dejas vacío <strong>WP Bundle ID</strong>, el portal intentará crear automáticamente un bundle privado en Tutor LMS.
               </div>
               <div className="grid gap-1.5">
@@ -196,7 +196,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 <PackageCourseSelector />
               </div>
               <div>
-                <Button type="submit" className="bg-[#E8761A] hover:bg-[#C45F0A]">
+                <Button type="submit" className="bg-[#F5853F] hover:bg-[#D96B20]">
                   Guardar paquete
                 </Button>
               </div>
@@ -272,7 +272,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                       <TableCell className="font-medium">{empresa.nombre}</TableCell>
                       <TableCell>
                         {empresa.paquetes.length > 0
-                          ? <Badge className="bg-[#fff5ed] text-[#C45F0A] hover:bg-[#fff5ed]">{activePackage}</Badge>
+                          ? <Badge className="bg-[#fff2eb] text-[#D96B20] hover:bg-[#fff2eb]">{activePackage}</Badge>
                           : <span className="text-xs text-slate-400">Sin paquete</span>
                         }
                       </TableCell>
@@ -426,7 +426,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                 </div>
                                 <FirmaInstructorUpload defaultUrl={dc3Metadata?.instructor_firma_url ?? ""} name="instructor_firma_url" />
                                 <div>
-                                  <Button size="sm" type="submit" className="bg-[#E8761A] hover:bg-[#C45F0A]">
+                                  <Button size="sm" type="submit" className="bg-[#F5853F] hover:bg-[#D96B20]">
                                     Guardar ficha DC-3
                                   </Button>
                                 </div>

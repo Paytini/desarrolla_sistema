@@ -17,7 +17,7 @@ export default function Toggle({ checked = false, onChange, disabled, ariaLabel 
       disabled={disabled}
       onClick={() => !disabled && onChange?.(!checked)}
       className={`relative h-5 w-9 rounded-full transition-colors ${
-        checked ? "bg-[#E8761A]" : "bg-[#e2e8f0]"
+        checked ? "bg-[#F5853F]" : "bg-[#e2e8f0]"
       } ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
     >
       <span
