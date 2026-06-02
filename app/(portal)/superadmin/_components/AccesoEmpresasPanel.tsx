@@ -9,65 +9,14 @@ import {
   ShieldCheck,
   type LucideIcon,
 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 
-const QUICK_LINKS: {
-  label: string
-  href: string
-  Icon: LucideIcon
-  iconCls: string
-}[] = [
-  {
-    label: "Empresas",
-    href: "/superadmin/empresas",
-    Icon: Building2,
-    iconCls: "bg-[#fff2eb] text-[#F5853F]",
-  },
-  {
-    label: "Paquetes",
-    href: "/superadmin/paquetes",
-    Icon: Package,
-    iconCls: "bg-violet-50 text-violet-600",
-  },
-  {
-    label: "Reportes",
-    href: "/superadmin/reportes",
-    Icon: BarChart3,
-    iconCls: "bg-amber-50 text-amber-600",
-  },
-  {
-    label: "Integración",
-    href: "/superadmin/integracion",
-    Icon: Plug,
-    iconCls: "bg-[#fff2eb] text-[#F5853F]",
-  },
-  {
-    label: "Accesos",
-    href: "/superadmin/accesos",
-    Icon: ShieldCheck,
-    iconCls: "bg-slate-100 text-slate-500",
-  },
-  {
-    label: "DC-3",
-    href: "/superadmin/dc3",
-    Icon: FileCheck,
-    iconCls: "bg-teal-50 text-teal-600",
-  },
+const QUICK_LINKS: { label: string; href: string; Icon: LucideIcon }[] = [
+  { label: "Empresas",   href: "/superadmin/empresas",    Icon: Building2 },
+  { label: "Paquetes",   href: "/superadmin/paquetes",    Icon: Package },
+  { label: "Reportes",   href: "/superadmin/reportes",    Icon: BarChart3 },
+  { label: "Integración",href: "/superadmin/integracion", Icon: Plug },
+  { label: "Accesos",    href: "/superadmin/accesos",     Icon: ShieldCheck },
+  { label: "DC-3",       href: "/superadmin/dc3",         Icon: FileCheck },
 ]
 
 interface AccesoEmpresasPanelProps {
@@ -78,78 +27,66 @@ export function AccesoEmpresasPanel({ empresas }: AccesoEmpresasPanelProps) {
   const recent = empresas.slice(0, 4)
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-[15px]">Acceso rápido</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Quick-links grid */}
-        <div className="grid grid-cols-2 gap-2">
-          {QUICK_LINKS.map(({ label, href, Icon, iconCls }) => (
+    <div className="space-y-6">
+      {/* Quick links */}
+      <div>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+          Acceso rápido
+        </p>
+        <div className="grid grid-cols-3 gap-1.5">
+          {QUICK_LINKS.map(({ label, href, Icon }) => (
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-2.5 rounded-lg p-2.5 transition hover:bg-[#fff2eb]"
+              className="group flex flex-col items-center gap-1.5 rounded-xl py-3 text-center transition"
+              style={{ background: "rgba(0,0,34,0.03)" }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(245,133,63,0.06)"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(0,0,34,0.03)"}
             >
-              <span
-                className={`flex size-7 shrink-0 items-center justify-center rounded-lg ${iconCls}`}
-              >
-                <Icon size={13} strokeWidth={2} />
+              <Icon size={15} strokeWidth={2} className="text-slate-400 group-hover:text-[#F5853F] transition-colors" />
+              <span className="text-[10px] font-semibold text-slate-500 group-hover:text-[#130303] transition-colors">
+                {label}
               </span>
-              <span className="text-sm font-medium text-slate-700">{label}</span>
             </Link>
           ))}
         </div>
+      </div>
 
-        <Separator />
+      {/* Divider */}
+      <div className="h-px bg-slate-100" />
 
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Empresas recientes
-        </p>
+      {/* Recent companies */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+            Empresas recientes
+          </p>
+          <Link href="/superadmin/empresas" className="text-[11px] font-semibold" style={{ color: "#F5853F" }}>
+            Ver todas →
+          </Link>
+        </div>
 
         {recent.length === 0 ? (
-          <p className="text-center text-xs text-slate-400">
-            Aún no hay empresas registradas.
-          </p>
+          <p className="text-[12px] text-slate-400">Aún no hay empresas registradas.</p>
         ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Empresa</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recent.map((e) => (
-                  <TableRow key={e.id}>
-                    <TableCell className="font-medium">{e.nombre}</TableCell>
-                    <TableCell>
-                      {e.activo ? (
-                        <Badge className="bg-green-50 text-green-700 hover:bg-green-50">
-                          Activa
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100">
-                          Suspendida
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="text-right">
-              <Link
-                href="/superadmin/empresas"
-                className="text-xs font-semibold text-[#F5853F] transition hover:text-[#D96B20]"
+          <div className="space-y-0">
+            {recent.map((e) => (
+              <div
+                key={e.id}
+                className="flex items-center justify-between border-b border-slate-50 py-2.5"
               >
-                Ver todas →
-              </Link>
-            </div>
-          </>
+                <p className="text-[13px] font-medium" style={{ color: "#130303" }}>{e.nombre}</p>
+                <span
+                  className="text-[10px] font-semibold"
+                  style={{ color: e.activo ? "#16a34a" : "#94a3b8" }}
+                >
+                  {e.activo ? "Activa" : "Suspendida"}
+                </span>
+              </div>
+            ))}
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

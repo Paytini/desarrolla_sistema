@@ -19,17 +19,11 @@ export default async function SuperadminDashboardPage() {
 
   const empresasActivas = empresas.filter((e) => e.activo).length
   const totalEmpleadosActivos = empresas.reduce(
-    (s, e) => s + e.empleados.filter((emp) => emp.activo).length,
-    0
+    (s, e) => s + e.empleados.filter((emp) => emp.activo).length, 0
   )
-  const totalContratados = empresas.reduce(
-    (s, e) => s + e.asientos_contratados,
-    0
-  )
+  const totalContratados = empresas.reduce((s, e) => s + e.asientos_contratados, 0)
   const totalUsados = empresas.reduce((s, e) => s + e.asientos_usados, 0)
-  const ocupacionPct = totalContratados
-    ? Math.round((totalUsados / totalContratados) * 100)
-    : 0
+  const ocupacionPct = totalContratados ? Math.round((totalUsados / totalContratados) * 100) : 0
 
   const renewals = empresas
     .filter((e) => {
@@ -40,8 +34,7 @@ export default async function SuperadminDashboardPage() {
     .map((e) => ({
       empresa: e,
       days: Math.floor(
-        (new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) /
-          DAY_MS
+        (new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) / DAY_MS
       ),
     }))
     .sort((a, b) => a.days - b.days)
@@ -49,7 +42,8 @@ export default async function SuperadminDashboardPage() {
   const nombre = session.user.nombre as string
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header + metrics */}
       <DashboardTopBar nombre={nombre} />
       <KpiStrip
         empresasActivas={empresasActivas}
@@ -60,7 +54,9 @@ export default async function SuperadminDashboardPage() {
         totalContratados={totalContratados}
         renovacionesCount={renewals.length}
       />
-      <div className="grid gap-6 xl:grid-cols-3">
+
+      {/* 3-column content — no card wrappers, just sections on white bg */}
+      <div className="grid gap-8 border-t border-slate-100 pt-8 xl:grid-cols-[1.5fr_1fr_1fr]">
         <OcupacionCard ocupacionPct={ocupacionPct} empresas={empresas} />
         <RenovacionesTable renewals={renewals} />
         <AccesoEmpresasPanel empresas={empresas} />
