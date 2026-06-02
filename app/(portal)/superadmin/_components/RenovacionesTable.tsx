@@ -23,7 +23,7 @@ import {
 
 type Renewal = {
   empresa: {
-    id: string
+    id: number
     nombre: string
     paquetes: Array<{
       paquete: { nombre: string }

@@ -71,7 +71,7 @@ const QUICK_LINKS: {
 ]
 
 interface AccesoEmpresasPanelProps {
-  empresas: Array<{ id: string; nombre: string; activo: boolean }>
+  empresas: Array<{ id: number; nombre: string; activo: boolean }>
 }
 
 export function AccesoEmpresasPanel({ empresas }: AccesoEmpresasPanelProps) {

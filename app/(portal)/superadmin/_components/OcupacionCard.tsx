@@ -81,7 +81,7 @@ function CompanyBar({
 interface OcupacionCardProps {
   ocupacionPct: number
   empresas: Array<{
-    id: string
+    id: number
     nombre: string
     asientos_usados: number
     asientos_contratados: number
