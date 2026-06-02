@@ -38,13 +38,10 @@ export function AccesoEmpresasPanel({ empresas }: AccesoEmpresasPanelProps) {
             <Link
               key={href}
               href={href}
-              className="group flex flex-col items-center gap-1.5 rounded-xl py-3 text-center transition"
-              style={{ background: "rgba(0,0,34,0.03)" }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(245,133,63,0.06)"}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "rgba(0,0,34,0.03)"}
+              className="group flex flex-col items-center gap-1.5 rounded-xl bg-slate-50 py-3 text-center transition hover:bg-[#fff2eb]"
             >
-              <Icon size={15} strokeWidth={2} className="text-slate-400 group-hover:text-[#F5853F] transition-colors" />
-              <span className="text-[10px] font-semibold text-slate-500 group-hover:text-[#130303] transition-colors">
+              <Icon size={15} strokeWidth={2} className="text-slate-400 transition-colors group-hover:text-[#F5853F]" />
+              <span className="text-[10px] font-semibold text-slate-500 transition-colors group-hover:text-[#130303]">
                 {label}
               </span>
             </Link>
