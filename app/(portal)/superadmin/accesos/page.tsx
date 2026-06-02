@@ -1,11 +1,17 @@
 import { redirect } from "next/navigation"
-import InfoCard from "@/components/portal/InfoCard"
 import PageHeader from "@/components/portal/PageHeader"
 import StatusNotice from "@/components/portal/StatusNotice"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getSuperadminAccesosSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
+import { AlertCircle, CheckCircle2, ShieldCheck, UserX, Users } from "lucide-react"
 import {
   deleteEmployeeAsSuperAdminAction,
   toggleRhUserStatusAction,
@@ -14,7 +20,7 @@ import {
 const successMessages: Record<string, string> = {
   rh_suspendido: "El usuario RH fue suspendido correctamente.",
   rh_activado: "El usuario RH fue reactivado correctamente.",
-  empleado_eliminado: "El empleado se elimino del portal desde el panel central de accesos.",
+  empleado_eliminado: "El empleado se eliminó del portal.",
 }
 
 const errorMessages: Record<string, string> = {
@@ -37,242 +43,292 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
   const { rhUsers, employeeUsers, employees } = await getSuperadminAccesosSnapshot()
 
   const employeeUserByEmail = new Map(
-    employeeUsers.map((user) => [user.email.toLowerCase(), user])
+    employeeUsers.map((u) => [u.email.toLowerCase(), u])
   )
 
-  const rhActivos = rhUsers.filter((user) => user.activo).length
-  const empleadosActivos = employees.filter((empleado) => empleado.activo).length
+  const rhActivos = rhUsers.filter((u) => u.activo).length
+  const empleadosActivos = employees.filter((e) => e.activo).length
   const usuariosSuspendidos =
-    rhUsers.filter((user) => !user.activo).length +
-    employeeUsers.filter((user) => !user.activo).length
+    rhUsers.filter((u) => !u.activo).length +
+    employeeUsers.filter((u) => !u.activo).length
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        eyebrow="SuperAdmin"
-        title="Control de accesos y permisos"
-        description="Zona para administrar usuarios RH, empleados activos y suspensiones por empresa."
-      />
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">SuperAdmin</p>
+        <h1 className="text-2xl font-bold text-slate-950">Control de accesos</h1>
+        <p className="mt-0.5 text-sm text-slate-500">
+          Administra usuarios RH, empleados activos y suspensiones por empresa.
+        </p>
+      </div>
 
-      {success ? <StatusNotice tone="success" message={successMessages[success] ?? success} /> : null}
-      {error ? <StatusNotice tone="error" message={errorMessages[error] ?? error} /> : null}
+      {/* Alerts */}
+      {success && (
+        <Alert className="border-green-200 bg-green-50 text-green-800">
+          <CheckCircle2 className="size-4" />
+          <AlertDescription>{successMessages[success] ?? success}</AlertDescription>
+        </Alert>
+      )}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="size-4" />
+          <AlertDescription>{errorMessages[error] ?? error}</AlertDescription>
+        </Alert>
+      )}
 
-      <section className="grid gap-4 lg:grid-cols-4">
-        <InfoCard
-          title="Usuarios RH activos"
-          value={String(rhActivos)}
-          description="Responsables de empresa que hoy pueden administrar su tenant."
-          accent="orange"
-        />
-        <InfoCard
-          title="Empleados activos"
-          value={String(empleadosActivos)}
-          description="Trabajadores con acceso vigente dentro del portal."
-          accent="amber"
-        />
-        <InfoCard
-          title="Usuarios suspendidos"
-          value={String(usuariosSuspendidos)}
-          description="Cuentas RH o empleado que hoy estan inhabilitadas."
-          accent="slate"
-        />
-        <InfoCard
-          title="Usuarios empleado"
-          value={String(employeeUsers.length)}
-          description="Cuentas de empleado registradas para ingreso al portal."
-          accent="slate"
-        />
-      </section>
+      {/* KPI Strip */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Usuarios RH activos", value: rhActivos, sub: "Administradores de empresa", icon: ShieldCheck, cls: "bg-[#fff5ed] text-[#E8761A]" },
+          { label: "Empleados activos", value: empleadosActivos, sub: "Con acceso vigente al portal", icon: Users, cls: "bg-teal-50 text-teal-600" },
+          { label: "Cuentas suspendidas", value: usuariosSuspendidos, sub: "RH + empleados inhabilitados", icon: UserX, cls: usuariosSuspendidos > 0 ? "bg-rose-50 text-rose-500" : "bg-slate-100 text-slate-500" },
+          { label: "Cuentas empleado", value: employeeUsers.length, sub: "Registradas en el portal", icon: Users, cls: "bg-slate-100 text-slate-600" },
+        ].map(({ label, value, sub, icon: Icon, cls }) => (
+          <Card key={label}>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-slate-500">{label}</p>
+                  <p className="mt-1 text-3xl font-bold text-slate-950">{value}</p>
+                  <p className="mt-1 text-xs text-slate-500">{sub}</p>
+                </div>
+                <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${cls}`}>
+                  <Icon size={16} strokeWidth={2} />
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-slate-950">Usuarios RH por empresa</h2>
-              <p className="text-sm leading-6 text-slate-600">
+      {/* Tabs */}
+      <Tabs defaultValue="rh">
+        <TabsList className="mb-4">
+          <TabsTrigger value="rh">
+            Usuarios RH
+            <Badge variant="secondary" className="ml-2">{rhUsers.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="empleados">
+            Empleados
+            <Badge variant="secondary" className="ml-2">{employees.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* RH Users Tab */}
+        <TabsContent value="rh">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-[15px]">Usuarios RH por empresa</CardTitle>
+              <CardDescription>
                 Pausa o reactiva accesos RH sin recorrer una lista interminable.
-              </p>
-            </div>
-            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-              {rhUsers.length} registros
-            </span>
-          </div>
-
-          <div className="max-h-[42rem] space-y-3 overflow-y-auto pr-2">
-            {rhUsers.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                Aun no hay usuarios RH registrados.
-              </div>
-            ) : null}
-
-            {rhUsers.map((user) => (
-              <div
-                key={user.id}
-                className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
-              >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="text-base font-semibold text-slate-950">{user.nombre}</h3>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          user.activo
-                            ? "bg-[#fff5ed] text-[#1a1a1a]"
-                            : "bg-slate-200 text-slate-700"
-                        }`}
-                      >
-                        {user.activo ? "Activo" : "Suspendido"}
-                      </span>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          user.empresa?.activo
-                            ? "bg-amber-100 text-amber-900"
-                            : "bg-rose-100 text-rose-900"
-                        }`}
-                      >
-                        {user.empresa?.activo ? "Empresa activa" : "Empresa suspendida"}
-                      </span>
-                    </div>
-
-                    <div className="grid gap-2 text-sm text-slate-600 2xl:grid-cols-2">
-                      <p>
-                        <span className="font-medium text-slate-800">Empresa:</span>{" "}
-                        {user.empresa?.nombre ?? "Sin empresa"}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Correo:</span> {user.email}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Ultimo acceso:</span>{" "}
-                        {formatDateTime(user.ultimo_acceso)}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Cupos usados:</span>{" "}
-                        {user.empresa ? `${user.empresa.asientos_usados}/${user.empresa.asientos_contratados}` : "N/A"}
-                      </p>
-                      <p>
-                        <span className="font-medium text-slate-800">Alta:</span>{" "}
-                        {formatDate(user.created_at)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <form action={toggleRhUserStatusAction}>
-                    <input type="hidden" name="user_id" value={user.id} />
-                    <button
-                      type="submit"
-                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                        user.activo
-                          ? "bg-[#1a1a1a] text-white hover:bg-slate-700"
-                          : "bg-violet-700 text-white hover:bg-violet-800"
-                      }`}
-                    >
-                      {user.activo ? "Suspender RH" : "Reactivar RH"}
-                    </button>
-                  </form>
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-slate-950">Empleados del portal</h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Revisa empleados por empresa y elimina accesos cuando haga falta liberar una cuenta.
-              </p>
-            </div>
-            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-              Ultimos {employees.length}
-            </span>
-          </div>
-
-          <div className="max-h-[42rem] space-y-3 overflow-y-auto pr-2">
-            {employees.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
-                Aun no hay empleados registrados.
-              </div>
-            ) : null}
-
-            {employees.map((empleado) => {
-              const employeeUser = employeeUserByEmail.get(empleado.email.toLowerCase())
-
-              return (
-                <div
-                  key={empleado.id}
-                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
-                >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="text-base font-semibold text-slate-950">
-                          {empleado.nombre} {empleado.apellido}
-                        </h3>
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            empleado.activo
-                              ? "bg-[#fff5ed] text-[#1a1a1a]"
-                              : "bg-slate-200 text-slate-700"
-                          }`}
-                        >
-                          {empleado.activo ? "Activo" : "Suspendido"}
-                        </span>
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            empleado.empresa.activo
-                              ? "bg-amber-100 text-amber-900"
-                              : "bg-rose-100 text-rose-900"
-                          }`}
-                        >
-                          {empleado.empresa.activo ? "Empresa activa" : "Empresa suspendida"}
-                        </span>
-                      </div>
-
-                      <div className="grid gap-2 text-sm text-slate-600 2xl:grid-cols-2">
-                        <p>
-                          <span className="font-medium text-slate-800">Empresa:</span>{" "}
-                          {empleado.empresa.nombre}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">Correo:</span> {empleado.email}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">Ultimo acceso:</span>{" "}
-                          {formatDateTime(employeeUser?.ultimo_acceso)}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">Usuario portal:</span>{" "}
-                          {employeeUser ? (employeeUser.activo ? "Activo" : "Suspendido") : "No encontrado"}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">WP user ID:</span>{" "}
-                          {empleado.wp_user_id ?? "Sin sincronizar"}
-                        </p>
-                        <p>
-                          <span className="font-medium text-slate-800">Alta:</span>{" "}
-                          {formatDate(empleado.created_at)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <form action={deleteEmployeeAsSuperAdminAction}>
-                      <input type="hidden" name="empleado_id" value={empleado.id} />
-                      <button
-                        type="submit"
-                        className="rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700"
-                      >
-                        Eliminar empleado
-                      </button>
-                    </form>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {rhUsers.length === 0 ? (
+                <div className="px-6 pb-6">
+                  <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-10 text-center">
+                    <ShieldCheck size={28} className="mx-auto mb-2 text-slate-300" />
+                    <p className="text-sm text-slate-400">Aún no hay usuarios RH registrados.</p>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        </article>
-      </section>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Empresa</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Último acceso</TableHead>
+                      <TableHead>Cupos</TableHead>
+                      <TableHead>Alta</TableHead>
+                      <TableHead className="text-right">Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rhUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-slate-950">{user.nombre}</p>
+                            <p className="text-xs text-slate-400">{user.email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-sm text-slate-700">{user.empresa?.nombre ?? "—"}</p>
+                            <Badge
+                              className={
+                                user.empresa?.activo
+                                  ? "mt-0.5 bg-amber-50 text-amber-700 hover:bg-amber-50"
+                                  : "mt-0.5 bg-rose-50 text-rose-700 hover:bg-rose-50"
+                              }
+                            >
+                              {user.empresa?.activo ? "Empresa activa" : "Empresa suspendida"}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              user.activo
+                                ? "bg-green-50 text-green-700 hover:bg-green-50"
+                                : "bg-slate-100 text-slate-500 hover:bg-slate-100"
+                            }
+                          >
+                            {user.activo ? "Activo" : "Suspendido"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs text-slate-500">{formatDateTime(user.ultimo_acceso)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs text-slate-500">
+                            {user.empresa
+                              ? `${user.empresa.asientos_usados}/${user.empresa.asientos_contratados}`
+                              : "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs text-slate-400">{formatDate(user.created_at)}</span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <form action={toggleRhUserStatusAction}>
+                            <input type="hidden" name="user_id" value={user.id} />
+                            <Button
+                              variant={user.activo ? "destructive" : "default"}
+                              size="sm"
+                              type="submit"
+                              className={user.activo ? "" : "bg-[#E8761A] hover:bg-[#C45F0A]"}
+                            >
+                              {user.activo ? "Suspender" : "Reactivar"}
+                            </Button>
+                          </form>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Employees Tab */}
+        <TabsContent value="empleados">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-[15px]">Empleados del portal</CardTitle>
+              <CardDescription>
+                Revisa empleados por empresa y elimina accesos cuando sea necesario.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {employees.length === 0 ? (
+                <div className="px-6 pb-6">
+                  <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-10 text-center">
+                    <Users size={28} className="mx-auto mb-2 text-slate-300" />
+                    <p className="text-sm text-slate-400">Aún no hay empleados registrados.</p>
+                  </div>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Empleado</TableHead>
+                      <TableHead>Empresa</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Portal</TableHead>
+                      <TableHead>WP user ID</TableHead>
+                      <TableHead>Último acceso</TableHead>
+                      <TableHead>Alta</TableHead>
+                      <TableHead className="text-right">Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {employees.map((empleado) => {
+                      const portalUser = employeeUserByEmail.get(empleado.email.toLowerCase())
+                      return (
+                        <TableRow key={empleado.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium text-slate-950">
+                                {empleado.nombre} {empleado.apellido}
+                              </p>
+                              <p className="text-xs text-slate-400">{empleado.email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="text-sm text-slate-700">{empleado.empresa.nombre}</p>
+                              <Badge
+                                className={
+                                  empleado.empresa.activo
+                                    ? "mt-0.5 bg-amber-50 text-amber-700 hover:bg-amber-50"
+                                    : "mt-0.5 bg-rose-50 text-rose-700 hover:bg-rose-50"
+                                }
+                              >
+                                {empleado.empresa.activo ? "Empresa activa" : "Suspendida"}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                empleado.activo
+                                  ? "bg-green-50 text-green-700 hover:bg-green-50"
+                                  : "bg-slate-100 text-slate-500 hover:bg-slate-100"
+                              }
+                            >
+                              {empleado.activo ? "Activo" : "Suspendido"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {portalUser ? (
+                              <Badge
+                                className={
+                                  portalUser.activo
+                                    ? "bg-green-50 text-green-700 hover:bg-green-50"
+                                    : "bg-slate-100 text-slate-500 hover:bg-slate-100"
+                                }
+                              >
+                                {portalUser.activo ? "Activo" : "Suspendido"}
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-slate-400">Sin cuenta</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-mono text-xs text-slate-500">
+                              {empleado.wp_user_id ?? <span className="text-slate-300">—</span>}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-xs text-slate-500">
+                              {formatDateTime(portalUser?.ultimo_acceso)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-xs text-slate-400">{formatDate(empleado.created_at)}</span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <form action={deleteEmployeeAsSuperAdminAction}>
+                              <input type="hidden" name="empleado_id" value={empleado.id} />
+                              <Button variant="destructive" size="sm" type="submit">
+                                Eliminar
+                              </Button>
+                            </form>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

@@ -1,11 +1,11 @@
-import KpiCard from "@/components/portal/KpiCard"
-import PageHeader from "@/components/portal/PageHeader"
-import StatusBadge from "@/components/portal/StatusBadge"
-import StatusNotice from "@/components/portal/StatusNotice"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
-import { Plus } from "lucide-react"
+import { CheckCircle2, Map, Plus } from "lucide-react"
 import Link from "next/link"
 
 const successMessages: Record<string, string> = {
@@ -37,109 +37,138 @@ export default async function SuperadminRutasPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="SuperAdmin / Rutas"
-        title="Rutas de aprendizaje"
-        description="Plantillas globales de secuencias de cursos"
-        actions={
-          <Link
-            href="/superadmin/rutas/nueva"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#E8761A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#C45F0A]"
-          >
-            <Plus size={14} strokeWidth={2.5} />
-            Nueva ruta
-          </Link>
-        }
-      />
-
-      {success ? (
-        <StatusNotice tone="success" message={successMessages[success] ?? success} />
-      ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <KpiCard label="Total rutas" value={String(totalRutas)} borderColor="orange" />
-        <KpiCard label="Asignadas a empresas" value={String(asignadas)} borderColor="charcoal" />
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">SuperAdmin</p>
+          <h1 className="text-2xl font-bold text-slate-950">Rutas de aprendizaje</h1>
+          <p className="mt-0.5 text-sm text-slate-500">Plantillas globales de secuencias de cursos.</p>
+        </div>
+        <Link
+          href="/superadmin/rutas/nueva"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#E8761A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#C45F0A]"
+        >
+          <Plus size={14} strokeWidth={2.5} />
+          Nueva ruta
+        </Link>
       </div>
 
-      {rutas.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-white px-4 py-12 text-center text-sm text-[#94a3b8]">
-          No hay rutas creadas aún.{" "}
-          <Link href="/superadmin/rutas/nueva" className="font-semibold text-[#E8761A] hover:underline">
-            Crear primera ruta
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {rutas.map((ruta) => {
-            const tieneEmpresas = ruta.empresas.length > 0
-            return (
-              <div
-                key={ruta.id}
-                className="rounded-xl border border-[#f0f0f0] bg-white p-4"
-                style={{
-                  borderLeft: `4px solid ${tieneEmpresas && ruta.activo ? "#E8761A" : "#1a1a1a"}`,
-                }}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="mb-1 flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#1a1a1a]">{ruta.nombre}</span>
-                      <StatusBadge variant={ruta.activo ? "green" : "slate"}>
-                        {ruta.activo ? "Activa" : "Inactiva"}
-                      </StatusBadge>
-                    </div>
-                    {ruta.descripcion && (
-                      <p className="mb-2 text-xs text-[#64748b]">{ruta.descripcion}</p>
-                    )}
-                    {tieneEmpresas ? (
-                      <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                        <span className="text-[10px] text-[#94a3b8]">Asignada a:</span>
-                        {ruta.empresas.map((e) => (
-                          <span
-                            key={e.id}
-                            className="rounded-full bg-[#f1f5f9] px-2 py-0.5 text-[10px] font-semibold text-[#1a1a1a]"
-                          >
-                            {e.nombre}
-                          </span>
-                        ))}
+      {success && (
+        <Alert className="border-green-200 bg-green-50 text-green-800">
+          <CheckCircle2 className="size-4" />
+          <AlertDescription>{successMessages[success] ?? success}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* KPI Strip */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {[
+          { label: "Total rutas", value: totalRutas, sub: "Plantillas de aprendizaje creadas", icon: Map, cls: "bg-[#fff5ed] text-[#E8761A]" },
+          { label: "Asignadas a empresas", value: asignadas, sub: "Con al menos una empresa asignada", icon: Map, cls: "bg-teal-50 text-teal-600" },
+        ].map(({ label, value, sub, icon: Icon, cls }) => (
+          <Card key={label}>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs text-slate-500">{label}</p>
+                  <p className="mt-1 text-3xl font-bold text-slate-950">{value}</p>
+                  <p className="mt-1 text-xs text-slate-500">{sub}</p>
+                </div>
+                <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${cls}`}>
+                  <Icon size={16} strokeWidth={2} />
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Routes table */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-[15px]">Rutas registradas</CardTitle>
+          <CardDescription>Secuencias de cursos ordenadas por posición.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {rutas.length === 0 ? (
+            <div className="px-6 pb-6">
+              <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-10 text-center">
+                <Map size={28} className="mx-auto mb-2 text-slate-300" />
+                <p className="text-sm text-slate-400">No hay rutas creadas aún.</p>
+                <Link href="/superadmin/rutas/nueva" className="mt-2 inline-block text-sm font-semibold text-[#E8761A] hover:underline">
+                  Crear primera ruta →
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Empresas asignadas</TableHead>
+                  <TableHead>Cursos</TableHead>
+                  <TableHead className="text-right">Acción</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rutas.map((ruta) => (
+                  <TableRow key={ruta.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-slate-950">{ruta.nombre}</p>
+                        {ruta.descripcion && (
+                          <p className="text-xs text-slate-400">{ruta.descripcion}</p>
+                        )}
                       </div>
-                    ) : (
-                      <p className="mb-2 text-[10px] text-[#94a3b8]">Sin empresas asignadas</p>
-                    )}
-                    {ruta.cursos.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={ruta.activo ? "bg-green-50 text-green-700 hover:bg-green-50" : "bg-slate-100 text-slate-500 hover:bg-slate-100"}>
+                        {ruta.activo ? "Activa" : "Inactiva"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {ruta.empresas.length === 0 ? (
+                        <span className="text-xs text-slate-400">Sin asignar</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {ruta.empresas.map((e) => (
+                            <Badge key={e.id} variant="secondary" className="text-[10px]">
+                              {e.nombre}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
                         {ruta.cursos.map((c, i) => (
                           <span
                             key={c.id}
-                            className="flex items-center gap-1 rounded-lg border border-[#f0f0f0] bg-[#f8fafc] px-2 py-0.5 text-[10px] text-[#1a1a1a]"
+                            className="flex items-center gap-1 rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-600 border border-slate-200"
                           >
-                            <span
-                              className={`inline-block size-1.5 rounded-full ${
-                                i === 0
-                                  ? "bg-[#22c55e]"
-                                  : i === ruta.cursos.length - 1
-                                  ? "bg-[#e2e8f0]"
-                                  : "bg-[#E8761A]"
-                              }`}
-                            />
+                            <span className={`inline-block size-1.5 rounded-full ${i === 0 ? "bg-green-500" : i === ruta.cursos.length - 1 ? "bg-slate-300" : "bg-[#E8761A]"}`} />
                             {i + 1}. {c.nombre_curso}
                           </span>
                         ))}
+                        {ruta.cursos.length === 0 && <span className="text-xs text-slate-400">Sin cursos</span>}
                       </div>
-                    )}
-                  </div>
-                  <Link
-                    href={`/superadmin/rutas/${ruta.id}/editar`}
-                    className="shrink-0 rounded-xl border border-[#f0f0f0] px-3 py-1.5 text-xs font-semibold text-[#1a1a1a] hover:bg-[#f8fafc]"
-                  >
-                    Editar
-                  </Link>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Link
+                        href={`/superadmin/rutas/${ruta.id}/editar`}
+                        className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent"
+                      >
+                        Editar →
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

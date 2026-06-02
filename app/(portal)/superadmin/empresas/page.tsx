@@ -1,12 +1,15 @@
-import InfoCard from "@/components/portal/InfoCard"
-import KpiCard from "@/components/portal/KpiCard"
-import PageHeader from "@/components/portal/PageHeader"
-import StatusBadge from "@/components/portal/StatusBadge"
-import StatusNotice from "@/components/portal/StatusNotice"
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
-import { AlertCircle, Building2, Clock, Download, Plus, Users } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle, Building2, CheckCircle2, Clock, Plus, Users } from "lucide-react"
 import Link from "next/link"
 import {
   createCompanyAction,
@@ -15,20 +18,19 @@ import {
 } from "./actions"
 
 const successMessages: Record<string, string> = {
-  empresa_creada: "La empresa se creo correctamente con su usuario RH inicial.",
-  empresa_suspendida: "La empresa fue suspendida. Ya no deberia operar nuevos accesos hasta reactivarse.",
+  empresa_creada: "La empresa se creó correctamente con su usuario RH inicial.",
+  empresa_suspendida: "La empresa fue suspendida.",
   empresa_activada: "La empresa fue reactivada correctamente.",
   cupos_actualizados: "Los cupos contratados se actualizaron correctamente.",
 }
 
 const errorMessages: Record<string, string> = {
   datos: "Faltan datos obligatorios para crear la empresa.",
-  email_rh: "Ese correo RH ya esta ligado a una empresa.",
+  email_rh: "Ese correo RH ya está ligado a una empresa.",
   usuario_rh: "Ese correo ya existe como usuario del portal.",
-  empresa: "No se encontro la empresa solicitada.",
-  cupos: "No fue posible actualizar cupos. Revisa que el valor sea mayor a cero.",
-  cupos_menor_uso:
-    "No puedes definir cupos contratados por debajo de los cupos actualmente usados por esa empresa.",
+  empresa: "No se encontró la empresa solicitada.",
+  cupos: "No fue posible actualizar cupos.",
+  cupos_menor_uso: "No puedes reducir cupos por debajo de los actualmente usados.",
 }
 
 type PageProps = {
@@ -42,186 +44,253 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
 
   const { empresas, paquetes } = await getSuperadminEmpresasSnapshot()
 
-  const empresasActivas = empresas.filter((empresa) => empresa.activo).length
-  const cuposVendidos = empresas.reduce(
-    (total, empresa) => total + empresa.asientos_contratados,
-    0
-  )
-  const cuposUsados = empresas.reduce((total, empresa) => total + empresa.asientos_usados, 0)
+  const empresasActivas = empresas.filter((e) => e.activo).length
+  const cuposVendidos = empresas.reduce((t, e) => t + e.asientos_contratados, 0)
+  const cuposUsados = empresas.reduce((t, e) => t + e.asientos_usados, 0)
   const colaboradoresSuspendidos = empresas.reduce(
-    (total, empresa) => total + empresa.empleados.filter((empleado) => !empleado.activo).length,
+    (t, e) => t + e.empleados.filter((emp) => !emp.activo).length,
     0
   )
   const occupancyPct = cuposVendidos ? Math.round((cuposUsados / cuposVendidos) * 100) : 0
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Administración"
-        title="Empresas clientes"
-        description="Gestiona las organizaciones activas en la plataforma"
-        actions={
-          <>
-            <button className="inline-flex items-center gap-1.5 rounded-lg bg-[#E8761A] px-4 py-2 text-[13.5px] font-semibold text-white transition hover:bg-[#C45F0A]">
-              <Plus size={14} strokeWidth={2.5} />
-              Nueva empresa
-            </button>
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-[#e2e8f0] bg-white px-4 py-2 text-[13.5px] font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]">
-              <Download size={14} strokeWidth={2} />
-              Exportar CSV
-            </button>
-          </>
-        }
-      />
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Administración</p>
+          <h1 className="text-2xl font-bold text-slate-950">Empresas clientes</h1>
+          <p className="mt-0.5 text-sm text-slate-500">Gestiona las organizaciones activas en la plataforma.</p>
+        </div>
+      </div>
 
-      {success ? <StatusNotice tone="success" message={successMessages[success] ?? success} /> : null}
-      {error ? <StatusNotice tone="error" message={errorMessages[error] ?? error} /> : null}
+      {/* Alerts */}
+      {success && (
+        <Alert className="border-green-200 bg-green-50 text-green-800">
+          <CheckCircle2 className="size-4" />
+          <AlertDescription>{successMessages[success] ?? success}</AlertDescription>
+        </Alert>
+      )}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="size-4" />
+          <AlertDescription>{errorMessages[error] ?? error}</AlertDescription>
+        </Alert>
+      )}
 
-      {/* KPI strip */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Empresas activas" value={String(empresasActivas)} sub={`${empresas.length} registradas en total`} icon={Building2} borderColor="orange" />
-        <KpiCard label="Total cupos vendidos" value={String(cuposVendidos)} sub="Capacidad comprometida total" icon={Users} borderColor="charcoal" />
-        <KpiCard label="Cupos en uso" value={String(cuposUsados)} sub={`Ocupación global: ${occupancyPct}%`} icon={Clock} borderColor="amber" />
-        <KpiCard label="Colaboradores suspendidos" value={String(colaboradoresSuspendidos)} sub="Sin acceso activo" icon={AlertCircle} borderColor="rose" />
-      </section>
+      {/* KPI Strip */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Empresas activas", value: empresasActivas, sub: `${empresas.length} registradas en total`, icon: Building2, cls: "bg-[#fff5ed] text-[#E8761A]" },
+          { label: "Cupos vendidos", value: cuposVendidos, sub: "Capacidad comprometida total", icon: Users, cls: "bg-slate-100 text-slate-600" },
+          { label: "Cupos en uso", value: `${cuposUsados} · ${occupancyPct}%`, sub: "Ocupación global de la plataforma", icon: Clock, cls: "bg-amber-50 text-amber-600" },
+          { label: "Colaboradores suspendidos", value: colaboradoresSuspendidos, sub: "Sin acceso activo", icon: AlertCircle, cls: colaboradoresSuspendidos > 0 ? "bg-rose-50 text-rose-500" : "bg-slate-100 text-slate-500" },
+        ].map(({ label, value, sub, icon: Icon, cls }) => (
+          <Card key={label}>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-slate-500">{label}</p>
+                  <p className="mt-1 text-3xl font-bold text-slate-950">{value}</p>
+                  <p className="mt-1 text-xs text-slate-500">{sub}</p>
+                </div>
+                <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${cls}`}>
+                  <Icon size={16} strokeWidth={2} />
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_1.35fr]">
+      {/* Main content */}
+      <div className="grid gap-6 xl:grid-cols-[1fr_1.4fr]">
         {/* Alta de empresa */}
-        <article className="rounded-xl border border-[#f0f0f0] bg-white p-6">
-          <h2 className="mb-1 text-[15px] font-bold text-[#1a1a1a]">Alta de empresa</h2>
-          <p className="mb-5 text-sm text-[#64748b]">Crea la empresa, su usuario RH primario y opcionalmente asigna el paquete inicial.</p>
-          <form action={createCompanyAction} className="grid gap-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Nombre de la empresa</span>
-                <input name="nombre" required className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-              </label>
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Correo RH</span>
-                <input name="email_rh" type="email" required className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-              </label>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Nombre responsable RH</span>
-                <input name="nombre_rh" required className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-              </label>
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Password temporal RH</span>
-                <input name="password_rh" type="password" minLength={8} required className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-              </label>
-            </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Teléfono</span>
-                <input name="telefono" className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-              </label>
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">RFC</span>
-                <input name="rfc" className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-              </label>
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Cupos contratados</span>
-                <input name="asientos_contratados" type="number" min={1} defaultValue={25} required className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-              </label>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Paquete inicial</span>
-                <select name="paquete_id" defaultValue="" className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]">
-                  <option value="">Sin asignar todavía</option>
-                  {paquetes.map((paquete) => (
-                    <option key={paquete.id} value={paquete.id}>{paquete.nombre}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-1.5 text-sm">
-                <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Vigencia del paquete</span>
-                <input name="fecha_vencimiento" type="date" className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-              </label>
-            </div>
-            <label className="grid gap-1.5 text-sm">
-              <span className="font-semibold uppercase tracking-[0.5px] text-[10.5px] text-[#64748b]">Notas internas</span>
-              <textarea name="notas" rows={3} className="rounded-lg border border-[#e2e8f0] px-3 py-2.5 text-[13.5px] outline-none transition focus:border-[#E8761A]" />
-            </label>
-            <button type="submit" className="inline-flex w-fit items-center gap-2 rounded-lg bg-[#E8761A] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#C45F0A]">
-              <Plus size={14} strokeWidth={2.5} />
-              Crear empresa y acceso RH
-            </button>
-          </form>
-        </article>
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-[15px]">Alta de empresa</CardTitle>
+            <CardDescription>
+              Crea la empresa, su usuario RH primario y opcionalmente asigna el paquete inicial.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form action={createCompanyAction} className="grid gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="nombre" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nombre de la empresa *</Label>
+                  <Input id="nombre" name="nombre" required placeholder="Ej: TechCorp MX" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="email_rh" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Correo RH *</Label>
+                  <Input id="email_rh" name="email_rh" type="email" required placeholder="rh@empresa.com" />
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="nombre_rh" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nombre responsable RH *</Label>
+                  <Input id="nombre_rh" name="nombre_rh" required placeholder="María González" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="password_rh" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Password temporal RH *</Label>
+                  <Input id="password_rh" name="password_rh" type="password" minLength={8} required placeholder="Mín. 8 caracteres" />
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="telefono" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Teléfono</Label>
+                  <Input id="telefono" name="telefono" placeholder="55 1234 5678" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="rfc" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">RFC</Label>
+                  <Input id="rfc" name="rfc" placeholder="XAXX010101000" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="asientos_contratados" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cupos *</Label>
+                  <Input id="asientos_contratados" name="asientos_contratados" type="number" min={1} defaultValue={25} required />
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="paquete_id" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Paquete inicial</Label>
+                  <select
+                    id="paquete_id"
+                    name="paquete_id"
+                    defaultValue=""
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="">Sin asignar todavía</option>
+                    {paquetes.map((p) => (
+                      <option key={p.id} value={p.id}>{p.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="fecha_vencimiento" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Vigencia del paquete</Label>
+                  <Input id="fecha_vencimiento" name="fecha_vencimiento" type="date" />
+                </div>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="notas" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Notas internas</Label>
+                <Textarea id="notas" name="notas" rows={3} placeholder="Observaciones o acuerdos comerciales…" />
+              </div>
+              <div>
+                <Button type="submit" className="gap-2 bg-[#E8761A] hover:bg-[#C45F0A]">
+                  <Plus size={14} strokeWidth={2.5} />
+                  Crear empresa y acceso RH
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
         {/* Lista de empresas */}
-        <article className="rounded-xl border border-[#f0f0f0] bg-white p-6">
-          <h2 className="mb-1 text-[15px] font-bold text-[#1a1a1a]">Empresas registradas</h2>
-          <p className="mb-5 text-sm text-[#64748b]">Vista operativa con cupos, paquete activo y acciones rápidas.</p>
-
-          <div className="space-y-3">
-            {empresas.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#e2e8f0] bg-[#f8fafc] px-4 py-8 text-center text-sm text-[#94a3b8]">
-                Aún no hay empresas registradas.
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-[15px]">Empresas registradas</CardTitle>
+                <CardDescription>Vista operativa con cupos, paquete activo y acciones rápidas.</CardDescription>
               </div>
-            ) : null}
-
-            {empresas.map((empresa) => {
-              const rh = empresa.usuarios[0]
-              const paquete = empresa.paquetes[0]?.paquete?.nombre ?? "Sin paquete asignado"
-              const empleadosActivos = empresa.empleados.filter((e) => e.activo).length
-              const cuposDisponibles = Math.max(empresa.asientos_contratados - empleadosActivos, 0)
-              const ocupacionEmpresa = empresa.asientos_contratados
-                ? Math.round((empleadosActivos / empresa.asientos_contratados) * 100)
-                : 0
-              const barColor = ocupacionEmpresa >= 80 ? "#E8761A" : ocupacionEmpresa >= 60 ? "#f59e0b" : "#22c55e"
-
-              return (
-                <div key={empresa.id} className="rounded-xl border border-[#f0f0f0] bg-[#f8fafc] p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-[14px] font-bold text-[#1a1a1a]">{empresa.nombre}</h3>
-                        <StatusBadge variant={empresa.activo ? "green" : "slate"} dot>
-                          {empresa.activo ? "Activa" : "Suspendida"}
-                        </StatusBadge>
-                      </div>
-                      <div className="grid gap-1.5 text-[13px] text-[#64748b] md:grid-cols-2">
-                        <p><span className="font-semibold text-[#1a1a1a]">RH:</span> {rh ? `${rh.nombre} · ${rh.email}` : empresa.email_rh}</p>
-                        <p><span className="font-semibold text-[#1a1a1a]">Paquete:</span> {paquete}</p>
-                        <p><span className="font-semibold text-[#1a1a1a]">Cupos:</span> {empleadosActivos}/{empresa.asientos_contratados}</p>
-                        <p><span className="font-semibold text-[#1a1a1a]">Disponibles:</span> {cuposDisponibles}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#f0f0f0]">
-                          <div className="h-full rounded-full transition-all" style={{ width: `${ocupacionEmpresa}%`, background: barColor }} />
-                        </div>
-                        <span className="text-[11px] text-[#94a3b8]">{ocupacionEmpresa}%</span>
-                      </div>
-                      {empresa.notas ? <p className="text-[13px] text-[#64748b]">{empresa.notas}</p> : null}
-                    </div>
-
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Link href={`/superadmin/empresas/${empresa.id}`} className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]">
-                        Ver detalle →
-                      </Link>
-                      <form action={updateCompanySeatsAction} className="flex items-center gap-2">
-                        <input type="hidden" name="empresa_id" value={empresa.id} />
-                        <input name="asientos_contratados" type="number" min={Math.max(empleadosActivos, 1)} defaultValue={empresa.asientos_contratados} className="w-20 rounded-lg border border-[#e2e8f0] px-2.5 py-1.5 text-[13px] outline-none transition focus:border-[#E8761A]" />
-                        <button type="submit" className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[13px] font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]">
-                          Actualizar cupos
-                        </button>
-                      </form>
-                      <form action={toggleCompanyStatusAction}>
-                        <input type="hidden" name="empresa_id" value={empresa.id} />
-                        <button type="submit" className={`rounded-lg px-3 py-1.5 text-[13px] font-semibold transition ${empresa.activo ? "bg-[#1a1a1a] text-white hover:bg-[#333]" : "bg-[#E8761A] text-white hover:bg-[#C45F0A]"}`}>
-                          {empresa.activo ? "Suspender" : "Reactivar"}
-                        </button>
-                      </form>
-                    </div>
-                  </div>
+              <Badge variant="secondary">{empresas.length} total</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {empresas.length === 0 ? (
+              <div className="px-6 pb-6">
+                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-10 text-center">
+                  <Building2 size={28} className="mx-auto mb-2 text-slate-300" />
+                  <p className="text-sm text-slate-400">Aún no hay empresas registradas.</p>
                 </div>
-              )
-            })}
-          </div>
-        </article>
-      </section>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Empresa</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Cupos</TableHead>
+                    <TableHead>Paquete</TableHead>
+                    <TableHead>Alta</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {empresas.map((empresa) => {
+                    const paquete = empresa.paquetes[0]?.paquete?.nombre ?? "—"
+                    const empleadosActivos = empresa.empleados.filter((e) => e.activo).length
+                    const ocupacionPct = empresa.asientos_contratados
+                      ? Math.round((empleadosActivos / empresa.asientos_contratados) * 100)
+                      : 0
+                    const barColor = ocupacionPct >= 80 ? "bg-rose-400" : ocupacionPct >= 60 ? "bg-amber-400" : "bg-[#E8761A]"
+
+                    return (
+                      <TableRow key={empresa.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-slate-950">{empresa.nombre}</p>
+                            <p className="text-xs text-slate-400">{empresa.email_rh}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={empresa.activo ? "bg-green-50 text-green-700 hover:bg-green-50" : "bg-slate-100 text-slate-500 hover:bg-slate-100"}>
+                            {empresa.activo ? "Activa" : "Suspendida"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-slate-700">{empleadosActivos}/{empresa.asientos_contratados}</p>
+                            <div className="h-1 w-16 overflow-hidden rounded-full bg-slate-100">
+                              <div className={`h-full rounded-full ${barColor}`} style={{ width: `${ocupacionPct}%` }} />
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs text-slate-500">{paquete}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-xs text-slate-400">{formatDate(empresa.created_at)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/superadmin/empresas/${empresa.id}`}
+                              className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium shadow-xs hover:bg-accent hover:text-accent-foreground"
+                            >
+                              Ver →
+                            </Link>
+                            <form action={updateCompanySeatsAction} className="flex items-center gap-1">
+                              <input type="hidden" name="empresa_id" value={empresa.id} />
+                              <Input
+                                name="asientos_contratados"
+                                type="number"
+                                min={Math.max(empleadosActivos, 1)}
+                                defaultValue={empresa.asientos_contratados}
+                                className="h-8 w-16 text-xs"
+                              />
+                              <Button variant="outline" size="sm" type="submit">↑</Button>
+                            </form>
+                            <form action={toggleCompanyStatusAction}>
+                              <input type="hidden" name="empresa_id" value={empresa.id} />
+                              <Button
+                                variant={empresa.activo ? "destructive" : "default"}
+                                size="sm"
+                                type="submit"
+                                className={empresa.activo ? "" : "bg-[#E8761A] hover:bg-[#C45F0A]"}
+                              >
+                                {empresa.activo ? "Suspender" : "Reactivar"}
+                              </Button>
+                            </form>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

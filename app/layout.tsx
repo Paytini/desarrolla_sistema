@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
-import { DM_Sans } from "next/font/google"
+import { DM_Sans, Geist } from "next/font/google"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Suspense } from "react"
 import GlobalLoadingController from "@/components/portal/GlobalLoadingController"
 import "./globals.css"
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -26,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={`h-full antialiased ${dmSans.variable}`}>
+    <html lang="es" className={cn("h-full", "antialiased", dmSans.variable, "font-sans", geist.variable)}>
       <body className={`min-h-full flex flex-col font-[family-name:var(--font-dm-sans)]`}>
         <Suspense fallback={null}>
           <GlobalLoadingController />
