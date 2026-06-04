@@ -47,7 +47,7 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3.5 transition hover:border-[#F5853F]/30 hover:shadow-sm"
+      className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3.5 transition hover:border-primary/30 hover:shadow-sm"
     >
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
         <Icon size={15} strokeWidth={2} />
