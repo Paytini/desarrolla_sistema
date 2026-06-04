@@ -36,7 +36,7 @@ export function ActivityFeed({ items }: { items: AuditoriaItem[] }) {
       <CardContent className="p-0">
         <ScrollArea className="h-[360px]">
           {items.length === 0 ? (
-            <div className="py-12 text-center text-[13px]" style={{ color: "#94a3b8" }}>
+            <div className="py-12 text-center text-[13px] text-muted-foreground">
               Sin eventos registrados aún.
             </div>
           ) : (
@@ -72,20 +72,17 @@ export function ActivityFeed({ items }: { items: AuditoriaItem[] }) {
                           {meta.label}
                         </span>
                         {/* Description */}
-                        <span className="text-[13px]" style={{ color: "#334155" }}>
+                        <span className="text-[13px] text-foreground">
                           {item.resumen}
                         </span>
                         {/* Actor */}
-                        <span className="text-[11px]" style={{ color: "#94a3b8" }}>
+                        <span className="text-[11px] text-muted-foreground">
                           · {item.actor_nombre}
                         </span>
                       </div>
 
                       {/* Timestamp */}
-                      <span
-                        className="shrink-0 font-mono text-[10.5px] tabular-nums"
-                        style={{ color: "#94a3b8" }}
-                      >
+                      <span className="shrink-0 font-mono text-[10.5px] tabular-nums text-muted-foreground">
                         {formatDateTime(item.created_at)}
                       </span>
                     </div>
