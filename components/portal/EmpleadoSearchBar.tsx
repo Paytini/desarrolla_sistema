@@ -1,168 +1,117 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useRef, useState } from "react"
+import SearchPalette from "./SearchPalette"
+import { Award, BookOpen } from "lucide-react"
 
-type CursoResult = {
-  id: number
-  nombre_curso: string
-  progreso_pct: number
-  completado: boolean
-}
-type ConstanciaResult = {
-  id: number
-  nombre_curso: string
-  folio: string
-}
-
-type SearchResults = {
-  cursos: CursoResult[]
-  constancias: ConstanciaResult[]
-}
+type CursoResult      = { id: number; nombre_curso: string; progreso_pct: number; completado: boolean }
+type ConstanciaResult = { id: number; nombre_curso: string; folio: string }
+type SearchResults    = { cursos: CursoResult[]; constancias: ConstanciaResult[] }
 
 export default function EmpleadoSearchBar() {
-  const [query, setQuery] = useState("")
-  const [results, setResults] = useState<SearchResults | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const search = useCallback(async (q: string) => {
-    if (q.length < 2) {
-      setResults(null)
-      setOpen(false)
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/internal/empleado-search?q=${encodeURIComponent(q)}`)
-      if (!res.ok) return
-      const data: SearchResults = await res.json()
-      setResults(data)
-      setOpen(true)
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    const timer = setTimeout(() => search(query), 300)
-    return () => clearTimeout(timer)
-  }, [query, search])
-
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside)
-    return () => document.removeEventListener("mousedown", onClickOutside)
-  }, [])
-
-  function handleClose() {
-    setOpen(false)
-    setQuery("")
-    setResults(null)
-  }
-
-  const hasResults =
-    results && (results.cursos.length > 0 || results.constancias.length > 0)
-
   return (
-    <div ref={containerRef} className="relative w-full max-w-lg">
-      <div className="relative">
-        <svg
-          aria-hidden
-          viewBox="0 0 24 24"
-          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.9"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => { if (hasResults) setOpen(true) }}
-          placeholder="Buscar cursos o constancias..."
-          className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-10 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-          aria-label="Buscar en el portal"
-          autoComplete="off"
-        />
-        {loading && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="size-4 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
-          </div>
-        )}
-      </div>
+    <SearchPalette<SearchResults>
+      searchUrl={(q) => `/api/internal/empleado-search?q=${encodeURIComponent(q)}`}
+      placeholder="Buscar cursos o constancias..."
+      triggerLabel="Buscar mis cursos"
+      renderGroups={(results, query, onClose) => {
+        const hasResults = results.cursos.length > 0 || results.constancias.length > 0
 
-      {open && (
-        <div className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-          {hasResults ? (
-            <>
-              {results!.cursos.length > 0 && (
-                <section>
-                  <p className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Mis cursos
-                  </p>
-                  {results!.cursos.map((c) => (
-                    <Link
-                      key={c.id}
-                      href="/empleado/cursos"
-                      onClick={handleClose}
-                      className="flex items-center justify-between gap-4 px-4 py-2.5 transition hover:bg-slate-50"
-                    >
-                      <p className="text-sm font-medium text-slate-900">{c.nombre_curso}</p>
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                          c.completado
-                            ? "bg-teal-100 text-teal-800"
-                            : c.progreso_pct > 0
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {c.completado ? "Completado" : c.progreso_pct > 0 ? `${c.progreso_pct}%` : "Sin iniciar"}
+        if (!hasResults) {
+          return (
+            <div className="px-4 py-10 text-center">
+              <p className="text-[13px] text-muted-foreground">
+                Sin resultados para{" "}
+                <span className="font-medium text-foreground">"{query}"</span>
+              </p>
+            </div>
+          )
+        }
+
+        return (
+          <div className="py-2">
+            {results.cursos.length > 0 && (
+              <section>
+                <GroupHeader icon={BookOpen} label="Mis cursos" count={results.cursos.length} />
+                {results.cursos.map((c) => (
+                  <Link
+                    key={c.id}
+                    href="/empleado/cursos"
+                    data-palette-item=""
+                    tabIndex={0}
+                    onClick={onClose}
+                    className="flex items-center justify-between gap-4 px-4 py-2.5 transition-colors hover:bg-accent focus:bg-accent focus:outline-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded bg-primary/10">
+                        <BookOpen size={11} strokeWidth={2} className="text-primary" />
                       </span>
-                    </Link>
-                  ))}
-                </section>
-              )}
+                      <p className="text-[13px] font-medium text-foreground">{c.nombre_curso}</p>
+                    </div>
+                    <ProgressChip curso={c} />
+                  </Link>
+                ))}
+              </section>
+            )}
 
-              {results!.constancias.length > 0 && (
-                <section>
-                  <p className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Constancias
-                  </p>
-                  {results!.constancias.map((c) => (
-                    <Link
-                      key={c.id}
-                      href="/empleado/constancias"
-                      onClick={handleClose}
-                      className="flex items-center justify-between gap-4 px-4 py-2.5 transition hover:bg-slate-50"
-                    >
-                      <p className="text-sm font-medium text-slate-900">{c.nombre_curso}</p>
-                      <span className="shrink-0 font-mono text-xs text-slate-400">{c.folio}</span>
-                    </Link>
-                  ))}
-                </section>
-              )}
-              <div className="h-2" />
-            </>
-          ) : (
-            <p className="px-4 py-5 text-center text-sm text-slate-500">
-              Sin resultados para &ldquo;{query}&rdquo;
-            </p>
-          )}
-        </div>
-      )}
+            {results.constancias.length > 0 && (
+              <section>
+                <GroupHeader icon={Award} label="Constancias" count={results.constancias.length} />
+                {results.constancias.map((c) => (
+                  <Link
+                    key={c.id}
+                    href="/empleado/constancias"
+                    data-palette-item=""
+                    tabIndex={0}
+                    onClick={onClose}
+                    className="flex items-center justify-between gap-4 px-4 py-2.5 transition-colors hover:bg-accent focus:bg-accent focus:outline-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded bg-green-100">
+                        <Award size={11} strokeWidth={2} className="text-green-600" />
+                      </span>
+                      <p className="text-[13px] font-medium text-foreground">{c.nombre_curso}</p>
+                    </div>
+                    <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{c.folio}</span>
+                  </Link>
+                ))}
+              </section>
+            )}
+          </div>
+        )
+      }}
+    />
+  )
+}
+
+function GroupHeader({ icon: Icon, label, count }: { icon: React.ElementType; label: string; count: number }) {
+  return (
+    <div className="flex items-center gap-2 px-4 pb-1 pt-3">
+      <Icon size={11} strokeWidth={2.5} className="text-muted-foreground/60" />
+      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">{label}</span>
+      <span className="ml-0.5 tabular-nums text-[10px] text-muted-foreground/50">({count})</span>
     </div>
+  )
+}
+
+function ProgressChip({ curso }: { curso: CursoResult }) {
+  if (curso.completado) {
+    return (
+      <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+        Completado
+      </span>
+    )
+  }
+  if (curso.progreso_pct > 0) {
+    return (
+      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+        {curso.progreso_pct}%
+      </span>
+    )
+  }
+  return (
+    <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+      Sin iniciar
+    </span>
   )
 }

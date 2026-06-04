@@ -1,162 +1,102 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useRef, useState } from "react"
+import SearchPalette from "./SearchPalette"
+import { BookOpen, Users } from "lucide-react"
 
-type EmpleadoResult = {
-  id: number
-  nombre: string
-  apellido: string
-  email: string
-  departamento: string | null
-}
-type CursoResult = { wp_curso_id: number; nombre_curso: string }
-
-type SearchResults = {
-  empleados: EmpleadoResult[]
-  cursos: CursoResult[]
-}
+type EmpleadoResult = { id: number; nombre: string; apellido: string; email: string; departamento: string | null }
+type CursoResult    = { wp_curso_id: number; nombre_curso: string }
+type SearchResults  = { empleados: EmpleadoResult[]; cursos: CursoResult[] }
 
 export default function RhSearchBar() {
-  const [query, setQuery] = useState("")
-  const [results, setResults] = useState<SearchResults | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [open, setOpen] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const search = useCallback(async (q: string) => {
-    if (q.length < 2) {
-      setResults(null)
-      setOpen(false)
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/internal/rh-search?q=${encodeURIComponent(q)}`)
-      if (!res.ok) return
-      const data: SearchResults = await res.json()
-      setResults(data)
-      setOpen(true)
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    const timer = setTimeout(() => search(query), 300)
-    return () => clearTimeout(timer)
-  }, [query, search])
-
-  useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside)
-    return () => document.removeEventListener("mousedown", onClickOutside)
-  }, [])
-
-  function handleClose() {
-    setOpen(false)
-    setQuery("")
-    setResults(null)
-  }
-
-  const hasResults =
-    results && (results.empleados.length > 0 || results.cursos.length > 0)
-
   return (
-    <div ref={containerRef} className="relative w-full max-w-lg">
-      <div className="relative">
-        <svg
-          aria-hidden
-          viewBox="0 0 24 24"
-          className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.9"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => { if (hasResults) setOpen(true) }}
-          placeholder="Buscar empleados o cursos..."
-          className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-10 text-sm shadow-sm outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-2 focus:ring-teal-100"
-          aria-label="Buscar en el portal"
-          autoComplete="off"
-        />
-        {loading && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="size-4 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+    <SearchPalette<SearchResults>
+      searchUrl={(q) => `/api/internal/rh-search?q=${encodeURIComponent(q)}`}
+      placeholder="Buscar empleados o cursos..."
+      triggerLabel="Buscar en el portal"
+      renderGroups={(results, query, onClose) => {
+        const hasResults = results.empleados.length > 0 || results.cursos.length > 0
+
+        if (!hasResults) {
+          return (
+            <div className="px-4 py-10 text-center">
+              <p className="text-[13px] text-muted-foreground">
+                Sin resultados para{" "}
+                <span className="font-medium text-foreground">"{query}"</span>
+              </p>
+            </div>
+          )
+        }
+
+        return (
+          <div className="py-2">
+            {results.empleados.length > 0 && (
+              <section>
+                <GroupHeader icon={Users} label="Empleados" count={results.empleados.length} />
+                {results.empleados.map((e) => (
+                  <Link
+                    key={e.id}
+                    href="/empresa/empleados"
+                    data-palette-item=""
+                    tabIndex={0}
+                    onClick={onClose}
+                    className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent focus:bg-accent focus:outline-none"
+                  >
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded bg-slate-100 text-[11px] font-bold text-slate-500">
+                      {e.nombre[0].toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-foreground">
+                        {e.nombre} {e.apellido}
+                      </p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {e.email}
+                        {e.departamento ? ` · ${e.departamento}` : ""}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </section>
+            )}
+
+            {results.cursos.length > 0 && (
+              <section>
+                <GroupHeader icon={BookOpen} label="Cursos del paquete" count={results.cursos.length} />
+                {results.cursos.map((c) => (
+                  <Link
+                    key={c.wp_curso_id}
+                    href="/empresa/progreso"
+                    data-palette-item=""
+                    tabIndex={0}
+                    onClick={onClose}
+                    className="flex items-center justify-between gap-4 px-4 py-2.5 transition-colors hover:bg-accent focus:bg-accent focus:outline-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded bg-primary/10">
+                        <BookOpen size={11} strokeWidth={2} className="text-primary" />
+                      </span>
+                      <p className="text-[13px] font-medium text-foreground">{c.nombre_curso}</p>
+                    </div>
+                    <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                      ID {c.wp_curso_id}
+                    </span>
+                  </Link>
+                ))}
+              </section>
+            )}
           </div>
-        )}
-      </div>
+        )
+      }}
+    />
+  )
+}
 
-      {open && (
-        <div className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-          {hasResults ? (
-            <>
-              {results!.empleados.length > 0 && (
-                <section>
-                  <p className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Empleados
-                  </p>
-                  {results!.empleados.map((e) => (
-                    <Link
-                      key={e.id}
-                      href="/empresa/empleados"
-                      onClick={handleClose}
-                      className="flex items-center justify-between gap-4 px-4 py-2.5 transition hover:bg-slate-50"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-900">
-                          {e.nombre} {e.apellido}
-                        </p>
-                        <p className="truncate text-xs text-slate-500">
-                          {e.email}
-                          {e.departamento ? ` · ${e.departamento}` : ""}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                </section>
-              )}
-
-              {results!.cursos.length > 0 && (
-                <section>
-                  <p className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Cursos del paquete
-                  </p>
-                  {results!.cursos.map((c) => (
-                    <Link
-                      key={c.wp_curso_id}
-                      href="/empresa/progreso"
-                      onClick={handleClose}
-                      className="flex items-center justify-between px-4 py-2.5 transition hover:bg-slate-50"
-                    >
-                      <p className="text-sm font-medium text-slate-900">{c.nombre_curso}</p>
-                      <span className="shrink-0 text-xs text-slate-400">ID: {c.wp_curso_id}</span>
-                    </Link>
-                  ))}
-                </section>
-              )}
-              <div className="h-2" />
-            </>
-          ) : (
-            <p className="px-4 py-5 text-center text-sm text-slate-500">
-              Sin resultados para &ldquo;{query}&rdquo;
-            </p>
-          )}
-        </div>
-      )}
+function GroupHeader({ icon: Icon, label, count }: { icon: React.ElementType; label: string; count: number }) {
+  return (
+    <div className="flex items-center gap-2 px-4 pb-1 pt-3">
+      <Icon size={11} strokeWidth={2.5} className="text-muted-foreground/60" />
+      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">{label}</span>
+      <span className="ml-0.5 tabular-nums text-[10px] text-muted-foreground/50">({count})</span>
     </div>
   )
 }
