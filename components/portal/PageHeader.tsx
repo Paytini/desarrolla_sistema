@@ -10,15 +10,15 @@ export default function PageHeader({ eyebrow, title, description, actions }: Pag
     <div className="flex items-end justify-between gap-4">
       <div>
         {eyebrow && (
-          <p className="text-[10.5px] font-bold uppercase tracking-[1.5px]" style={{ color: "#F5853F" }}>
+          <p className="text-[10.5px] font-bold uppercase tracking-[1.5px] text-primary">
             {eyebrow}
           </p>
         )}
-        <h1 className="mt-0.5 text-[26px] font-bold leading-tight" style={{ color: "#130303" }}>
+        <h1 className="mt-0.5 text-[26px] font-bold leading-tight text-foreground">
           {title}
         </h1>
         {description && (
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
