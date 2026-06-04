@@ -215,20 +215,12 @@ export default function Sidebar({
             <>
               <Link href={homeHref} className="flex min-w-0 items-center gap-2.5 px-1">
                 <Image
-                  src="/assets/logo_corta.png"
+                  src="/assets/logo_desarrolla_cropped.png"
                   alt="D360"
-                  width={28}
-                  height={28}
-                  className="size-[28px] shrink-0 object-contain"
+                  width={108}
+                  height={108}
+                  className="size-[108px] shrink-0 object-contain"
                 />
-                <div className="min-w-0">
-                  <p className="truncate text-[13px] font-bold leading-tight text-foreground">
-                    Desarrolla360
-                  </p>
-                  <p className="text-[10px] font-medium leading-tight text-primary">
-                    {roleLabel[rol]}
-                  </p>
-                </div>
               </Link>
               <Button
                 type="button"

@@ -2,20 +2,14 @@ import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  AlertCircle,
-  Building2,
-  CheckCircle2,
-  Clock,
-  Plus,
-  Users,
-} from "lucide-react"
+import { StatCard } from "@/components/superadmin/StatCard"
+import { PanelBox } from "@/components/superadmin/PanelBox"
+import { AlertCircle, Building2, CheckCircle2, ExternalLink, Plus } from "lucide-react"
 import Link from "next/link"
 import {
   createCompanyAction,
@@ -24,18 +18,18 @@ import {
 } from "./actions"
 
 const successMessages: Record<string, string> = {
-  empresa_creada: "Empresa creada correctamente con su usuario RH inicial.",
+  empresa_creada:     "Empresa creada correctamente con su usuario RH inicial.",
   empresa_suspendida: "Empresa suspendida.",
-  empresa_activada: "Empresa reactivada correctamente.",
+  empresa_activada:   "Empresa reactivada correctamente.",
   cupos_actualizados: "Cupos actualizados correctamente.",
 }
 const errorMessages: Record<string, string> = {
-  datos: "Faltan datos obligatorios.",
-  email_rh: "Ese correo RH ya está ligado a una empresa.",
-  usuario_rh: "Ese correo ya existe como usuario del portal.",
-  empresa: "No se encontró la empresa.",
-  cupos: "No fue posible actualizar cupos.",
-  cupos_menor_uso: "No puedes reducir cupos por debajo de los actualmente usados.",
+  datos:          "Faltan datos obligatorios.",
+  email_rh:       "Ese correo RH ya está ligado a una empresa.",
+  usuario_rh:     "Ese correo ya existe como usuario del portal.",
+  empresa:        "No se encontró la empresa.",
+  cupos:          "No fue posible actualizar cupos.",
+  cupos_menor_uso:"No puedes reducir cupos por debajo de los actualmente usados.",
 }
 
 type PageProps = {
@@ -44,38 +38,49 @@ type PageProps = {
 
 export default async function EmpresasPage({ searchParams }: PageProps) {
   const params = await searchParams
-  const success = readSearchParam(params, "success")
-  const error = readSearchParam(params, "error")
+  const success      = readSearchParam(params, "success")
+  const error        = readSearchParam(params, "error")
+  const q            = readSearchParam(params, "q")?.toLowerCase() ?? ""
+  const statusFilter = readSearchParam(params, "status") ?? "all"
+
   const { empresas, paquetes } = await getSuperadminEmpresasSnapshot()
 
-  const empresasActivas = empresas.filter((e) => e.activo).length
-  const cuposVendidos = empresas.reduce((t, e) => t + e.asientos_contratados, 0)
-  const cuposUsados = empresas.reduce((t, e) => t + e.asientos_usados, 0)
-  const suspendidos = empresas.reduce((t, e) => t + e.empleados.filter((emp) => !emp.activo).length, 0)
-  const occupancyPct = cuposVendidos ? Math.round((cuposUsados / cuposVendidos) * 100) : 0
+  const empresasFiltradas = empresas.filter((e) => {
+    const matchQ =
+      q
+        ? e.nombre.toLowerCase().includes(q) ||
+          (e.rfc?.toLowerCase().includes(q) ?? false) ||
+          e.email_rh.toLowerCase().includes(q)
+        : true
+    const matchStatus =
+      statusFilter === "activa"    ? e.activo  :
+      statusFilter === "suspendida"? !e.activo :
+      true
+    return matchQ && matchStatus
+  })
 
-  const stats = [
-    { label: "Empresas activas", value: String(empresasActivas), sub: `${empresas.length} registradas`, icon: Building2, color: "#F5853F" },
-    { label: "Cupos vendidos", value: String(cuposVendidos), sub: "Capacidad comprometida", icon: Users, color: "#000022" },
-    { label: "Ocupación global", value: `${occupancyPct}%`, sub: `${cuposUsados} en uso`, icon: Clock, color: "#f59e0b" },
-    { label: "Colaboradores suspendidos", value: String(suspendidos), sub: "Sin acceso activo", icon: AlertCircle, color: suspendidos > 0 ? "#f43f5e" : "#94a3b8" },
-  ]
+  const empresasActivas = empresas.filter((e) => e.activo).length
+  const cuposVendidos   = empresas.reduce((t, e) => t + e.asientos_contratados, 0)
+  const cuposUsados     = empresas.reduce((t, e) => t + e.asientos_usados, 0)
+  const occupancyPct    = cuposVendidos ? Math.round((cuposUsados / cuposVendidos) * 100) : 0
 
   return (
-    <div className="space-y-7">
-      {/* Header */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-[10.5px] font-bold uppercase tracking-[1.5px]" style={{ color: "#F5853F" }}>
-            Administración
-          </p>
-          <h1 className="mt-0.5 text-[26px] font-bold leading-tight" style={{ color: "#130303" }}>
-            Empresas clientes
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Gestiona las organizaciones activas en la plataforma.
-          </p>
-        </div>
+    <div className="space-y-6">
+
+      {/* Page header */}
+      <div>
+        <p
+          className="text-[10px] font-bold uppercase tracking-[0.14em]"
+          style={{ color: "#94a3b8" }}
+        >
+          SuperAdmin · Administración
+        </p>
+        <h1 className="mt-0.5 text-[22px] font-semibold leading-tight" style={{ color: "#0f172a" }}>
+          Empresas clientes
+        </h1>
+        <p className="mt-0.5 text-[13px]" style={{ color: "#94a3b8" }}>
+          Gestiona las organizaciones activas en la plataforma.
+        </p>
       </div>
 
       {/* Alerts */}
@@ -92,166 +97,235 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
         </Alert>
       )}
 
-      {/* Unified stat bar */}
-      <div
-        className="grid grid-cols-2 divide-x divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white lg:grid-cols-4 lg:divide-y-0"
-      >
-        {stats.map(({ label, value, sub, icon: Icon, color }) => (
-          <div key={label} className="flex items-center gap-4 px-6 py-5">
-            <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: `${color}18` }}
-            >
-              <Icon size={18} strokeWidth={2} style={{ color }} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-              <p className="text-2xl font-bold leading-none" style={{ color: "#130303" }}>{value}</p>
-              <p className="mt-0.5 text-[11px] text-slate-400">{sub}</p>
-            </div>
-          </div>
-        ))}
+      {/* KPI row */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard
+          label="Empresas activas"
+          value={String(empresasActivas)}
+          sub={`${empresas.length} registradas`}
+        />
+        <StatCard
+          label="Cupos vendidos"
+          value={String(cuposVendidos)}
+          sub="Capacidad comprometida"
+        />
+        <StatCard
+          label="Ocupación global"
+          value={`${occupancyPct}%`}
+          sub={`${cuposUsados} en uso`}
+          alert={occupancyPct >= 90}
+        />
+        <StatCard
+          label="Paquetes activos"
+          value={String(paquetes.length)}
+          sub="En catálogo"
+        />
       </div>
 
-      {/* Content: form + table */}
-      <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-        {/* Create form */}
-        <div
-          className="rounded-2xl border border-slate-200 bg-white p-6"
-          style={{ boxShadow: "0 1px 3px rgba(0,0,34,0.04)" }}
-        >
-          <h2 className="text-[15px] font-semibold" style={{ color: "#130303" }}>Alta de empresa</h2>
-          <p className="mt-0.5 text-sm text-slate-500">Crea la empresa y su usuario RH primario.</p>
+      {/* Main grid */}
+      <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
 
-          <form action={createCompanyAction} className="mt-5 grid gap-3.5">
-            <div className="grid gap-3.5 sm:grid-cols-2">
-              <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Nombre *</Label>
-                <Input name="nombre" required placeholder="Ej: TechCorp MX" />
+        {/* ── Alta de empresa ── */}
+        <PanelBox title="Alta de empresa" description="Crea la empresa y su usuario RH primario.">
+          <form action={createCompanyAction} className="p-5">
+            <div className="grid gap-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    Nombre *
+                  </Label>
+                  <Input name="nombre" required placeholder="CEMEX S.A. de C.V." />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    Correo RH *
+                  </Label>
+                  <Input name="email_rh" type="email" required placeholder="rh@empresa.com" />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    Responsable RH *
+                  </Label>
+                  <Input name="nombre_rh" required placeholder="María González" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    Password temporal *
+                  </Label>
+                  <Input name="password_rh" type="password" minLength={8} required placeholder="Mín. 8 caracteres" />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    Teléfono
+                  </Label>
+                  <Input name="telefono" placeholder="55 1234 5678" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    RFC
+                  </Label>
+                  <Input name="rfc" placeholder="XAXX010101000" />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    Cupos *
+                  </Label>
+                  <Input name="asientos_contratados" type="number" min={1} defaultValue={25} required />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    Paquete inicial
+                  </Label>
+                  <select
+                    name="paquete_id"
+                    defaultValue=""
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="">Sin asignar</option>
+                    {paquetes.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                    Vigencia
+                  </Label>
+                  <Input name="fecha_vencimiento" type="date" />
+                </div>
               </div>
               <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Correo RH *</Label>
-                <Input name="email_rh" type="email" required placeholder="rh@empresa.com" />
+                <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
+                  Notas internas
+                </Label>
+                <Textarea name="notas" rows={2} placeholder="Observaciones o notas del contrato…" />
               </div>
-            </div>
-            <div className="grid gap-3.5 sm:grid-cols-2">
-              <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Responsable RH *</Label>
-                <Input name="nombre_rh" required placeholder="María González" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Password temporal *</Label>
-                <Input name="password_rh" type="password" minLength={8} required placeholder="Mín. 8 caracteres" />
-              </div>
-            </div>
-            <div className="grid gap-3.5 sm:grid-cols-3">
-              <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Teléfono</Label>
-                <Input name="telefono" placeholder="55 1234 5678" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">RFC</Label>
-                <Input name="rfc" placeholder="XAXX010101000" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Cupos *</Label>
-                <Input name="asientos_contratados" type="number" min={1} defaultValue={25} required />
-              </div>
-            </div>
-            <div className="grid gap-3.5 sm:grid-cols-2">
-              <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Paquete inicial</Label>
-                <select
-                  name="paquete_id"
-                  defaultValue=""
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="">Sin asignar</option>
-                  {paquetes.map((p) => (
-                    <option key={p.id} value={p.id}>{p.nombre}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Vigencia</Label>
-                <Input name="fecha_vencimiento" type="date" />
-              </div>
-            </div>
-            <div className="grid gap-1.5">
-              <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Notas internas</Label>
-              <Textarea name="notas" rows={2} placeholder="Observaciones…" />
-            </div>
-            <div className="pt-1">
-              <Button type="submit" className="w-full gap-2" style={{ background: "#F5853F" }}>
+              <Button
+                type="submit"
+                className="w-full gap-2"
+                style={{ background: "#1a4f8a", color: "#fff" }}
+              >
                 <Plus size={14} strokeWidth={2.5} />
                 Crear empresa
               </Button>
             </div>
           </form>
-        </div>
+        </PanelBox>
 
-        {/* Empresas table */}
-        <div
-          className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
-          style={{ boxShadow: "0 1px 3px rgba(0,0,34,0.04)" }}
+        {/* ── Tabla de empresas ── */}
+        <PanelBox
+          title="Empresas registradas"
+          description={`${empresasFiltradas.length} resultado${empresasFiltradas.length !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}`}
+          noPadding
+          action={
+            <form method="GET" className="flex items-center gap-2">
+              <Input
+                name="q"
+                defaultValue={q}
+                placeholder="Buscar empresa o RFC…"
+                className="h-8 w-44 text-[13px]"
+              />
+              <select
+                name="status"
+                defaultValue={statusFilter}
+                className="flex h-8 rounded-md border border-input bg-transparent px-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="all">Todos</option>
+                <option value="activa">Activas</option>
+                <option value="suspendida">Suspendidas</option>
+              </select>
+              <Button type="submit" variant="outline" size="sm" className="h-8 px-3 text-[13px]">
+                Filtrar
+              </Button>
+            </form>
+          }
         >
-          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-            <div>
-              <h2 className="text-[15px] font-semibold" style={{ color: "#130303" }}>Empresas registradas</h2>
-              <p className="text-sm text-slate-500">Vista operativa con cupos y acciones rápidas.</p>
-            </div>
-            <Badge variant="secondary">{empresas.length}</Badge>
-          </div>
-
-          {empresas.length === 0 ? (
+          {empresasFiltradas.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <Building2 size={32} className="text-slate-200" />
-              <p className="text-sm text-slate-400">Aún no hay empresas registradas.</p>
+              <Building2 size={28} style={{ color: "#e2e8f0" }} />
+              <p className="text-[13px]" style={{ color: "#94a3b8" }}>
+                {q || statusFilter !== "all"
+                  ? "Sin resultados para ese filtro."
+                  : "Aún no hay empresas registradas."}
+              </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Empresa</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Cupos</TableHead>
-                  <TableHead>Paquete</TableHead>
-                  <TableHead>Alta</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
+                <TableRow
+                  className="hover:bg-transparent"
+                  style={{ background: "#fafafa", borderBottom: "1px solid #f1f5f9" }}
+                >
+                  {["Empresa", "RFC", "Plan", "Cupos", "Alta", "Estado", ""].map((h) => (
+                    <TableHead
+                      key={h}
+                      className={h === "" ? "text-right" : ""}
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        color: "#94a3b8",
+                      }}
+                    >
+                      {h}
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {empresas.map((empresa) => {
+                {empresasFiltradas.map((empresa) => {
                   const paquete = empresa.paquetes[0]?.paquete?.nombre ?? "—"
                   const activos = empresa.empleados.filter((e) => e.activo).length
                   const pct = empresa.asientos_contratados
                     ? Math.round((activos / empresa.asientos_contratados) * 100)
                     : 0
-                  const barColor = pct >= 80 ? "#f43f5e" : pct >= 60 ? "#f59e0b" : "#F5853F"
+                  const barColor =
+                    pct >= 90 ? "#dc2626" :
+                    pct >= 70 ? "#d97706" :
+                    "#1a4f8a"
 
                   return (
-                    <TableRow key={empresa.id}>
+                    <TableRow
+                      key={empresa.id}
+                      className="h-12 transition-colors hover:bg-slate-50/60"
+                      style={{ borderBottom: "1px solid #f8fafc" }}
+                    >
                       <TableCell>
                         <div>
-                          <p className="font-medium" style={{ color: "#130303" }}>{empresa.nombre}</p>
-                          <p className="text-xs text-slate-400">{empresa.email_rh}</p>
+                          <p className="text-[13px] font-medium" style={{ color: "#0f172a" }}>
+                            {empresa.nombre}
+                          </p>
+                          <p className="text-[11px]" style={{ color: "#94a3b8" }}>
+                            {empresa.email_rh}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          className={empresa.activo
-                            ? "bg-green-50 text-green-700 hover:bg-green-50"
-                            : "bg-slate-100 text-slate-500 hover:bg-slate-100"}
-                        >
-                          {empresa.activo ? "Activa" : "Suspendida"}
-                        </Badge>
+                        <span className="font-mono text-[12px]" style={{ color: "#64748b" }}>
+                          {empresa.rfc ?? "—"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-[12px]" style={{ color: "#64748b" }}>
+                          {paquete}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          <p className="text-xs font-medium" style={{ color: "#130303" }}>
-                            {activos}/{empresa.asientos_contratados}
+                          <p className="text-[12px] font-medium" style={{ color: "#334155" }}>
+                            {activos}
+                            <span style={{ color: "#94a3b8" }}>/{empresa.asientos_contratados}</span>
                           </p>
-                          <div className="h-1 w-16 overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-1 w-14 overflow-hidden rounded-full" style={{ background: "#f1f5f9" }}>
                             <div
                               className="h-full rounded-full"
                               style={{ width: `${pct}%`, background: barColor }}
@@ -260,17 +334,41 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs text-slate-500">{paquete}</span>
+                        <span className="text-[12px]" style={{ color: "#94a3b8" }}>
+                          {formatDate(empresa.created_at)}
+                        </span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs text-slate-400">{formatDate(empresa.created_at)}</span>
+                        {empresa.activo ? (
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-semibold"
+                            style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
+                          >
+                            <span className="size-1.5 rounded-full bg-green-500" />
+                            Activa
+                          </span>
+                        ) : (
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-semibold"
+                            style={{ background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}
+                          >
+                            <span className="size-1.5 rounded-full bg-slate-300" />
+                            Suspendida
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1.5">
                           <Link
                             href={`/superadmin/empresas/${empresa.id}`}
-                            className="inline-flex h-7 items-center rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-[12px] font-medium transition-colors"
+                            style={{
+                              border: "1px solid #e2e8f0",
+                              background: "#fff",
+                              color: "#475569",
+                            }}
                           >
+                            <ExternalLink size={11} strokeWidth={2} />
                             Ver
                           </Link>
                           <form action={updateCompanySeatsAction} className="flex items-center gap-1">
@@ -280,9 +378,9 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                               type="number"
                               min={Math.max(activos, 1)}
                               defaultValue={empresa.asientos_contratados}
-                              className="h-7 w-14 text-xs"
+                              className="h-7 w-14 text-[12px]"
                             />
-                            <Button variant="outline" size="sm" type="submit" className="h-7 px-2 text-xs">
+                            <Button variant="outline" size="sm" type="submit" className="h-7 px-2 text-[12px]">
                               ↑
                             </Button>
                           </form>
@@ -291,10 +389,12 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                             <Button
                               size="sm"
                               type="submit"
-                              className="h-7 px-2.5 text-xs"
-                              style={empresa.activo
-                                ? { background: "#130303", color: "#fff" }
-                                : { background: "#F5853F", color: "#fff" }}
+                              className="h-7 px-2.5 text-[12px]"
+                              style={
+                                empresa.activo
+                                  ? { background: "#0f172a", color: "#fff" }
+                                  : { background: "#1a4f8a", color: "#fff" }
+                              }
                             >
                               {empresa.activo ? "Suspender" : "Reactivar"}
                             </Button>
@@ -307,7 +407,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
               </TableBody>
             </Table>
           )}
-        </div>
+        </PanelBox>
       </div>
     </div>
   )
