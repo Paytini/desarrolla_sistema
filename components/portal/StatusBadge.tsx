@@ -1,3 +1,6 @@
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+
 type BadgeVariant = "green" | "amber" | "red" | "slate" | "blue" | "orange"
 
 type StatusBadgeProps = {
@@ -6,33 +9,32 @@ type StatusBadgeProps = {
   dot?: boolean
 }
 
-const styles: Record<BadgeVariant, string> = {
-  green:  "bg-[#dcfce7] text-[#16a34a]",
-  amber:  "bg-[#fef3c7] text-[#d97706]",
-  red:    "bg-[#fce7e7] text-[#dc2626]",
-  slate:  "bg-[#f1f5f9] text-[#475569]",
-  blue:   "bg-[#eff6ff] text-[#2563eb]",
-  orange: "bg-[#fff2eb] text-[#D96B20]",
+const variantClasses: Record<BadgeVariant, string> = {
+  green:  "bg-green-100 text-green-700 border-green-200 hover:bg-green-100",
+  amber:  "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100",
+  red:    "bg-red-100   text-red-700   border-red-200   hover:bg-red-100",
+  slate:  "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-100",
+  blue:   "bg-blue-100  text-blue-700  border-blue-200  hover:bg-blue-100",
+  orange: "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100",
 }
 
-const dotColors: Record<BadgeVariant, string> = {
-  green:  "bg-[#16a34a]",
-  amber:  "bg-[#d97706]",
-  red:    "bg-[#dc2626]",
-  slate:  "bg-[#94a3b8]",
-  blue:   "bg-[#2563eb]",
-  orange: "bg-[#F5853F]",
+const dotClasses: Record<BadgeVariant, string> = {
+  green:  "bg-green-600",
+  amber:  "bg-amber-600",
+  red:    "bg-red-600",
+  slate:  "bg-slate-400",
+  blue:   "bg-blue-600",
+  orange: "bg-orange-500",
 }
 
 export default function StatusBadge({ variant, children, dot }: StatusBadgeProps) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${styles[variant]}`}
+    <Badge
+      variant="outline"
+      className={cn("gap-1.5 rounded-full text-[11.5px] font-semibold", variantClasses[variant])}
     >
-      {dot && (
-        <span className={`size-[5px] rounded-full ${dotColors[variant]}`} />
-      )}
+      {dot && <span className={cn("size-[5px] rounded-full", dotClasses[variant])} />}
       {children}
-    </span>
+    </Badge>
   )
 }
