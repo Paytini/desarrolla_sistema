@@ -4,16 +4,16 @@ import PackageCourseSelector from "@/components/portal/PackageCourseSelector"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { StatCard } from "@/components/superadmin/StatCard"
 import { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities, formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
-import { AlertCircle, BookOpen, Building2, CheckCircle2, Package, RotateCw } from "lucide-react"
+import { AlertCircle, CheckCircle2, Package, RotateCw } from "lucide-react"
 import {
   assignPackageToCompanyAction,
   createPackageAction,
@@ -85,8 +85,8 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
   const { paquetes, empresas, dc3MetadataByCourseId } = await getSuperadminPaquetesSnapshot()
 
-  const totalPackages = paquetes.length
-  const totalCourses = paquetes.reduce((s, p) => s + p.cursos.length, 0)
+  const totalPackages   = paquetes.length
+  const totalCourses    = paquetes.reduce((s, p) => s + p.cursos.length, 0)
   const assignedCompanies = empresas.filter((e) => e.paquetes.length > 0).length
   const packagesWithBundle = paquetes.filter((p) => p.wp_bundle_id).length
 
@@ -94,9 +94,13 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">SuperAdmin</p>
-        <h1 className="text-2xl font-bold text-slate-950">Gestión de paquetes</h1>
-        <p className="mt-0.5 text-sm text-slate-500">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+          SuperAdmin · Operaciones
+        </p>
+        <h1 className="mt-1 text-[24px] font-semibold leading-tight text-slate-950">
+          Gestión de paquetes
+        </h1>
+        <p className="mt-0.5 text-[13px] text-slate-400">
           Define paquetes con cursos de Tutor LMS, asígnalos a empresas y sincroniza empleados.
         </p>
       </div>
@@ -117,55 +121,60 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
         </Alert>
       )}
 
-      {/* KPI Strip */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Paquetes registrados", value: totalPackages, sub: "Catálogo disponible", icon: Package, cls: "bg-[#fff2eb] text-[#F5853F]" },
-          { label: "Cursos definidos", value: totalCourses, sub: "Incluidos en paquetes", icon: BookOpen, cls: "bg-amber-50 text-amber-600" },
-          { label: "Empresas con paquete", value: assignedCompanies, sub: "Con paquete vigente", icon: Building2, cls: "bg-teal-50 text-teal-600" },
-          { label: "Con bundle privado", value: packagesWithBundle, sub: "Referencia a bundle WP", icon: Package, cls: "bg-slate-100 text-slate-600" },
-        ].map(({ label, value, sub, icon: Icon, cls }) => (
-          <Card key={label}>
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-slate-500">{label}</p>
-                  <p className="mt-1 text-3xl font-bold text-slate-950">{value}</p>
-                  <p className="mt-1 text-xs text-slate-500">{sub}</p>
-                </div>
-                <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${cls}`}>
-                  <Icon size={16} strokeWidth={2} />
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 divide-x divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200 bg-white lg:grid-cols-4 lg:divide-y-0">
+        <StatCard
+          label="Paquetes registrados"
+          value={totalPackages}
+          sub="En el catálogo activo"
+        />
+        <StatCard
+          label="Cursos definidos"
+          value={totalCourses}
+          sub="Incluidos en paquetes"
+        />
+        <StatCard
+          label="Empresas con paquete"
+          value={assignedCompanies}
+          sub="Con plan vigente asignado"
+        />
+        <StatCard
+          label="Con bundle privado"
+          value={packagesWithBundle}
+          sub="Referencia WP/Tutor LMS"
+        />
       </div>
 
       {/* Forms row */}
-      <div className="grid gap-6 xl:grid-cols-[1fr_1.3fr]">
+      <div className="grid gap-5 xl:grid-cols-[1fr_1.3fr]">
+
         {/* Create package */}
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-[15px]">Crear paquete</CardTitle>
-            <CardDescription>
+        <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+          <div className="border-b border-slate-100 px-6 py-4">
+            <p className="text-[14px] font-medium text-slate-900">Crear paquete</p>
+            <p className="text-[12px] text-slate-400">
               Define el paquete y selecciona sus cursos desde el catálogo real de Tutor LMS.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={createPackageAction} className="grid gap-4">
+            </p>
+          </div>
+          <form action={createPackageAction} className="p-6">
+            <div className="grid gap-4">
               <div className="grid gap-1.5">
-                <Label htmlFor="nombre" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nombre del paquete *</Label>
-                <Input id="nombre" name="nombre" required placeholder="Ej: Paquete Seguridad Industrial" />
+                <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                  Nombre del paquete *
+                </Label>
+                <Input name="nombre" required placeholder="Ej: Paquete Seguridad Industrial" />
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="descripcion" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Descripción</Label>
-                <Textarea id="descripcion" name="descripcion" rows={2} placeholder="Descripción del paquete…" />
+                <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                  Descripción
+                </Label>
+                <Textarea name="descripcion" rows={2} placeholder="Descripción del paquete…" />
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="modo_entrega" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Modo de entrega B2B</Label>
+                <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                  Modo de entrega B2B
+                </Label>
                 <select
-                  id="modo_entrega"
                   name="modo_entrega"
                   defaultValue="DIRECT_ENROLLMENT"
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
@@ -176,46 +185,54 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-1.5">
-                  <Label htmlFor="wp_bundle_id" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">WP Bundle ID</Label>
-                  <Input id="wp_bundle_id" name="wp_bundle_id" type="number" min={1} placeholder="Opcional" />
+                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                    WP Bundle ID
+                  </Label>
+                  <Input name="wp_bundle_id" type="number" min={1} placeholder="Opcional" />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="nombre_bundle" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nombre del bundle</Label>
-                  <Input id="nombre_bundle" name="nombre_bundle" placeholder="Auto si se crea desde el portal" />
+                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                    Nombre del bundle
+                  </Label>
+                  <Input name="nombre_bundle" placeholder="Auto si se crea desde el portal" />
                 </div>
               </div>
-              <div className="rounded-lg border border-[#F5853F]/30 bg-[#fff2eb]/70 p-3 text-xs leading-5 text-slate-700">
-                Si dejas vacío <strong>WP Bundle ID</strong>, el portal intentará crear automáticamente un bundle privado en Tutor LMS.
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-[12px] leading-5 text-slate-600">
+                Si dejas vacío <strong>WP Bundle ID</strong>, el portal intentará crear un bundle privado en Tutor LMS.
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="notas_operativas" className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Notas operativas</Label>
-                <Textarea id="notas_operativas" name="notas_operativas" rows={2} />
+                <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                  Notas operativas
+                </Label>
+                <Textarea name="notas_operativas" rows={2} />
               </div>
               <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cursos del paquete *</Label>
+                <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                  Cursos del paquete *
+                </Label>
                 <PackageCourseSelector />
               </div>
-              <div>
-                <Button type="submit" className="bg-[#F5853F] hover:bg-[#D96B20]">
-                  Guardar paquete
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              <Button type="submit" style={{ background: "#3730a3" }}>
+                Guardar paquete
+              </Button>
+            </div>
+          </form>
+        </div>
 
         {/* Assign to company */}
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-[15px]">Asignar paquete a empresa</CardTitle>
-            <CardDescription>
+        <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+          <div className="border-b border-slate-100 px-6 py-4">
+            <p className="text-[14px] font-medium text-slate-900">Asignar paquete a empresa</p>
+            <p className="text-[12px] text-slate-400">
               Cambia el paquete activo y sincroniza empleados hacia Tutor LMS.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
+            </p>
+          </div>
+          <div className="p-6 space-y-5">
             <form action={assignPackageToCompanyAction} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
               <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Empresa *</Label>
+                <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                  Empresa *
+                </Label>
                 <select
                   name="empresa_id"
                   required
@@ -229,7 +246,9 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 </select>
               </div>
               <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Paquete *</Label>
+                <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                  Paquete *
+                </Label>
                 <select
                   name="paquete_id"
                   required
@@ -243,24 +262,36 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 </select>
               </div>
               <div className="grid gap-1.5">
-                <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Vigencia</Label>
+                <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                  Vigencia
+                </Label>
                 <Input name="fecha_vencimiento" type="date" className="h-9" />
               </div>
-              <Button type="submit" className="sm:self-end bg-violet-700 hover:bg-violet-800">
+              <Button type="submit" className="sm:self-end" style={{ background: "#3730a3" }}>
                 Asignar
               </Button>
             </form>
 
             <Separator />
 
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Estado por empresa</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+              Estado por empresa
+            </p>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Empresa</TableHead>
-                  <TableHead>Paquete activo</TableHead>
-                  <TableHead>Empleados / WP ID</TableHead>
-                  <TableHead className="text-right">Sync</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                    Empresa
+                  </TableHead>
+                  <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                    Paquete activo
+                  </TableHead>
+                  <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                    Empleados / WP ID
+                  </TableHead>
+                  <TableHead className="text-right text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                    Sync
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -268,22 +299,29 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                   const activePackage = empresa.paquetes[0]?.paquete?.nombre ?? "—"
                   const syncable = empresa.empleados.filter((e) => e.wp_user_id).length
                   return (
-                    <TableRow key={empresa.id}>
-                      <TableCell className="font-medium">{empresa.nombre}</TableCell>
-                      <TableCell>
-                        {empresa.paquetes.length > 0
-                          ? <Badge className="bg-[#fff2eb] text-[#D96B20] hover:bg-[#fff2eb]">{activePackage}</Badge>
-                          : <span className="text-xs text-slate-400">Sin paquete</span>
-                        }
+                    <TableRow key={empresa.id} className="h-11">
+                      <TableCell className="text-[13px] font-medium text-slate-900">
+                        {empresa.nombre}
                       </TableCell>
                       <TableCell>
-                        <span className="text-xs text-slate-500">{empresa.empleados.length} empleados · {syncable} con WP ID</span>
+                        {empresa.paquetes.length > 0 ? (
+                          <Badge className="border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-50">
+                            {activePackage}
+                          </Badge>
+                        ) : (
+                          <span className="text-[12px] text-slate-400">Sin paquete</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-[12px] text-slate-500">
+                          {empresa.empleados.length} empleados · {syncable} con WP ID
+                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <form action={syncPackageToCompanyEmployeesAction}>
                           <input type="hidden" name="empresa_id" value={empresa.id} />
-                          <Button variant="outline" size="sm" type="submit" className="gap-1.5">
-                            <RotateCw size={12} />
+                          <Button variant="outline" size="sm" type="submit" className="h-7 gap-1.5 text-[12px]">
+                            <RotateCw size={11} />
                             Sync
                           </Button>
                         </form>
@@ -293,45 +331,66 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 })}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Package catalog */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-[15px]">Catálogo de paquetes</CardTitle>
-          <CardDescription>Cursos por paquete, estado DC-3 y empresas asignadas.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {paquetes.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-10 text-center">
-              <Package size={28} className="mx-auto mb-2 text-slate-300" />
-              <p className="text-sm text-slate-400">Aún no hay paquetes registrados.</p>
-            </div>
-          ) : (
-            paquetes.map((paquete) => (
-              <div key={paquete.id} className="rounded-lg border border-slate-200 bg-slate-50/50">
+      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+        <div className="border-b border-slate-100 px-6 py-4">
+          <p className="text-[14px] font-medium text-slate-900">Catálogo de paquetes</p>
+          <p className="text-[12px] text-slate-400">
+            Cursos por paquete, estado DC-3 y empresas asignadas.
+          </p>
+        </div>
+
+        {paquetes.length === 0 ? (
+          <div className="py-14 text-center">
+            <Package size={26} className="mx-auto mb-2 text-slate-200" />
+            <p className="text-[13px] text-slate-400">Aún no hay paquetes registrados.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {paquetes.map((paquete) => (
+              <div key={paquete.id} className="p-6">
                 {/* Package header */}
-                <div className="flex items-start justify-between gap-4 p-5">
-                  <div className="space-y-2 min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-semibold text-slate-950">{paquete.nombre}</h3>
-                      <Badge variant="secondary">{paquete.cursos.length} cursos</Badge>
+                      <h3 className="text-[14px] font-semibold text-slate-950">{paquete.nombre}</h3>
+                      <Badge className="border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-100">
+                        {paquete.cursos.length} cursos
+                      </Badge>
                     </div>
                     {paquete.descripcion && (
-                      <p className="text-sm text-slate-500">{paquete.descripcion}</p>
+                      <p className="text-[13px] text-slate-500">{paquete.descripcion}</p>
                     )}
-                    <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                      <span><strong className="text-slate-700">Modo:</strong> {paquete.modo_entrega === "PRIVATE_BUNDLE_REFERENCE" ? "Bundle privado" : "Matrícula directa"}</span>
-                      <span><strong className="text-slate-700">Empresas:</strong> {paquete.empresas.length > 0 ? paquete.empresas.map((i) => i.empresa.nombre).join(", ") : "Ninguna"}</span>
-                      <span><strong className="text-slate-700">Creado:</strong> {formatDate(paquete.created_at)}</span>
+                    <div className="flex flex-wrap gap-4 text-[12px] text-slate-500">
+                      <span>
+                        <strong className="text-slate-700">Modo:</strong>{" "}
+                        {paquete.modo_entrega === "PRIVATE_BUNDLE_REFERENCE"
+                          ? "Bundle privado"
+                          : "Matrícula directa"}
+                      </span>
+                      <span>
+                        <strong className="text-slate-700">Empresas:</strong>{" "}
+                        {paquete.empresas.length > 0
+                          ? paquete.empresas.map((i) => i.empresa.nombre).join(", ")
+                          : "Ninguna"}
+                      </span>
+                      <span>
+                        <strong className="text-slate-700">Creado:</strong>{" "}
+                        {formatDate(paquete.created_at)}
+                      </span>
                       {paquete.wp_bundle_id && (
-                        <span><strong className="text-slate-700">Bundle WP:</strong> {paquete.wp_bundle_id}</span>
+                        <span>
+                          <strong className="text-slate-700">Bundle WP:</strong>{" "}
+                          {paquete.wp_bundle_id}
+                        </span>
                       )}
                     </div>
                     {paquete.notas_operativas && (
-                      <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                      <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-900">
                         <strong>Notas:</strong> {paquete.notas_operativas}
                       </div>
                     )}
@@ -346,103 +405,156 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
                 {/* Courses */}
                 {paquete.cursos.length > 0 && (
-                  <>
-                    <Separator />
-                    <div className="p-4 space-y-2">
-                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Cursos incluidos</p>
-                      {paquete.cursos.map((curso) => {
-                        const dc3Metadata = dc3MetadataByCourseId[String(curso.wp_curso_id)] as Dc3MetadataView | undefined
-                        const missingFields = getDc3MissingFields(dc3Metadata)
-                        const isDc3Ready = missingFields.length === 0
+                  <div className="mt-5 space-y-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                      Cursos incluidos
+                    </p>
+                    {paquete.cursos.map((curso) => {
+                      const dc3Metadata = dc3MetadataByCourseId[String(curso.wp_curso_id)] as Dc3MetadataView | undefined
+                      const missingFields = getDc3MissingFields(dc3Metadata)
+                      const isDc3Ready = missingFields.length === 0
 
-                        return (
-                          <details
-                            key={curso.id}
-                            className="group rounded-lg border border-slate-200 bg-white"
-                          >
-                            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-slate-950">
-                                  {curso.wp_curso_id} — {decodeHtmlEntities(curso.nombre_curso ?? "")}
-                                </p>
-                                <p className="text-xs text-slate-400 mt-0.5">
-                                  {isDc3Ready ? "DC-3 lista para emitir constancias" : `Faltan: ${missingFields.join(", ")}`}
-                                </p>
-                              </div>
-                              <Badge
-                                className={isDc3Ready
-                                  ? "shrink-0 bg-green-50 text-green-700 hover:bg-green-50"
-                                  : "shrink-0 bg-amber-50 text-amber-700 hover:bg-amber-50"}
-                              >
-                                {isDc3Ready ? "DC-3 completo" : "DC-3 pendiente"}
-                              </Badge>
-                            </summary>
+                      return (
+                        <details
+                          key={curso.id}
+                          className="group overflow-hidden rounded-md border border-slate-200 bg-slate-50"
+                        >
+                          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[13px] font-medium text-slate-900">
+                                {curso.wp_curso_id} — {decodeHtmlEntities(curso.nombre_curso ?? "")}
+                              </p>
+                              <p className="text-[11px] text-slate-400 mt-0.5">
+                                {isDc3Ready
+                                  ? "DC-3 lista para emitir constancias"
+                                  : `Faltan: ${missingFields.join(", ")}`}
+                              </p>
+                            </div>
+                            <Badge
+                              className={
+                                isDc3Ready
+                                  ? "shrink-0 border-green-200 bg-green-50 text-green-700 hover:bg-green-50"
+                                  : "shrink-0 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50"
+                              }
+                            >
+                              {isDc3Ready ? "DC-3 completo" : "DC-3 pendiente"}
+                            </Badge>
+                          </summary>
 
-                            <div className="border-t border-slate-100 p-4">
-                              <div className="mb-4 flex items-center justify-between gap-3">
-                                <p className="text-xs text-slate-400">
-                                  Fuente: <strong className="text-slate-600">{dc3Metadata?.fuente ?? "Sin capturar"}</strong>
-                                  {" · "}
-                                  Sync: <strong className="text-slate-600">{dc3Metadata?.ultima_sincronizacion ? formatDate(dc3Metadata.ultima_sincronizacion) : "Nunca"}</strong>
-                                </p>
-                                <form action={syncCourseDc3MetadataAction}>
-                                  <input type="hidden" name="wp_curso_id" value={curso.wp_curso_id} />
-                                  <input type="hidden" name="nombre_curso" value={curso.nombre_curso} />
-                                  <Button variant="outline" size="sm" type="submit" className="gap-1.5">
-                                    <RotateCw size={12} />
-                                    Sync desde Tutor
-                                  </Button>
-                                </form>
-                              </div>
-
-                              <form action={updateCourseDc3MetadataAction} className="grid gap-4">
+                          <div className="border-t border-slate-200 bg-white p-5">
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                              <p className="text-[12px] text-slate-400">
+                                Fuente:{" "}
+                                <strong className="text-slate-600">
+                                  {dc3Metadata?.fuente ?? "Sin capturar"}
+                                </strong>
+                                {" · "}
+                                Sync:{" "}
+                                <strong className="text-slate-600">
+                                  {dc3Metadata?.ultima_sincronizacion
+                                    ? formatDate(dc3Metadata.ultima_sincronizacion)
+                                    : "Nunca"}
+                                </strong>
+                              </p>
+                              <form action={syncCourseDc3MetadataAction}>
                                 <input type="hidden" name="wp_curso_id" value={curso.wp_curso_id} />
                                 <input type="hidden" name="nombre_curso" value={curso.nombre_curso} />
-                                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                                  <div className="grid gap-1.5">
-                                    <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Duración (horas)</Label>
-                                    <Input name="duracion_horas" type="number" min={0} step="0.25" defaultValue={formatDurationValue(dc3Metadata?.duracion_horas)} placeholder="Ej. 12" />
-                                  </div>
-                                  <div className="grid gap-1.5">
-                                    <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Área temática</Label>
-                                    <Input name="area_tematica_nombre" defaultValue={dc3Metadata?.area_tematica_nombre ?? ""} placeholder="Higiene y seguridad" />
-                                  </div>
-                                  <div className="grid gap-1.5">
-                                    <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Clave área temática</Label>
-                                    <Input name="area_tematica_clave" defaultValue={dc3Metadata?.area_tematica_clave ?? ""} placeholder="Opcional" />
-                                  </div>
-                                  <div className="grid gap-1.5">
-                                    <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Agente capacitador</Label>
-                                    <Input name="agente_capacitador_nombre" defaultValue={dc3Metadata?.agente_capacitador_nombre ?? ""} placeholder="DesarrollaMX 360" />
-                                  </div>
-                                  <div className="grid gap-1.5">
-                                    <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Registro STPS / ACE</Label>
-                                    <Input name="agente_capacitador_registro" defaultValue={dc3Metadata?.agente_capacitador_registro ?? ""} placeholder="Si aplica" />
-                                  </div>
-                                  <div className="grid gap-1.5">
-                                    <Label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Instructor / Tutor</Label>
-                                    <Input name="instructor_nombre" defaultValue={dc3Metadata?.instructor_nombre ?? ""} placeholder="Nombre completo" />
-                                  </div>
-                                </div>
-                                <FirmaInstructorUpload defaultUrl={dc3Metadata?.instructor_firma_url ?? ""} name="instructor_firma_url" />
-                                <div>
-                                  <Button size="sm" type="submit" className="bg-[#F5853F] hover:bg-[#D96B20]">
-                                    Guardar ficha DC-3
-                                  </Button>
-                                </div>
+                                <Button variant="outline" size="sm" type="submit" className="h-7 gap-1.5 text-[12px]">
+                                  <RotateCw size={11} />
+                                  Sync desde Tutor
+                                </Button>
                               </form>
                             </div>
-                          </details>
-                        )
-                      })}
-                    </div>
-                  </>
+
+                            <form action={updateCourseDc3MetadataAction} className="grid gap-4">
+                              <input type="hidden" name="wp_curso_id" value={curso.wp_curso_id} />
+                              <input type="hidden" name="nombre_curso" value={curso.nombre_curso} />
+                              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                <div className="grid gap-1.5">
+                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                                    Duración (horas)
+                                  </Label>
+                                  <Input
+                                    name="duracion_horas"
+                                    type="number"
+                                    min={0}
+                                    step="0.25"
+                                    defaultValue={formatDurationValue(dc3Metadata?.duracion_horas)}
+                                    placeholder="Ej. 12"
+                                  />
+                                </div>
+                                <div className="grid gap-1.5">
+                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                                    Área temática
+                                  </Label>
+                                  <Input
+                                    name="area_tematica_nombre"
+                                    defaultValue={dc3Metadata?.area_tematica_nombre ?? ""}
+                                    placeholder="Higiene y seguridad"
+                                  />
+                                </div>
+                                <div className="grid gap-1.5">
+                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                                    Clave área temática
+                                  </Label>
+                                  <Input
+                                    name="area_tematica_clave"
+                                    defaultValue={dc3Metadata?.area_tematica_clave ?? ""}
+                                    placeholder="Opcional"
+                                  />
+                                </div>
+                                <div className="grid gap-1.5">
+                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                                    Agente capacitador
+                                  </Label>
+                                  <Input
+                                    name="agente_capacitador_nombre"
+                                    defaultValue={dc3Metadata?.agente_capacitador_nombre ?? ""}
+                                    placeholder="DesarrollaMX 360"
+                                  />
+                                </div>
+                                <div className="grid gap-1.5">
+                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                                    Registro STPS / ACE
+                                  </Label>
+                                  <Input
+                                    name="agente_capacitador_registro"
+                                    defaultValue={dc3Metadata?.agente_capacitador_registro ?? ""}
+                                    placeholder="Si aplica"
+                                  />
+                                </div>
+                                <div className="grid gap-1.5">
+                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
+                                    Instructor / Tutor
+                                  </Label>
+                                  <Input
+                                    name="instructor_nombre"
+                                    defaultValue={dc3Metadata?.instructor_nombre ?? ""}
+                                    placeholder="Nombre completo"
+                                  />
+                                </div>
+                              </div>
+                              <FirmaInstructorUpload
+                                defaultUrl={dc3Metadata?.instructor_firma_url ?? ""}
+                                name="instructor_firma_url"
+                              />
+                              <div>
+                                <Button size="sm" type="submit" style={{ background: "#3730a3" }}>
+                                  Guardar ficha DC-3
+                                </Button>
+                              </div>
+                            </form>
+                          </div>
+                        </details>
+                      )
+                    })}
+                  </div>
                 )}
               </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
