@@ -26,7 +26,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 /* Sidebar background — dark orange gradient */
-const BG = "#FF8F00"
+const BG      = "#111827"
+const ORANGE  = "#FF8F00"
 
 type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean }
 type NavSection = { heading: string; items: NavItem[] }
@@ -95,12 +96,12 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
           render={
             <Link
               href={item.href}
-              className={cn(
-                "flex items-center justify-center rounded-md py-2 transition-all",
+              className="flex items-center justify-center rounded-md py-2 transition-all"
+              style={
                 active
-                  ? "bg-black/20 text-white"
-                  : "text-white/85 hover:bg-black/10 hover:text-white"
-              )}
+                  ? { background: `${ORANGE}22`, color: ORANGE }
+                  : { color: "rgba(255,255,255,0.45)" }
+              }
             />
           }
         >
@@ -115,21 +116,24 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
     <Link
       href={item.href}
       prefetch
-      className={cn(
-        "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-all",
+      className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-all"
+      style={
         active
-          ? "bg-black/20 text-white"
-          : "text-white/85 hover:bg-black/10 hover:text-white"
-      )}
+          ? { background: `${ORANGE}22`, color: ORANGE }
+          : { color: "rgba(255,255,255,0.55)" }
+      }
+      onMouseEnter={(e) => {
+        if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.9)"
+      }}
+      onMouseLeave={(e) => {
+        if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"
+      }}
     >
       <span
         className="flex size-[5px] shrink-0 rounded-full transition-all"
-        style={{ background: active ? "white" : "rgba(255,255,255,0.4)" }}
+        style={{ background: active ? ORANGE : "rgba(255,255,255,0.2)" }}
       />
-      <span className={cn(
-        "flex size-6 shrink-0 items-center justify-center rounded-md",
-        active ? "text-white" : "text-white/80"
-      )}>
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-md">
         <Icon size={14} strokeWidth={active ? 2.2 : 1.8} />
       </span>
       <span className="truncate">{item.label}</span>
