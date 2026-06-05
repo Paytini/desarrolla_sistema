@@ -23,7 +23,7 @@ export default async function PortalLayout({
       <div className="flex flex-1 flex-col overflow-hidden">
         <header
           className="flex h-[60px] shrink-0 items-center px-6"
-          style={{ background: "linear-gradient(135deg, #C86030 0%, #AA4518 100%)" }}
+          style={{ background: "#FF8F00" }}
         >
           {rol === "SUPERADMIN" && <SuperadminSearchBar />}
           {rol === "RH" && <RhSearchBar />}

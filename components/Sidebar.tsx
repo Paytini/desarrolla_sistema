@@ -26,7 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 /* Sidebar background — dark orange gradient */
-const BG = "linear-gradient(175deg, #C86030 0%, #AA4518 100%)"
+const BG = "#FF8F00"
 
 type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean }
 type NavSection = { heading: string; items: NavItem[] }
