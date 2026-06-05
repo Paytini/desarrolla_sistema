@@ -6,6 +6,7 @@ import {
   BookOpen,
   Building2,
   ChevronLeft,
+  ChevronRight,
   ClipboardList,
   FileText,
   LayoutDashboard,
@@ -166,54 +167,49 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
   return (
     <TooltipProvider delay={200}>
       <aside
-        className="sticky top-0 flex h-screen shrink-0 flex-col transition-[width] duration-300 ease-in-out"
+        className="relative sticky top-0 flex h-screen shrink-0 flex-col transition-[width] duration-300 ease-in-out"
         style={{ width: collapsed ? 64 : 240, background: BG }}
       >
+        {/* Floating toggle button at right edge */}
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+          className="absolute -right-3 top-5 z-30 flex size-6 items-center justify-center rounded-full bg-white shadow-md transition-shadow hover:shadow-lg"
+          style={{ border: "1.5px solid #e5e7eb" }}
+        >
+          {collapsed
+            ? <ChevronRight size={11} strokeWidth={2.5} style={{ color: BG }} />
+            : <ChevronLeft  size={11} strokeWidth={2.5} style={{ color: BG }} />
+          }
+        </button>
+
         {/* Logo */}
         <div
           className={cn(
             "flex h-[60px] shrink-0 items-center",
-            collapsed ? "justify-center px-3" : "justify-between px-3"
+            collapsed ? "justify-center px-3" : "px-3"
           )}
           style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}
         >
           {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger
-                onClick={toggle}
-                aria-label="Expandir menú"
-                className="rounded-lg p-1 transition-opacity hover:opacity-70"
-              >
-                <Image
-                  src="/assets/logo_corta.png"
-                  alt="D360"
-                  width={30}
-                  height={30}
-                  className="size-[30px] object-contain brightness-0 invert"
-                />
-              </TooltipTrigger>
-              <TooltipContent side="right">Expandir menú</TooltipContent>
-            </Tooltip>
+            <Image
+              src="/assets/logo_corta.png"
+              alt="D360"
+              width={30}
+              height={30}
+              className="size-[30px] object-contain brightness-0 invert"
+            />
           ) : (
-            <>
-              <Link href={homeHref} className="flex min-w-0 items-center gap-2.5 px-1">
-                <Image
-                  src="/assets/logo_desarrolla_cropped.png"
-                  alt="D360"
-                  width={108}
-                  height={108}
-                  className="size-[108px] shrink-0 object-contain brightness-0 invert"
-                />
-              </Link>
-              <button
-                type="button"
-                onClick={toggle}
-                aria-label="Contraer menú"
-                className="flex size-7 shrink-0 items-center justify-center rounded-md text-white/40 transition-all hover:bg-white/10 hover:text-white"
-              >
-                <ChevronLeft size={13} strokeWidth={2.5} />
-              </button>
-            </>
+            <Link href={homeHref} className="flex min-w-0 items-center px-1">
+              <Image
+                src="/assets/logo_desarrolla_cropped.png"
+                alt="D360"
+                width={108}
+                height={108}
+                className="size-[108px] shrink-0 object-contain brightness-0 invert"
+              />
+            </Link>
           )}
         </div>
 

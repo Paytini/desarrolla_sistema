@@ -4,12 +4,89 @@ import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { ActivityFeed } from "@/components/superadmin/ActivityFeed"
 import { QuickActions } from "@/components/superadmin/QuickActions"
-import { StatCard } from "@/components/superadmin/StatCard"
+import { Card, CardContent } from "@/components/ui/card"
 import { OcupacionCard } from "./_components/OcupacionCard"
 import { RenovacionesTable } from "./_components/RenovacionesTable"
+import { cn } from "@/lib/utils"
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
+/* ── Mini ring chart (pure SVG, RSC-compatible) ─────────────────── */
+function RingChart({
+  pct,
+  size = 56,
+  sw = 6,
+  color,
+}: {
+  pct: number
+  size?: number
+  sw?: number
+  color: string
+}) {
+  const r      = (size - sw) / 2
+  const circ   = 2 * Math.PI * r
+  const offset = circ - (Math.min(pct, 100) / 100) * circ
+  const cx     = size / 2
+  const cy     = size / 2
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={sw} />
+      <circle
+        cx={cx} cy={cy} r={r} fill="none"
+        stroke={color} strokeWidth={sw} strokeLinecap="round"
+        strokeDasharray={circ} strokeDashoffset={offset}
+        transform={`rotate(-90 ${cx} ${cy})`}
+      />
+      <text x={cx} y={cy + 4} textAnchor="middle" fill="#0f172a" fontSize={11} fontWeight="700">
+        {pct}%
+      </text>
+    </svg>
+  )
+}
+
+/* ── Visual stat card with embedded ring chart ─────────────────── */
+function VisualStatCard({
+  label,
+  value,
+  sub,
+  pct,
+  color,
+  alert = false,
+}: {
+  label: string
+  value: string | number
+  sub?: string
+  pct: number
+  color: string
+  alert?: boolean
+}) {
+  return (
+    <Card className={cn("overflow-hidden border-t-[3px]", alert ? "border-t-destructive" : "border-t-primary")}>
+      <CardContent className="px-5 py-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              {label}
+            </p>
+            <p className={cn(
+              "mt-1.5 text-[32px] font-bold leading-none tabular-nums tracking-tight",
+              alert ? "text-destructive" : "text-foreground"
+            )}>
+              {value}
+            </p>
+            {sub && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">{sub}</p>
+            )}
+          </div>
+          <RingChart pct={pct} color={alert ? "#ef4444" : color} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/* ── Page ─────────────────────────────────────────────────────────── */
 export default async function SuperadminDashboardPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
@@ -32,16 +109,15 @@ export default async function SuperadminDashboardPage() {
   ])
 
   const now = Date.now()
-  const empresasActivas = empresas.filter((e) => e.activo).length
-  const totalEmpleadosActivos = empresas.reduce(
-    (s, e) => s + e.empleados.filter((emp) => emp.activo).length,
-    0
-  )
-  const totalContratados = empresas.reduce((s, e) => s + e.asientos_contratados, 0)
-  const totalUsados = empresas.reduce((s, e) => s + e.asientos_usados, 0)
-  const ocupacionPct = totalContratados
-    ? Math.round((totalUsados / totalContratados) * 100)
-    : 0
+
+  const empresasActivas       = empresas.filter((e) => e.activo).length
+  const empresasPct           = empresas.length ? Math.round((empresasActivas / empresas.length) * 100) : 0
+
+  const totalEmpleadosActivos = empresas.reduce((s, e) => s + e.empleados.filter((emp) => emp.activo).length, 0)
+  const totalContratados      = empresas.reduce((s, e) => s + e.asientos_contratados, 0)
+  const totalUsados           = empresas.reduce((s, e) => s + e.asientos_usados, 0)
+  const ocupacionPct          = totalContratados ? Math.round((totalUsados / totalContratados) * 100) : 0
+  const empleadosPct          = totalContratados ? Math.round((totalEmpleadosActivos / totalContratados) * 100) : 0
 
   const renewals = empresas
     .filter((e) => {
@@ -51,63 +127,45 @@ export default async function SuperadminDashboardPage() {
     })
     .map((e) => ({
       empresa: e,
-      days: Math.floor(
-        (new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) / DAY_MS
-      ),
+      days: Math.floor((new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) / DAY_MS),
     }))
     .sort((a, b) => a.days - b.days)
 
-  const nombre = session.user.nombre as string
-  const fecha = new Intl.DateTimeFormat("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(new Date())
+  const renovacionesPct = empresasActivas ? Math.round((renewals.length / empresasActivas) * 100) : 0
 
   return (
     <div className="space-y-6">
 
-      {/* Page header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-            Panel de control
-          </p>
-          <h1 className="mt-0.5 text-[22px] font-semibold leading-tight text-foreground">
-            {nombre}
-          </h1>
-          <p className="mt-0.5 text-[13px] capitalize text-muted-foreground">
-            {fecha}
-          </p>
-        </div>
-        <span className="inline-flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-primary">
-          <span className="size-1.5 animate-pulse rounded-full bg-primary" />
-          SuperAdmin
-        </span>
-      </div>
-
-      {/* KPI row — 4 separate stat cards */}
+      {/* Visual overview — 4 chart cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
+        <VisualStatCard
           label="Empresas activas"
           value={empresasActivas}
           sub={`de ${empresas.length} registradas`}
+          pct={empresasPct}
+          color="#22c55e"
         />
-        <StatCard
-          label="Empleados con acceso"
+        <VisualStatCard
+          label="Empleados en LMS"
           value={totalEmpleadosActivos}
-          sub="usuarios activos en LMS"
+          sub={`de ${totalContratados} cupos contratados`}
+          pct={empleadosPct}
+          color="#FF8F00"
         />
-        <StatCard
-          label="Ocupación global"
+        <VisualStatCard
+          label="Ocupación de cupos"
           value={`${ocupacionPct}%`}
-          sub={`${totalUsados} de ${totalContratados} cupos`}
+          sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`}
+          pct={ocupacionPct}
+          color="#3b82f6"
           alert={ocupacionPct >= 90}
         />
-        <StatCard
+        <VisualStatCard
           label="Renovaciones próximas"
           value={renewals.length}
-          sub="vencen en 30 días"
+          sub="empresas vencen en 30 días"
+          pct={renovacionesPct}
+          color="#f59e0b"
           alert={renewals.length > 0}
         />
       </div>
