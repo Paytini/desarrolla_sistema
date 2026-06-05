@@ -98,8 +98,8 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
               className={cn(
                 "flex items-center justify-center rounded-md py-2 transition-all",
                 active
-                  ? "bg-white/20 text-white"
-                  : "text-white/50 hover:bg-white/12 hover:text-white"
+                  ? "bg-black/20 text-white"
+                  : "text-white/85 hover:bg-black/10 hover:text-white"
               )}
             />
           }
@@ -118,17 +118,17 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
       className={cn(
         "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-all",
         active
-          ? "bg-white/18 text-white"
-          : "text-white/55 hover:bg-white/10 hover:text-white"
+          ? "bg-black/20 text-white"
+          : "text-white/85 hover:bg-black/10 hover:text-white"
       )}
     >
       <span
         className="flex size-[5px] shrink-0 rounded-full transition-all"
-        style={{ background: active ? "rgba(255,255,255,0.85)" : "transparent" }}
+        style={{ background: active ? "white" : "rgba(255,255,255,0.4)" }}
       />
       <span className={cn(
         "flex size-6 shrink-0 items-center justify-center rounded-md",
-        active ? "text-white" : "text-white/55"
+        active ? "text-white" : "text-white/80"
       )}>
         <Icon size={14} strokeWidth={active ? 2.2 : 1.8} />
       </span>
@@ -220,7 +220,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
             navSuperAdminSections.map((section, si) => (
               <div key={section.heading} className={si > 0 ? "mt-1" : ""}>
                 {!collapsed && (
-                  <p className="mb-1 mt-4 px-3 text-[9px] font-bold uppercase tracking-[1.8px] text-white/35">
+                  <p className="mb-1 mt-4 px-3 text-[9px] font-bold uppercase tracking-[1.8px] text-white/65">
                     {section.heading}
                   </p>
                 )}
@@ -254,7 +254,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
               <TooltipTrigger
                 onClick={() => signOut({ callbackUrl: "/login" })}
                 aria-label="Cerrar sesión"
-                className="flex w-full items-center justify-center rounded-md p-2 text-white/45 transition-all hover:bg-white/10 hover:text-white"
+                className="flex w-full items-center justify-center rounded-md p-2 text-white/80 transition-all hover:bg-black/10 hover:text-white"
               >
                 <LogOut size={15} strokeWidth={1.8} />
               </TooltipTrigger>
@@ -264,7 +264,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-[12px] font-medium text-white/45 transition-all hover:bg-white/10 hover:text-white"
+              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-[12px] font-medium text-white/80 transition-all hover:bg-black/10 hover:text-white"
             >
               <LogOut size={14} strokeWidth={1.8} className="shrink-0" />
               <span>Cerrar sesión</span>
@@ -299,7 +299,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
                 </Avatar>
                 <div className="min-w-0">
                   <p className="truncate text-[12px] font-semibold text-white">{nombre}</p>
-                  <p className="text-[10px] text-white/50">{roleLabel[rol]}</p>
+                  <p className="text-[10px] text-white/70">{roleLabel[rol]}</p>
                 </div>
               </div>
             )}

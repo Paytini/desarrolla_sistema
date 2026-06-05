@@ -131,8 +131,8 @@ export default function SearchPalette<T,>({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group flex h-9 items-center gap-2 rounded-lg px-3 text-[13px] font-medium text-white transition-all hover:opacity-90"
-        style={{ background: "#FF8F00" }}
+        className="group flex h-9 items-center gap-2 rounded-lg border border-white/30 px-3 text-[13px] font-medium text-white transition-all hover:bg-black/10"
+        style={{ background: "rgba(0,0,0,0.15)" }}
         aria-label={`${triggerLabel} (${kbd})`}
       >
         <Search size={13} strokeWidth={2} className="shrink-0 opacity-80" />
