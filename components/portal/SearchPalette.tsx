@@ -131,12 +131,13 @@ export default function SearchPalette<T,>({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group flex h-9 items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-3 text-[13px] text-muted-foreground transition-all hover:border-primary/20 hover:bg-accent hover:text-foreground"
+        className="group flex h-9 items-center gap-2 rounded-lg px-3 text-[13px] font-medium text-white transition-all hover:opacity-90"
+        style={{ background: "linear-gradient(135deg, #C86030 0%, #AA4518 100%)" }}
         aria-label={`${triggerLabel} (${kbd})`}
       >
-        <Search size={13} strokeWidth={2} className="shrink-0" />
-        <span className="hidden min-w-[160px] text-left sm:block">{triggerLabel}</span>
-        <kbd className="ml-auto hidden items-center rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[10px] text-foreground/50 sm:flex">
+        <Search size={13} strokeWidth={2} className="shrink-0 opacity-80" />
+        <span className="hidden min-w-[140px] text-left sm:block">{triggerLabel}</span>
+        <kbd className="ml-auto hidden items-center rounded border border-white/20 bg-white/15 px-1.5 py-0.5 font-mono text-[10px] text-white/75 sm:flex">
           {kbd}
         </kbd>
       </button>

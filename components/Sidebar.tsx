@@ -21,11 +21,12 @@ import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+
+/* Sidebar background — dark orange gradient */
+const BG = "linear-gradient(175deg, #C86030 0%, #AA4518 100%)"
 
 type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean }
 type NavSection = { heading: string; items: NavItem[] }
@@ -76,26 +77,14 @@ const roleLabel: Record<Rol, string> = {
 }
 
 function getInitials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("")
+  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")
 }
 
 function isActive(href: string, pathname: string, exact?: boolean) {
   return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
 }
 
-function NavItemRow({
-  item,
-  collapsed,
-  pathname,
-}: {
-  item: NavItem
-  collapsed: boolean
-  pathname: string
-}) {
+function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: boolean; pathname: string }) {
   const active = isActive(item.href, pathname, item.exact)
   const Icon = item.icon
 
@@ -107,10 +96,10 @@ function NavItemRow({
             <Link
               href={item.href}
               className={cn(
-                "flex items-center justify-center rounded-md py-2 transition-colors",
+                "flex items-center justify-center rounded-md py-2 transition-all",
                 active
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                  ? "bg-white/20 text-white"
+                  : "text-white/50 hover:bg-white/12 hover:text-white"
               )}
             />
           }
@@ -127,19 +116,19 @@ function NavItemRow({
       href={item.href}
       prefetch
       className={cn(
-        "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors",
+        "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-all",
         active
-          ? "bg-accent text-accent-foreground"
-          : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+          ? "bg-white/18 text-white"
+          : "text-white/55 hover:bg-white/10 hover:text-white"
       )}
     >
       <span
-        className="flex size-[6px] shrink-0 rounded-full transition-all"
-        style={{ background: active ? "hsl(var(--primary))" : "transparent" }}
+        className="flex size-[5px] shrink-0 rounded-full transition-all"
+        style={{ background: active ? "rgba(255,255,255,0.85)" : "transparent" }}
       />
       <span className={cn(
         "flex size-6 shrink-0 items-center justify-center rounded-md",
-        active ? "text-accent-foreground" : "text-muted-foreground"
+        active ? "text-white" : "text-white/55"
       )}>
         <Icon size={14} strokeWidth={active ? 2.2 : 1.8} />
       </span>
@@ -148,32 +137,20 @@ function NavItemRow({
   )
 }
 
-export default function Sidebar({
-  rol,
-  nombre,
-  empresa,
-}: {
-  rol: Rol
-  nombre: string
-  empresa?: string
-}) {
+export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: string; empresa?: string }) {
   void empresa
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const initials = getInitials(nombre)
 
   useEffect(() => {
-    try {
-      setCollapsed(localStorage.getItem("sidebar-collapsed") === "true")
-    } catch {}
+    try { setCollapsed(localStorage.getItem("sidebar-collapsed") === "true") } catch {}
   }, [])
 
   function toggle() {
     setCollapsed((prev) => {
       const next = !prev
-      try {
-        localStorage.setItem("sidebar-collapsed", String(next))
-      } catch {}
+      try { localStorage.setItem("sidebar-collapsed", String(next)) } catch {}
       return next
     })
   }
@@ -186,27 +163,30 @@ export default function Sidebar({
   return (
     <TooltipProvider delay={200}>
       <aside
-        className="sticky top-0 flex h-screen shrink-0 flex-col bg-card border-r border-border transition-[width] duration-300 ease-in-out"
-        style={{ width: collapsed ? 64 : 240 }}
+        className="sticky top-0 flex h-screen shrink-0 flex-col transition-[width] duration-300 ease-in-out"
+        style={{ width: collapsed ? 64 : 240, background: BG }}
       >
         {/* Logo */}
-        <div className={cn(
-          "flex h-[60px] shrink-0 items-center border-b border-border",
-          collapsed ? "justify-center px-3" : "justify-between px-3"
-        )}>
+        <div
+          className={cn(
+            "flex h-[60px] shrink-0 items-center",
+            collapsed ? "justify-center px-3" : "justify-between px-3"
+          )}
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}
+        >
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger
                 onClick={toggle}
                 aria-label="Expandir menú"
-                className="rounded-lg p-1 transition-opacity hover:opacity-75"
+                className="rounded-lg p-1 transition-opacity hover:opacity-70"
               >
                 <Image
                   src="/assets/logo_corta.png"
                   alt="D360"
                   width={30}
                   height={30}
-                  className="size-[30px] object-contain"
+                  className="size-[30px] object-contain brightness-0 invert"
                 />
               </TooltipTrigger>
               <TooltipContent side="right">Expandir menú</TooltipContent>
@@ -219,19 +199,17 @@ export default function Sidebar({
                   alt="D360"
                   width={108}
                   height={108}
-                  className="size-[108px] shrink-0 object-contain"
+                  className="size-[108px] shrink-0 object-contain brightness-0 invert"
                 />
               </Link>
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
                 onClick={toggle}
                 aria-label="Contraer menú"
-                className="size-7 text-muted-foreground"
+                className="flex size-7 shrink-0 items-center justify-center rounded-md text-white/40 transition-all hover:bg-white/10 hover:text-white"
               >
                 <ChevronLeft size={13} strokeWidth={2.5} />
-              </Button>
+              </button>
             </>
           )}
         </div>
@@ -242,19 +220,16 @@ export default function Sidebar({
             navSuperAdminSections.map((section, si) => (
               <div key={section.heading} className={si > 0 ? "mt-1" : ""}>
                 {!collapsed && (
-                  <p className="mb-1 mt-4 px-3 text-[9px] font-bold uppercase tracking-[1.8px] text-muted-foreground/60">
+                  <p className="mb-1 mt-4 px-3 text-[9px] font-bold uppercase tracking-[1.8px] text-white/35">
                     {section.heading}
                   </p>
                 )}
-                {collapsed && si > 0 && <Separator className="mx-2 my-2 w-auto" />}
+                {collapsed && si > 0 && (
+                  <div className="mx-2 my-2 h-px" style={{ background: "rgba(255,255,255,0.10)" }} />
+                )}
                 <div className="flex flex-col gap-px">
                   {section.items.map((item) => (
-                    <NavItemRow
-                      key={item.href}
-                      item={item}
-                      collapsed={collapsed}
-                      pathname={pathname}
-                    />
+                    <NavItemRow key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
                   ))}
                 </div>
               </div>
@@ -262,70 +237,69 @@ export default function Sidebar({
           ) : (
             <div className="flex flex-col gap-px">
               {(rol === "RH" ? navRH : navEmpleado).map((item) => (
-                <NavItemRow
-                  key={item.href}
-                  item={item}
-                  collapsed={collapsed}
-                  pathname={pathname}
-                />
+                <NavItemRow key={item.href} item={item} collapsed={collapsed} pathname={pathname} />
               ))}
             </div>
           )}
         </ScrollArea>
 
         {/* Bottom */}
-        <div className="shrink-0 border-t border-border px-2 pb-3 pt-2">
+        <div
+          className="shrink-0 px-2 pb-3 pt-2"
+          style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}
+        >
+          {/* Logout */}
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger
                 onClick={() => signOut({ callbackUrl: "/login" })}
                 aria-label="Cerrar sesión"
-                className="flex w-full items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent/50"
+                className="flex w-full items-center justify-center rounded-md p-2 text-white/45 transition-all hover:bg-white/10 hover:text-white"
               >
                 <LogOut size={15} strokeWidth={1.8} />
               </TooltipTrigger>
               <TooltipContent side="right">Cerrar sesión</TooltipContent>
             </Tooltip>
           ) : (
-            <Button
-              variant="ghost"
+            <button
+              type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="w-full justify-start gap-2.5 text-[12px] font-medium text-muted-foreground"
+              className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-[12px] font-medium text-white/45 transition-all hover:bg-white/10 hover:text-white"
             >
               <LogOut size={14} strokeWidth={1.8} className="shrink-0" />
               <span>Cerrar sesión</span>
-            </Button>
+            </button>
           )}
 
           {/* User identity */}
-          <div className={cn(
-            "mt-2 border-t border-border pt-2.5",
-            collapsed ? "flex justify-center" : "px-1"
-          )}>
+          <div
+            className={cn("mt-2 pt-2.5", collapsed ? "flex justify-center" : "px-1")}
+            style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}
+          >
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger className="cursor-default rounded-full focus-visible:outline-none">
                   <Avatar className="size-8 pointer-events-none">
-                    <AvatarFallback className="bg-primary text-[11px] font-bold text-primary-foreground">
+                    <AvatarFallback className="bg-white/20 text-[11px] font-bold text-white">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                   <p>{nombre}</p>
-                  <p className="text-[10px] text-muted-foreground">{roleLabel[rol]}</p>
+                  <p className="text-[10px] opacity-60">{roleLabel[rol]}</p>
                 </TooltipContent>
               </Tooltip>
             ) : (
               <div className="flex items-center gap-2.5">
                 <Avatar className="size-8 shrink-0">
-                  <AvatarFallback className="bg-primary text-[11px] font-bold text-primary-foreground">
+                  <AvatarFallback className="bg-white/20 text-[11px] font-bold text-white">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <p className="truncate text-[12px] font-semibold text-foreground">{nombre}</p>
-                  <p className="text-[10px] text-muted-foreground">{roleLabel[rol]}</p>
+                  <p className="truncate text-[12px] font-semibold text-white">{nombre}</p>
+                  <p className="text-[10px] text-white/50">{roleLabel[rol]}</p>
                 </div>
               </div>
             )}
