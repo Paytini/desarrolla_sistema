@@ -26,8 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 /* Sidebar background — dark orange gradient */
-const BG      = "#111827"
-const ORANGE  = "#FF8F00"
+const BG = "#FF8F00"
 
 type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean }
 type NavSection = { heading: string; items: NavItem[] }
@@ -99,8 +98,8 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
               className="flex items-center justify-center rounded-md py-2 transition-all"
               style={
                 active
-                  ? { background: `${ORANGE}22`, color: ORANGE }
-                  : { color: "rgba(255,255,255,0.45)" }
+                  ? { background: "rgba(0,0,0,0.18)", color: "#fff" }
+                  : { color: "rgba(255,255,255,0.7)" }
               }
             />
           }
@@ -119,19 +118,19 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
       className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-all"
       style={
         active
-          ? { background: `${ORANGE}22`, color: ORANGE }
-          : { color: "rgba(255,255,255,0.55)" }
+          ? { background: "rgba(0,0,0,0.18)", color: "#fff" }
+          : { color: "rgba(255,255,255,0.75)" }
       }
       onMouseEnter={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.9)"
+        if (!active) (e.currentTarget as HTMLElement).style.color = "#fff"
       }}
       onMouseLeave={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"
+        if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)"
       }}
     >
       <span
         className="flex size-[5px] shrink-0 rounded-full transition-all"
-        style={{ background: active ? ORANGE : "rgba(255,255,255,0.2)" }}
+        style={{ background: active ? "#fff" : "rgba(255,255,255,0.3)" }}
       />
       <span className="flex size-6 shrink-0 items-center justify-center rounded-md">
         <Icon size={14} strokeWidth={active ? 2.2 : 1.8} />
