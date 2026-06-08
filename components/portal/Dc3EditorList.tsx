@@ -5,10 +5,12 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  RotateCw,
   Upload,
   X,
 } from "lucide-react"
 import { useRef, useState, useTransition } from "react"
+import { formatDate } from "@/lib/format"
 
 type CourseMetadata = {
   id: number
@@ -32,6 +34,7 @@ export type CourseEntry = {
 }
 
 type SaveAction = (formData: FormData) => Promise<{ ok: boolean; error?: string }>
+type SyncAction = (formData: FormData) => Promise<{ ok: boolean; error?: string }>
 
 type Status = "complete" | "incomplete" | "empty"
 
@@ -89,10 +92,12 @@ const inputCls =
 function CourseEditorCard({
   course,
   action,
+  syncAction,
   defaultOpen,
 }: {
   course: CourseEntry
   action: SaveAction
+  syncAction: SyncAction
   defaultOpen?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false)
@@ -103,6 +108,9 @@ function CourseEditorCard({
   const [uploadingFirma, setUploadingFirma] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isSyncing, startSyncTransition] = useTransition()
+  const [syncSuccess, setSyncSuccess] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
 
   const status = getStatus(course.metadata)
   const completeness = getCompleteness(course.metadata)
@@ -141,6 +149,22 @@ function CourseEditorCard({
         setTimeout(() => setSaved(false), 3500)
       } else {
         setSaveError(result.error ?? "Error al guardar")
+      }
+    })
+  }
+
+  function handleSync() {
+    setSyncError(null)
+    const formData = new FormData()
+    formData.append("wp_curso_id", String(course.wp_curso_id))
+    formData.append("nombre_curso", course.nombre_curso)
+    startSyncTransition(async () => {
+      const result = await syncAction(formData)
+      if (result.ok) {
+        setSyncSuccess(true)
+        setTimeout(() => setSyncSuccess(false), 3500)
+      } else {
+        setSyncError(result.error ?? "Error al sincronizar")
       }
     })
   }
@@ -210,6 +234,42 @@ function CourseEditorCard({
       {/* Expanded form */}
       {open && (
         <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-5">
+          {/* Sync bar */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <p className="text-xs text-slate-500">
+              Fuente:{" "}
+              <strong className="text-slate-700">{m?.fuente ?? "Sin capturar"}</strong>
+              {" · "}
+              Última sincronización:{" "}
+              <strong className="text-slate-700">
+                {m?.ultima_sincronizacion ? formatDate(m.ultima_sincronizacion) : "Nunca"}
+              </strong>
+            </p>
+            <div className="flex items-center gap-2.5">
+              {syncSuccess && (
+                <span className="flex items-center gap-1 rounded-full bg-teal-100 px-2.5 py-1 text-xs font-semibold text-teal-800">
+                  <CheckCircle2 size={11} strokeWidth={2.5} />
+                  Sincronizado
+                </span>
+              )}
+              {syncError && (
+                <p className="flex items-center gap-1.5 text-xs text-rose-700">
+                  <AlertCircle size={13} strokeWidth={2} />
+                  {syncError}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={handleSync}
+                disabled={isSyncing}
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
+              >
+                <RotateCw size={12} strokeWidth={2} className={isSyncing ? "animate-spin" : ""} />
+                {isSyncing ? "Sincronizando…" : "Sincronizar con Tutor"}
+              </button>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <input type="hidden" name="wp_curso_id" value={course.wp_curso_id} />
             <input type="hidden" name="firma_url" value={firmaUrl} />
@@ -384,9 +444,11 @@ const FILTERS: { value: FilterValue; label: string }[] = [
 export default function Dc3EditorList({
   courses,
   action,
+  syncAction,
 }: {
   courses: CourseEntry[]
   action: SaveAction
+  syncAction: SyncAction
 }) {
   const [filter, setFilter] = useState<FilterValue>("all")
 
@@ -437,6 +499,7 @@ export default function Dc3EditorList({
               key={course.wp_curso_id}
               course={course}
               action={action}
+              syncAction={syncAction}
             />
           ))
         )}
