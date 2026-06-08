@@ -1,4 +1,4 @@
-import FirmaInstructorUpload from "@/components/portal/FirmaInstructorUpload"
+import Link from "next/link"
 import DeletePackageButton from "@/components/portal/DeletePackageButton"
 import PackageCourseSelector from "@/components/portal/PackageCourseSelector"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -18,9 +18,7 @@ import {
   assignPackageToCompanyAction,
   createPackageAction,
   deletePackageAction,
-  syncCourseDc3MetadataAction,
   syncPackageToCompanyEmployeesAction,
-  updateCourseDc3MetadataAction,
 } from "./actions"
 
 const successMessages: Record<string, string> = {
@@ -28,8 +26,6 @@ const successMessages: Record<string, string> = {
   paquete_eliminado: "El paquete se eliminó del catálogo.",
   paquete_asignado: "El paquete activo de la empresa se actualizó correctamente.",
   sync_ok: "Se sincronizaron los cursos con los empleados activos.",
-  dc3_actualizado: "La ficha DC-3 del curso se actualizó.",
-  dc3_sync_ok: "La ficha DC-3 se sincronizó desde WordPress/Tutor LMS.",
 }
 
 const errorMessages: Record<string, string> = {
@@ -40,8 +36,6 @@ const errorMessages: Record<string, string> = {
   paquete_asignado: "No puedes eliminar un paquete activo en una empresa.",
   asignacion: "No fue posible asignar el paquete.",
   sync: "No fue posible sincronizar. Revisa que exista paquete activo y empleados con WP user ID.",
-  dc3: "No fue posible guardar la ficha DC-3.",
-  dc3_sync: "No fue posible sincronizar la ficha DC-3.",
 }
 
 type Dc3MetadataView = {
@@ -68,10 +62,6 @@ function getDc3MissingFields(metadata: Dc3MetadataView | undefined) {
   return missing
 }
 
-function formatDurationValue(value: number | null | undefined) {
-  if (typeof value !== "number" || !Number.isFinite(value)) return ""
-  return String(value)
-}
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
@@ -406,7 +396,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                           </summary>
 
                           <div className="border-t border-slate-200 bg-white p-5">
-                            <div className="mb-4 flex items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
                               <p className="text-[12px] text-slate-400">
                                 Fuente:{" "}
                                 <strong className="text-slate-600">
@@ -420,94 +410,13 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                                     : "Nunca"}
                                 </strong>
                               </p>
-                              <form action={syncCourseDc3MetadataAction}>
-                                <input type="hidden" name="wp_curso_id" value={curso.wp_curso_id} />
-                                <input type="hidden" name="nombre_curso" value={curso.nombre_curso} />
-                                <Button variant="outline" size="sm" type="submit" className="h-7 gap-1.5 text-[12px]">
-                                  <RotateCw size={11} />
-                                  Sync desde Tutor
-                                </Button>
-                              </form>
+                              <Link
+                                href="/superadmin/dc3"
+                                className="text-[12px] font-medium text-indigo-600 transition hover:text-indigo-700 hover:underline"
+                              >
+                                Editar en DC-3 →
+                              </Link>
                             </div>
-
-                            <form action={updateCourseDc3MetadataAction} className="grid gap-4">
-                              <input type="hidden" name="wp_curso_id" value={curso.wp_curso_id} />
-                              <input type="hidden" name="nombre_curso" value={curso.nombre_curso} />
-                              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                                <div className="grid gap-1.5">
-                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                                    Duración (horas)
-                                  </Label>
-                                  <Input
-                                    name="duracion_horas"
-                                    type="number"
-                                    min={0}
-                                    step="0.25"
-                                    defaultValue={formatDurationValue(dc3Metadata?.duracion_horas)}
-                                    placeholder="Ej. 12"
-                                  />
-                                </div>
-                                <div className="grid gap-1.5">
-                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                                    Área temática
-                                  </Label>
-                                  <Input
-                                    name="area_tematica_nombre"
-                                    defaultValue={dc3Metadata?.area_tematica_nombre ?? ""}
-                                    placeholder="Higiene y seguridad"
-                                  />
-                                </div>
-                                <div className="grid gap-1.5">
-                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                                    Clave área temática
-                                  </Label>
-                                  <Input
-                                    name="area_tematica_clave"
-                                    defaultValue={dc3Metadata?.area_tematica_clave ?? ""}
-                                    placeholder="Opcional"
-                                  />
-                                </div>
-                                <div className="grid gap-1.5">
-                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                                    Agente capacitador
-                                  </Label>
-                                  <Input
-                                    name="agente_capacitador_nombre"
-                                    defaultValue={dc3Metadata?.agente_capacitador_nombre ?? ""}
-                                    placeholder="DesarrollaMX 360"
-                                  />
-                                </div>
-                                <div className="grid gap-1.5">
-                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                                    Registro STPS / ACE
-                                  </Label>
-                                  <Input
-                                    name="agente_capacitador_registro"
-                                    defaultValue={dc3Metadata?.agente_capacitador_registro ?? ""}
-                                    placeholder="Si aplica"
-                                  />
-                                </div>
-                                <div className="grid gap-1.5">
-                                  <Label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400">
-                                    Instructor / Tutor
-                                  </Label>
-                                  <Input
-                                    name="instructor_nombre"
-                                    defaultValue={dc3Metadata?.instructor_nombre ?? ""}
-                                    placeholder="Nombre completo"
-                                  />
-                                </div>
-                              </div>
-                              <FirmaInstructorUpload
-                                defaultUrl={dc3Metadata?.instructor_firma_url ?? ""}
-                                name="instructor_firma_url"
-                              />
-                              <div>
-                                <Button size="sm" type="submit" style={{ background: "#3730a3" }}>
-                                  Guardar ficha DC-3
-                                </Button>
-                              </div>
-                            </form>
                           </div>
                         </details>
                       )
