@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache"
 import {
   SUPERADMIN_ACCESOS_TAG,
+  SUPERADMIN_DC3_TAG,
   SUPERADMIN_EMPRESAS_TAG,
   SUPERADMIN_GLOBAL_TAG,
   SUPERADMIN_PAQUETES_TAG,
@@ -10,6 +11,7 @@ import {
   empresaEmpleadosTag,
 } from "@/lib/cache-tags"
 import { prisma } from "@/lib/prisma"
+import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
 
 const getSuperadminReportesSnapshotCached = unstable_cache(
   async () => {
@@ -173,6 +175,34 @@ const getSuperadminPaquetesSnapshotCached = unstable_cache(
 
 export async function getSuperadminPaquetesSnapshot() {
   return getSuperadminPaquetesSnapshotCached()
+}
+
+const getSuperadminDc3SnapshotCached = unstable_cache(
+  async () => {
+    const [catalog, metadata, paqueteCursos] = await Promise.all([
+      getWordPressCourseCatalog(),
+      prisma.cursoDc3Metadata.findMany(),
+      prisma.paqueteCurso.findMany({
+        select: {
+          wp_curso_id: true,
+          paquete: { select: { nombre: true } },
+        },
+      }),
+    ])
+
+    const publishedCourses = catalog.courses.filter((course) => course.status === "publish")
+
+    return { publishedCourses, metadata, paqueteCursos }
+  },
+  ["dashboard-snapshot", "superadmin", "dc3"],
+  {
+    revalidate: 90,
+    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_DC3_TAG],
+  }
+)
+
+export async function getSuperadminDc3Snapshot() {
+  return getSuperadminDc3SnapshotCached()
 }
 
 const getSuperadminAccesosSnapshotCached = unstable_cache(
