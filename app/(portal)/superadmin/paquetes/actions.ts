@@ -10,7 +10,6 @@ import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import {
   bridgeCreateBundle,
-  bridgeGetCourseDetails,
   isWordPressBridgeConfigured,
 } from "@/lib/wordpress-bridge"
 
@@ -23,29 +22,6 @@ function getInteger(value: string) {
   return Number.isInteger(parsed) ? parsed : NaN
 }
 
-function getFloat(value: string) {
-  if (!value) {
-    return null
-  }
-
-  const parsed = Number.parseFloat(value)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
-function preferBridgeValue(
-  incoming: string | number | null | undefined,
-  current: string | number | null | undefined
-) {
-  if (typeof incoming === "number" && Number.isFinite(incoming)) {
-    return incoming
-  }
-
-  if (typeof incoming === "string" && incoming.trim()) {
-    return incoming.trim()
-  }
-
-  return current ?? null
-}
 
 function getSyncErrorMessage(error: unknown) {
   const rawMessage =
@@ -211,139 +187,6 @@ export async function createPackageAction(formData: FormData) {
   revalidatePath("/superadmin/reportes")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/superadmin/paquetes?success=paquete_creado")
-}
-
-export async function syncCourseDc3MetadataAction(formData: FormData) {
-  await requireSuperAdminSession()
-
-  const wpCourseId = getInteger(getString(formData, "wp_curso_id"))
-  const nombreCurso = getString(formData, "nombre_curso")
-
-  if (!wpCourseId) {
-    redirect("/superadmin/paquetes?error=dc3_sync")
-  }
-
-  if (!isWordPressBridgeConfigured()) {
-    const detail = encodeURIComponent("Configura WP_BRIDGE_BASE_URL y WP_BRIDGE_PORTAL_KEY para leer datos del curso.")
-    redirect(`/superadmin/paquetes?error=dc3_sync&detail=${detail}`)
-  }
-
-  try {
-    const [details, existingMetadata] = await Promise.all([
-      bridgeGetCourseDetails(wpCourseId),
-      prisma.cursoDc3Metadata.findUnique({
-        where: { wp_curso_id: wpCourseId },
-      }),
-    ])
-
-    await prisma.cursoDc3Metadata.upsert({
-      where: { wp_curso_id: wpCourseId },
-      update: {
-        nombre_curso: decodeHtmlEntities(details.title || nombreCurso || existingMetadata?.nombre_curso || "") || null,
-        duracion_horas: preferBridgeValue(
-          details.duration_hours,
-          existingMetadata?.duracion_horas
-        ) as number | null,
-        area_tematica_nombre: preferBridgeValue(
-          details.thematic_area_name,
-          existingMetadata?.area_tematica_nombre
-        ) as string | null,
-        area_tematica_clave: preferBridgeValue(
-          details.thematic_area_code,
-          existingMetadata?.area_tematica_clave
-        ) as string | null,
-        agente_capacitador_nombre: preferBridgeValue(
-          details.training_agent_name,
-          existingMetadata?.agente_capacitador_nombre
-        ) as string | null,
-        agente_capacitador_registro: preferBridgeValue(
-          details.training_agent_registry,
-          existingMetadata?.agente_capacitador_registro
-        ) as string | null,
-        instructor_nombre: preferBridgeValue(
-          details.instructor_name,
-          existingMetadata?.instructor_nombre
-        ) as string | null,
-        instructor_firma_url: preferBridgeValue(
-          details.instructor_signature_url,
-          existingMetadata?.instructor_firma_url
-        ) as string | null,
-        fuente: "WORDPRESS_BRIDGE",
-        ultima_sincronizacion: new Date(),
-      },
-      create: {
-        wp_curso_id: wpCourseId,
-        nombre_curso: decodeHtmlEntities(details.title || nombreCurso || "") || null,
-        duracion_horas: details.duration_hours ?? null,
-        area_tematica_nombre: details.thematic_area_name || null,
-        area_tematica_clave: details.thematic_area_code || null,
-        agente_capacitador_nombre: details.training_agent_name || null,
-        agente_capacitador_registro: details.training_agent_registry || null,
-        instructor_nombre: details.instructor_name || null,
-        instructor_firma_url: details.instructor_signature_url || null,
-        fuente: "WORDPRESS_BRIDGE",
-        ultima_sincronizacion: new Date(),
-      },
-    })
-  } catch (error) {
-    const detail = encodeURIComponent(
-      error instanceof Error ? error.message.slice(0, 500) : "No fue posible leer el curso desde WordPress."
-    )
-    redirect(`/superadmin/paquetes?error=dc3_sync&detail=${detail}`)
-  }
-
-  revalidatePath("/superadmin/paquetes")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/superadmin/paquetes?success=dc3_sync_ok")
-}
-
-export async function updateCourseDc3MetadataAction(formData: FormData) {
-  await requireSuperAdminSession()
-
-  const wpCourseId = getInteger(getString(formData, "wp_curso_id"))
-  const nombreCurso = getString(formData, "nombre_curso")
-  const duracionHoras = getFloat(getString(formData, "duracion_horas"))
-  const areaTematicaNombre = getString(formData, "area_tematica_nombre")
-  const areaTematicaClave = getString(formData, "area_tematica_clave")
-  const agenteCapacitadorNombre = getString(formData, "agente_capacitador_nombre")
-  const agenteCapacitadorRegistro = getString(formData, "agente_capacitador_registro")
-  const instructorNombre = getString(formData, "instructor_nombre")
-  const instructorFirmaUrl = getString(formData, "instructor_firma_url")
-
-  if (!wpCourseId || !nombreCurso) {
-    redirect("/superadmin/paquetes?error=dc3")
-  }
-
-  await prisma.cursoDc3Metadata.upsert({
-    where: { wp_curso_id: wpCourseId },
-    update: {
-      nombre_curso: nombreCurso,
-      duracion_horas: duracionHoras,
-      area_tematica_nombre: areaTematicaNombre || null,
-      area_tematica_clave: areaTematicaClave || null,
-      agente_capacitador_nombre: agenteCapacitadorNombre || null,
-      agente_capacitador_registro: agenteCapacitadorRegistro || null,
-      instructor_nombre: instructorNombre || null,
-      instructor_firma_url: instructorFirmaUrl || null,
-      fuente: "MANUAL",
-    },
-    create: {
-      wp_curso_id: wpCourseId,
-      nombre_curso: nombreCurso,
-      duracion_horas: duracionHoras,
-      area_tematica_nombre: areaTematicaNombre || null,
-      area_tematica_clave: areaTematicaClave || null,
-      agente_capacitador_nombre: agenteCapacitadorNombre || null,
-      agente_capacitador_registro: agenteCapacitadorRegistro || null,
-      instructor_nombre: instructorNombre || null,
-      instructor_firma_url: instructorFirmaUrl || null,
-      fuente: "MANUAL",
-    },
-  })
-
-  revalidatePath("/superadmin/paquetes")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/superadmin/paquetes?success=dc3_actualizado")
 }
 
 export async function deletePackageAction(formData: FormData) {
