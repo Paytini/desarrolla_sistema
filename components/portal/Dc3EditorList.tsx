@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react"
 import { useRef, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { formatDate } from "@/lib/format"
 
 type CourseMetadata = {
@@ -111,6 +112,7 @@ function CourseEditorCard({
   const [isSyncing, startSyncTransition] = useTransition()
   const [syncSuccess, setSyncSuccess] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const router = useRouter()
 
   const status = getStatus(course.metadata)
   const completeness = getCompleteness(course.metadata)
@@ -163,6 +165,7 @@ function CourseEditorCard({
       if (result.ok) {
         setSyncSuccess(true)
         setTimeout(() => setSyncSuccess(false), 3500)
+        router.refresh()
       } else {
         setSyncError(result.error ?? "Error al sincronizar")
       }

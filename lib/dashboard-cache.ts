@@ -179,8 +179,8 @@ export async function getSuperadminPaquetesSnapshot() {
 
 const getSuperadminDc3SnapshotCached = unstable_cache(
   async () => {
-    const [catalog, metadata, paqueteCursos] = await Promise.all([
-      getWordPressCourseCatalog(),
+    const [catalogResult, metadata, paqueteCursos] = await Promise.all([
+      getWordPressCourseCatalog().catch(() => ({ courses: [], total: 0 })),
       prisma.cursoDc3Metadata.findMany(),
       prisma.paqueteCurso.findMany({
         select: {
@@ -190,7 +190,7 @@ const getSuperadminDc3SnapshotCached = unstable_cache(
       }),
     ])
 
-    const publishedCourses = catalog.courses.filter((course) => course.status === "publish")
+    const publishedCourses = catalogResult.courses.filter((course) => course.status === "publish")
 
     return { publishedCourses, metadata, paqueteCursos }
   },
