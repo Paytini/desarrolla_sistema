@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation"
+import { PageHeader } from "@/components/superadmin/PageHeader"
+import { SubmitButton } from "@/components/superadmin/SubmitButton"
 import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -149,26 +151,19 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-400">
-            SuperAdmin · Operaciones
-          </p>
-          <h1 className="mt-1 text-[24px] font-semibold leading-tight text-slate-950">
-            Reportes globales
-          </h1>
-          <p className="mt-0.5 text-[13px] text-slate-400">
-            Vista ejecutiva de vencimientos, sincronización y salud académica por empresa.
-          </p>
-        </div>
-        <form action={triggerGlobalLearningSyncAction} className="shrink-0">
-          <Button type="submit" className="gap-2" style={{ background: "#3730a3" }}>
-            <RefreshCw size={14} strokeWidth={2} />
-            Sincronizar todo
-          </Button>
-        </form>
-      </div>
+      <PageHeader
+        breadcrumb="SuperAdmin · Operaciones"
+        title="Reportes globales"
+        description="Vista ejecutiva de vencimientos, sincronización y salud académica por empresa."
+        action={
+          <form action={triggerGlobalLearningSyncAction}>
+            <SubmitButton>
+              <RefreshCw size={14} strokeWidth={2} />
+              Sincronizar todo
+            </SubmitButton>
+          </form>
+        }
+      />
 
       {/* Alerts */}
       {success && (

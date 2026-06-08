@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
+import { PageHeader } from "@/components/superadmin/PageHeader"
 import { CheckCircle2, Map, Plus } from "lucide-react"
 import Link from "next/link"
 
@@ -37,21 +38,20 @@ export default async function SuperadminRutasPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">SuperAdmin</p>
-          <h1 className="text-2xl font-bold text-slate-950">Rutas de aprendizaje</h1>
-          <p className="mt-0.5 text-sm text-slate-500">Plantillas globales de secuencias de cursos.</p>
-        </div>
-        <Link
-          href="/superadmin/rutas/nueva"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#F5853F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#D96B20]"
-        >
-          <Plus size={14} strokeWidth={2.5} />
-          Nueva ruta
-        </Link>
-      </div>
+      <PageHeader
+        breadcrumb="SuperAdmin · Operaciones"
+        title="Rutas de aprendizaje"
+        description="Plantillas globales de secuencias de cursos."
+        action={
+          <Link
+            href="/superadmin/rutas/nueva"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#F5853F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#D96B20]"
+          >
+            <Plus size={14} strokeWidth={2.5} />
+            Nueva ruta
+          </Link>
+        }
+      />
 
       {success && (
         <Alert className="border-green-200 bg-green-50 text-green-800">

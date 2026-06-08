@@ -3,6 +3,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
+import { PageHeader } from "@/components/superadmin/PageHeader"
 import { AlertCircle, AlertTriangle, BarChart3, CheckCircle2, FileText } from "lucide-react"
 import { redirect } from "next/navigation"
 import { saveDc3MetadataAction } from "./actions"
@@ -54,14 +55,11 @@ export default async function SuperadminDc3Page() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Operaciones</p>
-        <h1 className="text-2xl font-bold text-slate-950">Editor DC-3</h1>
-        <p className="mt-0.5 text-sm text-slate-500">
-          Configura la metadata oficial STPS por curso para emitir constancias DC-3 correctas.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb="SuperAdmin · Operaciones"
+        title="Editor DC-3"
+        description="Configura la metadata oficial STPS por curso para emitir constancias DC-3 correctas."
+      />
 
       {/* KPI Strip */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

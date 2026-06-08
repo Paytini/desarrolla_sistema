@@ -7,34 +7,32 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import { StatCard } from "@/components/superadmin/StatCard"
 import { PanelBox } from "@/components/superadmin/PanelBox"
-import { AlertCircle, Building2, CheckCircle2, ExternalLink, Plus } from "lucide-react"
+import { PasswordToggleInput } from "@/components/superadmin/PasswordToggleInput"
+import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButton"
+import { PageHeader } from "@/components/superadmin/PageHeader"
+import { SubmitButton } from "@/components/superadmin/SubmitButton"
+import { AlertCircle, Building2, CheckCircle2, ExternalLink, Plus, X } from "lucide-react"
 import Link from "next/link"
-import {
-  createCompanyAction,
-  toggleCompanyStatusAction,
-  updateCompanySeatsAction,
-} from "./actions"
+import { createCompanyAction } from "./actions"
 
 const successMessages: Record<string, string> = {
   empresa_creada:     "Empresa creada correctamente con su usuario RH inicial.",
   empresa_suspendida: "Empresa suspendida.",
   empresa_activada:   "Empresa reactivada correctamente.",
-  cupos_actualizados: "Cupos actualizados correctamente.",
 }
 const errorMessages: Record<string, string> = {
-  datos:          "Faltan datos obligatorios.",
-  email_rh:       "Ese correo RH ya está ligado a una empresa.",
-  usuario_rh:     "Ese correo ya existe como usuario del portal.",
-  empresa:        "No se encontró la empresa.",
-  cupos:          "No fue posible actualizar cupos.",
-  cupos_menor_uso:"No puedes reducir cupos por debajo de los actualmente usados.",
+  datos:      "Faltan datos obligatorios.",
+  email_rh:   "Ese correo RH ya está ligado a una empresa.",
+  usuario_rh: "Ese correo ya existe como usuario del portal.",
+  empresa:    "No se encontró la empresa.",
 }
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
+
+const PAGE_SIZE = 20
 
 export default async function EmpresasPage({ searchParams }: PageProps) {
   const params = await searchParams
@@ -42,6 +40,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
   const error        = readSearchParam(params, "error")
   const q            = readSearchParam(params, "q")?.toLowerCase() ?? ""
   const statusFilter = readSearchParam(params, "status") ?? "all"
+  const page         = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
   const { empresas, paquetes } = await getSuperadminEmpresasSnapshot()
 
@@ -59,31 +58,28 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
     return matchQ && matchStatus
   })
 
-  const empresasActivas = empresas.filter((e) => e.activo).length
-  const cuposVendidos   = empresas.reduce((t, e) => t + e.asientos_contratados, 0)
-  const cuposUsados     = empresas.reduce((t, e) => t + e.asientos_usados, 0)
-  const occupancyPct    = cuposVendidos ? Math.round((cuposUsados / cuposVendidos) * 100) : 0
+  const totalPages    = Math.max(1, Math.ceil(empresasFiltradas.length / PAGE_SIZE))
+  const currentPage   = Math.min(page, totalPages)
+  const empresasPagina = empresasFiltradas.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  function pageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (q) qs.set("q", q)
+    if (statusFilter !== "all") qs.set("status", statusFilter)
+    if (p > 1) qs.set("page", String(p))
+    const str = qs.toString()
+    return `/superadmin/empresas${str ? `?${str}` : ""}`
+  }
 
   return (
     <div className="space-y-6">
 
-      {/* Page header */}
-      <div>
-        <p
-          className="text-[10px] font-bold uppercase tracking-[0.14em]"
-          style={{ color: "#94a3b8" }}
-        >
-          SuperAdmin · Administración
-        </p>
-        <h1 className="mt-0.5 text-[22px] font-semibold leading-tight" style={{ color: "#0f172a" }}>
-          Empresas clientes
-        </h1>
-        <p className="mt-0.5 text-[13px]" style={{ color: "#94a3b8" }}>
-          Gestiona las organizaciones activas en la plataforma.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb="SuperAdmin · Administración"
+        title="Empresas clientes"
+        description="Gestiona las organizaciones activas en la plataforma."
+      />
 
-      {/* Alerts */}
       {success && (
         <Alert className="border-green-200 bg-green-50 text-green-800">
           <CheckCircle2 className="size-4" />
@@ -97,32 +93,6 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
         </Alert>
       )}
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          label="Empresas activas"
-          value={String(empresasActivas)}
-          sub={`${empresas.length} registradas`}
-        />
-        <StatCard
-          label="Cupos vendidos"
-          value={String(cuposVendidos)}
-          sub="Capacidad comprometida"
-        />
-        <StatCard
-          label="Ocupación global"
-          value={`${occupancyPct}%`}
-          sub={`${cuposUsados} en uso`}
-          alert={occupancyPct >= 90}
-        />
-        <StatCard
-          label="Paquetes activos"
-          value={String(paquetes.length)}
-          sub="En catálogo"
-        />
-      </div>
-
-      {/* Main grid */}
       <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
 
         {/* ── Alta de empresa ── */}
@@ -154,7 +124,12 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                   <Label className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: "#94a3b8" }}>
                     Password temporal *
                   </Label>
-                  <Input name="password_rh" type="password" minLength={8} required placeholder="Mín. 8 caracteres" />
+                  <PasswordToggleInput
+                    name="password_rh"
+                    minLength={8}
+                    required
+                    placeholder="Mín. 8 caracteres"
+                  />
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
@@ -208,14 +183,10 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                 </Label>
                 <Textarea name="notas" rows={2} placeholder="Observaciones o notas del contrato…" />
               </div>
-              <Button
-                type="submit"
-                className="w-full gap-2"
-                style={{ background: "#1a4f8a", color: "#fff" }}
-              >
+              <SubmitButton className="w-full">
                 <Plus size={14} strokeWidth={2.5} />
                 Crear empresa
-              </Button>
+              </SubmitButton>
             </div>
           </form>
         </PanelBox>
@@ -223,29 +194,40 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
         {/* ── Tabla de empresas ── */}
         <PanelBox
           title="Empresas registradas"
-          description={`${empresasFiltradas.length} resultado${empresasFiltradas.length !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}`}
+          description={`${empresasFiltradas.length} resultado${empresasFiltradas.length !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
           noPadding
           action={
-            <form method="GET" className="flex items-center gap-2">
-              <Input
-                name="q"
-                defaultValue={q}
-                placeholder="Buscar empresa o RFC…"
-                className="h-8 w-44 text-[13px]"
-              />
-              <select
-                name="status"
-                defaultValue={statusFilter}
-                className="flex h-8 rounded-md border border-input bg-transparent px-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="all">Todos</option>
-                <option value="activa">Activas</option>
-                <option value="suspendida">Suspendidas</option>
-              </select>
-              <Button type="submit" variant="outline" size="sm" className="h-8 px-3 text-[13px]">
-                Filtrar
-              </Button>
-            </form>
+            <div className="flex items-center gap-2">
+              <form method="GET" className="flex items-center gap-2">
+                <Input
+                  name="q"
+                  defaultValue={q}
+                  placeholder="Buscar empresa o RFC…"
+                  className="h-8 w-44 text-[13px]"
+                />
+                <select
+                  name="status"
+                  defaultValue={statusFilter}
+                  className="flex h-8 rounded-md border border-input bg-transparent px-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="all">Todos</option>
+                  <option value="activa">Activas</option>
+                  <option value="suspendida">Suspendidas</option>
+                </select>
+                <Button type="submit" variant="outline" size="sm" className="h-8 px-3 text-[13px]">
+                  Filtrar
+                </Button>
+              </form>
+              {(q || statusFilter !== "all") && (
+                <Link
+                  href="/superadmin/empresas"
+                  className="inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <X size={12} strokeWidth={2.5} />
+                  Limpiar
+                </Link>
+              )}
+            </div>
           }
         >
           {empresasFiltradas.length === 0 ? (
@@ -282,7 +264,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {empresasFiltradas.map((empresa) => {
+                {empresasPagina.map((empresa) => {
                   const paquete = empresa.paquetes[0]?.paquete?.nombre ?? "—"
                   const activos = empresa.empleados.filter((e) => e.activo).length
                   const pct = empresa.asientos_contratados
@@ -371,34 +353,11 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                             <ExternalLink size={11} strokeWidth={2} />
                             Ver
                           </Link>
-                          <form action={updateCompanySeatsAction} className="flex items-center gap-1">
-                            <input type="hidden" name="empresa_id" value={empresa.id} />
-                            <Input
-                              name="asientos_contratados"
-                              type="number"
-                              min={Math.max(activos, 1)}
-                              defaultValue={empresa.asientos_contratados}
-                              className="h-7 w-14 text-[12px]"
-                            />
-                            <Button variant="outline" size="sm" type="submit" className="h-7 px-2 text-[12px]">
-                              ↑
-                            </Button>
-                          </form>
-                          <form action={toggleCompanyStatusAction}>
-                            <input type="hidden" name="empresa_id" value={empresa.id} />
-                            <Button
-                              size="sm"
-                              type="submit"
-                              className="h-7 px-2.5 text-[12px]"
-                              style={
-                                empresa.activo
-                                  ? { background: "#0f172a", color: "#fff" }
-                                  : { background: "#1a4f8a", color: "#fff" }
-                              }
-                            >
-                              {empresa.activo ? "Suspender" : "Reactivar"}
-                            </Button>
-                          </form>
+                          <SuspendCompanyButton
+                            empresaId={empresa.id}
+                            activo={empresa.activo}
+                            nombre={empresa.nombre}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -406,6 +365,39 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                 })}
               </TableBody>
             </Table>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-5 py-3">
+              <p className="text-[12px] text-muted-foreground">
+                {empresasFiltradas.length} resultado{empresasFiltradas.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
+              </p>
+              <div className="flex items-center gap-1.5">
+                {currentPage > 1 ? (
+                  <Link
+                    href={pageUrl(currentPage - 1)}
+                    className="inline-flex h-7 items-center rounded-md border border-input bg-background px-3 text-[12px] font-medium text-foreground transition-colors hover:bg-accent"
+                  >
+                    ← Anterior
+                  </Link>
+                ) : (
+                  <span className="inline-flex h-7 items-center rounded-md border border-input px-3 text-[12px] text-muted-foreground opacity-50 cursor-not-allowed">
+                    ← Anterior
+                  </span>
+                )}
+                {currentPage < totalPages ? (
+                  <Link
+                    href={pageUrl(currentPage + 1)}
+                    className="inline-flex h-7 items-center rounded-md border border-input bg-background px-3 text-[12px] font-medium text-foreground transition-colors hover:bg-accent"
+                  >
+                    Siguiente →
+                  </Link>
+                ) : (
+                  <span className="inline-flex h-7 items-center rounded-md border border-input px-3 text-[12px] text-muted-foreground opacity-50 cursor-not-allowed">
+                    Siguiente →
+                  </span>
+                )}
+              </div>
+            </div>
           )}
         </PanelBox>
       </div>

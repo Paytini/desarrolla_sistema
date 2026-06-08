@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import { StatCard } from "@/components/superadmin/StatCard"
 import { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities, formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
+import { PageHeader } from "@/components/superadmin/PageHeader"
 import { AlertCircle, CheckCircle2, Package, RotateCw } from "lucide-react"
 import {
   assignPackageToCompanyAction,
@@ -85,25 +85,13 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
   const { paquetes, empresas, dc3MetadataByCourseId } = await getSuperadminPaquetesSnapshot()
 
-  const totalPackages   = paquetes.length
-  const totalCourses    = paquetes.reduce((s, p) => s + p.cursos.length, 0)
-  const assignedCompanies = empresas.filter((e) => e.paquetes.length > 0).length
-  const packagesWithBundle = paquetes.filter((p) => p.wp_bundle_id).length
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-400">
-          SuperAdmin · Operaciones
-        </p>
-        <h1 className="mt-1 text-[24px] font-semibold leading-tight text-slate-950">
-          Gestión de paquetes
-        </h1>
-        <p className="mt-0.5 text-[13px] text-slate-400">
-          Define paquetes con cursos de Tutor LMS, asígnalos a empresas y sincroniza empleados.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb="SuperAdmin · Operaciones"
+        title="Gestión de paquetes"
+        description="Define paquetes con cursos de Tutor LMS, asígnalos a empresas y sincroniza empleados."
+      />
 
       {/* Alerts */}
       {success && (
@@ -120,30 +108,6 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
           </AlertDescription>
         </Alert>
       )}
-
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 divide-x divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200 bg-white lg:grid-cols-4 lg:divide-y-0">
-        <StatCard
-          label="Paquetes registrados"
-          value={totalPackages}
-          sub="En el catálogo activo"
-        />
-        <StatCard
-          label="Cursos definidos"
-          value={totalCourses}
-          sub="Incluidos en paquetes"
-        />
-        <StatCard
-          label="Empresas con paquete"
-          value={assignedCompanies}
-          sub="Con plan vigente asignado"
-        />
-        <StatCard
-          label="Con bundle privado"
-          value={packagesWithBundle}
-          sub="Referencia WP/Tutor LMS"
-        />
-      </div>
 
       {/* Forms row */}
       <div className="grid gap-5 xl:grid-cols-[1fr_1.3fr]">

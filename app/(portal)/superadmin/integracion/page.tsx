@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { getSession } from "@/lib/session"
 import { getTutorLearningWebhookDiagnostics } from "@/lib/webhook-monitor"
+import { PageHeader } from "@/components/superadmin/PageHeader"
 import { CheckCircle2, Plug, XCircle } from "lucide-react"
 
 function buildPortalWebhookUrl() {
@@ -49,14 +50,11 @@ export default async function SuperAdminIntegracionPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">SuperAdmin</p>
-        <h1 className="text-2xl font-bold text-slate-950">Integración WordPress / Tutor</h1>
-        <p className="mt-0.5 text-sm text-slate-500">
-          Diagnóstico del bridge, webhook académico y último evento recibido.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb="SuperAdmin · Sistema"
+        title="Integración WordPress / Tutor"
+        description="Diagnóstico del bridge, webhook académico y último evento recibido."
+      />
 
       {/* Status banner */}
       {bridgeReachable ? (

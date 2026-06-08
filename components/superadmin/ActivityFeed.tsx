@@ -34,7 +34,7 @@ export function ActivityFeed({ items }: { items: AuditoriaItem[] }) {
         <CardTitle className="text-[14px] font-medium">Actividad reciente</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[360px]">
+        <ScrollArea className="max-h-[360px]">
           {items.length === 0 ? (
             <div className="py-12 text-center text-[13px] text-muted-foreground">
               Sin eventos registrados aún.

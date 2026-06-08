@@ -1,3 +1,5 @@
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+
 interface OcupacionCardProps {
   ocupacionPct: number
   empresas: Array<{ id: number; nombre: string; asientos_usados: number; asientos_contratados: number }>
@@ -36,11 +38,11 @@ function HorizontalBar({ nombre, usados, contratados }: { nombre: string; usados
 
 export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
   return (
-    <div style={{ overflow: "hidden", borderRadius: "6px", border: "1px solid #e2e8f0", background: "#fff" }}>
-      <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
+    <Card className="overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 border-b border-border px-5 py-4">
         <div>
-          <p className="text-[14px] font-medium text-slate-900">Ocupación de cupos</p>
-          <p className="text-[12px] text-slate-400">Cupos usados vs. contratados</p>
+          <p className="text-[14px] font-medium text-foreground">Ocupación de cupos</p>
+          <p className="text-[12px] text-muted-foreground">Cupos usados vs. contratados</p>
         </div>
         <div className="text-right">
           <p
@@ -49,13 +51,12 @@ export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
           >
             {ocupacionPct}%
           </p>
-          <p className="text-[11px] text-slate-400">ocupación global</p>
+          <p className="text-[11px] text-muted-foreground">ocupación global</p>
         </div>
-      </div>
-
-      <div className="p-6">
+      </CardHeader>
+      <CardContent className="p-5">
         {empresas.length === 0 ? (
-          <p className="text-center text-[13px] text-slate-400">Sin empresas registradas.</p>
+          <p className="text-center text-[13px] text-muted-foreground">Sin empresas registradas.</p>
         ) : (
           <div className="space-y-4">
             {empresas.slice(0, 6).map((e) => (
@@ -68,7 +69,7 @@ export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

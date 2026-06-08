@@ -45,47 +45,46 @@ const QUOTES = [
     text: "La capacitación es el puente entre el talento que ya tienes y los resultados que todavía no has alcanzado.",
     author: "Peter Drucker",
     role: "Padre de la administración moderna",
-    // Unsplash: collaborative team meeting, hands around table
+
+
+
+    
     image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=960&q=75",
   },
   {
     text: "Invertir en el conocimiento de tu equipo es la única inversión que ninguna crisis puede quitarte.",
     author: "Benjamin Franklin",
     role: "Empresario y estadista",
-    // Unsplash: person studying at laptop in professional setting
     image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=960&q=75",
   },
   {
     text: "Los equipos que aprenden juntos son los que construyen empresas que perduran.",
     author: "Peter Senge",
-    role: "La Quinta Disciplina",
-    // Unsplash: team brainstorming / group collaboration
+    role: "La Quinta Disciplina", 
     image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=960&q=75",
   },
   {
     text: "La diferencia entre una empresa ordinaria y una extraordinaria está en el desarrollo de su gente.",
     author: "Jack Welch",
     role: "Ex CEO de General Electric",
-    // Unsplash: confident business professional at work
     image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=960&q=75",
   },
   {
     text: "El cumplimiento normativo no es una carga: es la base sobre la que se construye una empresa confiable.",
     author: "Desarrolla360",
     role: "Portal Empresarial",
-    // Unsplash: professional training / classroom setting
     image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=960&q=75",
   },
 ]
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail]           = useState("")
-  const [password, setPassword]     = useState("")
-  const [showPw, setShowPw]         = useState(false)
-  const [error, setError]           = useState("")
-  const [loading, setLoading]       = useState(false)
-  const [activeIdx, setActiveIdx]   = useState(0)
+  const [email, setEmail]               = useState("")
+  const [password, setPassword]         = useState("")
+  const [showPw, setShowPw]             = useState(false)
+  const [error, setError]               = useState("")
+  const [loading, setLoading]           = useState(false)
+  const [activeIdx, setActiveIdx]       = useState(0)
   const [quoteVisible, setQuoteVisible] = useState(true)
 
   useEffect(() => {
@@ -123,9 +122,9 @@ export default function LoginPage() {
     const rol     = session?.user?.rol
 
     if      (rol === "SUPERADMIN") router.push("/superadmin/empresas")
-    else if (rol === "RH")        router.push("/empresa/inicio")
-    else if (rol === "EMPLEADO")  router.push("/empleado/cursos")
-    else                          setError("Rol no reconocido")
+    else if (rol === "RH")         router.push("/empresa/inicio")
+    else if (rol === "EMPLEADO")   router.push("/empleado/cursos")
+    else                           setError("Rol no reconocido")
   }
 
   const quote = QUOTES[activeIdx]
@@ -134,16 +133,14 @@ export default function LoginPage() {
     <div className="login-root">
 
       <aside className="login-quotes-panel">
-        {/* Imagen B&W de fondo — cambia con cada quote */}
         <div
           className="login-ql-bg-image"
           style={{
             backgroundImage: `url(${quote.image})`,
-            opacity: quoteVisible ? 1 : 0,
+            opacity: quoteVisible ? 0.38 : 0,
             transition: "opacity 1s ease",
           }}
         />
-        {/* Overlay cálido para legibilidad */}
         <div className="login-ql-overlay" />
         <div className="login-bg-grid" />
         <div className="login-ql-edge" />
@@ -164,18 +161,17 @@ export default function LoginPage() {
           <div className="login-ql-body">
             <span className="login-ql-mark">&ldquo;</span>
 
-            {/* Tarjeta de vidrio que enmarca el texto */}
             <div className="login-ql-quote-card">
               <div
                 style={{
                   opacity:    quoteVisible ? 1 : 0,
-                  transform:  quoteVisible ? "translateY(0)" : "translateY(1rem)",
+                  transform:  quoteVisible ? "translateY(0)" : "translateY(0.75rem)",
                   transition: "opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1)",
                 }}
               >
                 <p className="login-ql-text">{quote.text}</p>
                 <div className="login-ql-author">
-                  <span className="login-ql-name">— {quote.author}</span>
+                  <span className="login-ql-name">{quote.author}</span>
                   <span className="login-ql-role">{quote.role}</span>
                 </div>
               </div>
@@ -186,7 +182,7 @@ export default function LoginPage() {
                     key={i}
                     className={`login-ql-dot${i === activeIdx ? " login-ql-dot--active" : ""}`}
                     onClick={() => jumpTo(i)}
-                    aria-label={`Quote ${i + 1}`}
+                    aria-label={`Frase ${i + 1}`}
                   />
                 ))}
               </div>
@@ -259,6 +255,11 @@ export default function LoginPage() {
                   <EyeIcon open={showPw} />
                 </button>
               </div>
+            </div>
+
+            {/* Opcional: enlace de recuperación. Apunta a tu ruta real cuando la tengas. */}
+            <div className="login-aux-row">
+              <a href="/recuperar" className="login-forgot">¿Olvidaste tu contraseña?</a>
             </div>
 
             {error ? (

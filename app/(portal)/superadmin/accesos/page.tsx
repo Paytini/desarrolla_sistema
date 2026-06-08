@@ -8,6 +8,7 @@ import { getSuperadminAccesosSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
+import { PageHeader } from "@/components/superadmin/PageHeader"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import {
   deleteEmployeeAsSuperAdminAction,
@@ -48,18 +49,11 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-400">
-          SuperAdmin · Sistema
-        </p>
-        <h1 className="mt-1 text-[24px] font-semibold leading-tight text-slate-950">
-          Control de accesos
-        </h1>
-        <p className="mt-0.5 text-[13px] text-slate-400">
-          Administra usuarios RH, empleados activos y suspensiones.
-        </p>
-      </div>
+      <PageHeader
+        breadcrumb="SuperAdmin · Sistema"
+        title="Control de accesos"
+        description="Administra usuarios RH, empleados activos y suspensiones."
+      />
 
       {/* Alerts */}
       {success && (

@@ -11,6 +11,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Map,
   Package,
   Share2,
   Users,
@@ -45,6 +46,7 @@ const navSuperAdminSections: NavSection[] = [
     heading: "Operaciones",
     items: [
       { label: "Paquetes",       href: "/superadmin/paquetes",    icon: Package },
+      { label: "Rutas",          href: "/superadmin/rutas",       icon: Map },
       { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText },
       { label: "Reportes",       href: "/superadmin/reportes",    icon: BarChart3 },
       { label: "Accesos",        href: "/superadmin/accesos",     icon: Users },
@@ -167,7 +169,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
   return (
     <TooltipProvider delay={200}>
       <aside
-        className="relative sticky top-0 flex h-screen shrink-0 flex-col transition-[width] duration-300 ease-in-out"
+        className="relative sticky top-0 hidden h-screen shrink-0 flex-col transition-[width] duration-300 ease-in-out md:flex"
         style={{ width: collapsed ? 64 : 240, background: BG }}
       >
         {/* Floating toggle button at right edge */}

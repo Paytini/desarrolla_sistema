@@ -1,4 +1,5 @@
 import EmpleadoSearchBar from "@/components/portal/EmpleadoSearchBar"
+import { MobileNav } from "@/components/portal/MobileNav"
 import { PortalGreeting } from "@/components/portal/PortalGreeting"
 import RhSearchBar from "@/components/portal/RhSearchBar"
 import SuperadminSearchBar from "@/components/portal/SuperadminSearchBar"
@@ -22,8 +23,11 @@ export default async function PortalLayout({
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar rol={rol} nombre={nombre} empresa={empresa} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-[68px] shrink-0 items-center justify-between gap-6 border-b border-slate-100 bg-white px-8">
-          <PortalGreeting nombre={nombre} rol={rol} />
+        <header className="flex h-[68px] shrink-0 items-center justify-between gap-6 border-b border-slate-100 bg-white px-4 md:px-8">
+          <div className="flex items-center gap-2">
+            <MobileNav rol={rol} nombre={nombre} />
+            <PortalGreeting nombre={nombre} rol={rol} />
+          </div>
           <div className="shrink-0">
             {rol === "SUPERADMIN" && <SuperadminSearchBar />}
             {rol === "RH" && <RhSearchBar />}
