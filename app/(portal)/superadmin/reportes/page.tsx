@@ -4,7 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { StatCard } from "@/components/superadmin/StatCard"
+import KpiCard from "@/components/portal/KpiCard"
 import { getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
@@ -188,29 +188,33 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
         </Alert>
       )}
 
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 divide-x divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200 bg-white lg:grid-cols-4 lg:divide-y-0">
-        <StatCard
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <KpiCard
           label="Avance promedio global"
           value={`${averageProgress}%`}
           sub="Promedio ponderado de cursos"
+          borderColor="primary"
         />
-        <StatCard
+        <KpiCard
           label="Renovaciones en 30 d"
           value={renewalsIn30Days}
           sub="Empresas activas por vencer"
+          borderColor="primary"
           alert={renewalsIn30Days > 0}
         />
-        <StatCard
+        <KpiCard
           label="Empresas con error"
           value={companiesWithErrors}
           sub="Requieren atención de sync"
+          borderColor="primary"
           alert={companiesWithErrors > 0}
         />
-        <StatCard
+        <KpiCard
           label="Empleados activos"
           value={totalEmpleadosActivos}
           sub="Base laboral activa total"
+          borderColor="primary"
         />
       </div>
 
