@@ -7,7 +7,7 @@ import { QuickActions } from "@/components/superadmin/QuickActions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { OcupacionCard } from "./_components/OcupacionCard"
 import { RenovacionesTable } from "./_components/RenovacionesTable"
-import { cn } from "@/lib/utils"
+import KpiCard from "@/components/portal/KpiCard"
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -70,32 +70,6 @@ function ActivityBarChart({ data }: { data: { label: string; value: number }[] }
         )
       })}
     </div>
-  )
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   STAT CARD — ring chart embedded
-   ───────────────────────────────────────────────────────────────────────────── */
-function VisualStatCard({
-  label, value, sub, pct, color, alert = false,
-}: {
-  label: string; value: string | number; sub?: string
-  pct: number; color: string; alert?: boolean
-}) {
-  return (
-    <Card className={cn("overflow-hidden border-t-[3px]", alert ? "border-t-destructive" : "border-t-primary")}>
-      <CardContent className="px-5 py-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
-            <p className={cn("mt-1.5 text-[32px] font-bold leading-none tabular-nums tracking-tight",
-              alert ? "text-destructive" : "text-foreground")}>{value}</p>
-            {sub && <p className="mt-1.5 text-[11px] text-muted-foreground">{sub}</p>}
-          </div>
-          <RingChart pct={pct} color={alert ? "#ef4444" : color} />
-        </div>
-      </CardContent>
-    </Card>
   )
 }
 
@@ -172,12 +146,12 @@ export default async function SuperadminDashboardPage() {
   return (
     <div className="space-y-5">
 
-      {/* Row 1 — 4 visual KPI cards */}
+      {/* Row 1 — 4 KPI cards con anillo de progreso */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <VisualStatCard label="Empresas activas"    value={empresasActivas}          sub={`de ${empresas.length} registradas`}               pct={empresasPct}     color="#22c55e" />
-        <VisualStatCard label="Empleados en LMS"    value={totalEmpleadosActivos}    sub={`de ${totalContratados} cupos contratados`}         pct={empleadosPct}    color="#FF8F00" />
-        <VisualStatCard label="Ocupación de cupos"  value={`${ocupacionPct}%`}       sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} pct={ocupacionPct} color="#3b82f6" alert={ocupacionPct >= 90} />
-        <VisualStatCard label="Renovaciones"        value={renewals.length}          sub="empresas vencen en 30 días"                         pct={renovacionesPct} color="#f59e0b" alert={renewals.length > 0} />
+        <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="green"   ring={empresasPct} />
+        <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="primary" ring={empleadosPct} />
+        <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="blue"    ring={ocupacionPct}    alert={ocupacionPct >= 90} />
+        <KpiCard label="Renovaciones"       value={renewals.length}       sub="empresas vencen en 30 días"                                          borderColor="amber"   ring={renovacionesPct} alert={renewals.length > 0} />
       </div>
 
       {/* Row 2 — 3 analysis charts */}
