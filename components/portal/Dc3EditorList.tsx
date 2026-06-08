@@ -45,7 +45,8 @@ function getStatus(m: CourseMetadata | null): Status {
     m.duracion_horas != null &&
     !!m.area_tematica_nombre &&
     !!m.agente_capacitador_nombre &&
-    !!m.instructor_nombre
+    !!m.instructor_nombre &&
+    !!m.instructor_firma_url
   return ok ? "complete" : "incomplete"
 }
 
@@ -56,6 +57,7 @@ function getCompleteness(m: CourseMetadata | null): number {
     !!m.area_tematica_nombre,
     !!m.agente_capacitador_nombre,
     !!m.instructor_nombre,
+    !!m.instructor_firma_url,
   ].filter(Boolean).length
 }
 
@@ -143,6 +145,10 @@ function CourseEditorCard({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSaveError(null)
+    if (!firmaUrl) {
+      setSaveError("La firma del instructor es obligatoria")
+      return
+    }
     const formData = new FormData(e.currentTarget)
     startTransition(async () => {
       const result = await action(formData)
@@ -218,7 +224,7 @@ function CourseEditorCard({
                 status === "complete" ? "text-teal-600" : "text-amber-600"
               }`}
             >
-              {completeness}/4
+              {completeness}/5
             </span>
           )}
 
@@ -355,7 +361,7 @@ function CourseEditorCard({
                 />
               </Field>
 
-              <Field label="Firma del instructor">
+              <Field label="Firma del instructor" required>
                 <div className="flex items-center gap-2.5">
                   {firmaUrl ? (
                     <>

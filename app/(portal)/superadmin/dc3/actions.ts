@@ -48,6 +48,10 @@ export async function saveDc3MetadataAction(
   const instructorNombre = (formData.get("instructor_nombre") as string)?.trim() || null
   const firmaUrl = (formData.get("firma_url") as string)?.trim() || null
 
+  if (!firmaUrl) {
+    return { ok: false, error: "La firma del instructor es obligatoria" }
+  }
+
   await prisma.cursoDc3Metadata.upsert({
     where: { wp_curso_id: wpCursoId },
     create: {
