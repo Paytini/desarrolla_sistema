@@ -13,7 +13,6 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
-  Map,
   Menu,
   Package,
   Share2,
@@ -40,7 +39,6 @@ const navSuperAdminSections: NavSection[] = [
     heading: "Operaciones",
     items: [
       { label: "Paquetes",       href: "/superadmin/paquetes",    icon: Package },
-      { label: "Rutas",          href: "/superadmin/rutas",       icon: Map },
       { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText },
       { label: "Reportes",       href: "/superadmin/reportes",    icon: BarChart3 },
       { label: "Accesos",        href: "/superadmin/accesos",     icon: Users },

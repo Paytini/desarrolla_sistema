@@ -121,12 +121,6 @@ export default async function EmpleadoCursos() {
 
   const cursos = empleado.cursos as PortalCourseRecord[]
 
-  type RutaData = {
-    id: number
-    nombre: string
-    cursos: { id: number; wp_curso_id: number; nombre_curso: string; orden: number }[]
-  }
-  let ruta: RutaData | null = null
   let dc3MetaMap = new Map<number, { duracion_horas: number | null }>()
   let pkgCourseMap = new Map<number, { descripcion: string | null; num_lecciones: number | null }>()
 
@@ -135,22 +129,7 @@ export default async function EmpleadoCursos() {
       const { prisma } = await import("@/lib/prisma")
       const wpIds = cursos.map((c) => c.wp_curso_id)
 
-      const [empresaConRuta, dc3MetaRecords, pkgCourses] = await Promise.all([
-        prisma.empresa.findUnique({
-          where: { id: session.user.empresa_id },
-          select: {
-            ruta_aprendizaje: {
-              select: {
-                id: true,
-                nombre: true,
-                cursos: {
-                  select: { id: true, wp_curso_id: true, nombre_curso: true, orden: true },
-                  orderBy: { orden: "asc" },
-                },
-              },
-            },
-          },
-        }),
+      const [dc3MetaRecords, pkgCourses] = await Promise.all([
         prisma.cursoDc3Metadata.findMany({
           where: { wp_curso_id: { in: wpIds } },
           select: { wp_curso_id: true, duracion_horas: true },
@@ -162,7 +141,6 @@ export default async function EmpleadoCursos() {
         }),
       ])
 
-      ruta = empresaConRuta?.ruta_aprendizaje ?? null
       dc3MetaMap = new Map(
         dc3MetaRecords.map((m) => [m.wp_curso_id, { duracion_horas: m.duracion_horas }])
       )
@@ -181,18 +159,6 @@ export default async function EmpleadoCursos() {
   const avancePromedio = cursos.length
     ? Math.round(cursos.reduce((s, c) => s + c.progreso_pct, 0) / cursos.length)
     : 0
-
-  const completadosEnRuta = ruta
-    ? ruta.cursos.filter((rc) =>
-        cursos.find((c) => c.wp_curso_id === rc.wp_curso_id)?.completado
-      ).length
-    : 0
-
-  const rutaActiveCourseId = ruta
-    ? (ruta.cursos.find(
-        (rc) => !cursos.find((c) => c.wp_curso_id === rc.wp_curso_id)?.completado
-      )?.wp_curso_id ?? null)
-    : null
 
   return (
     <div className="space-y-6">
@@ -257,66 +223,6 @@ export default async function EmpleadoCursos() {
         </div>
       ) : null}
 
-      {/* Banner de ruta de aprendizaje */}
-      {ruta && (
-        <div className="rounded-xl border border-[#f0f0f0] bg-white p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#F5853F]">
-                Tu ruta de aprendizaje
-              </p>
-              <p className="text-sm font-bold text-[#1a1a1a]">{ruta.nombre}</p>
-            </div>
-            <span className="text-xs text-[#64748b]">
-              {completadosEnRuta} de {ruta.cursos.length} completados
-            </span>
-          </div>
-          <div className="flex items-center overflow-x-auto">
-            {ruta.cursos.map((rutaCurso, i) => {
-              const curso = cursos.find((c) => c.wp_curso_id === rutaCurso.wp_curso_id)
-              const completado = curso?.completado ?? false
-              const enProgreso = !completado && (curso?.progreso_pct ?? 0) > 0
-              const esUltimo = i === ruta.cursos.length - 1
-              return (
-                <Fragment key={rutaCurso.id}>
-                  <div className="flex min-w-0 flex-1 flex-col items-center">
-                    <div
-                      className={`mb-1 flex size-7 items-center justify-center rounded-full text-xs font-bold text-white ${
-                        completado
-                          ? "bg-[#22c55e]"
-                          : enProgreso
-                          ? "bg-[#F5853F]"
-                          : "bg-[#e2e8f0]"
-                      }`}
-                    >
-                      {completado ? "✓" : i + 1}
-                    </div>
-                    <span
-                      className={`max-w-[72px] text-center text-[9px] font-semibold leading-tight ${
-                        completado
-                          ? "text-[#1a1a1a]"
-                          : enProgreso
-                          ? "text-[#F5853F]"
-                          : "text-[#94a3b8]"
-                      }`}
-                    >
-                      {rutaCurso.nombre_curso}
-                    </span>
-                  </div>
-                  {!esUltimo && (
-                    <div
-                      className={`mb-4 h-0.5 w-6 shrink-0 ${
-                        completado ? "bg-[#22c55e]" : "bg-[#e2e8f0]"
-                      }`}
-                    />
-                  )}
-                </Fragment>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
       {/* Course grid */}
       {cursos.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-white px-4 py-12 text-center text-sm text-[#94a3b8]">
@@ -336,7 +242,6 @@ export default async function EmpleadoCursos() {
             const pkgMeta = pkgCourseMap.get(curso.wp_curso_id)
             const hasError = curso.acceso_estado === "ERROR"
             const enProgreso = !curso.completado && curso.progreso_pct > 0
-            const isRutaActive = rutaActiveCourseId === curso.wp_curso_id
             const barColor =
               curso.completado || enProgreso ? "bg-[#F5853F]" : "bg-[#94a3b8]"
             const duracionLabel = dc3Meta?.duracion_horas
@@ -348,9 +253,7 @@ export default async function EmpleadoCursos() {
               <article
                 key={curso.id}
                 className="flex flex-col overflow-hidden rounded-xl bg-white"
-                style={{
-                  border: `1px solid ${isRutaActive ? "#F5853F" : "#f0f0f0"}`,
-                }}
+                style={{ border: "1px solid #f0f0f0" }}
               >
                 {/* Thumbnail / placeholder */}
                 {thumbnail ? (

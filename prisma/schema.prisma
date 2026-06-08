@@ -68,12 +68,10 @@ model Empresa {
   notas                 String?  @db.Text // notas internas de Desarrolla360
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
-  ruta_aprendizaje_id   Int?
 
   usuarios          Usuario[]
   empleados         Empleado[]
   paquetes          EmpresaPaquete[]
-  ruta_aprendizaje  RutaAprendizaje? @relation("EmpresaRuta", fields: [ruta_aprendizaje_id], references: [id])
 
   @@map("empresas")
 }
@@ -339,38 +337,4 @@ model HistorialCupo {
   @@index([empresa_id])
   @@index([created_at])
   @@map("historial_cupos")
-}
-
-// ─────────────────────────────────────────────────────────────
-//  RUTA_APRENDIZAJE
-//  Plantillas globales de secuencias de cursos creadas por SuperAdmin.
-//  Una empresa puede tener una ruta asignada (ruta_aprendizaje_id en Empresa).
-// ─────────────────────────────────────────────────────────────
-
-model RutaAprendizaje {
-  id          Int         @id @default(autoincrement())
-  nombre      String
-  descripcion String?     @db.Text
-  activo      Boolean     @default(true)
-  created_at  DateTime    @default(now())
-  updated_at  DateTime    @updatedAt
-
-  cursos   RutaCurso[]
-  empresas Empresa[]   @relation("EmpresaRuta")
-
-  @@map("rutas_aprendizaje")
-}
-
-model RutaCurso {
-  id           Int             @id @default(autoincrement())
-  ruta_id      Int
-  wp_curso_id  Int
-  nombre_curso String
-  orden        Int
-
-  ruta RutaAprendizaje @relation(fields: [ruta_id], references: [id], onDelete: Cascade)
-
-  @@index([ruta_id])
-  @@unique([ruta_id, wp_curso_id])
-  @@map("ruta_cursos")
 }
