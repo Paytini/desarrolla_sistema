@@ -116,10 +116,13 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
     <Link
       href={item.href}
       prefetch
-      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-[15px] font-medium transition-all"
+      className={cn(
+        "flex items-center gap-3 px-3 py-2.5 text-[15px] font-medium transition-all",
+        active ? "rounded-l-2xl" : "rounded-md"
+      )}
       style={
         active
-          ? { background: "rgba(0,0,0,0.18)", color: "#fff" }
+          ? { background: "white", color: "#FF8F00" }
           : { color: "rgba(255,255,255,0.75)" }
       }
       onMouseEnter={(e) => {
@@ -131,7 +134,7 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
     >
       <span
         className="flex size-[6px] shrink-0 rounded-full transition-all"
-        style={{ background: active ? "#fff" : "rgba(255,255,255,0.3)" }}
+        style={{ background: active ? "#FF8F00" : "rgba(255,255,255,0.3)" }}
       />
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md">
         <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
@@ -175,12 +178,12 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
           type="button"
           onClick={toggle}
           aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
-          className="absolute -right-3 top-5 z-30 flex size-6 items-center justify-center rounded-full bg-white shadow-md transition-shadow hover:shadow-lg"
+          className="absolute -right-4 top-5 z-30 flex size-8 items-center justify-center rounded-full bg-white shadow-md transition-shadow hover:shadow-lg"
           style={{ border: "1.5px solid #e5e7eb" }}
         >
           {collapsed
-            ? <ChevronRight size={11} strokeWidth={2.5} style={{ color: BG }} />
-            : <ChevronLeft  size={11} strokeWidth={2.5} style={{ color: BG }} />
+            ? <ChevronRight size={14} strokeWidth={2.5} style={{ color: BG }} />
+            : <ChevronLeft  size={14} strokeWidth={2.5} style={{ color: BG }} />
           }
         </button>
 
@@ -214,7 +217,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
         </div>
 
         {/* Nav */}
-        <ScrollArea className="flex-1 px-2 py-3">
+        <ScrollArea className="flex-1 pl-2 pr-0 py-3">
           {rol === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
               <div key={section.heading} className={si > 0 ? "mt-1" : ""}>
