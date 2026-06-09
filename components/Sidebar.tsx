@@ -170,7 +170,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
   return (
     <TooltipProvider delay={200}>
       <aside
-        className="relative sticky top-0 hidden h-screen shrink-0 flex-col font-[family-name:var(--font-bricolage)] transition-[width] duration-300 ease-in-out md:flex"
+        className="relative sticky top-0 hidden h-screen shrink-0 flex-col rounded-r-3xl font-[family-name:var(--font-bricolage)] transition-[width] duration-300 ease-in-out md:flex"
         style={{ width: collapsed ? 76 : 288, background: BG }}
       >
         {/* Floating toggle button at right edge */}
