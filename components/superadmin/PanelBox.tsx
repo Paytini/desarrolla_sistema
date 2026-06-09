@@ -18,7 +18,7 @@ export function PanelBox({ title, description, count, action, children, noPaddin
       <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
-            <p className="text-[14px] font-medium leading-tight text-foreground">{title}</p>
+            <p className="text-[14px] font-medium leading-tight text-foreground font-[family-name:var(--font-heading)]">{title}</p>
             {count !== undefined && (
               <Badge variant="secondary" className="tabular-nums text-[10px]">
                 {count}

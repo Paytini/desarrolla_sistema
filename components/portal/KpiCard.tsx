@@ -43,7 +43,7 @@ export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "
             </p>
             <p
               className={cn(
-                "mt-2 text-[34px] font-bold leading-none tracking-tight tabular-nums",
+                "mt-2 text-[34px] font-bold leading-none tracking-tight tabular-nums font-[family-name:var(--font-heading)]",
                 alert ? "text-destructive" : "text-foreground"
               )}
             >

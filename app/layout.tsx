@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { DM_Sans, Geist } from "next/font/google"
+import { DM_Sans, Geist, Bricolage_Grotesque } from "next/font/google"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Suspense } from "react"
 import GlobalLoadingController from "@/components/portal/GlobalLoadingController"
@@ -12,6 +12,13 @@ const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-dm-sans",
+})
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-bricolage",
+  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -29,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={cn("h-full", "antialiased", dmSans.variable, "font-sans", geist.variable)}>
+    <html lang="es" className={cn("h-full", "antialiased", dmSans.variable, "font-sans", geist.variable, bricolage.variable)}>
       <body className={`min-h-full flex flex-col font-[family-name:var(--font-dm-sans)]`}>
         <Suspense fallback={null}>
           <GlobalLoadingController />
