@@ -173,6 +173,19 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
         className="relative sticky top-0 hidden h-screen shrink-0 flex-col rounded-r-3xl font-[family-name:var(--font-bricolage)] transition-[width] duration-300 ease-in-out md:flex"
         style={{ width: collapsed ? 76 : 288, background: BG }}
       >
+        {/* Decorative illustration */}
+        {!collapsed && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-52 overflow-hidden rounded-br-3xl opacity-[0.18]">
+            <img
+              src="/assets/sharing-knowledge.svg"
+              alt=""
+              aria-hidden="true"
+              className="absolute bottom-0 w-full"
+              style={{ filter: "brightness(0) invert(1)" }}
+            />
+          </div>
+        )}
+
         {/* Floating toggle button at right edge */}
         <button
           type="button"
