@@ -175,7 +175,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
       >
         {/* Decorative illustration */}
         {!collapsed && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-52 overflow-hidden rounded-br-3xl opacity-[0.18]">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[300px] overflow-hidden rounded-br-3xl opacity-[0.18]">
             <img
               src="/assets/sharing-knowledge.svg"
               alt=""
