@@ -1,4 +1,5 @@
 import { PanelBox } from "@/components/superadmin/PanelBox"
+import { SeatDonut } from "@/components/superadmin/SeatDonut"
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatDate, formatDateTime } from "@/lib/format"
@@ -36,32 +37,6 @@ function DonutChart({ pct, size = 160 }: { pct: number; size?: number }) {
       </text>
       <text x={cx} y={cy + 13} textAnchor="middle" fill="#94a3b8" fontSize={size * 0.08}>
         avance gbl.
-      </text>
-    </svg>
-  )
-}
-
-function SeatDonut({ used, total }: { used: number; total: number }) {
-  const pct  = total ? Math.round((used / total) * 100) : 0
-  const r    = 28
-  const circ = 2 * Math.PI * r
-  const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 90 ? "#dc2626" : pct >= 70 ? "#d97706" : "#1a4f8a"
-  return (
-    <svg width={72} height={72} viewBox="0 0 72 72" aria-hidden>
-      <circle cx={36} cy={36} r={r} fill="none" stroke="#f1f5f9" strokeWidth={8} />
-      {used > 0 && (
-        <circle
-          cx={36} cy={36} r={r} fill="none"
-          stroke={color} strokeWidth={8}
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          transform="rotate(-90 36 36)"
-        />
-      )}
-      <text x={36} y={40} textAnchor="middle" fill="#0f172a" fontSize={12} fontWeight="600">
-        {pct}%
       </text>
     </svg>
   )
