@@ -173,18 +173,16 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
         className="relative sticky top-0 hidden h-screen shrink-0 flex-col rounded-r-3xl font-[family-name:var(--font-bricolage)] transition-[width] duration-300 ease-in-out md:flex"
         style={{ width: collapsed ? 76 : 288, background: BG }}
       >
-        {/* Decorative illustration */}
-        {!collapsed && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[300px] overflow-hidden rounded-br-3xl opacity-[0.18]">
-            <img
-              src="/assets/sharing-knowledge.svg"
-              alt=""
-              aria-hidden="true"
-              className="absolute bottom-0 w-full"
-              style={{ filter: "brightness(0) invert(1)" }}
-            />
-          </div>
-        )}
+        {/* Background image + brand overlay */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-r-3xl">
+          <img
+            src="https://images.unsplash.com/photo-1761429528505-e153940c62a1?w=600&auto=format&fit=crop"
+            alt=""
+            aria-hidden="true"
+            className="size-full object-cover"
+          />
+          <div className="absolute inset-0" style={{ background: BG, opacity: 0.82 }} />
+        </div>
 
         {/* Floating toggle button at right edge */}
         <button
@@ -203,7 +201,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
         {/* Logo */}
         <div
           className={cn(
-            "flex h-[68px] shrink-0 items-center",
+            "relative z-10 flex h-[68px] shrink-0 items-center",
             collapsed ? "justify-center px-3" : "px-3"
           )}
           style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}
@@ -230,7 +228,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
         </div>
 
         {/* Nav */}
-        <ScrollArea className="flex-1 pl-2 pr-0 py-3">
+        <ScrollArea className="relative z-10 flex-1 pl-2 pr-0 py-3">
           {rol === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
               <div key={section.heading} className={si > 0 ? "mt-1" : ""}>
@@ -260,7 +258,7 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
 
         {/* Bottom */}
         <div
-          className="shrink-0 px-2 pb-3 pt-2"
+          className="relative z-10 shrink-0 px-2 pb-3 pt-2"
           style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}
         >
           {/* Logout */}

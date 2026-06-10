@@ -45,10 +45,6 @@ const QUOTES = [
     text: "La capacitación es el puente entre el talento que ya tienes y los resultados que todavía no has alcanzado.",
     author: "Peter Drucker",
     role: "Padre de la administración moderna",
-
-
-
-    
     image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=960&q=75",
   },
   {
@@ -191,6 +187,17 @@ export default function LoginPage() {
         </div>
       </aside>
 
+      {/* Wave divider — visible solo en escritorio */}
+      <div className="login-wave-divider" aria-hidden="true">
+        <svg
+          viewBox="0 0 180 800"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M 90 0 C 0 200, 0 600, 90 800 L 180 800 L 180 0 Z" fill="white" />
+        </svg>
+      </div>
+
       <main className="login-form-panel">
         <div className="login-card">
 
@@ -255,11 +262,6 @@ export default function LoginPage() {
                   <EyeIcon open={showPw} />
                 </button>
               </div>
-            </div>
-
-            {/* Opcional: enlace de recuperación. Apunta a tu ruta real cuando la tengas. */}
-            <div className="login-aux-row">
-              <a href="/recuperar" className="login-forgot">¿Olvidaste tu contraseña?</a>
             </div>
 
             {error ? (
