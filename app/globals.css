@@ -107,6 +107,66 @@ body {
   font-family: "DM Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
+/* ═══════════════════════════════════════════════
+   SIDEBAR — Navy Premium (alineado al login: colores
+   sólidos, sin gradientes, navy + acento naranja)
+   ═══════════════════════════════════════════════ */
+
+.sidebar-surface {
+  background: var(--brand-ink);
+}
+
+/* Grano fino para acabado premium — mismo patrón que el login */
+.sidebar-grain {
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Enlaces de navegación */
+.sidebar-nav-link {
+  color: rgba(239, 237, 246, 0.62);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.sidebar-nav-link:hover {
+  background: rgba(239, 237, 246, 0.06);
+  color: #EFEDF6;
+}
+
+.sidebar-nav-link--active {
+  background: var(--brand);
+  color: var(--brand-ink);
+}
+
+.sidebar-section-label {
+  color: rgba(239, 237, 246, 0.42);
+}
+
+/* Tarjetas (badge "Empresa") */
+.sidebar-card {
+  background: rgba(239, 237, 246, 0.06);
+  border: 1px solid rgba(239, 237, 246, 0.10);
+}
+
+/* Avatar — iniciales en acento naranja */
+.sidebar-avatar {
+  background: rgba(245, 133, 63, 0.18);
+  color: var(--brand);
+}
+
+/* Chip de colapsar/expandir — misma receta que el botón del login */
+.sidebar-toggle {
+  background: var(--brand);
+  color: var(--brand-ink);
+  box-shadow: 0 4px 14px -4px rgba(245, 133, 63, 0.5);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.sidebar-toggle:hover {
+  box-shadow: 0 6px 18px -4px rgba(245, 133, 63, 0.6);
+  transform: translateY(-1px);
+}
+
 /* ─── SHARED SPINNER ─── */
 .d360-spinner {
   width: 1.5rem;

@@ -1,21 +1,6 @@
 "use client"
 
-import {
-  BarChart3,
-  Award,
-  BookOpen,
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  Package,
-  Share2,
-  Users,
-  type LucideIcon,
-} from "lucide-react"
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -25,65 +10,17 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-
-/* Sidebar background — dark orange gradient */
-const BG = "#FF8F00"
-
-type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean }
-type NavSection = { heading: string; items: NavItem[] }
-type Rol = "SUPERADMIN" | "RH" | "EMPLEADO"
-
-const navSuperAdminSections: NavSection[] = [
-  {
-    heading: "Principal",
-    items: [
-      { label: "Dashboard",      href: "/superadmin",             icon: LayoutDashboard, exact: true },
-      { label: "Empresas",       href: "/superadmin/empresas",    icon: Building2 },
-    ],
-  },
-  {
-    heading: "Operaciones",
-    items: [
-      { label: "Paquetes",       href: "/superadmin/paquetes",    icon: Package },
-      { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText },
-      { label: "Reportes",       href: "/superadmin/reportes",    icon: BarChart3 },
-      { label: "Accesos",        href: "/superadmin/accesos",     icon: Users },
-    ],
-  },
-  {
-    heading: "Sistema",
-    items: [
-      { label: "Integración WP", href: "/superadmin/integracion", icon: Share2 },
-    ],
-  },
-]
-
-const navRH: NavItem[] = [
-  { label: "Inicio",        href: "/empresa/inicio",       icon: LayoutDashboard, exact: true },
-  { label: "Empleados",     href: "/empresa/empleados",    icon: Users },
-  { label: "Asignaciones",  href: "/empresa/asignaciones", icon: ClipboardList },
-  { label: "Progreso",      href: "/empresa/progreso",     icon: BarChart3 },
-  { label: "Constancias",   href: "/empresa/constancias",  icon: Award },
-]
-
-const navEmpleado: NavItem[] = [
-  { label: "Mis cursos",      href: "/empleado/cursos",      icon: BookOpen },
-  { label: "Mis constancias", href: "/empleado/constancias", icon: Award },
-]
-
-const roleLabel: Record<Rol, string> = {
-  SUPERADMIN: "SuperAdmin",
-  RH:         "RH / Empresa",
-  EMPLEADO:   "Empleado",
-}
-
-function getInitials(name: string) {
-  return name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")
-}
-
-function isActive(href: string, pathname: string, exact?: boolean) {
-  return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
-}
+import {
+  getInitials,
+  homeHrefForRole,
+  isActive,
+  navEmpleado,
+  navRH,
+  navSuperAdminSections,
+  roleLabel,
+  type NavItem,
+  type Rol,
+} from "@/components/portal/nav-config"
 
 function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: boolean; pathname: string }) {
   const active = isActive(item.href, pathname, item.exact)
@@ -96,12 +33,10 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
           render={
             <Link
               href={item.href}
-              className="flex items-center justify-center rounded-md py-2 transition-all"
-              style={
-                active
-                  ? { background: "rgba(0,0,0,0.18)", color: "#fff" }
-                  : { color: "rgba(255,255,255,0.7)" }
-              }
+              className={cn(
+                "sidebar-nav-link flex items-center justify-center rounded-lg py-2",
+                active && "sidebar-nav-link--active"
+              )}
             />
           }
         >
@@ -117,25 +52,10 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
       href={item.href}
       prefetch
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 text-[15px] font-medium transition-all",
-        active ? "rounded-l-2xl" : "rounded-md"
+        "sidebar-nav-link flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium",
+        active && "sidebar-nav-link--active font-semibold"
       )}
-      style={
-        active
-          ? { background: "white", color: "#FF8F00" }
-          : { color: "rgba(255,255,255,0.75)" }
-      }
-      onMouseEnter={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.color = "#fff"
-      }}
-      onMouseLeave={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.75)"
-      }}
     >
-      <span
-        className="flex size-[6px] shrink-0 rounded-full transition-all"
-        style={{ background: active ? "#FF8F00" : "rgba(255,255,255,0.3)" }}
-      />
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md">
         <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
       </span>
@@ -145,7 +65,6 @@ function NavItemRow({ item, collapsed, pathname }: { item: NavItem; collapsed: b
 }
 
 export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: string; empresa?: string }) {
-  void empresa
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const initials = getInitials(nombre)
@@ -162,83 +81,76 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
     })
   }
 
-  const homeHref =
-    rol === "SUPERADMIN" ? "/superadmin"
-    : rol === "RH"       ? "/empresa/inicio"
-    :                      "/empleado/cursos"
+  const homeHref = homeHrefForRole(rol)
 
   return (
     <TooltipProvider delay={200}>
       <aside
-        className="relative sticky top-0 hidden h-screen shrink-0 flex-col rounded-r-3xl font-[family-name:var(--font-bricolage)] transition-[width] duration-300 ease-in-out md:flex"
-        style={{ width: collapsed ? 76 : 288, background: BG }}
+        className="relative sticky top-0 hidden h-screen shrink-0 flex-col font-[family-name:var(--font-bricolage)] transition-[width] duration-300 ease-in-out md:flex"
+        style={{ width: collapsed ? 76 : 288 }}
       >
-        {/* Background image + brand overlay */}
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-r-3xl">
-          <img
-            src="https://images.unsplash.com/photo-1761429528505-e153940c62a1?w=600&auto=format&fit=crop"
-            alt=""
-            aria-hidden="true"
-            className="size-full object-cover"
-          />
-          <div className="absolute inset-0" style={{ background: BG, opacity: 0.82 }} />
+        <div className="sidebar-surface absolute inset-0 overflow-hidden rounded-r-3xl">
+          <div className="sidebar-grain pointer-events-none absolute inset-0" aria-hidden="true" />
         </div>
 
-        {/* Floating toggle button at right edge */}
         <button
           type="button"
           onClick={toggle}
           aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
-          className="absolute -right-4 top-5 z-30 flex size-8 items-center justify-center rounded-full bg-white shadow-md transition-shadow hover:shadow-lg"
-          style={{ border: "1.5px solid #e5e7eb" }}
+          className="sidebar-toggle absolute -right-4 top-5 z-30 flex size-8 items-center justify-center rounded-lg"
         >
           {collapsed
-            ? <ChevronRight size={14} strokeWidth={2.5} style={{ color: BG }} />
-            : <ChevronLeft  size={14} strokeWidth={2.5} style={{ color: BG }} />
+            ? <ChevronRight size={14} strokeWidth={2.5} />
+            : <ChevronLeft  size={14} strokeWidth={2.5} />
           }
         </button>
 
-        {/* Logo */}
         <div
           className={cn(
             "relative z-10 flex h-[68px] shrink-0 items-center",
-            collapsed ? "justify-center px-3" : "px-3"
+            collapsed ? "justify-center px-3" : "px-4"
           )}
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.10)" }}
+          style={{ borderBottom: "1px solid rgba(239,237,246,0.12)" }}
         >
           {collapsed ? (
             <Image
               src="/assets/logo_corta.png"
               alt="D360"
-              width={30}
-              height={30}
+              width={34}
+              height={34}
               className="size-[34px] object-contain brightness-0 invert"
             />
           ) : (
-            <Link href={homeHref} className="flex min-w-0 items-center px-1">
+            <Link href={homeHref} className="flex min-w-0 items-center">
               <Image
                 src="/assets/logo_desarrolla_cropped.png"
-                alt="D360"
-                width={108}
-                height={108}
-                className="size-[120px] shrink-0 object-contain brightness-0 invert"
+                alt="Desarrolla360"
+                width={1554}
+                height={461}
+                className="h-9 w-auto object-contain brightness-0 invert"
               />
             </Link>
           )}
         </div>
 
-        {/* Nav */}
+        {!collapsed && empresa && rol !== "SUPERADMIN" && (
+          <div className="sidebar-card relative z-10 mx-3 mt-3 shrink-0 rounded-lg px-3 py-2.5">
+            <p className="sidebar-section-label text-[9px] font-bold uppercase tracking-[1.8px]">Empresa</p>
+            <p className="mt-0.5 truncate text-[13px] font-semibold text-[#EFEDF6]">{empresa}</p>
+          </div>
+        )}
+
         <ScrollArea className="relative z-10 flex-1 pl-2 pr-0 py-3">
           {rol === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
               <div key={section.heading} className={si > 0 ? "mt-1" : ""}>
                 {!collapsed && (
-                  <p className="mb-1 mt-4 px-3 text-[10px] font-bold uppercase tracking-[1.8px] text-white/65">
+                  <p className="sidebar-section-label mb-1 mt-4 px-3 text-[10px] font-bold uppercase tracking-[1.8px]">
                     {section.heading}
                   </p>
                 )}
                 {collapsed && si > 0 && (
-                  <div className="mx-2 my-2 h-px" style={{ background: "rgba(255,255,255,0.10)" }} />
+                  <div className="mx-2 my-2 h-px" style={{ background: "rgba(239,237,246,0.10)" }} />
                 )}
                 <div className="flex flex-col gap-0.5">
                   {section.items.map((item) => (
@@ -256,18 +168,16 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
           )}
         </ScrollArea>
 
-        {/* Bottom */}
         <div
           className="relative z-10 shrink-0 px-2 pb-3 pt-2"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}
+          style={{ borderTop: "1px solid rgba(239,237,246,0.10)" }}
         >
-          {/* Logout */}
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger
                 onClick={() => signOut({ callbackUrl: "/login" })}
                 aria-label="Cerrar sesión"
-                className="flex w-full items-center justify-center rounded-md p-2 text-white/80 transition-all hover:bg-black/10 hover:text-white"
+                className="sidebar-nav-link flex w-full items-center justify-center rounded-lg p-2"
               >
                 <LogOut size={18} strokeWidth={1.8} />
               </TooltipTrigger>
@@ -277,23 +187,22 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-[14px] font-medium text-white/80 transition-all hover:bg-black/10 hover:text-white"
+              className="sidebar-nav-link flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium"
             >
               <LogOut size={17} strokeWidth={1.8} className="shrink-0" />
               <span>Cerrar sesión</span>
             </button>
           )}
 
-          {/* User identity */}
           <div
             className={cn("mt-2 pt-2.5", collapsed ? "flex justify-center" : "px-1")}
-            style={{ borderTop: "1px solid rgba(255,255,255,0.10)" }}
+            style={{ borderTop: "1px solid rgba(239,237,246,0.10)" }}
           >
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger className="cursor-default rounded-full focus-visible:outline-none">
                   <Avatar className="size-9 pointer-events-none">
-                    <AvatarFallback className="bg-white/20 text-[12px] font-bold text-white">
+                    <AvatarFallback className="sidebar-avatar text-[12px] font-bold">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -306,13 +215,13 @@ export default function Sidebar({ rol, nombre, empresa }: { rol: Rol; nombre: st
             ) : (
               <div className="flex items-center gap-3">
                 <Avatar className="size-9 shrink-0">
-                  <AvatarFallback className="bg-white/20 text-[11px] font-bold text-white">
+                  <AvatarFallback className="sidebar-avatar text-[11px] font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <p className="truncate text-[14px] font-semibold text-white">{nombre}</p>
-                  <p className="text-[11px] text-white/70">{roleLabel[rol]}</p>
+                  <p className="truncate text-[14px] font-semibold text-[#EFEDF6]">{nombre}</p>
+                  <p className="text-[11px] text-[#EFEDF6]/55">{roleLabel[rol]}</p>
                 </div>
               </div>
             )}

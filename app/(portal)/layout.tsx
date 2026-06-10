@@ -25,7 +25,7 @@ export default async function PortalLayout({
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-[68px] shrink-0 items-center justify-between gap-6 border-b border-slate-100 bg-white px-4 md:px-8">
           <div className="flex items-center gap-2">
-            <MobileNav rol={rol} nombre={nombre} />
+            <MobileNav rol={rol} nombre={nombre} empresa={empresa} />
             <PortalGreeting nombre={nombre} rol={rol} />
           </div>
           <div className="shrink-0">
