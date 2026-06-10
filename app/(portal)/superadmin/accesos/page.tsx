@@ -43,10 +43,6 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
     employeeUsers.map((u) => [u.email.toLowerCase(), u])
   )
 
-  const rhActivos = rhUsers.filter((u) => u.activo).length
-  const empleadosActivos = employees.filter((e) => e.activo).length
-  const suspendidos = rhUsers.filter((u) => !u.activo).length + employeeUsers.filter((u) => !u.activo).length
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -68,22 +64,6 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
           <AlertDescription>{errorMessages[error] ?? error}</AlertDescription>
         </Alert>
       )}
-
-      {/* KPI bar */}
-      <div className="grid grid-cols-2 divide-x divide-y divide-slate-100 overflow-hidden rounded-md border border-slate-200 bg-white lg:grid-cols-4 lg:divide-y-0">
-        {[
-          { label: "Usuarios RH activos",    value: String(rhActivos),                         sub: "Administradores de empresa" },
-          { label: "Empleados activos",       value: String(empleadosActivos),                   sub: "Con acceso vigente" },
-          { label: "Cuentas suspendidas",     value: String(suspendidos),                        sub: "RH + empleados inactivos" },
-          { label: "Cuentas empleado",        value: String(employeeUsers.length),               sub: "Registradas en el portal" },
-        ].map(({ label, value, sub }) => (
-          <div key={label} className="px-6 py-5">
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-400">{label}</p>
-            <p className="mt-2 text-[36px] font-semibold leading-none tabular-nums text-slate-950">{value}</p>
-            <p className="mt-1.5 text-[12px] text-slate-400">{sub}</p>
-          </div>
-        ))}
-      </div>
 
       {/* Tabs */}
       <Tabs defaultValue="rh">
