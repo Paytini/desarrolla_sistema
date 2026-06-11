@@ -131,6 +131,8 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                       <input type="hidden" name="empresa_id" value={empresa.id} />
                       <select
                         name="paquete_id"
+                        required
+                        aria-label="Paquete"
                         defaultValue={empresa.paquetes[0]?.paquete_id ?? ""}
                         className="h-8 rounded-md border border-input bg-transparent px-2 text-[12px] focus:outline-none focus:ring-1 focus:ring-ring"
                       >
@@ -142,6 +144,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                       <input
                         type="date"
                         name="fecha_vencimiento"
+                        aria-label="Fecha de vencimiento"
                         className="h-8 rounded-md border border-input bg-transparent px-2 text-[12px] focus:outline-none focus:ring-1 focus:ring-ring"
                       />
                       <Button type="submit" size="sm" className="bg-brand text-brand-ink hover:bg-brand/90">
