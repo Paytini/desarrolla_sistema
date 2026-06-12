@@ -3,6 +3,7 @@ import { DM_Sans, Geist, Bricolage_Grotesque } from "next/font/google"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Suspense } from "react"
 import GlobalLoadingController from "@/components/portal/GlobalLoadingController"
+import { MuiProviders } from "@/components/mui/MuiProviders"
 import "./globals.css"
 import { cn } from "@/lib/utils";
 
@@ -38,11 +39,13 @@ export default function RootLayout({
   return (
     <html lang="es" className={cn("h-full", "antialiased", dmSans.variable, "font-sans", geist.variable, bricolage.variable)}>
       <body className={`min-h-full flex flex-col font-[family-name:var(--font-dm-sans)]`}>
-        <Suspense fallback={null}>
-          <GlobalLoadingController />
-        </Suspense>
-        {children}
-        <SpeedInsights />
+        <MuiProviders>
+          <Suspense fallback={null}>
+            <GlobalLoadingController />
+          </Suspense>
+          {children}
+          <SpeedInsights />
+        </MuiProviders>
       </body>
     </html>
   )
