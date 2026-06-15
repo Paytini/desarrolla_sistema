@@ -1,13 +1,14 @@
+import { redirect } from "next/navigation"
+import { Box, LinearProgress, Stack, Typography } from "@mui/material"
 import { getSuperadminEmpresasSnapshot, getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { redirect } from "next/navigation"
 import { ActivityFeed } from "@/components/superadmin/ActivityFeed"
 import { QuickActions } from "@/components/superadmin/QuickActions"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SectionCard } from "@/components/mui/SectionCard"
+import KpiCard from "@/components/portal/KpiCard"
 import { OcupacionCard } from "./_components/OcupacionCard"
 import { RenovacionesTable } from "./_components/RenovacionesTable"
-import KpiCard from "@/components/portal/KpiCard"
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -34,7 +35,7 @@ function DonutChart({
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
-      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#f1f5f9" strokeWidth={sw} />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#EFEAE3" strokeWidth={sw} />
       {total > 0 && segments.map((seg, i) => {
         const len    = (seg.value / total) * circ - GAP
         const offset = circ / 4 - (cum / total) * circ
@@ -46,8 +47,8 @@ function DonutChart({
             strokeDashoffset={offset} />
         ) : null
       })}
-      <text x={cx} y={cx - 6}  textAnchor="middle" fill="#0f172a" fontSize={22} fontWeight="700">{total}</text>
-      <text x={cx} y={cx + 12} textAnchor="middle" fill="#94a3b8" fontSize={9}>cursos total</text>
+      <text x={cx} y={cx - 6}  textAnchor="middle" fill="#130303" fontSize={22} fontWeight="700">{total}</text>
+      <text x={cx} y={cx + 12} textAnchor="middle" fill="#858382" fontSize={9}>cursos total</text>
     </svg>
   )
 }
@@ -56,20 +57,27 @@ function DonutChart({
 function ActivityBarChart({ data }: { data: { label: string; value: number }[] }) {
   const max = Math.max(...data.map((d) => d.value), 1)
   return (
-    <div className="flex items-end gap-1" style={{ height: 80 }}>
+    <Box sx={{ display: "flex", alignItems: "flex-end", gap: 0.5, height: 80 }}>
       {data.map((d) => {
         const h = Math.round((d.value / max) * 100)
         return (
-          <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
-            <div
-              className="w-full min-h-[3px] rounded-t"
-              style={{ height: `${h}%`, background: d.value > 0 ? "#FF8F00" : "#f1f5f9" }}
+          <Box key={d.label} sx={{ display: "flex", flex: 1, flexDirection: "column", alignItems: "center", gap: 0.5 }}>
+            <Box
+              sx={{
+                width: "100%",
+                minHeight: "3px",
+                height: `${h}%`,
+                borderRadius: "2px 2px 0 0",
+                bgcolor: d.value > 0 ? "primary.main" : "#EFEAE3",
+              }}
             />
-            <span className="text-[8px] text-muted-foreground leading-none">{d.label}</span>
-          </div>
+            <Typography sx={{ fontSize: 8, lineHeight: 1, color: "text.secondary" }}>
+              {d.label}
+            </Typography>
+          </Box>
         )
       })}
-    </div>
+    </Box>
   )
 }
 
@@ -144,120 +152,140 @@ export default async function SuperadminDashboardPage() {
   const totalEventos = activityRaw.length
 
   return (
-    <div className="space-y-5">
+    <Stack spacing={3}>
 
       {/* Row 1 — 4 KPI cards con anillo de progreso */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="green"   ring={empresasPct} />
-        <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="primary" ring={empleadosPct} />
-        <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="blue"    ring={ocupacionPct}    alert={ocupacionPct >= 90} />
-        <KpiCard label="Renovaciones"       value={renewals.length}       sub="empresas vencen en 30 días"                                          borderColor="amber"   ring={renovacionesPct} alert={renewals.length > 0} />
-      </div>
+      <Box sx={{ position: "relative" }}>
+        <Box
+          aria-hidden
+          sx={{
+            position: "absolute",
+            inset: "-24px -24px auto -24px",
+            height: 200,
+            background: "radial-gradient(ellipse at top left, rgba(245,133,63,0.06), transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
+        <Box sx={{ position: "relative", display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
+          <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="green"   ring={empresasPct} />
+          <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="primary" ring={empleadosPct} />
+          <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="blue"    ring={ocupacionPct}    alert={ocupacionPct >= 90} />
+          <KpiCard label="Renovaciones"       value={renewals.length}       sub="empresas vencen en 30 días"                                          borderColor="amber"   ring={renovacionesPct} alert={renewals.length > 0} />
+        </Box>
+      </Box>
 
-      {/* Row 2 — 3 analysis charts */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Row 2 — 3 analysis cards */}
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "repeat(3, 1fr)" } }}>
 
         {/* E — Estado global de aprendizaje */}
-        <Card>
-          <CardHeader className="px-5 py-4 border-b border-border">
-            <CardTitle className="text-[14px] font-medium">Estado de aprendizaje</CardTitle>
-          </CardHeader>
-          <CardContent className="px-5 py-5">
-            <div className="flex items-center gap-6">
-              <DonutChart size={130} sw={16} segments={[
-                { value: completados, color: "#22c55e", label: "Completados" },
-                { value: enProgreso,  color: "#FF8F00", label: "En progreso" },
-                { value: sinIniciar,  color: "#e2e8f0", label: "Sin iniciar" },
-              ]} />
-              <div className="space-y-3 min-w-0">
-                {[
-                  { label: "Completados",  value: completados, color: "#22c55e" },
-                  { label: "En progreso",  value: enProgreso,  color: "#FF8F00" },
-                  { label: "Sin iniciar",  value: sinIniciar,  color: "#e2e8f0" },
-                ].map((s) => (
-                  <div key={s.label} className="flex items-center gap-2">
-                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: s.color }} />
-                    <span className="min-w-0 truncate text-[12px] text-muted-foreground">{s.label}</span>
-                    <span className="ml-auto tabular-nums text-[13px] font-semibold text-foreground">{s.value}</span>
-                    {totalCursos > 0 && (
-                      <span className="text-[10px] text-muted-foreground w-8 text-right">
-                        {Math.round((s.value / totalCursos) * 100)}%
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SectionCard title="Estado de aprendizaje">
+          <Stack direction="row" spacing={3} sx={{ alignItems: "center" }}>
+            <DonutChart size={130} sw={16} segments={[
+              { value: completados, color: "#22c55e", label: "Completados" },
+              { value: enProgreso,  color: "#F5853F", label: "En progreso" },
+              { value: sinIniciar,  color: "#EFEAE3", label: "Sin iniciar" },
+            ]} />
+            <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+              {[
+                { label: "Completados",  value: completados, color: "#22c55e" },
+                { label: "En progreso",  value: enProgreso,  color: "#F5853F" },
+                { label: "Sin iniciar",  value: sinIniciar,  color: "#EFEAE3" },
+              ].map((s) => (
+                <Stack key={s.label} direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                  <Box sx={{ width: 10, height: 10, flexShrink: 0, borderRadius: "50%", bgcolor: s.color }} />
+                  <Typography sx={{ minWidth: 0, flex: 1, fontSize: 12, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {s.label}
+                  </Typography>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "text.primary" }}>
+                    {s.value}
+                  </Typography>
+                  {totalCursos > 0 && (
+                    <Typography sx={{ width: 32, textAlign: "right", fontSize: 10, color: "text.secondary" }}>
+                      {Math.round((s.value / totalCursos) * 100)}%
+                    </Typography>
+                  )}
+                </Stack>
+              ))}
+            </Stack>
+          </Stack>
+        </SectionCard>
 
         {/* F — Ranking de progreso por empresa */}
-        <Card>
-          <CardHeader className="px-5 py-4 border-b border-border">
-            <CardTitle className="text-[14px] font-medium">Progreso por empresa</CardTitle>
-          </CardHeader>
-          <CardContent className="px-5 py-5">
-            {rankingEmpresas.length === 0 ? (
-              <p className="text-[13px] text-muted-foreground">Sin datos de progreso.</p>
-            ) : (
-              <div className="space-y-3">
-                {rankingEmpresas.map((e) => (
-                  <div key={e.nombre}>
-                    <div className="mb-1 flex items-center justify-between gap-2">
-                      <p className="min-w-0 truncate text-[12px] font-medium text-foreground">{e.nombre}</p>
-                      <span className="shrink-0 tabular-nums text-[12px] font-semibold text-muted-foreground">{e.avg}%</span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{ width: `${e.avg}%`, background: e.avg >= 75 ? "#22c55e" : e.avg >= 40 ? "#FF8F00" : "#f59e0b" }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <SectionCard title="Progreso por empresa">
+          {rankingEmpresas.length === 0 ? (
+            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+              Sin datos de progreso.
+            </Typography>
+          ) : (
+            <Stack spacing={2}>
+              {rankingEmpresas.map((e) => (
+                <Box key={e.nombre}>
+                  <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
+                    <Typography sx={{ minWidth: 0, flex: 1, fontSize: 12, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {e.nombre}
+                    </Typography>
+                    <Typography sx={{ flexShrink: 0, fontSize: 12, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "text.secondary" }}>
+                      {e.avg}%
+                    </Typography>
+                  </Stack>
+                  <LinearProgress
+                    variant="determinate"
+                    value={e.avg}
+                    sx={{
+                      height: 6,
+                      borderRadius: 999,
+                      bgcolor: "#f1f5f9",
+                      "& .MuiLinearProgress-bar": {
+                        borderRadius: 999,
+                        bgcolor: e.avg >= 75 ? "#22c55e" : e.avg >= 40 ? "primary.main" : "#f59e0b",
+                      },
+                    }}
+                  />
+                </Box>
+              ))}
+            </Stack>
+          )}
+        </SectionCard>
 
         {/* G — Actividad de usuarios */}
-        <Card>
-          <CardHeader className="px-5 py-4 border-b border-border">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-[14px] font-medium">Actividad en el portal</CardTitle>
-              <span className="text-[11px] text-muted-foreground">{totalEventos} eventos · 14 días</span>
-            </div>
-          </CardHeader>
-          <CardContent className="px-5 py-5">
-            <ActivityBarChart data={activityData} />
-            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4">
-              {[
-                { label: "Hoy",         value: activityData[activityData.length - 1]?.value ?? 0 },
-                { label: "Ayer",        value: activityData[activityData.length - 2]?.value ?? 0 },
-                { label: "Esta semana", value: activityData.slice(-7).reduce((s, d) => s + d.value, 0) },
-                { label: "Total",       value: totalEventos },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-                  <p className="text-[18px] font-bold tabular-nums text-foreground">{stat.value}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <SectionCard
+          title="Actividad en el portal"
+          action={
+            <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
+              {totalEventos} eventos · 14 días
+            </Typography>
+          }
+        >
+          <ActivityBarChart data={activityData} />
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1.5, mt: 2, pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
+            {[
+              { label: "Hoy",         value: activityData[activityData.length - 1]?.value ?? 0 },
+              { label: "Ayer",        value: activityData[activityData.length - 2]?.value ?? 0 },
+              { label: "Esta semana", value: activityData.slice(-7).reduce((s, d) => s + d.value, 0) },
+              { label: "Total",       value: totalEventos },
+            ].map((stat) => (
+              <Box key={stat.label}>
+                <Typography sx={{ fontSize: 10, color: "text.secondary" }}>{stat.label}</Typography>
+                <Typography sx={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "text.primary" }}>
+                  {stat.value}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </SectionCard>
+      </Box>
 
       {/* Row 3 — Activity feed + Quick actions */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 280px" } }}>
         <ActivityFeed items={recentEvents} />
         <QuickActions />
-      </div>
+      </Box>
 
       {/* Row 4 — Ocupación + Renovaciones */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 300px" } }}>
         <OcupacionCard ocupacionPct={ocupacionPct} empresas={empresas} />
         <RenovacionesTable renewals={renewals} />
-      </div>
-    </div>
+      </Box>
+    </Stack>
   )
 }
