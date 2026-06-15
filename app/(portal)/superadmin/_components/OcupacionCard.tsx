@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Box, LinearProgress, Stack, Typography } from "@mui/material"
+import { SectionCard } from "@/components/mui/SectionCard"
 
 interface OcupacionCardProps {
   ocupacionPct: number
@@ -13,63 +14,74 @@ function HorizontalBar({ nombre, usados, contratados }: { nombre: string; usados
     "#1a4f8a"
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="truncate text-[12px] text-slate-600">{nombre}</p>
-        <div className="flex shrink-0 items-center gap-2">
-          <span className="text-[11px] tabular-nums text-slate-400">{usados}/{contratados}</span>
-          <span
-            className="text-[11px] font-semibold tabular-nums"
-            style={{ color: barColor, minWidth: "32px", textAlign: "right" }}
-          >
+    <Box>
+      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1.5, mb: 0.75 }}>
+        <Typography
+          sx={{
+            minWidth: 0,
+            flex: 1,
+            fontSize: 12,
+            color: "text.secondary",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {nombre}
+        </Typography>
+        <Stack direction="row" sx={{ alignItems: "center", gap: 1, flexShrink: 0 }}>
+          <Typography sx={{ fontSize: 11, fontVariantNumeric: "tabular-nums", color: "text.disabled" }}>
+            {usados}/{contratados}
+          </Typography>
+          <Typography sx={{ minWidth: 32, textAlign: "right", fontSize: 11, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: barColor }}>
             {pct}%
-          </span>
-        </div>
-      </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, background: barColor }}
-        />
-      </div>
-    </div>
+          </Typography>
+        </Stack>
+      </Stack>
+      <LinearProgress
+        variant="determinate"
+        value={Math.min(pct, 100)}
+        sx={{
+          height: 6,
+          borderRadius: 999,
+          bgcolor: "#f1f5f9",
+          "& .MuiLinearProgress-bar": { borderRadius: 999, bgcolor: barColor },
+        }}
+      />
+    </Box>
   )
 }
 
 export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 border-b border-border px-5 py-4">
-        <div>
-          <p className="text-[14px] font-medium text-foreground">Ocupación de cupos</p>
-          <p className="text-[12px] text-muted-foreground">Cupos usados vs. contratados</p>
-        </div>
-        <div className="text-right">
-          <p
-            className="text-[36px] font-semibold leading-none tabular-nums"
-            style={{ color: ocupacionPct >= 90 ? "#dc2626" : "#0f172a" }}
+    <SectionCard
+      title="Ocupación de cupos"
+      description="Cupos usados vs. contratados"
+      action={
+        <Box sx={{ textAlign: "right" }}>
+          <Typography
+            variant="h3"
+            sx={{ fontSize: 36, fontWeight: 700, lineHeight: 1, color: ocupacionPct >= 90 ? "error.main" : "text.primary" }}
           >
             {ocupacionPct}%
-          </p>
-          <p className="text-[11px] text-muted-foreground">ocupación global</p>
-        </div>
-      </CardHeader>
-      <CardContent className="p-5">
-        {empresas.length === 0 ? (
-          <p className="text-center text-[13px] text-muted-foreground">Sin empresas registradas.</p>
-        ) : (
-          <div className="space-y-4">
-            {empresas.slice(0, 6).map((e) => (
-              <HorizontalBar
-                key={e.id}
-                nombre={e.nombre}
-                usados={e.asientos_usados}
-                contratados={e.asientos_contratados}
-              />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
+            ocupación global
+          </Typography>
+        </Box>
+      }
+    >
+      {empresas.length === 0 ? (
+        <Typography sx={{ textAlign: "center", fontSize: 13, color: "text.secondary" }}>
+          Sin empresas registradas.
+        </Typography>
+      ) : (
+        <Stack spacing={2}>
+          {empresas.slice(0, 6).map((e) => (
+            <HorizontalBar key={e.id} nombre={e.nombre} usados={e.asientos_usados} contratados={e.asientos_contratados} />
+          ))}
+        </Stack>
+      )}
+    </SectionCard>
   )
 }
