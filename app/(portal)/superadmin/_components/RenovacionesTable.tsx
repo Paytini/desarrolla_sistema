@@ -2,7 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { Box, Chip, Divider, Stack, Typography } from "@mui/material"
 import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
+import { SectionCard } from "@/components/mui/SectionCard"
 
 type Renewal = {
   empresa: {
@@ -17,22 +19,30 @@ type Renewal = {
 }
 
 function DayChip({ days }: { days: number }) {
-  if (days < 0)
+  if (days < 0) {
     return (
-      <span className="inline-flex items-center rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">
-        Vencido
-      </span>
+      <Chip
+        label="Vencido"
+        size="small"
+        sx={{ height: 20, borderRadius: "4px", fontSize: 10, fontWeight: 600, bgcolor: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}
+      />
     )
-  if (days <= 7)
+  }
+  if (days <= 7) {
     return (
-      <span className="inline-flex items-center rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-        {days}d
-      </span>
+      <Chip
+        label={`${days}d`}
+        size="small"
+        sx={{ height: 20, borderRadius: "4px", fontSize: 10, fontWeight: 600, bgcolor: "#fffbeb", color: "#b45309", border: "1px solid #fde68a" }}
+      />
     )
+  }
   return (
-    <span className="inline-flex items-center rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
-      {days}d
-    </span>
+    <Chip
+      label={`${days}d`}
+      size="small"
+      sx={{ height: 20, borderRadius: "4px", fontSize: 10, fontWeight: 600, bgcolor: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}
+    />
   )
 }
 
@@ -43,60 +53,86 @@ export function RenovacionesTable({ renewals }: { renewals: Renewal[] }) {
     .slice(0, 6)
 
   return (
-    <div style={{ overflow: "hidden", borderRadius: "6px", border: "1px solid #e2e8f0", background: "#fff" }}>
-      <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #f1f5f9" }}>
-        <div>
-          <p className="text-[14px] font-medium text-slate-900">Renovaciones</p>
-          <p className="text-[12px] text-slate-400">Paquetes por vencer en 30 días</p>
-        </div>
-        {renewals.length > 6 && (
-          <Link
+    <SectionCard
+      title="Renovaciones"
+      description="Paquetes por vencer en 30 días"
+      disableContentPadding
+      action={
+        renewals.length > 6 ? (
+          <Typography
+            component={Link}
             href="/superadmin/reportes"
-            className="text-[11px] font-semibold hover:opacity-75" style={{ color: "#1a4f8a" }}
+            sx={{ fontSize: 11, fontWeight: 600, color: "primary.main", textDecoration: "none", "&:hover": { opacity: 0.75 } }}
           >
             Ver todos →
-          </Link>
-        )}
-      </div>
-
+          </Typography>
+        ) : undefined
+      }
+    >
       {renewals.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-10 text-center">
-          <CheckCircle2 size={20} className="text-slate-200" />
-          <p className="text-[12px] text-slate-400">Sin alertas de vencimiento</p>
-        </div>
+        <Stack spacing={1.5} sx={{ alignItems: "center", py: 5, textAlign: "center" }}>
+          <CheckCircle2 size={20} style={{ color: "#cbd5e1" }} />
+          <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+            Sin alertas de vencimiento
+          </Typography>
+        </Stack>
       ) : (
-        <div>
-          <div className="flex items-center justify-between border-b border-slate-50 px-6 py-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-300">
+        <Box>
+          <Stack
+            direction="row"
+            sx={{ alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f8fafc", px: 2.5, py: 1 }}
+          >
+            <Typography sx={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "text.disabled" }}>
               Empresa
-            </span>
-            <button
-              onClick={() => setSortDir(d => d === "asc" ? "desc" : "asc")}
-              className="flex items-center gap-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-300 transition-colors hover:text-slate-500"
+            </Typography>
+            <Box
+              component="button"
+              type="button"
+              onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.25,
+                fontSize: 10,
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                color: "text.disabled",
+                bgcolor: "transparent",
+                border: "none",
+                cursor: "pointer",
+                p: 0,
+                "&:hover": { color: "text.secondary" },
+              }}
             >
               Días {sortDir === "asc" ? <ChevronUp size={9} /> : <ChevronDown size={9} />}
-            </button>
-          </div>
-          <div className="divide-y divide-slate-50">
+            </Box>
+          </Stack>
+          <Stack divider={<Divider sx={{ borderColor: "#f8fafc" }} />}>
             {sorted.map(({ empresa, days }) => (
-              <div
+              <Stack
                 key={empresa.id}
-                className="flex items-center justify-between px-6 py-3 transition-colors hover:bg-slate-50/50"
+                direction="row"
+                sx={{ alignItems: "center", justifyContent: "space-between", px: 2.5, py: 1.5, "&:hover": { bgcolor: "action.hover" } }}
               >
-                <div className="min-w-0 flex-1 pr-3">
-                  <p className="truncate text-[13px] font-medium text-slate-900">
+                <Box sx={{ minWidth: 0, flex: 1, pr: 1.5 }}>
+                  <Typography
+                    sx={{ fontSize: 13, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  >
                     {empresa.nombre}
-                  </p>
-                  <p className="truncate text-[11px] text-slate-400">
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: 11, color: "text.disabled", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  >
                     {empresa.paquetes[0]?.paquete.nombre ?? "Sin paquete"}
-                  </p>
-                </div>
+                  </Typography>
+                </Box>
                 <DayChip days={days} />
-              </div>
+              </Stack>
             ))}
-          </div>
-        </div>
+          </Stack>
+        </Box>
       )}
-    </div>
+    </SectionCard>
   )
 }
