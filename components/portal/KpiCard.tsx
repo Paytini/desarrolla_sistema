@@ -1,6 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, Box, Paper, Typography } from "@mui/material"
 import { RingChart } from "@/components/portal/RingChart"
-import { cn } from "@/lib/utils"
 import type { LucideIcon } from "lucide-react"
 
 export type KpiBorderColor =
@@ -19,6 +18,8 @@ type KpiCardProps = {
   ring?: number
 }
 
+// "primary"/"destructive" mirror theme.palette.primary.main/error.main as literals,
+// since accent colors are consumed as plain strings (bgcolor, SVG-adjacent props).
 const accentMap: Record<KpiBorderColor, { bar: string; icon: string; iconBg: string }> = {
   orange:      { bar: "#F5853F", icon: "#F5853F", iconBg: "rgba(245,133,63,0.1)" },
   charcoal:    { bar: "#000022", icon: "#000022", iconBg: "rgba(0,0,34,0.07)" },
@@ -26,43 +27,66 @@ const accentMap: Record<KpiBorderColor, { bar: string; icon: string; iconBg: str
   rose:        { bar: "#f43f5e", icon: "#f43f5e", iconBg: "rgba(244,63,94,0.1)" },
   blue:        { bar: "#1a4f8a", icon: "#1a4f8a", iconBg: "rgba(26,79,138,0.1)" },
   green:       { bar: "#22c55e", icon: "#22c55e", iconBg: "rgba(34,197,94,0.1)" },
-  primary:     { bar: "var(--color-primary)",     icon: "var(--color-primary)",     iconBg: "color-mix(in oklch, var(--color-primary) 10%, transparent)" },
-  destructive: { bar: "var(--color-destructive)", icon: "var(--color-destructive)", iconBg: "color-mix(in oklch, var(--color-destructive) 10%, transparent)" },
+  primary:     { bar: "#F5853F", icon: "#F5853F", iconBg: "rgba(245,133,63,0.1)" },
+  destructive: { bar: "#EF4444", icon: "#EF4444", iconBg: "rgba(239,68,68,0.1)" },
 }
 
-export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "orange", alert = false, ring }: KpiCardProps) {
+export default function KpiCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  borderColor = "orange",
+  alert = false,
+  ring,
+}: KpiCardProps) {
   const { bar, icon: iconColor, iconBg } = accentMap[alert ? "destructive" : borderColor]
   return (
-    <Card className="relative overflow-hidden">
-      <div className="absolute left-0 top-0 h-[3px] w-full" style={{ background: bar }} />
-      <CardContent className="px-5 py-5 pt-6">
-        <div className="flex items-start justify-between">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-              {label}
-            </p>
-            <p
-              className={cn(
-                "mt-2 text-[34px] font-bold leading-none tracking-tight tabular-nums font-[family-name:var(--font-heading)]",
-                alert ? "text-destructive" : "text-foreground"
-              )}
-            >
-              {value}
-            </p>
-            {sub && <p className="mt-2 text-[12px] text-muted-foreground">{sub}</p>}
-          </div>
-          {ring !== undefined ? (
-            <RingChart pct={ring} color={iconColor} />
-          ) : Icon ? (
-            <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: iconBg }}
-            >
-              <Icon size={18} strokeWidth={2} style={{ color: iconColor }} />
-            </span>
-          ) : null}
-        </div>
-      </CardContent>
-    </Card>
+    <Paper
+      elevation={0}
+      sx={{
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: "divider",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+      }}
+    >
+      <Box sx={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, bgcolor: bar }} />
+      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", px: 2.5, py: 2.5, pt: 3 }}>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography sx={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "text.secondary" }}>
+            {label}
+          </Typography>
+          <Typography
+            variant="h3"
+            sx={{
+              mt: 1,
+              fontSize: 34,
+              fontWeight: 700,
+              lineHeight: 1,
+              letterSpacing: "-0.01em",
+              fontVariantNumeric: "tabular-nums",
+              color: alert ? "error.main" : "text.primary",
+            }}
+          >
+            {value}
+          </Typography>
+          {sub && (
+            <Typography sx={{ mt: 1, fontSize: 12, color: "text.secondary" }}>
+              {sub}
+            </Typography>
+          )}
+        </Box>
+        {ring !== undefined ? (
+          <RingChart pct={ring} color={iconColor} />
+        ) : Icon ? (
+          <Avatar sx={{ width: 40, height: 40, borderRadius: "12px", bgcolor: iconBg, color: iconColor }}>
+            <Icon size={18} strokeWidth={2} />
+          </Avatar>
+        ) : null}
+      </Box>
+    </Paper>
   )
 }
