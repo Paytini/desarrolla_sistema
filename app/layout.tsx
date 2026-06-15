@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { DM_Sans, Geist, Bricolage_Grotesque } from "next/font/google"
+import { Plus_Jakarta_Sans } from "next/font/google"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Suspense } from "react"
 import GlobalLoadingController from "@/components/portal/GlobalLoadingController"
@@ -7,18 +7,10 @@ import { MuiProviders } from "@/components/mui/MuiProviders"
 import "./globals.css"
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
-})
-
-const bricolage = Bricolage_Grotesque({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-bricolage",
+  variable: "--font-plus-jakarta-sans",
   display: "swap",
 })
 
@@ -37,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={cn("h-full", "antialiased", dmSans.variable, "font-sans", geist.variable, bricolage.variable)}>
-      <body className={`min-h-full flex flex-col font-[family-name:var(--font-dm-sans)]`}>
+    <html lang="es" className={cn("h-full", "antialiased", plusJakartaSans.variable, "font-sans")}>
+      <body className={`min-h-full flex flex-col font-[family-name:var(--font-plus-jakarta-sans)]`}>
         <MuiProviders>
           <Suspense fallback={null}>
             <GlobalLoadingController />

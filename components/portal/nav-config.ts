@@ -14,11 +14,14 @@ import {
 
 export type Rol = "SUPERADMIN" | "RH" | "EMPLEADO"
 export type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean }
-export type NavSection = { heading: string; items: NavItem[] }
+export type NavSection = { heading: string; accent: string; items: NavItem[] }
+
+export const defaultNavAccent = "var(--brand)"
 
 export const navSuperAdminSections: NavSection[] = [
   {
     heading: "Principal",
+    accent: "var(--brand)",
     items: [
       { label: "Dashboard",      href: "/superadmin",             icon: LayoutDashboard, exact: true },
       { label: "Empresas",       href: "/superadmin/empresas",    icon: Building2 },
@@ -26,6 +29,7 @@ export const navSuperAdminSections: NavSection[] = [
   },
   {
     heading: "Operaciones",
+    accent: "var(--sidebar-accent-2)",
     items: [
       { label: "Paquetes",       href: "/superadmin/paquetes",    icon: Package },
       { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText },
@@ -35,6 +39,7 @@ export const navSuperAdminSections: NavSection[] = [
   },
   {
     heading: "Sistema",
+    accent: "var(--sidebar-accent-3)",
     items: [
       { label: "Integración WP", href: "/superadmin/integracion", icon: Share2 },
     ],

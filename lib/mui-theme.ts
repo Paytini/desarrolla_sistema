@@ -4,7 +4,7 @@ import { createTheme } from "@mui/material/styles"
 // --destructive, --background, --card, --foreground, --muted-foreground, --border).
 // Keep in sync if those tokens change.
 
-const headingFontFamily = 'var(--font-bricolage), "Bricolage Grotesque", sans-serif'
+const headingFontFamily = 'var(--font-plus-jakarta-sans), "Plus Jakarta Sans", sans-serif'
 
 export const muiTheme = createTheme({
   palette: {
@@ -33,7 +33,7 @@ export const muiTheme = createTheme({
     borderRadius: 8,
   },
   typography: {
-    fontFamily: 'var(--font-dm-sans), "DM Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    fontFamily: 'var(--font-plus-jakarta-sans), "Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
     h1: { fontFamily: headingFontFamily, fontWeight: 700 },
     h2: { fontFamily: headingFontFamily, fontWeight: 700 },
     h3: { fontFamily: headingFontFamily, fontWeight: 700 },
