@@ -1,8 +1,8 @@
-"use client"
-
 import Link from "next/link"
+import { alpha } from "@mui/material/styles"
+import { Avatar, Box, Typography } from "@mui/material"
 import { BarChart3, Building2, FileText, Package, Share2, Users, type LucideIcon } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { SectionCard } from "@/components/mui/SectionCard"
 
 const ACTIONS: { label: string; description: string; href: string; Icon: LucideIcon }[] = [
   { label: "Empresas",    description: "Clientes y cupos",    href: "/superadmin/empresas",    Icon: Building2 },
@@ -15,29 +15,47 @@ const ACTIONS: { label: string; description: string; href: string; Icon: LucideI
 
 export function QuickActions() {
   return (
-    <Card>
-      <CardHeader className="px-5 py-4 border-b border-border">
-        <CardTitle className="text-[14px] font-medium">Accesos directos</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4">
-        <div className="grid grid-cols-2 gap-2">
-          {ACTIONS.map(({ label, description, href, Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="group flex flex-col gap-2.5 rounded-md border border-border bg-muted/50 p-3 transition-colors hover:bg-accent hover:border-accent"
+    <SectionCard title="Accesos directos">
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1 }}>
+        {ACTIONS.map(({ label, description, href, Icon }) => (
+          <Box
+            key={href}
+            component={Link}
+            href={href}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.25,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+              p: 1.5,
+              textDecoration: "none",
+              transition: "background-color 0.15s, border-color 0.15s",
+              "&:hover": { bgcolor: "action.hover", borderColor: "primary.main" },
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                color: "primary.main",
+              }}
             >
-              <span className="flex size-8 items-center justify-center rounded-md bg-primary/10">
-                <Icon size={14} strokeWidth={2} className="text-primary" />
-              </span>
-              <div>
-                <p className="text-[12px] font-semibold leading-tight text-foreground">{label}</p>
-                <p className="mt-0.5 text-[10px] leading-tight text-muted-foreground">{description}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+              <Icon size={14} strokeWidth={2} />
+            </Avatar>
+            <Box>
+              <Typography sx={{ fontSize: 12, fontWeight: 600, lineHeight: 1.3, color: "text.primary" }}>
+                {label}
+              </Typography>
+              <Typography sx={{ mt: 0.25, fontSize: 10, lineHeight: 1.3, color: "text.secondary" }}>
+                {description}
+              </Typography>
+            </Box>
+          </Box>
+        ))}
+      </Box>
+    </SectionCard>
   )
 }
