@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { alpha } from "@mui/material/styles"
 import { Avatar, Box, Typography } from "@mui/material"
