@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import PageHeader from "@/components/portal/PageHeader"
+import PageHeader from "@/components/shared/PageHeader"
 
 function isDiagramImageUrl(url: string) {
   return /\.(svg|png|jpe?g|webp|gif)(\?.*)?$/i.test(url) || url.startsWith("/")

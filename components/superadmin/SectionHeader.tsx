@@ -1,4 +1,6 @@
-import { type ReactNode } from "react"
+import type { ReactNode } from "react"
+import Box from "@mui/material/Box"
+import Typography from "@mui/material/Typography"
 
 interface SectionHeaderProps {
   title: string
@@ -9,19 +11,33 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ title, description, breadcrumb, action }: SectionHeaderProps) {
   return (
-    <div className="flex items-end justify-between gap-4">
-      <div>
+    <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 2 }}>
+      <Box>
         {breadcrumb && (
-          <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          <Typography
+            sx={{
+              fontSize: "10px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.14em",
+              color: "text.secondary",
+              lineHeight: 1,
+              mb: 0.5,
+            }}
+          >
             {breadcrumb}
-          </p>
+          </Typography>
         )}
-        <h2 className="text-[15px] font-medium leading-tight text-foreground">{title}</h2>
+        <Typography sx={{ fontSize: "15px", fontWeight: 500, lineHeight: 1.35, color: "text.primary" }}>
+          {title}
+        </Typography>
         {description && (
-          <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>
+          <Typography sx={{ mt: 0.5, fontSize: "13px", color: "text.secondary" }}>
+            {description}
+          </Typography>
         )}
-      </div>
-      {action && <div className="shrink-0">{action}</div>}
-    </div>
+      </Box>
+      {action && <Box sx={{ flexShrink: 0 }}>{action}</Box>}
+    </Box>
   )
 }

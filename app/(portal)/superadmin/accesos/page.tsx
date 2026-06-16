@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation"
 import { Box, Stack, Typography } from "@mui/material"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
-import { DismissibleAlert } from "@/components/mui/DismissibleAlert"
+import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { getSuperadminAccesosSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
-import { AccesosTabs, type EmployeeAccessRow, type RhAccessRow } from "./AccesosTabs"
+import { AccesosTabs, type EmployeeAccessRow, type RhAccessRow } from "@/components/superadmin/AccesosTabs"
 
 const successMessages: Record<string, string> = {
   rh_suspendido: "Usuario RH suspendido.",

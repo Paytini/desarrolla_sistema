@@ -1,9 +1,9 @@
-import EmpleadoSearchBar from "@/components/portal/EmpleadoSearchBar"
-import { MobileNav } from "@/components/portal/MobileNav"
-import { PortalGreeting } from "@/components/portal/PortalGreeting"
-import RhSearchBar from "@/components/portal/RhSearchBar"
-import SuperadminSearchBar from "@/components/portal/SuperadminSearchBar"
-import Sidebar from "@/components/Sidebar"
+import EmpleadoSearchBar from "@/components/search/EmpleadoSearchBar"
+import { MobileNav } from "@/components/layout/MobileNav"
+import { PortalGreeting } from "@/components/layout/PortalGreeting"
+import RhSearchBar from "@/components/search/RhSearchBar"
+import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
+import Sidebar from "@/components/layout/Sidebar"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 
@@ -23,12 +23,12 @@ export default async function PortalLayout({
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar rol={rol} nombre={nombre} empresa={empresa} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-[68px] shrink-0 items-center justify-between gap-6 border-b border-slate-100 bg-white px-4 md:px-8">
-          <div className="flex items-center gap-2">
+        <header className="relative flex h-[76px] shrink-0 items-center justify-between gap-6 border-b border-border bg-card px-4 md:px-8">
+          <div className="relative z-10 flex min-w-0 items-center gap-2">
             <MobileNav rol={rol} nombre={nombre} empresa={empresa} />
             <PortalGreeting nombre={nombre} rol={rol} />
           </div>
-          <div className="shrink-0">
+          <div className="relative z-10 shrink-0">
             {rol === "SUPERADMIN" && <SuperadminSearchBar />}
             {rol === "RH" && <RhSearchBar />}
             {rol === "EMPLEADO" && <EmpleadoSearchBar />}

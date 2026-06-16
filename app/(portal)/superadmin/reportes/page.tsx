@@ -2,26 +2,33 @@ import { redirect } from "next/navigation"
 import { PageHeader } from "@/components/superadmin/PageHeader"
 import { SubmitButton } from "@/components/superadmin/SubmitButton"
 import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import KpiCard from "@/components/portal/KpiCard"
+import KpiCard from "@/components/shared/KpiCard"
 import { getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { retryCompanySyncAction, triggerGlobalLearningSyncAction } from "./actions"
+import Alert from "@mui/material/Alert"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
+import Chip from "@mui/material/Chip"
+import Paper from "@mui/material/Paper"
+import Table from "@mui/material/Table"
+import TableBody from "@mui/material/TableBody"
+import TableCell from "@mui/material/TableCell"
+import TableHead from "@mui/material/TableHead"
+import TableRow from "@mui/material/TableRow"
+import Typography from "@mui/material/Typography"
 
-const DAY_MS = 1000 * 60 * 60 * 24
+const DAY_MS       = 1000 * 60 * 60 * 24
 const STALE_SYNC_MS = 1000 * 60 * 60 * 24
 
 const successMessages: Record<string, string> = {
-  sync_background_started: "La sincronización global se envió a segundo plano.",
-  sync_background_already_running: "Ya existe una sincronización global en proceso.",
-  sync_retry_ok: "Se ejecutó el reintento de sincronización de la empresa.",
-  sync_retry_queue_busy: "Se actualizó el acceso del paquete. El refresco ya estaba en cola.",
-  sync_retry_partial: "Se lanzó el reintento, pero hubo advertencias. Revisa el detalle.",
+  sync_background_started:        "La sincronización global se envió a segundo plano.",
+  sync_background_already_running:"Ya existe una sincronización global en proceso.",
+  sync_retry_ok:                  "Se ejecutó el reintento de sincronización de la empresa.",
+  sync_retry_queue_busy:          "Se actualizó el acceso del paquete. El refresco ya estaba en cola.",
+  sync_retry_partial:             "Se lanzó el reintento, pero hubo advertencias. Revisa el detalle.",
 }
 
 const errorMessages: Record<string, string> = {
@@ -35,73 +42,76 @@ type PageProps = {
 function calculateRemainingDays(date: Date) {
   const today = new Date()
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
-  const target = new Date(date)
+  const target      = new Date(date)
   const targetStart = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime()
   return Math.floor((targetStart - startOfToday) / DAY_MS)
 }
 
-function SyncBadge({ status }: { status: "OK" | "PARCIAL" | "ERROR" | "SUSPENDIDA" }) {
-  const map: Record<typeof status, string> = {
-    OK: "border-green-200 bg-green-50 text-green-700 hover:bg-green-50",
-    PARCIAL: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50",
-    ERROR: "border-red-200 bg-red-50 text-red-600 hover:bg-red-50",
-    SUSPENDIDA: "border-slate-200 bg-slate-100 text-slate-500 hover:bg-slate-100",
-  }
-  return <Badge className={map[status]}>{status}</Badge>
+type SyncStatus = "OK" | "PARCIAL" | "ERROR" | "SUSPENDIDA"
+
+const SYNC_CHIP_STYLES: Record<SyncStatus, { bg: string; color: string; border: string }> = {
+  OK:         { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
+  PARCIAL:    { bg: "#fffbeb", color: "#b45309", border: "#fde68a" },
+  ERROR:      { bg: "#fef2f2", color: "#dc2626", border: "#fecaca" },
+  SUSPENDIDA: { bg: "#f8fafc", color: "#64748b", border: "#e2e8f0" },
+}
+
+const TH_SX = {
+  fontSize: "10.5px",
+  fontWeight: 700,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.08em",
+  color: "#94a3b8",
+  bgcolor: "transparent",
+  borderBottom: "1px solid #f1f5f9",
+  py: 1.25,
+  px: 2,
+}
+
+const TD_SX = {
+  py: 1.25,
+  px: 2,
+  borderBottom: "1px solid #f8fafc",
+  fontSize: 13,
 }
 
 export default async function SuperAdminReportesPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
-  const params = await searchParams
+  const params  = await searchParams
   const success = readSearchParam(params, "success")
-  const error = readSearchParam(params, "error")
-  const detail = readDecodedSearchParam(params, "detail")
+  const error   = readSearchParam(params, "error")
+  const detail  = readDecodedSearchParam(params, "detail")
 
   const { empresas } = await getSuperadminReportesSnapshot()
   const now = Date.now()
 
   const companyStats = empresas.map((empresa) => {
-    const empleadosActivos = empresa.empleados.filter((e) => e.activo)
-    const empleadosSuspendidos = empresa.empleados.length - empleadosActivos.length
-    const employeesWithoutWpUser = empleadosActivos.filter((e) => !e.wp_user_id).length
-    const totalCourses = empleadosActivos.reduce((s, e) => s + e.cursos.length, 0)
-    const totalProgress = empleadosActivos.reduce(
-      (s, e) => s + e.cursos.reduce((cs, c) => cs + c.progreso_pct, 0), 0
-    )
-    const averageProgress = totalCourses ? Math.round(totalProgress / totalCourses) : 0
-    const completedCourses = empleadosActivos.reduce(
-      (s, e) => s + e.cursos.filter((c) => c.completado).length, 0
-    )
-    const notStartedCourses = empleadosActivos.reduce(
-      (s, e) => s + e.cursos.filter((c) => !c.completado && c.progreso_pct === 0).length, 0
-    )
-    const errorCourses = empleadosActivos.reduce(
-      (s, e) => s + e.cursos.filter((c) => c.acceso_estado === "ERROR").length, 0
-    )
-    const pendingCourses = empleadosActivos.reduce(
-      (s, e) => s + e.cursos.filter((c) => c.acceso_estado === "PENDING" || c.acceso_estado === "REQUIRES_REVIEW").length, 0
-    )
-    const staleCourses = empleadosActivos.reduce(
-      (s, e) => s + e.cursos.filter((c) => now - new Date(c.ultima_sincronizacion).getTime() > STALE_SYNC_MS).length, 0
-    )
-    const employeesWithoutCourses = empleadosActivos.filter((e) => e.cursos.length === 0).length
+    const empleadosActivos         = empresa.empleados.filter((e) => e.activo)
+    const empleadosSuspendidos     = empresa.empleados.length - empleadosActivos.length
+    const employeesWithoutWpUser   = empleadosActivos.filter((e) => !e.wp_user_id).length
+    const totalCourses             = empleadosActivos.reduce((s, e) => s + e.cursos.length, 0)
+    const totalProgress            = empleadosActivos.reduce((s, e) => s + e.cursos.reduce((cs, c) => cs + c.progreso_pct, 0), 0)
+    const averageProgress          = totalCourses ? Math.round(totalProgress / totalCourses) : 0
+    const completedCourses         = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => c.completado).length, 0)
+    const notStartedCourses        = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => !c.completado && c.progreso_pct === 0).length, 0)
+    const errorCourses             = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => c.acceso_estado === "ERROR").length, 0)
+    const pendingCourses           = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => c.acceso_estado === "PENDING" || c.acceso_estado === "REQUIRES_REVIEW").length, 0)
+    const staleCourses             = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => now - new Date(c.ultima_sincronizacion).getTime() > STALE_SYNC_MS).length, 0)
+    const employeesWithoutCourses  = empleadosActivos.filter((e) => e.cursos.length === 0).length
 
-    let syncStatus: "OK" | "PARCIAL" | "ERROR" | "SUSPENDIDA" = "OK"
+    let syncStatus: SyncStatus = "OK"
     if (!empresa.activo) syncStatus = "SUSPENDIDA"
     else if (errorCourses > 0) syncStatus = "ERROR"
     else if (
-      employeesWithoutWpUser > 0 ||
-      pendingCourses > 0 ||
-      staleCourses > 0 ||
+      employeesWithoutWpUser > 0 || pendingCourses > 0 || staleCourses > 0 ||
       (empleadosActivos.length > 0 && totalCourses === 0)
-    )
-      syncStatus = "PARCIAL"
+    ) syncStatus = "PARCIAL"
 
-    const activePackage = empresa.paquetes[0]
+    const activePackage  = empresa.paquetes[0]
     const expirationDate = activePackage?.fecha_vencimiento
-    const remainingDays = expirationDate ? calculateRemainingDays(new Date(expirationDate)) : null
+    const remainingDays  = expirationDate ? calculateRemainingDays(new Date(expirationDate)) : null
 
     return {
       empresa,
@@ -122,35 +132,31 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
     }
   })
 
-  const empresasActivas = companyStats.filter((i) => i.empresa.activo)
+  const empresasActivas     = companyStats.filter((i) => i.empresa.activo)
   const totalEmpleadosActivos = empresasActivas.reduce((s, i) => s + i.empleadosActivos, 0)
-  const totalCursosActivos = empresasActivas.reduce((s, i) => s + i.totalCourses, 0)
-  const weightedProgress = empresasActivas.reduce(
-    (s, i) => s + i.averageProgress * i.totalCourses, 0
-  )
-  const averageProgress = totalCursosActivos > 0
-    ? Math.round(weightedProgress / totalCursosActivos)
-    : 0
+  const totalCursosActivos  = empresasActivas.reduce((s, i) => s + i.totalCourses, 0)
+  const weightedProgress    = empresasActivas.reduce((s, i) => s + i.averageProgress * i.totalCourses, 0)
+  const averageProgress     = totalCursosActivos > 0 ? Math.round(weightedProgress / totalCursosActivos) : 0
   const companiesWithErrors = empresasActivas.filter((i) => i.syncStatus === "ERROR").length
-  const renewalsIn30Days = empresasActivas.filter(
+  const renewalsIn30Days    = empresasActivas.filter(
     (i) => i.remainingDays !== null && i.remainingDays >= 0 && i.remainingDays <= 30
   ).length
 
-  const renewalAlerts = companyStats
+  const renewalAlerts  = companyStats
     .filter((i) => i.remainingDays !== null && i.remainingDays <= 30)
     .sort((a, b) => (a.remainingDays ?? 0) - (b.remainingDays ?? 0))
 
-  const renewalsOverdue  = renewalAlerts.filter((i) => (i.remainingDays ?? 0) < 0).length
-  const renewalsIn7      = renewalAlerts.filter((i) => (i.remainingDays ?? 999) >= 0 && (i.remainingDays ?? 999) <= 7).length
-  const renewalsIn15     = renewalAlerts.filter((i) => (i.remainingDays ?? 999) >= 8 && (i.remainingDays ?? 999) <= 15).length
-  const renewalsIn30     = renewalAlerts.filter((i) => (i.remainingDays ?? 999) >= 16 && (i.remainingDays ?? 999) <= 30).length
+  const renewalsOverdue = renewalAlerts.filter((i) => (i.remainingDays ?? 0) < 0).length
+  const renewalsIn7    = renewalAlerts.filter((i) => (i.remainingDays ?? 999) >= 0 && (i.remainingDays ?? 999) <= 7).length
+  const renewalsIn15   = renewalAlerts.filter((i) => (i.remainingDays ?? 999) >= 8 && (i.remainingDays ?? 999) <= 15).length
+  const renewalsIn30   = renewalAlerts.filter((i) => (i.remainingDays ?? 999) >= 16 && (i.remainingDays ?? 999) <= 30).length
 
   const syncOk      = companyStats.filter((i) => i.syncStatus === "OK").length
   const syncPartial = companyStats.filter((i) => i.syncStatus === "PARCIAL").length
   const syncError   = companyStats.filter((i) => i.syncStatus === "ERROR").length
 
   return (
-    <div className="space-y-6">
+    <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
         breadcrumb="SuperAdmin · Operaciones"
         title="Reportes globales"
@@ -167,145 +173,122 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
 
       {/* Alerts */}
       {success && (
-        <Alert className="border-green-200 bg-green-50 text-green-800">
-          <CheckCircle2 className="size-4" />
-          <AlertDescription>
-            {detail
-              ? `${successMessages[success] ?? success} — ${detail}`
-              : (successMessages[success] ?? success)}
-          </AlertDescription>
+        <Alert severity="success" icon={<CheckCircle2 size={16} />} sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}>
+          {detail ? `${successMessages[success] ?? success} — ${detail}` : (successMessages[success] ?? success)}
         </Alert>
       )}
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" />
-          <AlertDescription>{errorMessages[error] ?? error}</AlertDescription>
+        <Alert severity="error" icon={<AlertCircle size={16} />} sx={{ borderRadius: 2 }}>
+          {errorMessages[error] ?? error}
         </Alert>
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KpiCard
-          label="Avance promedio global"
-          value={`${averageProgress}%`}
-          sub="Promedio ponderado de cursos"
-          borderColor="primary"
-        />
-        <KpiCard
-          label="Renovaciones en 30 d"
-          value={renewalsIn30Days}
-          sub="Empresas activas por vencer"
-          borderColor="primary"
-          alert={renewalsIn30Days > 0}
-        />
-        <KpiCard
-          label="Empresas con error"
-          value={companiesWithErrors}
-          sub="Requieren atención de sync"
-          borderColor="primary"
-          alert={companiesWithErrors > 0}
-        />
-        <KpiCard
-          label="Empleados activos"
-          value={totalEmpleadosActivos}
-          sub="Base laboral activa total"
-          borderColor="primary"
-        />
-      </div>
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", lg: "repeat(4,1fr)" } }}>
+        <KpiCard label="Avance promedio global"  value={`${averageProgress}%`}  sub="Promedio ponderado de cursos"   borderColor="primary" />
+        <KpiCard label="Renovaciones en 30 d"    value={renewalsIn30Days}        sub="Empresas activas por vencer"    borderColor="primary" alert={renewalsIn30Days > 0} />
+        <KpiCard label="Empresas con error"       value={companiesWithErrors}     sub="Requieren atención de sync"     borderColor="primary" alert={companiesWithErrors > 0} />
+        <KpiCard label="Empleados activos"        value={totalEmpleadosActivos}   sub="Base laboral activa total"      borderColor="primary" />
+      </Box>
 
       {/* Two-column layout */}
-      <div className="grid gap-5 xl:grid-cols-2">
+      <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "1fr", xl: "1fr 1fr" } }}>
 
         {/* Vencimientos */}
-        <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-          <div className="border-b border-slate-100 px-6 py-4">
-            <p className="text-[14px] font-medium text-slate-900">Control de vencimientos</p>
-            <p className="text-[12px] text-slate-400">
+        <Paper elevation={0} sx={{ overflow: "hidden", borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "background.paper" }}>
+          <Box sx={{ borderBottom: "1px solid #f1f5f9", px: 3, py: 2 }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>Control de vencimientos</Typography>
+            <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
               Alertas por tramo para anticipar renovaciones comerciales.
-            </p>
-          </div>
-          <div className="p-5 space-y-4">
+            </Typography>
+          </Box>
+          <Box sx={{ p: 2.5, display: "grid", gap: 2 }}>
             {/* Tramo summary */}
-            <div className="grid grid-cols-4 gap-2">
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1 }}>
               {[
-                { label: "Vencidos", value: renewalsOverdue, danger: true },
-                { label: "0–7 d",    value: renewalsIn7,    warn: true },
-                { label: "8–15 d",   value: renewalsIn15,   warn: false },
-                { label: "16–30 d",  value: renewalsIn30,   warn: false },
+                { label: "Vencidos", value: renewalsOverdue, danger: true,  warn: false },
+                { label: "0–7 d",    value: renewalsIn7,    danger: false,  warn: true  },
+                { label: "8–15 d",   value: renewalsIn15,   danger: false,  warn: false },
+                { label: "16–30 d",  value: renewalsIn30,   danger: false,  warn: false },
               ].map(({ label, value, danger, warn }) => (
-                <div
+                <Box
                   key={label}
-                  className="rounded-md border p-3 text-center"
-                  style={{
+                  sx={{
+                    borderRadius: 1.5,
+                    border: "1px solid",
                     borderColor: danger ? "#fecaca" : warn ? "#fde68a" : "#e2e8f0",
-                    background:  danger ? "#fef2f2" : warn ? "#fffbeb" : "#f8fafc",
+                    bgcolor: danger ? "#fef2f2" : warn ? "#fffbeb" : "#f8fafc",
+                    p: 1.5,
+                    textAlign: "center",
                   }}
                 >
-                  <p
-                    className="text-[20px] font-semibold tabular-nums"
-                    style={{ color: danger ? "#dc2626" : warn ? "#d97706" : "#475569" }}
+                  <Typography
+                    sx={{
+                      fontSize: 20,
+                      fontWeight: 600,
+                      fontVariantNumeric: "tabular-nums",
+                      color: danger ? "#dc2626" : warn ? "#d97706" : "#475569",
+                    }}
                   >
                     {value}
-                  </p>
-                  <p className="mt-0.5 text-[9.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                  </Typography>
+                  <Typography sx={{ mt: 0.5, fontSize: "9.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#94a3b8" }}>
                     {label}
-                  </p>
-                </div>
+                  </Typography>
+                </Box>
               ))}
-            </div>
+            </Box>
 
             {renewalAlerts.length === 0 ? (
-              <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 py-8 text-center">
-                <CheckCircle2 size={22} className="mx-auto mb-2 text-green-400" />
-                <p className="text-[13px] text-slate-400">
-                  Sin vencimientos en los próximos 30 días.
-                </p>
-              </div>
+              <Box sx={{ borderRadius: 1.5, border: "1px dashed #e2e8f0", bgcolor: "#f8fafc", py: 4, textAlign: "center" }}>
+                <CheckCircle2 size={22} style={{ color: "#86efac", margin: "0 auto 8px" }} />
+                <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>Sin vencimientos en los próximos 30 días.</Typography>
+              </Box>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                      Empresa
-                    </TableHead>
-                    <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                      Paquete
-                    </TableHead>
-                    <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                      Vence
-                    </TableHead>
-                    <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                      Estado
-                    </TableHead>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={TH_SX}>Empresa</TableCell>
+                    <TableCell sx={TH_SX}>Paquete</TableCell>
+                    <TableCell sx={TH_SX}>Vence</TableCell>
+                    <TableCell sx={TH_SX}>Estado</TableCell>
                   </TableRow>
-                </TableHeader>
+                </TableHead>
                 <TableBody>
                   {renewalAlerts.map((item) => {
                     const days = item.remainingDays as number
                     return (
-                      <TableRow key={item.empresa.id} className="h-11">
-                        <TableCell className="text-[13px] font-medium text-slate-900">
+                      <TableRow key={item.empresa.id} sx={{ height: 44 }}>
+                        <TableCell sx={{ ...TD_SX, fontWeight: 500, color: "#0f172a" }}>
                           {item.empresa.nombre}
                         </TableCell>
-                        <TableCell className="text-[12px] text-slate-500">
+                        <TableCell sx={{ ...TD_SX, color: "#64748b" }}>
                           {item.activePackage?.paquete.nombre ?? "—"}
                         </TableCell>
-                        <TableCell className="text-[12px] text-slate-500">
+                        <TableCell sx={{ ...TD_SX, color: "#64748b" }}>
                           {formatDate(item.activePackage?.fecha_vencimiento)}
                         </TableCell>
-                        <TableCell>
-                          <span
-                            className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-semibold"
-                            style={
-                              days < 0
-                                ? { borderColor: "#fecaca", background: "#fef2f2", color: "#dc2626" }
+                        <TableCell sx={TD_SX}>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              borderRadius: 0.75,
+                              border: "1px solid",
+                              px: 0.75,
+                              py: 0.25,
+                              fontSize: "10px",
+                              fontWeight: 600,
+                              ...(days < 0
+                                ? { borderColor: "#fecaca", bgcolor: "#fef2f2", color: "#dc2626" }
                                 : days <= 7
-                                ? { borderColor: "#fde68a", background: "#fffbeb", color: "#d97706" }
-                                : { borderColor: "#e2e8f0", background: "#f8fafc", color: "#64748b" }
-                            }
+                                ? { borderColor: "#fde68a", bgcolor: "#fffbeb", color: "#d97706" }
+                                : { borderColor: "#e2e8f0", bgcolor: "#f8fafc", color: "#64748b" }),
+                            }}
                           >
                             {days < 0 ? `Vencido ${Math.abs(days)}d` : `${days}d`}
-                          </span>
+                          </Box>
                         </TableCell>
                       </TableRow>
                     )
@@ -313,110 +296,118 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
                 </TableBody>
               </Table>
             )}
-          </div>
-        </div>
+          </Box>
+        </Paper>
 
         {/* Sync status */}
-        <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-          <div className="border-b border-slate-100 px-6 py-4">
-            <p className="text-[14px] font-medium text-slate-900">
+        <Paper elevation={0} sx={{ overflow: "hidden", borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "background.paper" }}>
+          <Box sx={{ borderBottom: "1px solid #f1f5f9", px: 3, py: 2 }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>
               Estado de sincronización WP/Tutor
-            </p>
-            <p className="text-[12px] text-slate-400">
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
               Semáforo operativo por empresa con reintento directo.
-            </p>
-          </div>
-          <div className="p-5 space-y-4">
+            </Typography>
+          </Box>
+          <Box sx={{ p: 2.5, display: "grid", gap: 2 }}>
             {/* Sync summary */}
-            <div className="grid grid-cols-3 gap-2">
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1 }}>
               {[
-                { label: "OK",      value: syncOk,      ok: true,    warn: false, err: false },
-                { label: "Parcial", value: syncPartial,  ok: false,   warn: true,  err: false },
-                { label: "Error",   value: syncError,    ok: false,   warn: false, err: true },
-              ].map(({ label, value, ok, warn, err }) => (
-                <div
+                { label: "OK",      value: syncOk,      bg: "#f0fdf4", border: "#bbf7d0", color: "#16a34a" },
+                { label: "Parcial", value: syncPartial,  bg: "#fffbeb", border: "#fde68a", color: "#d97706" },
+                { label: "Error",   value: syncError,    bg: "#fef2f2", border: "#fecaca", color: "#dc2626" },
+              ].map(({ label, value, bg, border, color }) => (
+                <Box
                   key={label}
-                  className="rounded-md border p-3 text-center"
-                  style={{
-                    borderColor: err ? "#fecaca" : warn ? "#fde68a" : "#bbf7d0",
-                    background:  err ? "#fef2f2" : warn ? "#fffbeb" : "#f0fdf4",
-                  }}
+                  sx={{ borderRadius: 1.5, border: "1px solid", borderColor: border, bgcolor: bg, p: 1.5, textAlign: "center" }}
                 >
-                  <p
-                    className="text-[20px] font-semibold tabular-nums"
-                    style={{ color: err ? "#dc2626" : warn ? "#d97706" : "#16a34a" }}
-                  >
+                  <Typography sx={{ fontSize: 20, fontWeight: 600, fontVariantNumeric: "tabular-nums", color }}>
                     {value}
-                  </p>
-                  <p className="mt-0.5 text-[9.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                  </Typography>
+                  <Typography sx={{ mt: 0.5, fontSize: "9.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#94a3b8" }}>
                     {label}
-                  </p>
-                </div>
+                  </Typography>
+                </Box>
               ))}
-            </div>
+            </Box>
 
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                    Empresa
-                  </TableHead>
-                  <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                    Sync
-                  </TableHead>
-                  <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                    Errores
-                  </TableHead>
-                  <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                    Pendientes
-                  </TableHead>
-                  <TableHead className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                    Sin WP ID
-                  </TableHead>
-                  <TableHead className="text-right text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                    Acción
-                  </TableHead>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={TH_SX}>Empresa</TableCell>
+                  <TableCell sx={TH_SX}>Sync</TableCell>
+                  <TableCell sx={TH_SX}>Errores</TableCell>
+                  <TableCell sx={TH_SX}>Pend.</TableCell>
+                  <TableCell sx={TH_SX}>Sin WP</TableCell>
+                  <TableCell sx={{ ...TH_SX, textAlign: "right" }}>Acción</TableCell>
                 </TableRow>
-              </TableHeader>
+              </TableHead>
               <TableBody>
-                {companyStats.map((item) => (
-                  <TableRow key={item.empresa.id} className="h-11">
-                    <TableCell className="text-[13px] font-medium text-slate-900">
-                      {item.empresa.nombre}
-                    </TableCell>
-                    <TableCell>
-                      <SyncBadge status={item.syncStatus} />
-                    </TableCell>
-                    <TableCell>
-                      <span className={item.errorCourses > 0 ? "text-[13px] font-semibold text-red-600" : "text-[13px] text-slate-400"}>
-                        {item.errorCourses}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={item.pendingCourses > 0 ? "text-[13px] font-semibold text-amber-600" : "text-[13px] text-slate-400"}>
-                        {item.pendingCourses}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={item.employeesWithoutWpUser > 0 ? "text-[13px] font-semibold text-slate-700" : "text-[13px] text-slate-400"}>
-                        {item.employeesWithoutWpUser}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <form action={retryCompanySyncAction}>
-                        <input type="hidden" name="empresa_id" value={item.empresa.id} />
-                        <Button variant="outline" size="sm" type="submit" className="h-7 text-[12px]">
-                          Reintentar
-                        </Button>
-                      </form>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {companyStats.map((item) => {
+                  const style = SYNC_CHIP_STYLES[item.syncStatus]
+                  return (
+                    <TableRow key={item.empresa.id} sx={{ height: 44 }}>
+                      <TableCell sx={{ ...TD_SX, fontWeight: 500, color: "#0f172a" }}>
+                        {item.empresa.nombre}
+                      </TableCell>
+                      <TableCell sx={TD_SX}>
+                        <Chip
+                          label={item.syncStatus}
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            border: "1px solid",
+                            borderColor: style.border,
+                            bgcolor: style.bg,
+                            color: style.color,
+                            "& .MuiChip-label": { px: 1 },
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={TD_SX}>
+                        <Typography sx={{ fontSize: 13, fontWeight: item.errorCourses > 0 ? 600 : 400, color: item.errorCourses > 0 ? "#dc2626" : "#94a3b8" }}>
+                          {item.errorCourses}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={TD_SX}>
+                        <Typography sx={{ fontSize: 13, fontWeight: item.pendingCourses > 0 ? 600 : 400, color: item.pendingCourses > 0 ? "#d97706" : "#94a3b8" }}>
+                          {item.pendingCourses}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={TD_SX}>
+                        <Typography sx={{ fontSize: 13, fontWeight: item.employeesWithoutWpUser > 0 ? 600 : 400, color: item.employeesWithoutWpUser > 0 ? "#334155" : "#94a3b8" }}>
+                          {item.employeesWithoutWpUser}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ ...TD_SX, textAlign: "right" }}>
+                        <form action={retryCompanySyncAction}>
+                          <input type="hidden" name="empresa_id" value={item.empresa.id} />
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            type="submit"
+                            sx={{
+                              height: 28,
+                              fontSize: 12,
+                              borderColor: "divider",
+                              color: "text.secondary",
+                              "&:hover": { borderColor: "text.secondary" },
+                            }}
+                          >
+                            Reintentar
+                          </Button>
+                        </form>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
-          </div>
-        </div>
-      </div>
-    </div>
+          </Box>
+        </Paper>
+      </Box>
+    </Box>
   )
 }

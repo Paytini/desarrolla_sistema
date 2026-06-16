@@ -1,6 +1,6 @@
 import { Box, Chip, Stack, Typography } from "@mui/material"
 import { formatDateTime } from "@/lib/format"
-import { SectionCard } from "@/components/mui/SectionCard"
+import { SectionCard } from "@/components/shared/SectionCard"
 
 export type AuditoriaItem = {
   id: number

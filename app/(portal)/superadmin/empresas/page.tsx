@@ -1,16 +1,22 @@
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
-import { cn } from "@/lib/utils"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CreateEmpresaSheet } from "@/components/superadmin/CreateEmpresaSheet"
 import { EmpresaRow } from "@/components/superadmin/EmpresaRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/superadmin/PageHeader"
 import { AlertCircle, Building2, CheckCircle2, Search, X } from "lucide-react"
 import Link from "next/link"
+import Alert from "@mui/material/Alert"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
+import InputAdornment from "@mui/material/InputAdornment"
+import Table from "@mui/material/Table"
+import TableBody from "@mui/material/TableBody"
+import TableCell from "@mui/material/TableCell"
+import TableHead from "@mui/material/TableHead"
+import TableRow from "@mui/material/TableRow"
+import TextField from "@mui/material/TextField"
+import Typography from "@mui/material/Typography"
 
 const successMessages: Record<string, string> = {
   empresa_creada:     "Empresa creada correctamente con su usuario RH inicial.",
@@ -24,7 +30,16 @@ const errorMessages: Record<string, string> = {
   empresa:    "No se encontró la empresa.",
 }
 
-const thClass = "text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground"
+const TH_SX = {
+  fontSize: "10px",
+  fontWeight: 700,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.1em",
+  color: "text.secondary",
+  bgcolor: "action.hover",
+  borderBottom: "1px solid",
+  borderColor: "divider",
+}
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
@@ -33,7 +48,7 @@ type PageProps = {
 const PAGE_SIZE = 20
 
 export default async function EmpresasPage({ searchParams }: PageProps) {
-  const params = await searchParams
+  const params       = await searchParams
   const success      = readSearchParam(params, "success")
   const error        = readSearchParam(params, "error")
   const q            = readSearchParam(params, "q")?.toLowerCase() ?? ""
@@ -50,14 +65,14 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
           e.email_rh.toLowerCase().includes(q)
         : true
     const matchStatus =
-      statusFilter === "activa"    ? e.activo  :
-      statusFilter === "suspendida"? !e.activo :
+      statusFilter === "activa"     ? e.activo  :
+      statusFilter === "suspendida" ? !e.activo :
       true
     return matchQ && matchStatus
   })
 
-  const totalPages    = Math.max(1, Math.ceil(empresasFiltradas.length / PAGE_SIZE))
-  const currentPage   = Math.min(page, totalPages)
+  const totalPages     = Math.max(1, Math.ceil(empresasFiltradas.length / PAGE_SIZE))
+  const currentPage    = Math.min(page, totalPages)
   const empresasPagina = empresasFiltradas.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   function pageUrl(p: number) {
@@ -70,8 +85,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
-
+    <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
         breadcrumb="SuperAdmin · Administración"
         title="Empresas clientes"
@@ -79,54 +93,80 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
       />
 
       {success && (
-        <Alert className="border-green-200 bg-green-50 text-green-800">
-          <CheckCircle2 className="size-4" />
-          <AlertDescription>{successMessages[success] ?? success}</AlertDescription>
+        <Alert severity="success" icon={<CheckCircle2 size={16} />} sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}>
+          {successMessages[success] ?? success}
         </Alert>
       )}
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="size-4" />
-          <AlertDescription>{errorMessages[error] ?? error}</AlertDescription>
+        <Alert severity="error" icon={<AlertCircle size={16} />} sx={{ borderRadius: 2 }}>
+          {errorMessages[error] ?? error}
         </Alert>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <form method="GET" className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search size={14} strokeWidth={2} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              name="q"
-              defaultValue={q}
-              placeholder="Buscar empresa o RFC…"
-              className="h-9 w-56 pl-8 text-[13px]"
-            />
-          </div>
-          <select
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1.5 }}>
+        <Box component="form" method="GET" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+          <TextField
+            name="q"
+            defaultValue={q}
+            placeholder="Buscar empresa o RFC…"
+            size="small"
+            sx={{ width: 224 }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={14} style={{ color: "#94a3b8" }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <Box
+            component="select"
             name="status"
             defaultValue={statusFilter}
-            className="flex h-9 rounded-md border border-input bg-transparent px-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-ring"
+            sx={{
+              height: 40,
+              borderRadius: 1,
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "transparent",
+              px: 1.5,
+              fontSize: 13,
+              color: "text.primary",
+              outline: "none",
+              cursor: "pointer",
+              "&:focus": { borderColor: "primary.main" },
+            }}
           >
             <option value="all">Todos</option>
             <option value="activa">Activas</option>
             <option value="suspendida">Suspendidas</option>
-          </select>
-          <Button type="submit" variant="outline" size="sm" className="h-9 px-3 text-[13px]">
+          </Box>
+          <Button
+            type="submit"
+            variant="outlined"
+            size="small"
+            sx={{ height: 40, px: 1.5, fontSize: 13, borderColor: "divider", color: "text.secondary" }}
+          >
             Filtrar
           </Button>
           {(q || statusFilter !== "all") && (
-            <Link
+            <Button
+              component={Link}
               href="/superadmin/empresas"
-              className="inline-flex h-9 items-center gap-1 rounded-md px-2.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              variant="text"
+              size="small"
+              startIcon={<X size={12} strokeWidth={2.5} />}
+              sx={{ height: 40, fontSize: 12, color: "text.secondary" }}
             >
-              <X size={12} strokeWidth={2.5} />
               Limpiar
-            </Link>
+            </Button>
           )}
-        </form>
+        </Box>
 
         <CreateEmpresaSheet paquetes={paquetes} defaultOpen={!!error} />
-      </div>
+      </Box>
 
       <PanelBox
         title="Empresas registradas"
@@ -134,27 +174,25 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
         noPadding
       >
         {empresasFiltradas.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <Building2 size={28} className="text-muted-foreground/40" />
-            <p className="text-[13px] text-muted-foreground">
-              {q || statusFilter !== "all"
-                ? "Sin resultados para ese filtro."
-                : "Aún no hay empresas registradas."}
-            </p>
-          </div>
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5, py: 8, textAlign: "center" }}>
+            <Building2 size={28} style={{ color: "#cbd5e1" }} />
+            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+              {q || statusFilter !== "all" ? "Sin resultados para ese filtro." : "Aún no hay empresas registradas."}
+            </Typography>
+          </Box>
         ) : (
           <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-transparent">
-                <TableHead className={thClass}>Empresa</TableHead>
-                <TableHead className={cn(thClass, "hidden sm:table-cell")}>RFC</TableHead>
-                <TableHead className={cn(thClass, "hidden md:table-cell")}>Plan</TableHead>
-                <TableHead className={thClass}>Cupos</TableHead>
-                <TableHead className={cn(thClass, "hidden lg:table-cell")}>Alta</TableHead>
-                <TableHead className={thClass}>Estado</TableHead>
-                <TableHead className={cn(thClass, "text-right")}>Acciones</TableHead>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={TH_SX}>Empresa</TableCell>
+                <TableCell sx={{ ...TH_SX, display: { xs: "none", sm: "table-cell" } }}>RFC</TableCell>
+                <TableCell sx={{ ...TH_SX, display: { xs: "none", md: "table-cell" } }}>Plan</TableCell>
+                <TableCell sx={TH_SX}>Cupos</TableCell>
+                <TableCell sx={{ ...TH_SX, display: { xs: "none", lg: "table-cell" } }}>Alta</TableCell>
+                <TableCell sx={TH_SX}>Estado</TableCell>
+                <TableCell sx={{ ...TH_SX, textAlign: "right" }}>Acciones</TableCell>
               </TableRow>
-            </TableHeader>
+            </TableHead>
             <TableBody>
               {empresasPagina.map((empresa) => (
                 <EmpresaRow key={empresa.id} empresa={empresa} />
@@ -162,40 +200,57 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             </TableBody>
           </Table>
         )}
+
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border px-5 py-3">
-            <p className="text-[12px] text-muted-foreground">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderTop: "1px solid",
+              borderColor: "divider",
+              px: 2.5,
+              py: 1.5,
+            }}
+          >
+            <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
               {empresasFiltradas.length} resultado{empresasFiltradas.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
-            </p>
-            <div className="flex items-center gap-1.5">
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
               {currentPage > 1 ? (
-                <Link
+                <Button
+                  component={Link}
                   href={pageUrl(currentPage - 1)}
-                  className="inline-flex h-7 items-center rounded-md border border-input bg-background px-3 text-[12px] font-medium text-foreground transition-colors hover:bg-accent"
+                  variant="outlined"
+                  size="small"
+                  sx={{ height: 28, fontSize: 12, borderColor: "divider", color: "text.primary" }}
                 >
                   ← Anterior
-                </Link>
+                </Button>
               ) : (
-                <span className="inline-flex h-7 items-center rounded-md border border-input px-3 text-[12px] text-muted-foreground opacity-50 cursor-not-allowed">
+                <Button variant="outlined" size="small" disabled sx={{ height: 28, fontSize: 12 }}>
                   ← Anterior
-                </span>
+                </Button>
               )}
               {currentPage < totalPages ? (
-                <Link
+                <Button
+                  component={Link}
                   href={pageUrl(currentPage + 1)}
-                  className="inline-flex h-7 items-center rounded-md border border-input bg-background px-3 text-[12px] font-medium text-foreground transition-colors hover:bg-accent"
+                  variant="outlined"
+                  size="small"
+                  sx={{ height: 28, fontSize: 12, borderColor: "divider", color: "text.primary" }}
                 >
                   Siguiente →
-                </Link>
+                </Button>
               ) : (
-                <span className="inline-flex h-7 items-center rounded-md border border-input px-3 text-[12px] text-muted-foreground opacity-50 cursor-not-allowed">
+                <Button variant="outlined" size="small" disabled sx={{ height: 28, fontSize: 12 }}>
                   Siguiente →
-                </span>
+                </Button>
               )}
-            </div>
-          </div>
+            </Box>
+          </Box>
         )}
       </PanelBox>
-    </div>
+    </Box>
   )
 }

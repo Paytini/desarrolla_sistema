@@ -1,4 +1,4 @@
-import LoadingOverlay from "@/components/portal/LoadingOverlay"
+import LoadingOverlay from "@/components/layout/LoadingOverlay"
 
 export default function PortalLoading() {
   return (

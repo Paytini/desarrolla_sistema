@@ -1,4 +1,6 @@
-import { type ReactNode } from "react"
+import type { ReactNode } from "react"
+import Box from "@mui/material/Box"
+import Typography from "@mui/material/Typography"
 
 interface PageHeaderProps {
   breadcrumb: string
@@ -9,19 +11,34 @@ interface PageHeaderProps {
 
 export function PageHeader({ breadcrumb, title, description, action }: PageHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+    <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }}>
+      <Box>
+        <Typography
+          sx={{
+            fontSize: "10px",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.14em",
+            color: "text.secondary",
+            lineHeight: 1,
+          }}
+        >
           {breadcrumb}
-        </p>
-        <h1 className="mt-0.5 text-[22px] font-semibold leading-tight text-foreground">
+        </Typography>
+        <Typography variant="h1" sx={{ mt: 0.5, fontSize: "22px", fontWeight: 600, lineHeight: 1.25 }}>
           {title}
-        </h1>
+        </Typography>
         {description && (
-          <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>
+          <Typography sx={{ mt: 0.5, fontSize: "13px", color: "text.secondary" }}>
+            {description}
+          </Typography>
         )}
-      </div>
-      {action && <div className="shrink-0 pt-1">{action}</div>}
-    </div>
+      </Box>
+      {action && (
+        <Box sx={{ flexShrink: 0, pt: 0.5 }}>
+          {action}
+        </Box>
+      )}
+    </Box>
   )
 }

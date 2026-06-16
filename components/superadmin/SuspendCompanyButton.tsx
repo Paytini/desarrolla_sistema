@@ -1,18 +1,12 @@
 "use client"
 
-import { useTransition } from "react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+import { useState, useTransition } from "react"
+import Button from "@mui/material/Button"
+import Dialog from "@mui/material/Dialog"
+import DialogActions from "@mui/material/DialogActions"
+import DialogContent from "@mui/material/DialogContent"
+import DialogContentText from "@mui/material/DialogContentText"
+import DialogTitle from "@mui/material/DialogTitle"
 import { toggleCompanyStatusAction } from "@/app/(portal)/superadmin/empresas/actions"
 
 interface SuspendCompanyButtonProps {
@@ -22,6 +16,7 @@ interface SuspendCompanyButtonProps {
 }
 
 export function SuspendCompanyButton({ empresaId, activo, nombre }: SuspendCompanyButtonProps) {
+  const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleConfirm() {
@@ -30,52 +25,64 @@ export function SuspendCompanyButton({ empresaId, activo, nombre }: SuspendCompa
     startTransition(() => {
       void toggleCompanyStatusAction(formData)
     })
+    setOpen(false)
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger
-        render={
-          <Button
-            size="sm"
-            type="button"
-            disabled={isPending}
-            className="h-7 px-2.5 text-[12px]"
-            style={
-              activo
-                ? { background: "#0f172a", color: "#fff" }
-                : { background: "#F5853F", color: "#fff" }
-            }
-          />
-        }
+    <>
+      <Button
+        size="small"
+        variant="contained"
+        disabled={isPending}
+        onClick={() => setOpen(true)}
+        sx={{
+          height: 28,
+          px: 1.25,
+          fontSize: 12,
+          bgcolor: activo ? "#0f172a" : "primary.main",
+          color: "#fff",
+          boxShadow: "none",
+          "&:hover": {
+            bgcolor: activo ? "#1e293b" : "primary.dark",
+            boxShadow: "none",
+          },
+        }}
       >
         {isPending ? "…" : activo ? "Suspender" : "Reactivar"}
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {activo ? "¿Suspender empresa?" : "¿Reactivar empresa?"}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
+      </Button>
+
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{
+          paper: { sx: { borderRadius: "16px", border: "1px solid", borderColor: "divider" } },
+        }}
+      >
+        <DialogTitle>
+          {activo ? "¿Suspender empresa?" : "¿Reactivar empresa?"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
             {activo
               ? `Esto suspenderá "${nombre}". Todos sus empleados y el usuario RH perderán acceso al portal de inmediato.`
               : `Esto reactivará "${nombre}". Sus empleados recuperarán acceso al portal.`}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button variant="outlined" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color={activo ? "error" : "primary"}
             onClick={handleConfirm}
-            className={
-              activo
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : ""
-            }
           >
             {activo ? "Sí, suspender" : "Sí, reactivar"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }

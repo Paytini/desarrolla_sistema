@@ -1,10 +1,10 @@
-import CnoSelect from "@/components/portal/CnoSelect"
-import DeleteEmployeeButton from "@/components/portal/DeleteEmployeeButton"
-import EmployeeOnboardingTabs from "@/components/portal/EmployeeOnboardingTabs"
-import KpiCard from "@/components/portal/KpiCard"
-import PageHeader from "@/components/portal/PageHeader"
-import StatusBadge from "@/components/portal/StatusBadge"
-import StatusNotice from "@/components/portal/StatusNotice"
+import CnoSelect from "@/components/empresa/CnoSelect"
+import DeleteEmployeeButton from "@/components/empresa/DeleteEmployeeButton"
+import EmployeeOnboardingTabs from "@/components/empresa/EmployeeOnboardingTabs"
+import KpiCard from "@/components/shared/KpiCard"
+import PageHeader from "@/components/shared/PageHeader"
+import StatusBadge from "@/components/shared/StatusBadge"
+import StatusNotice from "@/components/shared/StatusNotice"
 import { AlertCircle, Package, ShieldCheck, Users, UserX } from "lucide-react"
 import {
   matchesEmployeeFilters,

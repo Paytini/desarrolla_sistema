@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import { Plus_Jakarta_Sans } from "next/font/google"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Suspense } from "react"
-import GlobalLoadingController from "@/components/portal/GlobalLoadingController"
-import { MuiProviders } from "@/components/mui/MuiProviders"
+import GlobalLoadingController from "@/components/layout/GlobalLoadingController"
+import { MuiProviders } from "@/components/providers/MuiProviders"
 import "./globals.css"
 import { cn } from "@/lib/utils";
 

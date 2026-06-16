@@ -1,5 +1,5 @@
-import KpiCard from "@/components/portal/KpiCard"
-import PageHeader from "@/components/portal/PageHeader"
+import KpiCard from "@/components/shared/KpiCard"
+import PageHeader from "@/components/shared/PageHeader"
 import { Award, BarChart3, ChevronRight, ClipboardList, Package, Users, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"

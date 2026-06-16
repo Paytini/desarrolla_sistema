@@ -1,7 +1,7 @@
-import KpiCard from "@/components/portal/KpiCard"
-import PageHeader from "@/components/portal/PageHeader"
-import StatusBadge from "@/components/portal/StatusBadge"
-import EmployeeLearningRefresh from "@/components/portal/EmployeeLearningRefresh"
+import KpiCard from "@/components/shared/KpiCard"
+import PageHeader from "@/components/shared/PageHeader"
+import StatusBadge from "@/components/shared/StatusBadge"
+import EmployeeLearningRefresh from "@/components/empleado/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCourseRecord } from "@/lib/learning-types"
@@ -13,8 +13,12 @@ import {
 } from "@/lib/wordpress-bridge"
 import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
 import { Award, BookOpen, CheckCircle, Clock } from "lucide-react"
-import { Fragment } from "react"
 import { redirect } from "next/navigation"
+import Alert from "@mui/material/Alert"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
+import Paper from "@mui/material/Paper"
+import Typography from "@mui/material/Typography"
 
 function getCourseUrl(
   courseId: number,
@@ -30,20 +34,16 @@ function getCourseUrl(
 }
 
 function RingChart({ pct }: { pct: number }) {
-  const r = 28
-  const circ = 2 * Math.PI * r
+  const r     = 28
+  const circ  = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
   const color = pct >= 80 ? "#F5853F" : pct >= 40 ? "#f59e0b" : "#f43f5e"
   return (
     <svg width={72} height={72} viewBox="0 0 72 72" aria-hidden="true">
       <circle cx={36} cy={36} r={r} fill="none" stroke="#e2e8f0" strokeWidth={7} />
       <circle
-        cx={36}
-        cy={36}
-        r={r}
-        fill="none"
-        stroke={color}
-        strokeWidth={7}
+        cx={36} cy={36} r={r}
+        fill="none" stroke={color} strokeWidth={7}
         strokeLinecap="round"
         strokeDasharray={circ}
         strokeDashoffset={offset}
@@ -63,13 +63,12 @@ export default async function EmpleadoCursos() {
   }
 
   const learningData = await getEmployeeLearningData(session.user.email ?? "")
-  const empleado = learningData?.empleado
-
+  const empleado     = learningData?.empleado
   if (!empleado) redirect("/login")
 
-  let courseUrlById = new Map<number, string>()
+  let courseUrlById   = new Map<number, string>()
   let fallbackUrlById = new Map<number, string>()
-  let thumbnailById = new Map<number, string>()
+  let thumbnailById   = new Map<number, string>()
 
   if (isWordPressBridgeConfigured()) {
     try {
@@ -83,10 +82,7 @@ export default async function EmpleadoCursos() {
       fallbackUrlById = new Map(
         bridgeCourses.courses
           .filter((c) => c.post_type && siteUrl)
-          .map((c) => [
-            c.wp_course_id,
-            `${siteUrl}/?post_type=${c.post_type}&p=${c.wp_course_id}`,
-          ])
+          .map((c) => [c.wp_course_id, `${siteUrl}/?post_type=${c.post_type}&p=${c.wp_course_id}`])
       )
       thumbnailById = new Map(
         bridgeCourses.courses
@@ -121,14 +117,13 @@ export default async function EmpleadoCursos() {
 
   const cursos = empleado.cursos as PortalCourseRecord[]
 
-  let dc3MetaMap = new Map<number, { duracion_horas: number | null }>()
+  let dc3MetaMap  = new Map<number, { duracion_horas: number | null }>()
   let pkgCourseMap = new Map<number, { descripcion: string | null; num_lecciones: number | null }>()
 
   if (session.user.empresa_id && cursos.length > 0) {
     try {
       const { prisma } = await import("@/lib/prisma")
       const wpIds = cursos.map((c) => c.wp_curso_id)
-
       const [dc3MetaRecords, pkgCourses] = await Promise.all([
         prisma.cursoDc3Metadata.findMany({
           where: { wp_curso_id: { in: wpIds } },
@@ -140,28 +135,20 @@ export default async function EmpleadoCursos() {
           distinct: ["wp_curso_id"],
         }),
       ])
-
-      dc3MetaMap = new Map(
-        dc3MetaRecords.map((m) => [m.wp_curso_id, { duracion_horas: m.duracion_horas }])
-      )
-      pkgCourseMap = new Map(
-        pkgCourses.map((c) => [
-          c.wp_curso_id,
-          { descripcion: c.descripcion, num_lecciones: c.num_lecciones },
-        ])
-      )
+      dc3MetaMap  = new Map(dc3MetaRecords.map((m) => [m.wp_curso_id, { duracion_horas: m.duracion_horas }]))
+      pkgCourseMap = new Map(pkgCourses.map((c) => [c.wp_curso_id, { descripcion: c.descripcion, num_lecciones: c.num_lecciones }]))
     } catch {}
   }
 
   const cursosCompletados = cursos.filter((c) => c.completado).length
-  const cursosEnProgreso = cursos.filter((c) => !c.completado && c.progreso_pct > 0).length
-  const cursosPendientes = cursos.filter((c) => c.progreso_pct === 0).length
-  const avancePromedio = cursos.length
+  const cursosEnProgreso  = cursos.filter((c) => !c.completado && c.progreso_pct > 0).length
+  const cursosPendientes  = cursos.filter((c) => c.progreso_pct === 0).length
+  const avancePromedio    = cursos.length
     ? Math.round(cursos.reduce((s, c) => s + c.progreso_pct, 0) / cursos.length)
     : 0
 
   return (
-    <div className="space-y-6">
+    <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
         eyebrow="Mi aprendizaje"
         title={`¡Hola, ${empleado.nombre}!`}
@@ -169,235 +156,316 @@ export default async function EmpleadoCursos() {
       />
 
       {/* KPI strip */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Completados"
-          value={String(cursosCompletados)}
-          sub={`de ${cursos.length} cursos`}
-          icon={CheckCircle}
-          borderColor="green"
-        />
-        <KpiCard
-          label="En progreso"
-          value={String(cursosEnProgreso)}
-          sub="iniciados"
-          icon={BookOpen}
-          borderColor="amber"
-        />
-        <KpiCard
-          label="Sin iniciar"
-          value={String(cursosPendientes)}
-          sub="pendientes"
-          icon={Clock}
-          borderColor="charcoal"
-        />
-        {/* Avance global: inline para mostrar RingChart visible */}
-        <article
-          className="relative overflow-hidden rounded-xl bg-white p-5"
-          style={{ border: "1px solid #f0f0f0", borderLeft: "4px solid #F5853F" }}
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", xl: "repeat(4,1fr)" } }}>
+        <KpiCard label="Completados"  value={String(cursosCompletados)} sub={`de ${cursos.length} cursos`} icon={CheckCircle} borderColor="green" />
+        <KpiCard label="En progreso"  value={String(cursosEnProgreso)}  sub="iniciados"  icon={BookOpen} borderColor="amber" />
+        <KpiCard label="Sin iniciar"  value={String(cursosPendientes)}  sub="pendientes" icon={Clock}    borderColor="charcoal" />
+
+        {/* Avance global with ring chart */}
+        <Paper
+          elevation={0}
+          sx={{
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: 2.5,
+            border: "1px solid #f0f0f0",
+            borderLeft: "4px solid #F5853F",
+            bgcolor: "background.paper",
+            p: 2.5,
+          }}
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.6px] text-[#94a3b8]">
+          <Typography sx={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8" }}>
             Avance global
-          </p>
-          <p className="mt-1 text-[28px] font-bold leading-none text-[#1a1a1a]">
+          </Typography>
+          <Typography sx={{ mt: 0.5, fontSize: 28, fontWeight: 700, lineHeight: 1, color: "#1a1a1a" }}>
             {avancePromedio}%
-          </p>
-          <p className="mt-1 text-xs text-[#64748b]">promedio</p>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+          </Typography>
+          <Typography sx={{ mt: 0.5, fontSize: 11, color: "#64748b" }}>promedio</Typography>
+          <Box sx={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
             <RingChart pct={avancePromedio} />
-          </div>
-        </article>
-      </div>
+          </Box>
+        </Paper>
+      </Box>
 
       <EmployeeLearningRefresh autoRefresh pollIntervalMs={15_000} />
 
       {learningData?.syncError ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <Alert severity="warning" sx={{ borderRadius: 2, border: "1px solid #fde68a", bgcolor: "#fffbeb", color: "#78350f" }}>
           No pudimos refrescar tu avance. Mostramos el último dato guardado.
-        </div>
+        </Alert>
       ) : null}
 
       {!learningData?.syncError && learningData?.backgroundSyncQueued ? (
-        <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+        <Alert severity="info" sx={{ borderRadius: 2, border: "1px solid #bae6fd", bgcolor: "#f0f9ff", color: "#0c4a6e" }}>
           Verificando tu avance con Tutor LMS. La vista se actualizará automáticamente.
-        </div>
+        </Alert>
       ) : null}
 
       {/* Course grid */}
       {cursos.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-white px-4 py-12 text-center text-sm text-[#94a3b8]">
-          Aún no tienes cursos sincronizados. Pide a RH o a SuperAdmin que ejecute la
-          sincronización.
-        </div>
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 2,
+            border: "1px dashed",
+            borderColor: "divider",
+            py: 6,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            Aún no tienes cursos sincronizados. Pide a RH o a SuperAdmin que ejecute la sincronización.
+          </Typography>
+        </Paper>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", xl: "1fr 1fr 1fr" } }}>
           {cursos.map((curso) => {
             const courseUrl = getCourseUrl(curso.wp_curso_id, courseUrlById, fallbackUrlById)
-            const launchUrl = buildWordPressCourseLaunchUrl({
-              wpUserId: empleado.wp_user_id,
-              courseUrl,
-            })
-            const thumbnail = thumbnailById.get(curso.wp_curso_id)
-            const dc3Meta = dc3MetaMap.get(curso.wp_curso_id)
-            const pkgMeta = pkgCourseMap.get(curso.wp_curso_id)
-            const hasError = curso.acceso_estado === "ERROR"
+            const launchUrl = buildWordPressCourseLaunchUrl({ wpUserId: empleado.wp_user_id, courseUrl })
+            const thumbnail  = thumbnailById.get(curso.wp_curso_id)
+            const dc3Meta    = dc3MetaMap.get(curso.wp_curso_id)
+            const pkgMeta    = pkgCourseMap.get(curso.wp_curso_id)
+            const hasError   = curso.acceso_estado === "ERROR"
             const enProgreso = !curso.completado && curso.progreso_pct > 0
-            const barColor =
-              curso.completado || enProgreso ? "bg-[#F5853F]" : "bg-[#94a3b8]"
-            const duracionLabel = dc3Meta?.duracion_horas
-              ? `${Math.round(dc3Meta.duracion_horas)}h`
-              : null
-            const hasDc3 = !!dc3Meta
+            const barColor   = curso.completado || enProgreso ? "#F5853F" : "#94a3b8"
+            const duracionLabel = dc3Meta?.duracion_horas ? `${Math.round(dc3Meta.duracion_horas)}h` : null
+            const hasDc3     = !!dc3Meta
 
             return (
-              <article
+              <Paper
                 key={curso.id}
-                className="flex flex-col overflow-hidden rounded-xl bg-white"
-                style={{ border: "1px solid #f0f0f0" }}
+                elevation={0}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                  borderRadius: 2.5,
+                  border: "1px solid #f0f0f0",
+                  bgcolor: "background.paper",
+                }}
               >
-                {/* Thumbnail / placeholder */}
+                {/* Thumbnail */}
                 {thumbnail ? (
-                  <div className="relative">
+                  <Box sx={{ position: "relative" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={thumbnail} alt="" className="h-36 w-full object-cover" />
+                    <img src={thumbnail} alt="" style={{ height: 144, width: "100%", objectFit: "cover", display: "block" }} />
                     {duracionLabel && (
-                      <span className="absolute bottom-2 right-2 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          bottom: 8,
+                          right: 8,
+                          borderRadius: 1,
+                          bgcolor: "rgba(0,0,0,0.6)",
+                          px: 0.75,
+                          py: 0.375,
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          color: "#fff",
+                        }}
+                      >
                         {duracionLabel}
-                      </span>
+                      </Box>
                     )}
-                  </div>
+                  </Box>
                 ) : (
-                  <div className="relative flex h-24 items-center justify-center bg-[#fff2eb]">
-                    <span className="text-3xl font-extrabold text-[#F5853F] opacity-40">
+                  <Box sx={{ position: "relative", display: "flex", height: 96, alignItems: "center", justifyContent: "center", bgcolor: "#fff2eb" }}>
+                    <Typography sx={{ fontSize: 30, fontWeight: 800, color: "#F5853F", opacity: 0.4 }}>
                       {curso.nombre_curso.charAt(0).toUpperCase()}
-                    </span>
+                    </Typography>
                     {duracionLabel && (
-                      <span className="absolute bottom-2 right-2 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          bottom: 8,
+                          right: 8,
+                          borderRadius: 1,
+                          bgcolor: "rgba(0,0,0,0.6)",
+                          px: 0.75,
+                          py: 0.375,
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          color: "#fff",
+                        }}
+                      >
                         {duracionLabel}
-                      </span>
+                      </Box>
                     )}
-                  </div>
+                  </Box>
                 )}
 
-                <div className="flex flex-1 flex-col p-4">
-                  {/* Title + status badge */}
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="line-clamp-2 text-sm font-semibold text-[#1a1a1a]">
-                      {curso.nombre_curso}
-                    </h3>
-                    <StatusBadge
-                      variant={
-                        curso.completado ? "green" : enProgreso ? "amber" : "slate"
-                      }
+                <Box sx={{ display: "flex", flex: 1, flexDirection: "column", p: 2 }}>
+                  {/* Title + badge */}
+                  <Box sx={{ mb: 1, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: "#1a1a1a",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
                     >
-                      {curso.completado
-                        ? "Completado"
-                        : enProgreso
-                        ? "En progreso"
-                        : "Sin iniciar"}
+                      {curso.nombre_curso}
+                    </Typography>
+                    <StatusBadge variant={curso.completado ? "green" : enProgreso ? "amber" : "slate"}>
+                      {curso.completado ? "Completado" : enProgreso ? "En progreso" : "Sin iniciar"}
                     </StatusBadge>
-                  </div>
+                  </Box>
 
                   {/* Description */}
                   {pkgMeta?.descripcion && (
-                    <p className="mb-2 line-clamp-2 text-xs text-[#64748b]">
+                    <Typography
+                      sx={{
+                        mb: 1,
+                        fontSize: 11,
+                        color: "#64748b",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
                       {pkgMeta.descripcion}
-                    </p>
+                    </Typography>
                   )}
 
                   {/* Meta row */}
                   {(pkgMeta?.num_lecciones || hasDc3) && (
-                    <div className="mb-2 flex gap-3">
+                    <Box sx={{ mb: 1, display: "flex", gap: 1.5 }}>
                       {pkgMeta?.num_lecciones && (
-                        <span className="text-[11px] text-[#94a3b8]">
+                        <Typography sx={{ fontSize: "11px", color: "#94a3b8" }}>
                           📋 {pkgMeta.num_lecciones} lecciones
-                        </span>
+                        </Typography>
                       )}
                       {hasDc3 && (
-                        <span className="text-[11px] font-semibold text-[#F5853F]">
+                        <Typography sx={{ fontSize: "11px", fontWeight: 600, color: "#F5853F" }}>
                           🏅 DC-3
-                        </span>
+                        </Typography>
                       )}
-                    </div>
+                    </Box>
                   )}
 
                   {/* Progress bar */}
-                  <div className="mb-1 flex items-center justify-between text-xs text-[#94a3b8]">
-                    <span>Avance</span>
-                    <span className="font-semibold text-[#1a1a1a]">{curso.progreso_pct}%</span>
-                  </div>
-                  <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-[#f0f0f0]">
-                    <div
-                      className={`h-full rounded-full ${barColor}`}
-                      style={{ width: `${curso.progreso_pct}%` }}
-                    />
-                  </div>
+                  <Box sx={{ mb: 0.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>Avance</Typography>
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a" }}>{curso.progreso_pct}%</Typography>
+                  </Box>
+                  <Box sx={{ mb: 2, height: 6, overflow: "hidden", borderRadius: "999px", bgcolor: "#f0f0f0" }}>
+                    <Box sx={{ height: "100%", borderRadius: "999px", bgcolor: barColor, width: `${curso.progreso_pct}%` }} />
+                  </Box>
 
                   {/* Error notice */}
                   {hasError && curso.acceso_error ? (
-                    <p className="mb-3 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-800">
-                      {curso.acceso_error}
-                    </p>
+                    <Box sx={{ mb: 1.5, borderRadius: 2, bgcolor: "#fff1f2", px: 1.5, py: 1 }}>
+                      <Typography sx={{ fontSize: 11, color: "#881337" }}>{curso.acceso_error}</Typography>
+                    </Box>
                   ) : null}
 
                   {/* Completion date */}
                   {curso.completado && curso.fecha_completado ? (
-                    <p className="mb-3 text-[11px] text-[#94a3b8]">
+                    <Typography sx={{ mb: 1.5, fontSize: "11px", color: "#94a3b8" }}>
                       Completado: {formatDateTime(curso.fecha_completado)}
-                    </p>
+                    </Typography>
                   ) : null}
 
                   {/* CTA */}
-                  <div className="mt-auto">
+                  <Box sx={{ mt: "auto" }}>
                     {launchUrl ? (
-                      <a
+                      <Button
+                        component="a"
                         href={launchUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className={`flex w-full items-center justify-center rounded-xl py-2.5 text-sm font-semibold transition ${
-                          curso.completado
-                            ? "bg-[#F5853F] text-white hover:bg-[#D96B20]"
-                            : "bg-[#1a1a1a] text-white hover:bg-[#333]"
-                        }`}
+                        variant="contained"
+                        fullWidth
+                        disableElevation
+                        sx={{
+                          borderRadius: 2.5,
+                          py: 1.25,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          bgcolor: curso.completado ? "#F5853F" : "#1a1a1a",
+                          color: "#fff",
+                          "&:hover": { bgcolor: curso.completado ? "#D96B20" : "#333" },
+                        }}
                       >
                         {curso.completado ? "Repasar curso" : "Continuar curso"}
-                      </a>
+                      </Button>
                     ) : (
-                      <span className="block text-center text-xs text-[#94a3b8]">
+                      <Typography sx={{ textAlign: "center", fontSize: 11, color: "#94a3b8" }}>
                         Sin URL disponible
-                      </span>
+                      </Typography>
                     )}
-                  </div>
-                </div>
-              </article>
+                  </Box>
+                </Box>
+              </Paper>
             )
           })}
-        </div>
+        </Box>
       )}
 
       {/* Constancias banner */}
       {cursosCompletados > 0 ? (
-        <div className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-5 py-4">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-[#F5853F]">
+        <Paper
+          elevation={0}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            borderRadius: 2.5,
+            border: "1px solid #f0f0f0",
+            bgcolor: "background.paper",
+            px: 2.5,
+            py: 2,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 36,
+              height: 36,
+              flexShrink: 0,
+              borderRadius: 2,
+              bgcolor: "#fff2eb",
+              color: "#F5853F",
+            }}
+          >
             <Award size={16} strokeWidth={2} />
-          </span>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-[#1a1a1a]">
-              Tienes {cursosCompletados} curso{cursosCompletados > 1 ? "s" : ""} completado
-              {cursosCompletados > 1 ? "s" : ""}
-            </p>
-            <p className="text-xs text-[#64748b]">
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
+              Tienes {cursosCompletados} curso{cursosCompletados > 1 ? "s" : ""} completado{cursosCompletados > 1 ? "s" : ""}
+            </Typography>
+            <Typography sx={{ fontSize: 11, color: "#64748b" }}>
               Descarga tus constancias DC-3 oficiales STPS.
-            </p>
-          </div>
-          <a
+            </Typography>
+          </Box>
+          <Button
+            component="a"
             href="/empleado/constancias"
-            className="shrink-0 rounded-xl bg-[#F5853F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#D96B20]"
+            variant="contained"
+            disableElevation
+            sx={{
+              flexShrink: 0,
+              borderRadius: 2.5,
+              px: 2,
+              py: 1,
+              fontSize: 13,
+              fontWeight: 600,
+              bgcolor: "#F5853F",
+              color: "#fff",
+              "&:hover": { bgcolor: "#D96B20" },
+            }}
           >
             Ver constancias
-          </a>
-        </div>
+          </Button>
+        </Paper>
       ) : null}
-    </div>
+    </Box>
   )
 }

@@ -2,7 +2,9 @@
 
 import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import IconButton from "@mui/material/IconButton"
+import InputAdornment from "@mui/material/InputAdornment"
+import TextField from "@mui/material/TextField"
 
 interface PasswordToggleInputProps {
   name: string
@@ -20,24 +22,35 @@ export function PasswordToggleInput({
   const [visible, setVisible] = useState(false)
 
   return (
-    <div className="relative">
-      <Input
-        name={name}
-        type={visible ? "text" : "password"}
-        placeholder={placeholder}
-        minLength={minLength}
-        required={required}
-        className="pr-9"
-      />
-      <button
-        type="button"
-        onClick={() => setVisible((v) => !v)}
-        className="absolute inset-y-0 right-0 flex items-center px-2.5 text-muted-foreground transition-colors hover:text-foreground"
-        tabIndex={-1}
-        aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
-      >
-        {visible ? <EyeOff size={14} strokeWidth={2} /> : <Eye size={14} strokeWidth={2} />}
-      </button>
-    </div>
+    <TextField
+      name={name}
+      type={visible ? "text" : "password"}
+      placeholder={placeholder}
+      required={required}
+      size="small"
+      fullWidth
+      slotProps={{
+        htmlInput: { minLength },
+        input: {
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                tabIndex={-1}
+                size="small"
+                aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+                onClick={() => setVisible((v) => !v)}
+                edge="end"
+                sx={{ color: "text.secondary", "&:hover": { color: "text.primary" } }}
+              >
+                {visible
+                  ? <EyeOff size={14} strokeWidth={2} />
+                  : <Eye    size={14} strokeWidth={2} />
+                }
+              </IconButton>
+            </InputAdornment>
+          ),
+        },
+      }}
+    />
   )
 }

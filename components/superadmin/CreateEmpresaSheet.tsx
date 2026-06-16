@@ -1,15 +1,15 @@
+"use client"
+
+import { useState } from "react"
 import { Plus } from "lucide-react"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
+import Divider from "@mui/material/Divider"
+import Drawer from "@mui/material/Drawer"
+import MenuItem from "@mui/material/MenuItem"
+import TextField from "@mui/material/TextField"
+import Typography from "@mui/material/Typography"
+
 import { PasswordToggleInput } from "@/components/superadmin/PasswordToggleInput"
 import { SubmitButton } from "@/components/superadmin/SubmitButton"
 import { createCompanyAction } from "@/app/(portal)/superadmin/empresas/actions"
@@ -17,101 +17,188 @@ import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 
 type Paquete = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["paquetes"][number]
 
-const labelClass = "text-[10px] font-bold uppercase tracking-[0.08em]"
-const labelStyle = { color: "#94a3b8" }
+const LABEL_SX = {
+  fontSize: "10px",
+  fontWeight: 700,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.08em",
+  color: "#94a3b8",
+  mb: 0.75,
+  display: "block",
+}
 
-export function CreateEmpresaSheet({ paquetes, defaultOpen }: { paquetes: Paquete[]; defaultOpen: boolean }) {
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <Typography sx={LABEL_SX}>{children}</Typography>
+}
+
+export function CreateEmpresaSheet({
+  paquetes,
+  defaultOpen,
+}: {
+  paquetes: Paquete[]
+  defaultOpen: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+
   return (
-    <Sheet defaultOpen={defaultOpen}>
-      <SheetTrigger
-        render={
-          <button
-            type="button"
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-brand px-3.5 text-[13px] font-semibold text-brand-ink shadow-[0_4px_14px_-4px_rgba(245,133,63,0.5)] transition-all hover:-translate-y-px hover:shadow-[0_6px_18px_-4px_rgba(245,133,63,0.6)]"
-          />
-        }
+    <>
+      <Button
+        variant="contained"
+        startIcon={<Plus size={14} strokeWidth={2.5} />}
+        onClick={() => setOpen(true)}
+        sx={{
+          height: 36,
+          px: 2,
+          fontSize: 13,
+          fontWeight: 600,
+          bgcolor: "#F5853F",
+          color: "#000022",
+          boxShadow: "0 4px 14px -4px rgba(245,133,63,0.5)",
+          "&:hover": {
+            bgcolor: "#D96B20",
+            boxShadow: "0 6px 18px -4px rgba(245,133,63,0.6)",
+            transform: "translateY(-1px)",
+          },
+          transition: "all 0.15s ease",
+        }}
       >
-        <Plus size={14} strokeWidth={2.5} />
         Nueva empresa
-      </SheetTrigger>
+      </Button>
 
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Alta de empresa</SheetTitle>
-          <SheetDescription>Crea la empresa y su usuario RH primario.</SheetDescription>
-        </SheetHeader>
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={() => setOpen(false)}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: "100%", sm: 440 },
+              bgcolor: "background.paper",
+              borderLeft: "1px solid",
+              borderColor: "divider",
+            },
+          },
+        }}
+      >
+        {/* Header */}
+        <Box sx={{ px: 3, py: 2.5, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: 16 }}>
+            Alta de empresa
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary" }}>
+            Crea la empresa y su usuario RH primario.
+          </Typography>
+        </Box>
 
-        <form action={createCompanyAction} className="grid gap-4 px-4 pb-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>Nombre *</Label>
-              <Input name="nombre" required placeholder="CEMEX S.A. de C.V." />
-            </div>
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>Correo RH *</Label>
-              <Input name="email_rh" type="email" required placeholder="rh@empresa.com" />
-            </div>
-          </div>
+        {/* Form */}
+        <Box
+          component="form"
+          action={createCompanyAction}
+          sx={{ flex: 1, overflowY: "auto", px: 3, py: 3, display: "grid", gap: 2.5 }}
+        >
+          {/* Nombre + Correo RH */}
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+            <Box>
+              <FieldLabel>Nombre *</FieldLabel>
+              <TextField name="nombre" required placeholder="CEMEX S.A. de C.V." size="small" fullWidth />
+            </Box>
+            <Box>
+              <FieldLabel>Correo RH *</FieldLabel>
+              <TextField name="email_rh" type="email" required placeholder="rh@empresa.com" size="small" fullWidth />
+            </Box>
+          </Box>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>Responsable RH *</Label>
-              <Input name="nombre_rh" required placeholder="María González" />
-            </div>
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>Password temporal *</Label>
-              <PasswordToggleInput name="password_rh" minLength={8} required placeholder="Mín. 8 caracteres" />
-            </div>
-          </div>
+          {/* Responsable + Password */}
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+            <Box>
+              <FieldLabel>Responsable RH *</FieldLabel>
+              <TextField name="nombre_rh" required placeholder="María González" size="small" fullWidth />
+            </Box>
+            <Box>
+              <FieldLabel>Password temporal *</FieldLabel>
+              <PasswordToggleInput
+                name="password_rh"
+                minLength={8}
+                required
+                placeholder="Mín. 8 caracteres"
+              />
+            </Box>
+          </Box>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>Teléfono</Label>
-              <Input name="telefono" placeholder="55 1234 5678" />
-            </div>
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>RFC</Label>
-              <Input name="rfc" placeholder="XAXX010101000" />
-            </div>
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>Cupos *</Label>
-              <Input name="asientos_contratados" type="number" min={1} defaultValue={25} required />
-            </div>
-          </div>
+          {/* Teléfono + RFC + Cupos */}
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" }, gap: 2 }}>
+            <Box>
+              <FieldLabel>Teléfono</FieldLabel>
+              <TextField name="telefono" placeholder="55 1234 5678" size="small" fullWidth />
+            </Box>
+            <Box>
+              <FieldLabel>RFC</FieldLabel>
+              <TextField name="rfc" placeholder="XAXX010101000" size="small" fullWidth />
+            </Box>
+            <Box>
+              <FieldLabel>Cupos *</FieldLabel>
+              <TextField
+                name="asientos_contratados"
+                type="number"
+                required
+                defaultValue={25}
+                slotProps={{ htmlInput: { min: 1 } }}
+                size="small"
+                fullWidth
+              />
+            </Box>
+          </Box>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>Paquete inicial</Label>
-              <select
+          {/* Paquete + Vigencia */}
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+            <Box>
+              <FieldLabel>Paquete inicial</FieldLabel>
+              <TextField
                 name="paquete_id"
+                select
                 defaultValue=""
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                size="small"
+                fullWidth
               >
-                <option value="">Sin asignar</option>
+                <MenuItem value="">Sin asignar</MenuItem>
                 {paquetes.map((p) => (
-                  <option key={p.id} value={p.id}>
+                  <MenuItem key={p.id} value={p.id}>
                     {p.nombre}
-                  </option>
+                  </MenuItem>
                 ))}
-              </select>
-            </div>
-            <div className="grid gap-1.5">
-              <Label className={labelClass} style={labelStyle}>Vigencia</Label>
-              <Input name="fecha_vencimiento" type="date" />
-            </div>
-          </div>
+              </TextField>
+            </Box>
+            <Box>
+              <FieldLabel>Vigencia</FieldLabel>
+              <TextField name="fecha_vencimiento" type="date" size="small" fullWidth />
+            </Box>
+          </Box>
 
-          <div className="grid gap-1.5">
-            <Label className={labelClass} style={labelStyle}>Notas internas</Label>
-            <Textarea name="notas" rows={2} placeholder="Observaciones o notas del contrato…" />
-          </div>
+          {/* Notas */}
+          <Box>
+            <FieldLabel>Notas internas</FieldLabel>
+            <TextField
+              name="notas"
+              multiline
+              rows={2}
+              placeholder="Observaciones o notas del contrato…"
+              size="small"
+              fullWidth
+            />
+          </Box>
 
-          <SubmitButton className="w-full">
+          <Divider />
+
+          <SubmitButton
+            fullWidth
+            variant="contained"
+            sx={{ bgcolor: "#F5853F", color: "#000022", "&:hover": { bgcolor: "#D96B20" } }}
+          >
             <Plus size={14} strokeWidth={2.5} />
             Crear empresa
           </SubmitButton>
-        </form>
-      </SheetContent>
-    </Sheet>
+        </Box>
+      </Drawer>
+    </>
   )
 }

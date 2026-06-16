@@ -1,7 +1,8 @@
-import { type ReactNode } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import type { ReactNode } from "react"
+import Box from "@mui/material/Box"
+import Chip from "@mui/material/Chip"
+import Paper from "@mui/material/Paper"
+import Typography from "@mui/material/Typography"
 
 interface PanelBoxProps {
   title: string
@@ -14,26 +15,65 @@ interface PanelBoxProps {
 
 export function PanelBox({ title, description, count, action, children, noPadding }: PanelBoxProps) {
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 border-b border-border px-5 py-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <p className="text-[14px] font-medium leading-tight text-foreground font-[family-name:var(--font-heading)]">{title}</p>
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: "divider",
+        overflow: "hidden",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 2,
+          px: 2.5,
+          py: 2,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              sx={{
+                fontSize: 14,
+                fontWeight: 500,
+                lineHeight: 1.3,
+                color: "text.primary",
+              }}
+            >
+              {title}
+            </Typography>
             {count !== undefined && (
-              <Badge variant="secondary" className="tabular-nums text-[10px]">
-                {count}
-              </Badge>
+              <Chip
+                label={count}
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: "10px",
+                  fontVariantNumeric: "tabular-nums",
+                  bgcolor: "action.hover",
+                  color: "text.secondary",
+                  "& .MuiChip-label": { px: 1 },
+                }}
+              />
             )}
-          </div>
+          </Box>
           {description && (
-            <p className="mt-0.5 text-[12px] text-muted-foreground">{description}</p>
+            <Typography sx={{ mt: 0.5, fontSize: 12, color: "text.secondary" }}>
+              {description}
+            </Typography>
           )}
-        </div>
-        {action && <div className="shrink-0">{action}</div>}
-      </CardHeader>
-      <CardContent className={cn("p-0")}>
+        </Box>
+        {action && <Box sx={{ flexShrink: 0 }}>{action}</Box>}
+      </Box>
+      <Box sx={noPadding ? undefined : { p: 0 }}>
         {children}
-      </CardContent>
-    </Card>
+      </Box>
+    </Paper>
   )
 }

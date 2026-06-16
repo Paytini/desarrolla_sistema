@@ -5,10 +5,10 @@ import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { ActivityFeed } from "@/components/superadmin/ActivityFeed"
 import { QuickActions } from "@/components/superadmin/QuickActions"
-import { SectionCard } from "@/components/mui/SectionCard"
-import KpiCard from "@/components/portal/KpiCard"
-import { OcupacionCard } from "./_components/OcupacionCard"
-import { RenovacionesTable } from "./_components/RenovacionesTable"
+import { SectionCard } from "@/components/shared/SectionCard"
+import KpiCard from "@/components/shared/KpiCard"
+import { OcupacionCard } from "@/components/superadmin/OcupacionCard"
+import { RenovacionesTable } from "@/components/superadmin/RenovacionesTable"
 
 const DAY_MS = 1000 * 60 * 60 * 24
 

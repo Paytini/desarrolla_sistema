@@ -1,12 +1,14 @@
 import { redirect } from "next/navigation"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { getSession } from "@/lib/session"
 import { getTutorLearningWebhookDiagnostics } from "@/lib/webhook-monitor"
 import { PageHeader } from "@/components/superadmin/PageHeader"
 import { CheckCircle2, Plug, XCircle } from "lucide-react"
+import Alert from "@mui/material/Alert"
+import Box from "@mui/material/Box"
+import Chip from "@mui/material/Chip"
+import Divider from "@mui/material/Divider"
+import Paper from "@mui/material/Paper"
+import Typography from "@mui/material/Typography"
 
 function buildPortalWebhookUrl() {
   const baseUrl = process.env.NEXTAUTH_URL?.trim().replace(/\/$/, "")
@@ -19,37 +21,37 @@ export default async function SuperAdminIntegracionPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
-  const diagnostics = await getTutorLearningWebhookDiagnostics()
-  const bridgeHealth = diagnostics.bridgeHealth
+  const diagnostics   = await getTutorLearningWebhookDiagnostics()
+  const bridgeHealth  = diagnostics.bridgeHealth
   const bridgeReachable = bridgeHealth ? bridgeHealth.ok : false
-  const bridgeError = bridgeHealth && "error_message" in bridgeHealth ? bridgeHealth.error_message : null
+  const bridgeError   = bridgeHealth && "error_message" in bridgeHealth ? bridgeHealth.error_message : null
 
   const infoRows = [
     {
       label: "Plugin",
       items: [
-        { key: "Versión", value: bridgeHealth?.plugin_version || "Sin dato" },
-        { key: "WordPress", value: bridgeHealth?.wordpress_version || "Sin dato" },
-        { key: "Tutor REST disponible", value: bool(Boolean(bridgeHealth?.tutor_rest_available)) },
+        { key: "Versión",                value: bridgeHealth?.plugin_version    || "Sin dato" },
+        { key: "WordPress",              value: bridgeHealth?.wordpress_version  || "Sin dato" },
+        { key: "Tutor REST disponible",  value: bool(Boolean(bridgeHealth?.tutor_rest_available)) },
       ],
     },
     {
       label: "Configuración",
       items: [
-        { key: "Service user", value: bool(Boolean(bridgeHealth?.service_user_configured)) },
-        { key: "Webhook en bridge", value: bool(Boolean(bridgeHealth?.learning_webhook_configured)) },
-        { key: "URL esperada", value: buildPortalWebhookUrl(), mono: true },
+        { key: "Service user",        value: bool(Boolean(bridgeHealth?.service_user_configured)) },
+        { key: "Webhook en bridge",   value: bool(Boolean(bridgeHealth?.learning_webhook_configured)) },
+        { key: "URL esperada",        value: buildPortalWebhookUrl(), mono: true },
       ],
     },
   ]
 
   const statusCards = [
     { label: "Bridge configurado", ok: diagnostics.bridgeConfigured, description: "Base URL y credenciales definidas en variables de entorno." },
-    { label: "Bridge responde", ok: bridgeReachable, description: "Health check responde desde el portal correctamente." },
+    { label: "Bridge responde",    ok: bridgeReachable,              description: "Health check responde desde el portal correctamente." },
   ]
 
   return (
-    <div className="space-y-6">
+    <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
         breadcrumb="SuperAdmin · Sistema"
         title="Integración WordPress / Tutor"
@@ -58,84 +60,143 @@ export default async function SuperAdminIntegracionPage() {
 
       {/* Status banner */}
       {bridgeReachable ? (
-        <Alert className="border-green-200 bg-green-50 text-green-800">
-          <CheckCircle2 className="size-4" />
-          <AlertTitle>Bridge conectado correctamente</AlertTitle>
-          <AlertDescription>desarrolla360-bridge · WordPress · Tutor LMS Pro</AlertDescription>
+        <Alert
+          severity="success"
+          icon={<CheckCircle2 size={16} />}
+          sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}
+        >
+          <strong>Bridge conectado correctamente</strong>
+          <br />
+          desarrolla360-bridge · WordPress · Tutor LMS Pro
         </Alert>
       ) : (
-        <Alert variant="destructive">
-          <XCircle className="size-4" />
-          <AlertTitle>Bridge inaccesible</AlertTitle>
-          <AlertDescription>
-            {bridgeError ?? "No se pudo establecer conexión con el plugin WordPress."}
-          </AlertDescription>
+        <Alert
+          severity="error"
+          icon={<XCircle size={16} />}
+          sx={{ borderRadius: 2 }}
+        >
+          <strong>Bridge inaccesible</strong>
+          <br />
+          {bridgeError ?? "No se pudo establecer conexión con el plugin WordPress."}
         </Alert>
       )}
 
       {/* Status cards */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
         {statusCards.map(({ label, ok, description }) => (
-          <Card key={label}>
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-slate-500">{label}</p>
-                  <p className="mt-1 text-2xl font-bold text-slate-950">{ok ? "Sí" : "No"}</p>
-                  <p className="mt-1 text-xs text-slate-500">{description}</p>
-                </div>
-                <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${ok ? "bg-green-50 text-green-600" : "bg-rose-50 text-rose-500"}`}>
-                  {ok ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <Paper
+            key={label}
+            elevation={0}
+            sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}
+          >
+            <Box sx={{ p: 2.5, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+              <Box>
+                <Typography sx={{ fontSize: 11, color: "text.secondary" }}>{label}</Typography>
+                <Typography sx={{ mt: 0.5, fontSize: 24, fontWeight: 700, color: "text.primary" }}>
+                  {ok ? "Sí" : "No"}
+                </Typography>
+                <Typography sx={{ mt: 0.5, fontSize: 11, color: "text.secondary" }}>{description}</Typography>
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 36,
+                  height: 36,
+                  borderRadius: 2,
+                  flexShrink: 0,
+                  bgcolor: ok ? "#f0fdf4" : "#fef2f2",
+                  color: ok ? "#16a34a" : "#ef4444",
+                }}
+              >
+                {ok ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+              </Box>
+            </Box>
+          </Paper>
         ))}
-      </div>
+      </Box>
 
       {/* Bridge detail */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Plug size={16} className="text-[#F5853F]" />
-            <CardTitle className="text-[15px]">Estado del bridge</CardTitle>
-          </div>
-          <CardDescription>
+      <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+        {/* Card header */}
+        <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Plug size={16} style={{ color: "#F5853F" }} />
+            <Typography sx={{ fontSize: 15, fontWeight: 600, color: "text.primary" }}>
+              Estado del bridge
+            </Typography>
+          </Box>
+          <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary" }}>
             Detalles de la conexión con WordPress, Tutor LMS y la configuración del webhook.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
+          </Typography>
+        </Box>
+
+        <Box sx={{ p: 2.5 }}>
+          <Box sx={{ display: "grid", gap: 3, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
             {infoRows.map(({ label, items }) => (
-              <div key={label} className="space-y-3">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
-                <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-50 p-4">
+              <Box key={label}>
+                <Typography
+                  sx={{
+                    mb: 1.5,
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    color: "text.disabled",
+                  }}
+                >
+                  {label}
+                </Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gap: 1,
+                    borderRadius: 1.5,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.default",
+                    p: 2,
+                  }}
+                >
                   {items.map(({ key, value, mono }) => (
-                    <div key={key} className="flex justify-between gap-4">
-                      <span className="text-sm text-slate-500 shrink-0">{key}</span>
-                      <span className={`text-sm font-medium text-slate-950 text-right break-all ${mono ? "font-mono text-xs" : ""}`}>
+                    <Box key={key} sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                      <Typography sx={{ fontSize: 13, color: "text.secondary", flexShrink: 0 }}>
+                        {key}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: mono ? 11 : 13,
+                          fontWeight: 500,
+                          color: "text.primary",
+                          textAlign: "right",
+                          wordBreak: "break-all",
+                          fontFamily: mono ? "monospace" : undefined,
+                        }}
+                      >
                         {value}
-                      </span>
-                    </div>
+                      </Typography>
+                    </Box>
                   ))}
-                </div>
-              </div>
+                </Box>
+              </Box>
             ))}
-          </div>
+          </Box>
 
           {bridgeError && (
             <>
-              <Separator className="my-4" />
-              <Alert variant="destructive">
-                <XCircle className="size-4" />
-                <AlertDescription>
-                  No pudimos consultar el health del bridge. Detalle: {bridgeError}
-                </AlertDescription>
+              <Divider sx={{ my: 2 }} />
+              <Alert
+                severity="error"
+                icon={<XCircle size={16} />}
+                sx={{ borderRadius: 2 }}
+              >
+                No pudimos consultar el health del bridge. Detalle: {bridgeError}
               </Alert>
             </>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </Box>
+      </Paper>
+    </Box>
   )
 }

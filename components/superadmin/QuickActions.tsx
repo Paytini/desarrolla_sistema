@@ -4,7 +4,7 @@ import Link from "next/link"
 import { alpha } from "@mui/material/styles"
 import { Avatar, Box, Typography } from "@mui/material"
 import { BarChart3, Building2, FileText, Package, Share2, Users, type LucideIcon } from "lucide-react"
-import { SectionCard } from "@/components/mui/SectionCard"
+import { SectionCard } from "@/components/shared/SectionCard"
 
 const ACTIONS: { label: string; description: string; href: string; Icon: LucideIcon }[] = [
   { label: "Empresas",    description: "Clientes y cupos",    href: "/superadmin/empresas",    Icon: Building2 },

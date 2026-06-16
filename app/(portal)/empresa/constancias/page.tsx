@@ -1,5 +1,5 @@
-import KpiCard from "@/components/portal/KpiCard"
-import PageHeader from "@/components/portal/PageHeader"
+import KpiCard from "@/components/shared/KpiCard"
+import PageHeader from "@/components/shared/PageHeader"
 import { Award, Clock, Users } from "lucide-react"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"

@@ -1,21 +1,26 @@
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
-import { Separator } from "@/components/ui/separator"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { ArrowLeft, Calendar, Mail, Phone, User } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-
-/* ── SVG Donuts ──────────────────────────────────────────────── */
+import Box from "@mui/material/Box"
+import Chip from "@mui/material/Chip"
+import Divider from "@mui/material/Divider"
+import Table from "@mui/material/Table"
+import TableBody from "@mui/material/TableBody"
+import TableCell from "@mui/material/TableCell"
+import TableHead from "@mui/material/TableHead"
+import TableRow from "@mui/material/TableRow"
+import Typography from "@mui/material/Typography"
 
 function DonutChart({ pct, size = 160 }: { pct: number; size?: number }) {
-  const sw = 14
-  const r  = (size - sw) / 2
-  const cx = size / 2
-  const cy = size / 2
+  const sw    = 14
+  const r     = (size - sw) / 2
+  const cx    = size / 2
+  const cy    = size / 2
   const circ  = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
   const color = pct >= 75 ? "#1a4f8a" : pct >= 40 ? "#d97706" : "#dc2626"
@@ -49,6 +54,18 @@ function getInitials(nombre: string, apellido: string) {
 function progressColor(pct: number) {
   return pct >= 75 ? "#1a4f8a" : pct >= 40 ? "#d97706" : "#dc2626"
 }
+
+const TH_SX = {
+  fontSize: "10px",
+  fontWeight: 700,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.1em",
+  color: "#94a3b8",
+  bgcolor: "#fafafa",
+  borderBottom: "1px solid #f1f5f9",
+}
+
+const TD_SX = { borderBottom: "1px solid #f8fafc" }
 
 type PageProps = { params: Promise<{ id: string }> }
 
@@ -87,15 +104,15 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
   })
   if (!empresa) notFound()
 
-  const activeEmpleados  = empresa.empleados.filter((e) => e.activo)
-  const allCourses       = empresa.empleados.flatMap((e) => e.cursos)
-  const allConstancias   = empresa.empleados.flatMap((e) => e.constancias)
-  const avgProgress      = allCourses.length
+  const activeEmpleados = empresa.empleados.filter((e) => e.activo)
+  const allCourses      = empresa.empleados.flatMap((e) => e.cursos)
+  const allConstancias  = empresa.empleados.flatMap((e) => e.constancias)
+  const avgProgress     = allCourses.length
     ? Math.round(allCourses.reduce((s, c) => s + c.progreso_pct, 0) / allCourses.length)
     : 0
 
-  const activePaquete  = empresa.paquetes.find((p) => p.activo) ?? empresa.paquetes[0] ?? null
-  const paqueteCursos  = activePaquete?.paquete?.cursos ?? []
+  const activePaquete = empresa.paquetes.find((p) => p.activo) ?? empresa.paquetes[0] ?? null
+  const paqueteCursos = activePaquete?.paquete?.cursos ?? []
 
   const empleadoStats = activeEmpleados
     .map((e) => {
@@ -112,11 +129,11 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
     .sort((a, b) => b.avg - a.avg)
 
   const courseStats = paqueteCursos.map((pc) => {
-    const assigned    = allCourses.filter((c) => c.wp_curso_id === pc.wp_curso_id)
-    const completed   = assigned.filter((c) => c.completado).length
-    const inProgress  = assigned.filter((c) => !c.completado && c.progreso_pct > 0).length
-    const notStarted  = assigned.filter((c) => c.progreso_pct === 0).length
-    const avgPct      = assigned.length
+    const assigned   = allCourses.filter((c) => c.wp_curso_id === pc.wp_curso_id)
+    const completed  = assigned.filter((c) => c.completado).length
+    const inProgress = assigned.filter((c) => !c.completado && c.progreso_pct > 0).length
+    const notStarted = assigned.filter((c) => c.progreso_pct === 0).length
+    const avgPct     = assigned.length
       ? Math.round(assigned.reduce((s, c) => s + c.progreso_pct, 0) / assigned.length)
       : 0
     return { ...pc, assigned: assigned.length, completed, inProgress, notStarted, avgPct }
@@ -128,262 +145,273 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
     : 0
 
   return (
-    <div className="space-y-5">
-
+    <Box sx={{ display: "grid", gap: 2.5 }}>
       {/* Back + header */}
-      <div className="space-y-3">
-        <Link
+      <Box sx={{ display: "grid", gap: 1.5 }}>
+        <Box
+          component={Link}
           href="/superadmin/empresas"
-          className="inline-flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-slate-600"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.75,
+            fontSize: 12,
+            fontWeight: 500,
+            color: "text.secondary",
+            textDecoration: "none",
+            "&:hover": { color: "#475569" },
+          }}
         >
           <ArrowLeft size={12} strokeWidth={2.5} />
           Empresas
-        </Link>
+        </Box>
 
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-[24px] font-semibold" style={{ color: "#0f172a" }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5 }}>
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Typography sx={{ fontSize: 24, fontWeight: 600, color: "#0f172a" }}>
                 {empresa.nombre}
-              </h1>
-              {empresa.activo ? (
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold"
-                  style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
-                >
-                  <span className="size-1.5 rounded-full bg-green-500" />
-                  Activa
-                </span>
-              ) : (
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold"
-                  style={{ background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}
-                >
-                  <span className="size-1.5 rounded-full bg-slate-300" />
-                  Suspendida
-                </span>
-              )}
-            </div>
-            <div className="mt-2 flex flex-wrap gap-4 text-[12px]" style={{ color: "#94a3b8" }}>
+              </Typography>
+              <Chip
+                label={empresa.activo ? "Activa" : "Suspendida"}
+                size="small"
+                icon={
+                  <Box
+                    component="span"
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      bgcolor: empresa.activo ? "#22c55e" : "#cbd5e1",
+                      ml: "6px !important",
+                    }}
+                  />
+                }
+                sx={{
+                  height: 24,
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  border: "1px solid",
+                  borderColor: empresa.activo ? "#bbf7d0" : "#e2e8f0",
+                  bgcolor: empresa.activo ? "#f0fdf4" : "#f8fafc",
+                  color: empresa.activo ? "#16a34a" : "#64748b",
+                  "& .MuiChip-label": { px: 1 },
+                }}
+              />
+            </Box>
+            <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 2, fontSize: 12, color: "#94a3b8" }}>
               {empresa.rfc && (
-                <span className="font-mono font-medium" style={{ color: "#475569" }}>
+                <Box component="span" sx={{ fontFamily: "monospace", fontWeight: 500, color: "#475569" }}>
                   {empresa.rfc}
-                </span>
+                </Box>
               )}
-              <span className="flex items-center gap-1">
+              <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <Mail size={11} />{empresa.email_rh}
-              </span>
+              </Box>
               {empresa.telefono && (
-                <span className="flex items-center gap-1">
+                <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <Phone size={11} />{empresa.telefono}
-                </span>
+                </Box>
               )}
-              <span className="flex items-center gap-1">
+              <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <Calendar size={11} />Alta {formatDate(empresa.created_at)}
-              </span>
+              </Box>
               {rh && (
-                <span className="flex items-center gap-1">
+                <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <User size={11} />{rh.nombre}
-                </span>
+                </Box>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
 
-      <Separator style={{ background: "#f1f5f9" }} />
+      <Divider sx={{ borderColor: "#f1f5f9" }} />
 
-      {/* Summary row: donut + employee bars + seat/package cards */}
-      <div className="grid gap-4 xl:grid-cols-[180px_1fr_180px]">
-
-        {/* Global progress donut */}
+      {/* Summary row */}
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "180px 1fr 180px" } }}>
+        {/* Donut */}
         <PanelBox title="Avance">
-          <div className="flex flex-col items-center gap-4 px-4 pb-4">
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, px: 2, pb: 2 }}>
             <DonutChart pct={avgProgress} size={150} />
-            <div className="w-full space-y-2 pt-1 text-center" style={{ borderTop: "1px solid #f1f5f9" }}>
-              <p className="text-[22px] font-semibold tabular-nums" style={{ color: "#0f172a" }}>
-                {activeEmpleados.length}
-                <span className="ml-1 text-[13px] font-normal" style={{ color: "#94a3b8" }}>
-                  / {empresa.asientos_contratados}
-                </span>
-              </p>
-              <p className="text-[11px]" style={{ color: "#94a3b8" }}>empleados activos</p>
-              <p className="text-[22px] font-semibold tabular-nums" style={{ color: "#0f172a" }}>
-                {allConstancias.length}
-              </p>
-              <p className="text-[11px]" style={{ color: "#94a3b8" }}>constancias emitidas</p>
-            </div>
-          </div>
+            <Box sx={{ width: "100%", display: "grid", gap: 1, pt: 1, textAlign: "center", borderTop: "1px solid #f1f5f9" }}>
+              <Box>
+                <Typography sx={{ fontSize: 22, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "#0f172a" }}>
+                  {activeEmpleados.length}
+                  <Box component="span" sx={{ ml: 0.5, fontSize: 13, fontWeight: 400, color: "#94a3b8" }}>
+                    / {empresa.asientos_contratados}
+                  </Box>
+                </Typography>
+                <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>empleados activos</Typography>
+              </Box>
+              <Box>
+                <Typography sx={{ fontSize: 22, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "#0f172a" }}>
+                  {allConstancias.length}
+                </Typography>
+                <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>constancias emitidas</Typography>
+              </Box>
+            </Box>
+          </Box>
         </PanelBox>
 
         {/* Employee progress bars */}
         <PanelBox title="Progreso por empleado" description="Mayor a menor">
-          <div className="p-5">
+          <Box sx={{ p: 2.5 }}>
             {empleadoStats.length === 0 ? (
-              <p className="text-[13px]" style={{ color: "#94a3b8" }}>Sin empleados activos.</p>
+              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>Sin empleados activos.</Typography>
             ) : (
-              <div className="space-y-3">
+              <Box sx={{ display: "grid", gap: 1.5 }}>
                 {empleadoStats.map((e) => (
-                  <div key={e.id} className="flex items-center gap-3">
-                    <div
-                      className="flex size-7 shrink-0 items-center justify-center rounded text-[10px] font-bold"
-                      style={
-                        e.hasError
-                          ? { background: "#fef2f2", color: "#dc2626" }
-                          : { background: "#eff4fb", color: "#1a4f8a" }
-                      }
+                  <Box key={e.id} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 28,
+                        height: 28,
+                        flexShrink: 0,
+                        borderRadius: 1,
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        ...(e.hasError ? { bgcolor: "#fef2f2", color: "#dc2626" } : { bgcolor: "#eff4fb", color: "#1a4f8a" }),
+                      }}
                     >
                       {getInitials(e.nombre, e.apellido)}
-                    </div>
-                    <span
-                      className="w-28 shrink-0 truncate text-[12px]"
-                      style={{ color: "#334155" }}
-                    >
+                    </Box>
+                    <Typography sx={{ width: 112, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, color: "#334155" }}>
                       {e.nombre} {e.apellido}
-                    </span>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: "#f1f5f9" }}>
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{ width: `${e.avg}%`, background: progressColor(e.avg) }}
-                          />
-                        </div>
-                        <span
-                          className="w-8 shrink-0 text-right text-[12px] font-semibold tabular-nums"
-                          style={{ color: "#334155" }}
-                        >
+                    </Typography>
+                    <Box sx={{ flex: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Box sx={{ flex: 1, height: 8, overflow: "hidden", borderRadius: "999px", bgcolor: "#f1f5f9" }}>
+                          <Box sx={{ height: "100%", borderRadius: "999px", bgcolor: progressColor(e.avg), width: `${e.avg}%` }} />
+                        </Box>
+                        <Typography sx={{ width: 32, flexShrink: 0, textAlign: "right", fontSize: 12, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "#334155" }}>
                           {e.avg}%
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-[10px]" style={{ color: "#94a3b8" }}>
+                        </Typography>
+                      </Box>
+                      <Typography sx={{ mt: 0.25, fontSize: "10px", color: "#94a3b8" }}>
                         {e.completed}/{e.total} cursos · {e.constanciasCount} constancias
-                      </p>
-                    </div>
-                  </div>
+                      </Typography>
+                    </Box>
+                  </Box>
                 ))}
-              </div>
+              </Box>
             )}
-          </div>
+          </Box>
         </PanelBox>
 
         {/* Seat + package */}
-        <div className="flex flex-col gap-4">
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <PanelBox title="Cupos">
-            <div className="p-4">
-              <div className="flex items-center gap-4">
+            <Box sx={{ p: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <SeatDonut used={empresa.asientos_usados} total={empresa.asientos_contratados} />
-                <div className="space-y-1 text-[12px]" style={{ color: "#64748b" }}>
-                  <p>
-                    <span className="font-semibold" style={{ color: "#0f172a" }}>{empresa.asientos_usados}</span> en uso
-                  </p>
-                  <p>
-                    <span className="font-semibold" style={{ color: "#0f172a" }}>
+                <Box sx={{ display: "grid", gap: 0.5, fontSize: 12, color: "#64748b" }}>
+                  <Typography sx={{ fontSize: 12, color: "#64748b" }}>
+                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>{empresa.asientos_usados}</Box> en uso
+                  </Typography>
+                  <Typography sx={{ fontSize: 12, color: "#64748b" }}>
+                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>
                       {Math.max(empresa.asientos_contratados - empresa.asientos_usados, 0)}
-                    </span>{" "}
-                    disponibles
-                  </p>
-                  <p>
-                    <span className="font-semibold" style={{ color: "#0f172a" }}>{empresa.asientos_contratados}</span>{" "}
-                    contratados
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full" style={{ background: "#f1f5f9" }}>
-                <div
-                  className="h-full rounded-full"
-                  style={{
+                    </Box>{" "}disponibles
+                  </Typography>
+                  <Typography sx={{ fontSize: 12, color: "#64748b" }}>
+                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>{empresa.asientos_contratados}</Box> contratados
+                  </Typography>
+                </Box>
+              </Box>
+              <Box sx={{ mt: 1.5, height: 6, overflow: "hidden", borderRadius: "999px", bgcolor: "#f1f5f9" }}>
+                <Box
+                  sx={{
+                    height: "100%",
+                    borderRadius: "999px",
+                    bgcolor: seatPct >= 90 ? "#dc2626" : seatPct >= 70 ? "#d97706" : "#1a4f8a",
                     width: `${seatPct}%`,
-                    background: seatPct >= 90 ? "#dc2626" : seatPct >= 70 ? "#d97706" : "#1a4f8a",
                   }}
                 />
-              </div>
-            </div>
+              </Box>
+            </Box>
           </PanelBox>
 
           <PanelBox title="Paquete activo">
-            <div className="p-4">
+            <Box sx={{ p: 2 }}>
               {activePaquete ? (
                 <>
-                  <p className="text-[13px] font-semibold" style={{ color: "#0f172a" }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
                     {activePaquete.paquete?.nombre ?? "—"}
-                  </p>
-                  <div className="mt-2 space-y-1 text-[12px]" style={{ color: "#94a3b8" }}>
-                    <p>Inicio: {formatDate(activePaquete.fecha_inicio)}</p>
-                    <p>
+                  </Typography>
+                  <Box sx={{ mt: 1, display: "grid", gap: 0.5, fontSize: 12, color: "#94a3b8" }}>
+                    <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>Inicio: {formatDate(activePaquete.fecha_inicio)}</Typography>
+                    <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
                       Vence:{" "}
-                      {activePaquete.fecha_vencimiento
-                        ? formatDate(activePaquete.fecha_vencimiento)
-                        : "Sin vencimiento"}
-                    </p>
-                    <p>{paqueteCursos.length} cursos incluidos</p>
-                  </div>
+                      {activePaquete.fecha_vencimiento ? formatDate(activePaquete.fecha_vencimiento) : "Sin vencimiento"}
+                    </Typography>
+                    <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>{paqueteCursos.length} cursos incluidos</Typography>
+                  </Box>
                 </>
               ) : (
-                <p className="text-[12px]" style={{ color: "#94a3b8" }}>Sin paquete asignado</p>
+                <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>Sin paquete asignado</Typography>
               )}
-            </div>
+            </Box>
           </PanelBox>
-        </div>
-      </div>
+        </Box>
+      </Box>
 
       {/* Course breakdown */}
       {courseStats.length > 0 && (
         <PanelBox
           title="Avance por curso"
           action={
-            <div className="flex items-center gap-4 text-[10px]" style={{ color: "#94a3b8" }}>
-              <span className="flex items-center gap-1">
-                <span className="inline-block size-2 rounded-sm" style={{ background: "#1a4f8a" }} />
-                Completado
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block size-2 rounded-sm bg-amber-400" />
-                En curso
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="inline-block size-2 rounded-sm" style={{ background: "#f1f5f9" }} />
-                Pendiente
-              </span>
-            </div>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, fontSize: "10px", color: "#94a3b8" }}>
+              {[
+                { color: "#1a4f8a", label: "Completado" },
+                { color: "#fbbf24", label: "En curso" },
+                { color: "#f1f5f9", label: "Pendiente" },
+              ].map(({ color, label }) => (
+                <Box key={label} component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5, fontSize: "10px", color: "#94a3b8" }}>
+                  <Box component="span" sx={{ display: "inline-block", width: 8, height: 8, borderRadius: 0.5, bgcolor: color }} />
+                  {label}
+                </Box>
+              ))}
+            </Box>
           }
         >
-          <div className="space-y-4 p-5">
+          <Box sx={{ display: "grid", gap: 2, p: 2.5 }}>
             {courseStats.map((c) => {
               const cPct = c.assigned ? (c.completed / c.assigned) * 100 : 0
               const iPct = c.assigned ? (c.inProgress / c.assigned) * 100 : 0
               return (
-                <div key={c.wp_curso_id}>
-                  <div className="mb-1.5 flex items-center justify-between gap-4">
-                    <p className="truncate text-[13px] font-medium" style={{ color: "#334155" }}>
+                <Box key={c.wp_curso_id}>
+                  <Box sx={{ mb: 0.75, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 500, color: "#334155", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {c.nombre_curso}
-                    </p>
-                    <div className="flex shrink-0 items-center gap-3 text-[11px]" style={{ color: "#94a3b8" }}>
-                      <span className="font-semibold" style={{ color: "#1a4f8a" }}>{c.completed} compl.</span>
-                      <span>{c.inProgress} en curso</span>
-                      <span>{c.notStarted} pend.</span>
+                    </Typography>
+                    <Box sx={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 1.5, fontSize: 11, color: "#94a3b8" }}>
+                      <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a4f8a" }}>{c.completed} compl.</Typography>
+                      <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{c.inProgress} en curso</Typography>
+                      <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{c.notStarted} pend.</Typography>
                       {c.assigned > 0 && (
-                        <span className="font-semibold" style={{ color: "#475569" }}>{c.avgPct}% avg</span>
+                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#475569" }}>{c.avgPct}% avg</Typography>
                       )}
-                    </div>
-                  </div>
+                    </Box>
+                  </Box>
                   {c.assigned > 0 ? (
-                    <div className="flex h-2.5 overflow-hidden rounded-full" style={{ background: "#f1f5f9" }}>
-                      <div style={{ background: "#1a4f8a", width: `${cPct}%` }} />
-                      <div className="bg-amber-400" style={{ width: `${iPct}%` }} />
-                    </div>
+                    <Box sx={{ display: "flex", height: 10, overflow: "hidden", borderRadius: "999px", bgcolor: "#f1f5f9" }}>
+                      <Box sx={{ bgcolor: "#1a4f8a", width: `${cPct}%` }} />
+                      <Box sx={{ bgcolor: "#fbbf24", width: `${iPct}%` }} />
+                    </Box>
                   ) : (
-                    <div className="h-2.5 rounded-full" style={{ background: "#f1f5f9" }} />
+                    <Box sx={{ height: 10, borderRadius: "999px", bgcolor: "#f1f5f9" }} />
                   )}
                   {c.assigned === 0 && (
-                    <p className="mt-0.5 text-[11px]" style={{ color: "#94a3b8" }}>
-                      Sin empleados asignados
-                    </p>
+                    <Typography sx={{ mt: 0.25, fontSize: 11, color: "#94a3b8" }}>Sin empleados asignados</Typography>
                   )}
-                </div>
+                </Box>
               )
             })}
-          </div>
+          </Box>
         </PanelBox>
       )}
 
@@ -399,125 +427,90 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
         noPadding
       >
         {empleadoStats.length === 0 ? (
-          <div className="px-6 py-10">
-            <div
-              className="rounded py-8 text-center text-[13px]"
-              style={{
-                border: "1px dashed #e2e8f0",
-                background: "#fafafa",
-                color: "#94a3b8",
-              }}
-            >
-              Sin empleados activos registrados.
-            </div>
-          </div>
+          <Box sx={{ px: 3, py: 5 }}>
+            <Box sx={{ borderRadius: 1.5, border: "1px dashed #e2e8f0", bgcolor: "#fafafa", py: 4, textAlign: "center" }}>
+              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>Sin empleados activos registrados.</Typography>
+            </Box>
+          </Box>
         ) : (
           <Table>
-            <TableHeader>
-              <TableRow
-                className="hover:bg-transparent"
-                style={{ background: "#fafafa", borderBottom: "1px solid #f1f5f9" }}
-              >
+            <TableHead>
+              <TableRow>
                 {["Empleado", "Progreso", "Cursos", "Constancias", "WP sync", "Última sync"].map((h) => (
-                  <TableHead
-                    key={h}
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                      color: "#94a3b8",
-                    }}
-                  >
-                    {h}
-                  </TableHead>
+                  <TableCell key={h} sx={TH_SX}>{h}</TableCell>
                 ))}
               </TableRow>
-            </TableHeader>
+            </TableHead>
             <TableBody>
               {empleadoStats.map((e) => (
                 <TableRow
                   key={e.id}
-                  className="h-12 transition-colors hover:bg-slate-50/50"
-                  style={{
-                    borderBottom: "1px solid #f8fafc",
-                    background: e.hasError ? "rgba(254,242,242,0.4)" : "transparent",
+                  sx={{
+                    height: 48,
+                    bgcolor: e.hasError ? "rgba(254,242,242,0.4)" : "transparent",
+                    "&:hover": { bgcolor: "rgba(248,250,252,0.5)" },
+                    ...TD_SX,
                   }}
                 >
-                  <TableCell>
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className="flex size-7 shrink-0 items-center justify-center rounded text-[10px] font-bold"
-                        style={
-                          e.hasError
-                            ? { background: "#fef2f2", color: "#dc2626" }
-                            : { background: "#eff4fb", color: "#1a4f8a" }
-                        }
+                  <TableCell sx={TD_SX}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 28,
+                          height: 28,
+                          flexShrink: 0,
+                          borderRadius: 1,
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          ...(e.hasError ? { bgcolor: "#fef2f2", color: "#dc2626" } : { bgcolor: "#eff4fb", color: "#1a4f8a" }),
+                        }}
                       >
                         {getInitials(e.nombre, e.apellido)}
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-medium" style={{ color: "#0f172a" }}>
+                      </Box>
+                      <Box>
+                        <Typography sx={{ fontSize: 13, fontWeight: 500, color: "#0f172a" }}>
                           {e.nombre} {e.apellido}
-                        </p>
-                        <p className="text-[11px]" style={{ color: "#94a3b8" }}>{e.email}</p>
-                      </div>
-                    </div>
+                        </Typography>
+                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{e.email}</Typography>
+                      </Box>
+                    </Box>
                   </TableCell>
-                  <TableCell>
-                    <div className="w-24">
-                      <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "#f1f5f9" }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${e.avg}%`, background: progressColor(e.avg) }}
-                        />
-                      </div>
-                      <p
-                        className="mt-0.5 text-right text-[10px] font-semibold"
-                        style={{ color: "#64748b" }}
-                      >
+                  <TableCell sx={TD_SX}>
+                    <Box sx={{ width: 96 }}>
+                      <Box sx={{ height: 6, overflow: "hidden", borderRadius: "999px", bgcolor: "#f1f5f9" }}>
+                        <Box sx={{ height: "100%", borderRadius: "999px", bgcolor: progressColor(e.avg), width: `${e.avg}%` }} />
+                      </Box>
+                      <Typography sx={{ mt: 0.25, textAlign: "right", fontSize: "10px", fontWeight: 600, color: "#64748b" }}>
                         {e.avg}%
-                      </p>
-                    </div>
+                      </Typography>
+                    </Box>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-[13px] font-semibold tabular-nums" style={{ color: "#0f172a" }}>
+                  <TableCell sx={TD_SX}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "#0f172a" }}>
                       {e.completed}/{e.total}
-                    </span>
+                    </Typography>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-[13px] font-semibold tabular-nums" style={{ color: "#0f172a" }}>
+                  <TableCell sx={TD_SX}>
+                    <Typography sx={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "#0f172a" }}>
                       {e.constanciasCount}
-                    </span>
+                    </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={TD_SX}>
                     {e.hasError ? (
-                      <span
-                        className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold"
-                        style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}
-                      >
-                        Error
-                      </span>
+                      <Chip label="Error" size="small" sx={{ height: 20, fontSize: 11, fontWeight: 600, border: "1px solid #fecaca", bgcolor: "#fef2f2", color: "#dc2626", "& .MuiChip-label": { px: 1 } }} />
                     ) : e.wp_user_id ? (
-                      <span
-                        className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold"
-                        style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
-                      >
-                        Sincronizado
-                      </span>
+                      <Chip label="Sincronizado" size="small" sx={{ height: 20, fontSize: 11, fontWeight: 600, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#16a34a", "& .MuiChip-label": { px: 1 } }} />
                     ) : (
-                      <span
-                        className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold"
-                        style={{ background: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}
-                      >
-                        Sin WP ID
-                      </span>
+                      <Chip label="Sin WP ID" size="small" sx={{ height: 20, fontSize: 11, fontWeight: 600, border: "1px solid #e2e8f0", bgcolor: "#f8fafc", color: "#64748b", "& .MuiChip-label": { px: 1 } }} />
                     )}
                   </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-[11px]" style={{ color: "#94a3b8" }}>
+                  <TableCell sx={TD_SX}>
+                    <Typography sx={{ fontFamily: "monospace", fontSize: 11, color: "#94a3b8" }}>
                       {e.lastSync ? formatDateTime(e.lastSync) : "—"}
-                    </span>
+                    </Typography>
                   </TableCell>
                 </TableRow>
               ))}
@@ -529,13 +522,11 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
       {/* Internal notes */}
       {empresa.notas && (
         <PanelBox title="Notas internas">
-          <div className="p-5">
-            <p className="text-[13px]" style={{ color: "#475569" }}>
-              {empresa.notas}
-            </p>
-          </div>
+          <Box sx={{ p: 2.5 }}>
+            <Typography sx={{ fontSize: 13, color: "#475569" }}>{empresa.notas}</Typography>
+          </Box>
         </PanelBox>
       )}
-    </div>
+    </Box>
   )
 }
