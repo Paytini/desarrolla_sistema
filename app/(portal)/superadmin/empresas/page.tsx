@@ -152,16 +152,24 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             Filtrar
           </Button>
           {(q || statusFilter !== "all") && (
-            <Button
-              component={Link}
+            <Link
               href="/superadmin/empresas"
-              variant="text"
-              size="small"
-              startIcon={<X size={12} strokeWidth={2.5} />}
-              sx={{ height: 40, fontSize: 12, color: "text.secondary" }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                height: 40,
+                paddingLeft: 8,
+                paddingRight: 8,
+                fontSize: 12,
+                color: "#64748b",
+                textDecoration: "none",
+                borderRadius: 4,
+              }}
             >
+              <X size={12} strokeWidth={2.5} />
               Limpiar
-            </Button>
+            </Link>
           )}
         </Box>
 
@@ -218,30 +226,48 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
               {currentPage > 1 ? (
-                <Button
-                  component={Link}
+                <Link
                   href={pageUrl(currentPage - 1)}
-                  variant="outlined"
-                  size="small"
-                  sx={{ height: 28, fontSize: 12, borderColor: "divider", color: "text.primary" }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    height: 28,
+                    paddingLeft: 10,
+                    paddingRight: 10,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#0f172a",
+                    textDecoration: "none",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 4,
+                  }}
                 >
                   ← Anterior
-                </Button>
+                </Link>
               ) : (
                 <Button variant="outlined" size="small" disabled sx={{ height: 28, fontSize: 12 }}>
                   ← Anterior
                 </Button>
               )}
               {currentPage < totalPages ? (
-                <Button
-                  component={Link}
+                <Link
                   href={pageUrl(currentPage + 1)}
-                  variant="outlined"
-                  size="small"
-                  sx={{ height: 28, fontSize: 12, borderColor: "divider", color: "text.primary" }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    height: 28,
+                    paddingLeft: 10,
+                    paddingRight: 10,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#0f172a",
+                    textDecoration: "none",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 4,
+                  }}
                 >
                   Siguiente →
-                </Button>
+                </Link>
               ) : (
                 <Button variant="outlined" size="small" disabled sx={{ height: 28, fontSize: 12 }}>
                   Siguiente →

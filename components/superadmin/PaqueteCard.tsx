@@ -173,20 +173,18 @@ export function PaqueteCard({
                         : "Nunca"}
                     </strong>
                   </Typography>
-                  <Box
-                    component={Link}
+                  <Link
                     href="/superadmin/dc3"
-                    sx={{
+                    style={{
                       display: "inline-block",
-                      mt: 0.75,
+                      marginTop: 6,
                       fontSize: 12,
-                      color: "primary.main",
+                      color: "#F5853F",
                       textDecoration: "none",
-                      "&:hover": { textDecoration: "underline" },
                     }}
                   >
                     Editar en DC-3 →
-                  </Box>
+                  </Link>
                 </AccordionDetails>
               </Accordion>
             )

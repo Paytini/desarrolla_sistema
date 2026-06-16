@@ -28,8 +28,6 @@ type ConfirmIconButtonProps = {
   hiddenFields?: Record<string, string | number>
 }
 
-// SystemStyleObject (not SxProps) on purpose: SxProps<Theme> can itself be an array,
-// which breaks the sx={[{...}, toneSx[tone]]} array-merge syntax on the IconButton below.
 const toneSx: Record<ConfirmIconButtonTone, SystemStyleObject<Theme>> = {
   brand: {
     bgcolor: "primary.main",

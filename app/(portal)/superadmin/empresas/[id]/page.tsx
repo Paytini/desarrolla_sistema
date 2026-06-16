@@ -148,23 +148,21 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
     <Box sx={{ display: "grid", gap: 2.5 }}>
       {/* Back + header */}
       <Box sx={{ display: "grid", gap: 1.5 }}>
-        <Box
-          component={Link}
+        <Link
           href="/superadmin/empresas"
-          sx={{
+          style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 0.75,
+            gap: 6,
             fontSize: 12,
             fontWeight: 500,
-            color: "text.secondary",
+            color: "#64748b",
             textDecoration: "none",
-            "&:hover": { color: "#475569" },
           }}
         >
           <ArrowLeft size={12} strokeWidth={2.5} />
           Empresas
-        </Box>
+        </Link>
 
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5 }}>
           <Box>
