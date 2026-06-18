@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
-import { LogOut, Menu } from "lucide-react"
 
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
@@ -50,7 +49,6 @@ function MobileNavLink({
   onClose: () => void
 }) {
   const active = isActive(item.href, pathname, item.exact)
-  const Icon   = item.icon
   const c      = resolveAccent(accentColor)
 
   return (
@@ -62,40 +60,43 @@ function MobileNavLink({
       <ListItemButton
         selected={active}
         sx={{
-          borderRadius: "8px",
-          mx: 1,
+          borderStartStartRadius: 0,
+          borderEndStartRadius: 0,
+          borderStartEndRadius: "50px",
+          borderEndEndRadius: "50px",
+          mx: 0,
           mb: 0.25,
-          px: 1.25,
-          py: 0.875,
+          pl: "20px",
+          pr: "16px",
+          py: "9px",
           minHeight: 40,
           color: active ? "text.primary" : "text.secondary",
           gap: 1,
           "&.Mui-selected": {
-            bgcolor: `${c}1A`,
-            color: "text.primary",
-            boxShadow: `inset 3px 0 0 0 ${c}`,
-            "& .nav-icon": { color: c },
-            "&:hover": { bgcolor: `${c}24` },
+            background: `linear-gradient(270deg, ${c}, color-mix(in srgb, ${c} 50%, white))`,
+            color: "#fff",
+            "& .nav-icon": { color: "#fff" },
+            "&:hover": { background: `linear-gradient(270deg, ${c}, color-mix(in srgb, ${c} 50%, white))` },
           },
           "&:hover:not(.Mui-selected)": {
-            bgcolor: `${c}0D`,
+            bgcolor: "action.hover",
             color: "text.primary",
             "& .nav-icon": { color: c },
           },
-          transition: "background-color 0.15s ease, box-shadow 0.15s ease",
+          transition: "background 0.15s ease",
         }}
       >
         <ListItemIcon
           className="nav-icon"
-          sx={{ minWidth: 0, color: active ? c : "inherit", transition: "color 0.15s ease", flexShrink: 0 }}
+          sx={{ minWidth: 0, color: "inherit", transition: "color 0.15s ease", flexShrink: 0 }}
         >
-          <Icon size={17} strokeWidth={active ? 2.2 : 1.8} />
+          <i className={item.icon} style={{ fontSize: "1.25rem", lineHeight: 1 }} />
         </ListItemIcon>
         <ListItemText
           primary={item.label}
           slotProps={{
             primary: {
-              sx: { fontSize: 13, fontWeight: active ? 600 : 500, letterSpacing: "-0.01em", lineHeight: 1 },
+              sx: { fontSize: "0.875rem", fontWeight: active ? 600 : 400, letterSpacing: "-0.01em", lineHeight: 1, color: "inherit" },
             },
           }}
           sx={{ my: 0 }}
@@ -131,7 +132,7 @@ export function MobileNav({
           "&:hover": { bgcolor: "action.hover", color: "text.primary" },
         }}
       >
-        <Menu size={18} strokeWidth={2} />
+        <i className="ri-menu-line" style={{ fontSize: "1.125rem", lineHeight: 1 }} />
       </IconButton>
 
       <Drawer
@@ -201,21 +202,22 @@ export function MobileNav({
           {rol === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
               <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2.5, mt: si > 0 ? 2 : 0.5, mb: 0.75 }}>
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      bgcolor: resolveAccent(section.accent),
-                      flexShrink: 0,
-                      boxShadow: `0 0 6px 0 ${resolveAccent(section.accent)}`,
-                    }}
-                  />
-                  <Typography variant="overline" sx={{ color: resolveAccent(section.accent), lineHeight: 1 }}>
-                    {section.heading}
-                  </Typography>
-                </Box>
+                <Typography
+                  sx={{
+                    fontSize: "0.625rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    color: resolveAccent(section.accent),
+                    opacity: 0.7,
+                    px: "20px",
+                    mt: si > 0 ? 2 : 0.5,
+                    mb: 0.5,
+                    lineHeight: 1,
+                  }}
+                >
+                  {section.heading}
+                </Typography>
                 <List disablePadding>
                   {section.items.map((item) => (
                     <MobileNavLink
@@ -263,14 +265,14 @@ export function MobileNav({
               bgcolor: "transparent",
               cursor: "pointer",
               color: "text.secondary",
-              fontSize: 13,
+              fontSize: "0.875rem",
               fontWeight: 500,
               fontFamily: "inherit",
-              "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+              "&:hover": { bgcolor: "rgba(220,38,38,0.06)", color: "error.main" },
               transition: "background-color 0.15s ease, color 0.15s ease",
             }}
           >
-            <LogOut size={16} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+            <i className="ri-logout-box-r-line" style={{ fontSize: "1.125rem", lineHeight: 1, flexShrink: 0 }} />
             <span>Cerrar sesión</span>
           </Box>
         </Box>
@@ -280,10 +282,10 @@ export function MobileNav({
             {initials}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {nombre}
             </Typography>
-            <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
+            <Typography sx={{ fontSize: "0.6875rem", color: "text.secondary" }}>
               {roleLabel[rol]}
             </Typography>
           </Box>

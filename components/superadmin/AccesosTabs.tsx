@@ -185,7 +185,7 @@ export function AccesosTabs({ rhUsers, employees }: AccesosTabsProps) {
   const [tab, setTab] = useState<"rh" | "empleados">("rh")
 
   return (
-    <Paper variant="outlined" sx={{ borderRadius: 2, p: 2.5, boxShadow: 1 }}>
+    <Paper variant="outlined" sx={{ borderRadius: 0, p: 2.5, boxShadow: 1 }}>
       <Tabs value={tab} onChange={(_, value: "rh" | "empleados") => setTab(value)}>
         <Tab value="rh" label={`Usuarios RH (${rhUsers.length})`} />
         <Tab value="empleados" label={`Empleados (${employees.length})`} />

@@ -17,7 +17,7 @@ export const muiTheme = createTheme({
     warning: { main: "#F59E0B" },
     info:    { main: "#2DD4BF" },
     background: {
-      default: "#FFFFFF",
+      default: "#F5F5F9",
       paper:   "#FFFFFF",
     },
     text: {
@@ -33,8 +33,8 @@ export const muiTheme = createTheme({
   shape: { borderRadius: 10 },
   typography: {
     fontFamily: '"Plus Jakarta Sans","Segoe UI","Helvetica Neue",Arial,sans-serif',
-    h1: { fontFamily: '"Fraunces",Georgia,serif', fontStyle: "italic", fontWeight: 400 },
-    h2: { fontFamily: '"Fraunces",Georgia,serif', fontStyle: "italic", fontWeight: 400 },
+    h1: { fontFamily: '"Plus Jakarta Sans",sans-serif', fontWeight: 800 },
+    h2: { fontFamily: '"Plus Jakarta Sans",sans-serif', fontWeight: 800 },
     h3: { fontFamily: '"Plus Jakarta Sans",sans-serif', fontWeight: 700 },
     h4: { fontFamily: '"Plus Jakarta Sans",sans-serif', fontWeight: 700 },
     h5: { fontFamily: '"Plus Jakarta Sans",sans-serif', fontWeight: 700 },
@@ -49,7 +49,7 @@ export const muiTheme = createTheme({
   },
   components: {
     MuiCssBaseline: {
-      styleOverrides: { body: { backgroundColor: "#FFFFFF" } },
+      styleOverrides: { body: { backgroundColor: "#F5F5F9" } },
     },
     MuiButton: {
       styleOverrides: {
@@ -67,7 +67,7 @@ export const muiTheme = createTheme({
     MuiCard: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        root: { border: "1px solid #E8E4DF", borderRadius: 12, backgroundImage: "none" },
+        root: { border: "1px solid #E8E4DF", borderRadius: 0, backgroundImage: "none" },
       },
     },
     MuiCardContent: {
@@ -78,7 +78,7 @@ export const muiTheme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root:       { backgroundImage: "none" },
-        rounded:    { borderRadius: 10 },
+        rounded:    { borderRadius: 0 },
         elevation1: { boxShadow: "0 1px 4px rgba(0,0,34,0.06)" },
         elevation2: { boxShadow: "0 2px 8px rgba(0,0,34,0.08)" },
         elevation3: { boxShadow: "0 4px 16px rgba(0,0,34,0.10)" },
@@ -150,7 +150,7 @@ export const muiTheme = createTheme({
     },
     MuiDialog: {
       styleOverrides: {
-        paper: { borderRadius: 14, border: "1px solid #E8E4DF" },
+        paper: { borderRadius: 0, border: "1px solid #E8E4DF" },
       },
     },
     MuiDialogTitle: {

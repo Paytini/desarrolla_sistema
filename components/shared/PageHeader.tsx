@@ -9,27 +9,13 @@ type PageHeaderProps = {
   actions?: ReactNode
 }
 
-export default function PageHeader({ eyebrow, title, description, actions }: PageHeaderProps) {
+export default function PageHeader({ eyebrow: _eyebrow, title, description, actions }: PageHeaderProps) {
   return (
     <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 2 }}>
       <Box>
-        {eyebrow && (
-          <Typography
-            sx={{
-              fontSize: "10.5px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "1.5px",
-              color: "primary.main",
-              lineHeight: 1,
-            }}
-          >
-            {eyebrow}
-          </Typography>
-        )}
         <Typography
           variant="h1"
-          sx={{ mt: eyebrow ? 0.5 : 0, fontSize: "26px", fontWeight: 700, lineHeight: 1.2 }}
+          sx={{ fontSize: "26px", fontWeight: 700, lineHeight: 1.2 }}
         >
           {title}
         </Typography>

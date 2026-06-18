@@ -18,7 +18,7 @@ export function PanelBox({ title, description, count, action, children, noPaddin
     <Paper
       elevation={0}
       sx={{
-        borderRadius: 2,
+        borderRadius: 0,
         border: "1px solid",
         borderColor: "divider",
         overflow: "hidden",

@@ -68,7 +68,7 @@ function ActivityBarChart({ data }: { data: { label: string; value: number }[] }
                 minHeight: "3px",
                 height: `${h}%`,
                 borderRadius: "2px 2px 0 0",
-                bgcolor: d.value > 0 ? "primary.main" : "#EFEAE3",
+                bgcolor: d.value > 0 ? "#7367F0" : "#E9E7FD",
               }}
             />
             <Typography sx={{ fontSize: 8, lineHeight: 1, color: "text.secondary" }}>
@@ -155,23 +155,11 @@ export default async function SuperadminDashboardPage() {
     <Stack spacing={3}>
 
       {/* Row 1 — 4 KPI cards con anillo de progreso */}
-      <Box sx={{ position: "relative" }}>
-        <Box
-          aria-hidden
-          sx={{
-            position: "absolute",
-            inset: "-24px -24px auto -24px",
-            height: 200,
-            background: "radial-gradient(ellipse at top left, rgba(245,133,63,0.06), transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-        <Box sx={{ position: "relative", display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
-          <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="green"   ring={empresasPct} />
-          <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="primary" ring={empleadosPct} />
-          <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="blue"    ring={ocupacionPct}    alert={ocupacionPct >= 90} />
-          <KpiCard label="Renovaciones"       value={renewals.length}       sub="empresas vencen en 30 días"                                          borderColor="amber"   ring={renovacionesPct} alert={renewals.length > 0} />
-        </Box>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
+        <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="green"   ring={empresasPct} />
+        <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="primary" ring={empleadosPct} />
+        <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="blue"    ring={ocupacionPct}    alert={ocupacionPct >= 90} />
+        <KpiCard label="Renovaciones"       value={renewals.length}       sub="empresas vencen en 30 días"                                          borderColor="amber"   ring={renovacionesPct} alert={renewals.length > 0} />
       </Box>
 
       {/* Row 2 — 3 analysis cards */}
@@ -181,15 +169,15 @@ export default async function SuperadminDashboardPage() {
         <SectionCard title="Estado de aprendizaje">
           <Stack direction="row" spacing={3} sx={{ alignItems: "center" }}>
             <DonutChart size={130} sw={16} segments={[
-              { value: completados, color: "#22c55e", label: "Completados" },
-              { value: enProgreso,  color: "#F5853F", label: "En progreso" },
-              { value: sinIniciar,  color: "#EFEAE3", label: "Sin iniciar" },
+              { value: completados, color: "#28C76F", label: "Completados" },
+              { value: enProgreso,  color: "#7367F0", label: "En progreso" },
+              { value: sinIniciar,  color: "#E9E7FD", label: "Sin iniciar" },
             ]} />
             <Stack spacing={1.5} sx={{ minWidth: 0 }}>
               {[
-                { label: "Completados",  value: completados, color: "#22c55e" },
-                { label: "En progreso",  value: enProgreso,  color: "#F5853F" },
-                { label: "Sin iniciar",  value: sinIniciar,  color: "#EFEAE3" },
+                { label: "Completados",  value: completados, color: "#28C76F" },
+                { label: "En progreso",  value: enProgreso,  color: "#7367F0" },
+                { label: "Sin iniciar",  value: sinIniciar,  color: "#E9E7FD" },
               ].map((s) => (
                 <Stack key={s.label} direction="row" spacing={1} sx={{ alignItems: "center" }}>
                   <Box sx={{ width: 10, height: 10, flexShrink: 0, borderRadius: "50%", bgcolor: s.color }} />
@@ -237,7 +225,7 @@ export default async function SuperadminDashboardPage() {
                       bgcolor: "#f1f5f9",
                       "& .MuiLinearProgress-bar": {
                         borderRadius: 999,
-                        bgcolor: e.avg >= 75 ? "#22c55e" : e.avg >= 40 ? "primary.main" : "#f59e0b",
+                        bgcolor: e.avg >= 75 ? "#28C76F" : e.avg >= 40 ? "#7367F0" : "#FF9F43",
                       },
                     }}
                   />

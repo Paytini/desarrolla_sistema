@@ -28,7 +28,7 @@ export function QuickActions() {
               display: "flex",
               flexDirection: "column",
               gap: 1.25,
-              borderRadius: 2,
+              borderRadius: 0,
               border: "1px solid",
               borderColor: "divider",
               p: 1.5,

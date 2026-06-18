@@ -152,7 +152,7 @@ export default function SearchPalette<T,>({
           px: { xs: 1, sm: 2 },
           border: "1px solid",
           borderColor: "divider",
-          borderRadius: "20px",
+          borderRadius: 0,
           bgcolor: "background.default",
           cursor: "pointer",
           fontSize: "0.8125rem",
