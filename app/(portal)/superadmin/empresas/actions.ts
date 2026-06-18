@@ -21,45 +21,42 @@ function getPositiveInt(formData: FormData, key: string) {
   return Number.parseInt(String(formData.get(key) ?? "0"), 10)
 }
 
-export async function createCompanyAction(formData: FormData) {
+export async function createCompanyAction(
+  _prevState: { error: string } | null,
+  formData: FormData,
+) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const nombre = getString(formData, "nombre")
-  const emailRh = getString(formData, "email_rh").toLowerCase()
-  const telefono = getString(formData, "telefono")
-  const rfc = getString(formData, "rfc")
-  const asientosContratados = getPositiveInt(formData, "asientos_contratados")
-  const nombreRh = getString(formData, "nombre_rh")
-  const passwordRh = getString(formData, "password_rh")
-  const notas = getString(formData, "notas")
-  const paqueteIdRaw = getString(formData, "paquete_id")
-  const fechaVencimientoRaw = getString(formData, "fecha_vencimiento")
+  const nombre                = getString(formData, "nombre")
+  const emailRh               = getString(formData, "email_rh").toLowerCase()
+  const telefono              = getString(formData, "telefono")
+  const rfc                   = getString(formData, "rfc")
+  const asientosContratados   = getPositiveInt(formData, "asientos_contratados")
+  const nombreRh              = getString(formData, "nombre_rh")
+  const passwordRh            = getString(formData, "password_rh")
+  const notas                 = getString(formData, "notas")
+  const paqueteIdRaw          = getString(formData, "paquete_id")
+  const fechaVencimientoRaw   = getString(formData, "fecha_vencimiento")
 
   if (!nombre || !emailRh || !nombreRh || !passwordRh || asientosContratados < 1) {
-    redirect("/superadmin/empresas?error=datos")
+    return { error: "datos" }
   }
 
   const existingCompany = await prisma.empresa.findUnique({
     where: { email_rh: emailRh },
     select: { id: true },
   })
-
-  if (existingCompany) {
-    redirect("/superadmin/empresas?error=email_rh")
-  }
+  if (existingCompany) return { error: "email_rh" }
 
   const existingUser = await prisma.usuario.findUnique({
     where: { email: emailRh },
     select: { id: true },
   })
+  if (existingUser) return { error: "usuario_rh" }
 
-  if (existingUser) {
-    redirect("/superadmin/empresas?error=usuario_rh")
-  }
-
-  const passwordHash = await bcrypt.hash(passwordRh, 12)
-  const paqueteId = paqueteIdRaw ? Number.parseInt(paqueteIdRaw, 10) : NaN
+  const passwordHash  = await bcrypt.hash(passwordRh, 12)
+  const paqueteId     = paqueteIdRaw ? Number.parseInt(paqueteIdRaw, 10) : NaN
   const fechaVencimiento = (() => {
     if (!fechaVencimientoRaw) return null
     const d = new Date(fechaVencimientoRaw)
@@ -70,21 +67,21 @@ export async function createCompanyAction(formData: FormData) {
     const empresa = await tx.empresa.create({
       data: {
         nombre,
-        email_rh: emailRh,
-        telefono: telefono || null,
-        rfc: rfc || null,
-        asientos_contratados: asientosContratados,
-        notas: notas || null,
+        email_rh:              emailRh,
+        telefono:              telefono || null,
+        rfc:                   rfc || null,
+        asientos_contratados:  asientosContratados,
+        notas:                 notas || null,
       },
     })
 
     await tx.usuario.create({
       data: {
-        email: emailRh,
+        email:         emailRh,
         password_hash: passwordHash,
-        nombre: nombreRh,
-        rol: "RH",
-        empresa_id: empresa.id,
+        nombre:        nombreRh,
+        rol:           "RH",
+        empresa_id:    empresa.id,
       },
     })
 
@@ -92,19 +89,16 @@ export async function createCompanyAction(formData: FormData) {
     if (Number.isInteger(paqueteId)) {
       await tx.empresaPaquete.create({
         data: {
-          empresa_id: empresa.id,
-          paquete_id: paqueteId,
+          empresa_id:        empresa.id,
+          paquete_id:        paqueteId,
           fecha_vencimiento: fechaVencimiento,
-          activo: true,
+          activo:            true,
         },
       })
       assignedPackageId = paqueteId
     }
 
-    return {
-      empresaId: empresa.id,
-      assignedPackageId,
-    }
+    return { empresaId: empresa.id, assignedPackageId }
   })
 
   const seatSnapshot = await getCompanySeatSnapshot(createdResult.empresaId)
@@ -112,41 +106,37 @@ export async function createCompanyAction(formData: FormData) {
     await createSeatHistoryEntry({
       actor,
       empresaId: createdResult.empresaId,
-      motivo: "empresa_creada",
-      detalle: "Se inicializaron los cupos al crear la empresa en SuperAdmin.",
-      before: {
-        asientos_contratados: 0,
-        asientos_usados: 0,
-        empleados_suspendidos: 0,
-      },
-      after: seatSnapshot,
+      motivo:   "empresa_creada",
+      detalle:  "Se inicializaron los cupos al crear la empresa en SuperAdmin.",
+      before: { asientos_contratados: 0, asientos_usados: 0, empleados_suspendidos: 0 },
+      after:  seatSnapshot,
     })
   }
 
   await createAuditEvent({
     actor,
-    accion: "EMPRESA_CREADA",
+    accion:      "EMPRESA_CREADA",
     entidadTipo: "EMPRESA",
-    entidadId: createdResult.empresaId,
-    empresaId: createdResult.empresaId,
-    resumen: `Se creo la empresa ${nombre} y su acceso RH inicial.`,
+    entidadId:   createdResult.empresaId,
+    empresaId:   createdResult.empresaId,
+    resumen:     `Se creo la empresa ${nombre} y su acceso RH inicial.`,
     metadata: {
-      email_rh: emailRh,
-      asientos_contratados: asientosContratados,
-      paquete_inicial_id: createdResult.assignedPackageId,
+      email_rh:              emailRh,
+      asientos_contratados:  asientosContratados,
+      paquete_inicial_id:    createdResult.assignedPackageId,
     },
   })
 
   if (createdResult.assignedPackageId) {
     await createAuditEvent({
       actor,
-      accion: "PAQUETE_ASIGNADO",
+      accion:      "PAQUETE_ASIGNADO",
       entidadTipo: "EMPRESA_PAQUETE",
-      entidadId: createdResult.assignedPackageId,
-      empresaId: createdResult.empresaId,
-      resumen: `Se asigno paquete inicial a la empresa ${nombre}.`,
+      entidadId:   createdResult.assignedPackageId,
+      empresaId:   createdResult.empresaId,
+      resumen:     `Se asigno paquete inicial a la empresa ${nombre}.`,
       metadata: {
-        paquete_id: createdResult.assignedPackageId,
+        paquete_id:        createdResult.assignedPackageId,
         fecha_vencimiento: fechaVencimiento?.toISOString() ?? null,
       },
     })
