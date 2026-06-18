@@ -1,10 +1,9 @@
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
-import { CreateEmpresaSheet } from "@/components/superadmin/CreateEmpresaSheet"
 import { EmpresaRow } from "@/components/superadmin/EmpresaRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/superadmin/PageHeader"
-import { AlertCircle, Building2, CheckCircle2, Search, X } from "lucide-react"
+import { AlertCircle, Building2, CheckCircle2, Plus, Search, X } from "lucide-react"
 import Link from "next/link"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
@@ -55,7 +54,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
   const statusFilter = readSearchParam(params, "status") ?? "all"
   const page         = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { empresas, paquetes } = await getSuperadminEmpresasSnapshot()
+  const { empresas } = await getSuperadminEmpresasSnapshot()
 
   const empresasFiltradas = empresas.filter((e) => {
     const matchQ =
@@ -87,9 +86,33 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        breadcrumb="SuperAdmin · Administración"
         title="Empresas clientes"
         description="Gestiona las organizaciones activas en la plataforma."
+        action={
+          <Button
+            component={Link}
+            href="/superadmin/empresas/nueva"
+            variant="contained"
+            startIcon={<Plus size={14} strokeWidth={2.5} />}
+            sx={{
+              height: 36,
+              px: 2,
+              fontSize: 13,
+              fontWeight: 600,
+              bgcolor: "#F5853F",
+              color: "#000022",
+              boxShadow: "0 4px 14px -4px rgba(245,133,63,0.5)",
+              "&:hover": {
+                bgcolor: "#D96B20",
+                boxShadow: "0 6px 18px -4px rgba(245,133,63,0.6)",
+                transform: "translateY(-1px)",
+              },
+              transition: "all 0.15s ease",
+            }}
+          >
+            Nueva empresa
+          </Button>
+        }
       />
 
       {success && (
@@ -127,7 +150,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             defaultValue={statusFilter}
             sx={{
               height: 40,
-              borderRadius: 1,
+              borderRadius: 0,
               border: "1px solid",
               borderColor: "divider",
               bgcolor: "transparent",
@@ -164,7 +187,6 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                 fontSize: 12,
                 color: "#64748b",
                 textDecoration: "none",
-                borderRadius: 4,
               }}
             >
               <X size={12} strokeWidth={2.5} />
@@ -172,8 +194,6 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             </Link>
           )}
         </Box>
-
-        <CreateEmpresaSheet paquetes={paquetes} defaultOpen={!!error} />
       </Box>
 
       <PanelBox
@@ -239,7 +259,6 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                     color: "#0f172a",
                     textDecoration: "none",
                     border: "1px solid #e2e8f0",
-                    borderRadius: 4,
                   }}
                 >
                   ← Anterior
@@ -263,7 +282,6 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
                     color: "#0f172a",
                     textDecoration: "none",
                     border: "1px solid #e2e8f0",
-                    borderRadius: 4,
                   }}
                 >
                   Siguiente →
