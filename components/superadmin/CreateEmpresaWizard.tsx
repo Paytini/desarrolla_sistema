@@ -1,7 +1,6 @@
 "use client"
 
 import { useActionState, useRef, useState } from "react"
-import { Building2, Package, UserRound } from "lucide-react"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
@@ -19,9 +18,9 @@ import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 type Paquete = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["paquetes"][number]
 
 const STEPS = [
-  { label: "Info empresa", Icon: Building2 },
-  { label: "Admin RH",    Icon: UserRound  },
-  { label: "Plan",        Icon: Package    },
+  "Info empresa",
+  "Admin RH",
+  "Plan",
 ]
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -76,7 +75,7 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
   return (
     <Box sx={{ maxWidth: 720, mx: "auto" }}>
       <Stepper activeStep={step} sx={{ mb: 5 }}>
-        {STEPS.map(({ label }) => (
+        {STEPS.map((label) => (
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
           </Step>
