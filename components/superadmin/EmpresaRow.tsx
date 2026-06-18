@@ -10,7 +10,7 @@ import TableCell from "@mui/material/TableCell"
 import TableRow from "@mui/material/TableRow"
 import Typography from "@mui/material/Typography"
 
-import { getInitials } from "@/components/layout/nav-config"
+import { avatarColor, getInitials } from "@/components/layout/nav-config"
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
 import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButton"
 import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
@@ -40,8 +40,8 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
               fontSize: 12,
               fontWeight: 700,
               borderRadius: "8px",
-              bgcolor: "rgba(245,133,63,0.12)",
-              color: "#F5853F",
+              bgcolor: avatarColor(empresa.nombre),
+              color: "#ffffff",
               flexShrink: 0,
             }}
           >
@@ -120,28 +120,16 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
       {/* Estado */}
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Chip
-          label={
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  bgcolor: empresa.activo ? "#22c55e" : "#94a3b8",
-                }}
-              />
-              {empresa.activo ? "Activa" : "Suspendida"}
-            </Box>
-          }
+          label={empresa.activo ? "Activa" : "Suspendida"}
           size="small"
           sx={{
             height: 22,
             fontSize: "11px",
             fontWeight: 600,
             border: "1px solid",
-            borderColor: empresa.activo ? "#bbf7d0" : "#e2e8f0",
-            bgcolor: empresa.activo ? "#f0fdf4" : "#f8fafc",
-            color: empresa.activo ? "#15803d" : "#475569",
+            borderColor: empresa.activo ? "rgba(40,199,111,0.3)" : "rgba(234,84,85,0.3)",
+            bgcolor: empresa.activo ? "rgba(40,199,111,0.12)" : "rgba(234,84,85,0.12)",
+            color: empresa.activo ? "#28C76F" : "#EA5455",
             borderRadius: "11px",
             "& .MuiChip-label": { px: 1.25 },
           }}
