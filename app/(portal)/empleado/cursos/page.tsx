@@ -152,6 +152,7 @@ export default async function EmpleadoCursos() {
       <PageHeader
         title={`¡Hola, ${empleado.nombre}!`}
         description="Tu ruta de capacitación activa"
+        accentColor="#34D399"
       />
 
       {/* KPI strip */}
@@ -226,7 +227,7 @@ export default async function EmpleadoCursos() {
             const pkgMeta    = pkgCourseMap.get(curso.wp_curso_id)
             const hasError   = curso.acceso_estado === "ERROR"
             const enProgreso = !curso.completado && curso.progreso_pct > 0
-            const barColor   = curso.completado || enProgreso ? "#F5853F" : "#94a3b8"
+            const barColor   = curso.completado ? "#34D399" : enProgreso ? "#8B5CF6" : "#94a3b8"
             const duracionLabel = dc3Meta?.duracion_horas ? `${Math.round(dc3Meta.duracion_horas)}h` : null
             const hasDc3     = !!dc3Meta
 

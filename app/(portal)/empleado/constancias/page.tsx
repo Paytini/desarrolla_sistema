@@ -31,6 +31,7 @@ export default async function EmpleadoConstanciasPage() {
       <PageHeader
         title="Mis constancias"
         description="Evidencia DC-3 oficial STPS de tus cursos completados"
+        accentColor="#34D399"
       />
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
