@@ -190,7 +190,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                         variant="contained"
                         disableElevation
                         sx={{
-                          height: 44,
+                          height: 32,
                           px: 3,
                           fontSize: '0.875rem',
                           fontWeight: 700,
