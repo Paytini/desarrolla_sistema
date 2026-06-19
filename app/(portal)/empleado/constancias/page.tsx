@@ -1,5 +1,5 @@
 import KpiCard from "@/components/shared/KpiCard"
-import PageHeader from "@/components/shared/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import EmployeeLearningRefresh from "@/components/empleado/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
@@ -29,7 +29,6 @@ export default async function EmpleadoConstanciasPage() {
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        eyebrow="Mi aprendizaje"
         title="Mis constancias"
         description="Evidencia DC-3 oficial STPS de tus cursos completados"
       />

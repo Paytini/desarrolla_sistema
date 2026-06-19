@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import PageHeader from "@/components/shared/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 
 function isDiagramImageUrl(url: string) {
   return /\.(svg|png|jpe?g|webp|gif)(\?.*)?$/i.test(url) || url.startsWith("/")
@@ -101,7 +101,6 @@ export default function Home() {
         <section className="grid gap-6 rounded-[2rem] border border-white/70 bg-white/85 p-8 shadow-sm backdrop-blur md:grid-cols-[1.4fr_0.9fr]">
           <div className="space-y-6">
             <PageHeader
-              eyebrow="Desarrolla360"
               title="Portal empresarial para cursos corporativos y trazabilidad por empresa"
               description="Esta app se queda con la capa B2B del negocio: empresas, RH, empleados, cupos, reportes y constancias. WordPress y Tutor LMS se mantienen como motor comercial y academico del ecosistema."
             />

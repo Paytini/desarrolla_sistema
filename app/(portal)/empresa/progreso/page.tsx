@@ -1,5 +1,5 @@
 import KpiCard from "@/components/shared/KpiCard"
-import PageHeader from "@/components/shared/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
 import { formatDateTime } from "@/lib/format"
@@ -109,7 +109,7 @@ export default async function EmpresaProgresoPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="RH / Empresa" title="Progreso" description="Avance y actividad de cursos por colaborador" />
+      <PageHeader title="Progreso" description="Avance y actividad de cursos por colaborador" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Avance promedio" value={`${averageProgress}%`} sub="Todos los cursos" icon={BarChart3} borderColor="orange" />

@@ -1,5 +1,5 @@
 import KpiCard from "@/components/shared/KpiCard"
-import PageHeader from "@/components/shared/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import EmployeeLearningRefresh from "@/components/empleado/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
@@ -150,7 +150,6 @@ export default async function EmpleadoCursos() {
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        eyebrow="Mi aprendizaje"
         title={`¡Hola, ${empleado.nombre}!`}
         description="Tu ruta de capacitación activa"
       />

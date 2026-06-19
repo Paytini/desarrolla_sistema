@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import KpiCard from "@/components/shared/KpiCard"
-import PageHeader from "@/components/shared/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import StatusNotice from "@/components/shared/StatusNotice"
 import { BookOpen, Package, Users } from "lucide-react"
 import { getRhAsignacionesSnapshot } from "@/lib/dashboard-cache"
@@ -66,7 +66,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="RH / Empresa" title="Asignación de cursos" description="Asigna cursos del paquete activo a cada colaborador" />
+      <PageHeader title="Asignación de cursos" description="Asigna cursos del paquete activo a cada colaborador" />
 
       {success ? (
         <StatusNotice tone="success" message={successMessages[success] ?? success} />

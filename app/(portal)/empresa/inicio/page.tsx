@@ -1,5 +1,5 @@
 import KpiCard from "@/components/shared/KpiCard"
-import PageHeader from "@/components/shared/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { Award, BarChart3, ChevronRight, ClipboardList, Package, Users, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
@@ -93,7 +93,7 @@ export default async function EmpresaInicio() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="RH / Empresa" title={empresa.nombre} description="Panel de operación académica" />
+      <PageHeader title={empresa.nombre} description="Panel de operación académica" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard

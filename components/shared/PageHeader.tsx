@@ -1,35 +1,39 @@
 import type { ReactNode } from "react"
-import Box from "@mui/material/Box"
-import Typography from "@mui/material/Typography"
+import { Squiggle } from "@/components/shared/Squiggle"
 
-type PageHeaderProps = {
-  eyebrow?: string
+interface PageHeaderProps {
   title: string
   description?: string
-  actions?: ReactNode
+  action?: ReactNode
+  accentColor?: string
 }
 
-export default function PageHeader({ eyebrow: _eyebrow, title, description, actions }: PageHeaderProps) {
+export function PageHeader({ title, description, action, accentColor = '#8B5CF6' }: PageHeaderProps) {
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 2 }}>
-      <Box>
-        <Typography
-          variant="h1"
-          sx={{ fontSize: "26px", fontWeight: 700, lineHeight: 1.2 }}
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+      <div style={{ minWidth: 0 }}>
+        <h1
+          style={{
+            fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+            fontSize: '1.75rem',
+            fontWeight: 800,
+            lineHeight: 1.2,
+            color: '#1E293B',
+            margin: 0,
+          }}
         >
           {title}
-        </Typography>
+        </h1>
+        <div style={{ marginTop: '6px' }}>
+          <Squiggle color={accentColor} width={Math.min(title.length * 10, 120)} />
+        </div>
         {description && (
-          <Typography variant="body2" sx={{ mt: 0.75, color: "text.secondary" }}>
+          <p style={{ marginTop: '8px', fontSize: '0.875rem', color: '#64748B', margin: '8px 0 0' }}>
             {description}
-          </Typography>
+          </p>
         )}
-      </Box>
-      {actions && (
-        <Box sx={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 1 }}>
-          {actions}
-        </Box>
-      )}
-    </Box>
+      </div>
+      {action && <div style={{ flexShrink: 0, paddingTop: '4px' }}>{action}</div>}
+    </div>
   )
 }

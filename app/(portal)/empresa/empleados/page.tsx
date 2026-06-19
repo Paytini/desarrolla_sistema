@@ -2,7 +2,7 @@ import CnoSelect from "@/components/empresa/CnoSelect"
 import DeleteEmployeeButton from "@/components/empresa/DeleteEmployeeButton"
 import EmployeeOnboardingTabs from "@/components/empresa/EmployeeOnboardingTabs"
 import KpiCard from "@/components/shared/KpiCard"
-import PageHeader from "@/components/shared/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import StatusNotice from "@/components/shared/StatusNotice"
 import { AlertCircle, Package, ShieldCheck, Users, UserX } from "lucide-react"
@@ -419,7 +419,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="RH / Empresa" title="Empleados" description="Gestión de la plantilla de colaboradores" />
+      <PageHeader title="Empleados" description="Gestión de la plantilla de colaboradores" />
 
       {success ? (
         <StatusNotice tone="success" message={getSuccessMessage(success, params) ?? success} />

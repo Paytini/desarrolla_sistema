@@ -1,5 +1,5 @@
 import KpiCard from "@/components/shared/KpiCard"
-import PageHeader from "@/components/shared/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { Award, Clock, Users } from "lucide-react"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
@@ -98,7 +98,7 @@ export default async function EmpresaConstanciasPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="RH / Empresa" title="Constancias DC-3" description="Constancias de habilidades laborales para cumplimiento STPS" />
+      <PageHeader title="Constancias DC-3" description="Constancias de habilidades laborales para cumplimiento STPS" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard label="Constancias emitidas" value={String(constancias.length)} sub="Total registradas" icon={Award} borderColor="orange" />
