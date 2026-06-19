@@ -1,16 +1,23 @@
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans } from "next/font/google"
+import { Plus_Jakarta_Sans, Outfit } from "next/font/google"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Suspense } from "react"
 import GlobalLoadingController from "@/components/layout/GlobalLoadingController"
 import { MuiProviders } from "@/components/providers/MuiProviders"
 import "./globals.css"
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-plus-jakarta-sans",
+  display: "swap",
+})
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["700", "800"],
+  variable: "--font-outfit",
   display: "swap",
 })
 
@@ -23,14 +30,13 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={cn("h-full", "antialiased", plusJakartaSans.variable, "font-sans")}>
-      <body className={`min-h-full flex flex-col font-[family-name:var(--font-plus-jakarta-sans)]`}>
+    <html
+      lang="es"
+      className={cn("h-full antialiased", plusJakartaSans.variable, outfit.variable, "font-sans")}
+    >
+      <body className="min-h-full flex flex-col font-[family-name:var(--font-plus-jakarta-sans)]">
         <MuiProviders>
           <Suspense fallback={null}>
             <GlobalLoadingController />

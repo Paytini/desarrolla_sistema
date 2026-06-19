@@ -47,6 +47,21 @@
   --sidebar-accent-foreground: oklch(0.685 0.178 44);
   --sidebar-border: oklch(0.918 0.008 55);
   --sidebar-ring: oklch(0.685 0.178 44);
+  /* ── Playful Geometric tokens ───────────────────────── */
+  --pg-orange:  #F5853F;
+  --pg-violet:  #8B5CF6;
+  --pg-pink:    #F472B6;
+  --pg-amber:   #FBBF24;
+  --pg-emerald: #34D399;
+  --pg-cream:   #FFFDF5;
+  --pg-ink:     #1E293B;
+  --pg-muted:   #64748B;
+  --pg-border:  #E2E8F0;
+  --pg-shadow-sm:    3px 3px 0px 0px #1E293B;
+  --pg-shadow-md:    5px 5px 0px 0px #1E293B;
+  --pg-shadow-lg:    8px 8px 0px 0px #1E293B;
+  --pg-shadow-pink:  5px 5px 0px 0px #F472B6;
+  --pg-shadow-hover: 7px 7px 0px 0px #1E293B;
 }
 
 @theme inline {
@@ -513,6 +528,30 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .login-card { animation: none; }
+}
+
+/* ── Playful Geometric utilities ───────────────────── */
+.pg-shadow-sm   { box-shadow: var(--pg-shadow-sm); }
+.pg-shadow-md   { box-shadow: var(--pg-shadow-md); }
+.pg-shadow-lg   { box-shadow: var(--pg-shadow-lg); }
+.pg-shadow-pink { box-shadow: var(--pg-shadow-pink); }
+.pg-border      { border: 2px solid var(--pg-ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .pg-hover-lift {
+    transition: transform 200ms cubic-bezier(0.34,1.56,0.64,1),
+                box-shadow 200ms cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .pg-hover-lift:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: var(--pg-shadow-hover);
+  }
+  @keyframes pg-wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    33%       { transform: rotate(4deg); }
+    66%       { transform: rotate(-4deg); }
+  }
+  .pg-icon-wiggle:hover { animation: pg-wiggle 300ms ease; }
 }
 
 @layer base {
