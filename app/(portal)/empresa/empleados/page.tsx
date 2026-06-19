@@ -419,7 +419,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Empleados" description="Gestión de la plantilla de colaboradores" />
+      <PageHeader title="Empleados" description="Gestión de la plantilla de colaboradores" accentColor="#F5853F" />
 
       {success ? (
         <StatusNotice tone="success" message={getSuccessMessage(success, params) ?? success} />

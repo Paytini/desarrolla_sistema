@@ -93,7 +93,7 @@ export default async function EmpresaInicio() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={empresa.nombre} description="Panel de operación académica" />
+      <PageHeader title={empresa.nombre} description="Panel de operación académica" accentColor="#F5853F" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard

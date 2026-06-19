@@ -109,7 +109,7 @@ export default async function EmpresaProgresoPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Progreso" description="Avance y actividad de cursos por colaborador" />
+      <PageHeader title="Progreso" description="Avance y actividad de cursos por colaborador" accentColor="#F5853F" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Avance promedio" value={`${averageProgress}%`} sub="Todos los cursos" icon={BarChart3} borderColor="orange" />

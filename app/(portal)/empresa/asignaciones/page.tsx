@@ -66,7 +66,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Asignación de cursos" description="Asigna cursos del paquete activo a cada colaborador" />
+      <PageHeader title="Asignación de cursos" description="Asigna cursos del paquete activo a cada colaborador" accentColor="#F5853F" />
 
       {success ? (
         <StatusNotice tone="success" message={successMessages[success] ?? success} />

@@ -98,7 +98,7 @@ export default async function EmpresaConstanciasPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Constancias DC-3" description="Constancias de habilidades laborales para cumplimiento STPS" />
+      <PageHeader title="Constancias DC-3" description="Constancias de habilidades laborales para cumplimiento STPS" accentColor="#F5853F" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard label="Constancias emitidas" value={String(constancias.length)} sub="Total registradas" icon={Award} borderColor="orange" />
