@@ -35,7 +35,7 @@ function DonutChart({
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
-      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#EFEAE3" strokeWidth={sw} />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#E2E8F0" strokeWidth={sw} />
       {total > 0 && segments.map((seg, i) => {
         const len    = (seg.value / total) * circ - GAP
         const offset = circ / 4 - (cum / total) * circ
@@ -47,8 +47,8 @@ function DonutChart({
             strokeDashoffset={offset} />
         ) : null
       })}
-      <text x={cx} y={cx - 6}  textAnchor="middle" fill="#130303" fontSize={22} fontWeight="700">{total}</text>
-      <text x={cx} y={cx + 12} textAnchor="middle" fill="#858382" fontSize={9}>cursos total</text>
+      <text x={cx} y={cx - 6}  textAnchor="middle" fill="#1E293B" fontSize={22} fontWeight="800" fontFamily="Outfit, system-ui">{total}</text>
+      <text x={cx} y={cx + 12} textAnchor="middle" fill="#64748B" fontSize={9}>cursos total</text>
     </svg>
   )
 }
@@ -68,7 +68,7 @@ function ActivityBarChart({ data }: { data: { label: string; value: number }[] }
                 minHeight: "3px",
                 height: `${h}%`,
                 borderRadius: "2px 2px 0 0",
-                bgcolor: d.value > 0 ? "#7367F0" : "#E9E7FD",
+                bgcolor: d.value > 0 ? "#8B5CF6" : "#E2E8F0",
               }}
             />
             <Typography sx={{ fontSize: 8, lineHeight: 1, color: "text.secondary" }}>
@@ -169,15 +169,15 @@ export default async function SuperadminDashboardPage() {
         <SectionCard title="Estado de aprendizaje">
           <Stack direction="row" spacing={3} sx={{ alignItems: "center" }}>
             <DonutChart size={130} sw={16} segments={[
-              { value: completados, color: "#28C76F", label: "Completados" },
-              { value: enProgreso,  color: "#7367F0", label: "En progreso" },
-              { value: sinIniciar,  color: "#E9E7FD", label: "Sin iniciar" },
+              { value: completados, color: "#34D399", label: "Completados" },
+              { value: enProgreso,  color: "#8B5CF6", label: "En progreso" },
+              { value: sinIniciar,  color: "#F1F5F9", label: "Sin iniciar" },
             ]} />
             <Stack spacing={1.5} sx={{ minWidth: 0 }}>
               {[
-                { label: "Completados",  value: completados, color: "#28C76F" },
-                { label: "En progreso",  value: enProgreso,  color: "#7367F0" },
-                { label: "Sin iniciar",  value: sinIniciar,  color: "#E9E7FD" },
+                { label: "Completados",  value: completados, color: "#34D399" },
+                { label: "En progreso",  value: enProgreso,  color: "#8B5CF6" },
+                { label: "Sin iniciar",  value: sinIniciar,  color: "#F1F5F9" },
               ].map((s) => (
                 <Stack key={s.label} direction="row" spacing={1} sx={{ alignItems: "center" }}>
                   <Box sx={{ width: 10, height: 10, flexShrink: 0, borderRadius: "50%", bgcolor: s.color }} />
@@ -225,7 +225,7 @@ export default async function SuperadminDashboardPage() {
                       bgcolor: "#f1f5f9",
                       "& .MuiLinearProgress-bar": {
                         borderRadius: 999,
-                        bgcolor: e.avg >= 75 ? "#28C76F" : e.avg >= 40 ? "#7367F0" : "#FF9F43",
+                        bgcolor: e.avg >= 75 ? "#34D399" : e.avg >= 40 ? "#8B5CF6" : "#FBBF24",
                       },
                     }}
                   />
