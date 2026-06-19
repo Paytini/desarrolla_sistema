@@ -54,16 +54,15 @@ const TD_SX = { borderBottom: "1px solid", borderColor: "divider" }
 
 const SELECT_SX = {
   height: 32,
-  borderRadius: 1,
-  border: "1px solid",
-  borderColor: "divider",
-  bgcolor: "transparent",
+  borderRadius: '8px',
+  border: '2px solid #CBD5E1',
+  bgcolor: '#FFFFFF',
   px: 1,
   fontSize: 12,
-  color: "text.primary",
-  outline: "none",
-  cursor: "pointer",
-  "&:focus": { borderColor: "primary.main" },
+  color: '#1E293B',
+  outline: 'none',
+  cursor: 'pointer',
+  '&:focus': { borderColor: '#8B5CF6', boxShadow: '3px 3px 0px 0px #8B5CF6' },
 }
 
 type PageProps = {
@@ -84,6 +83,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
         breadcrumb="SuperAdmin · Operaciones"
         title="Gestión de paquetes"
         description="Define paquetes con cursos de Tutor LMS, asígnalos a empresas y sincroniza empleados."
+        accentColor="#8B5CF6"
       />
 
       {success && (
@@ -190,11 +190,26 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                         variant="contained"
                         disableElevation
                         sx={{
-                          height: 32,
-                          fontSize: 12,
-                          bgcolor: "#F5853F",
-                          color: "#fff",
-                          "&:hover": { bgcolor: "#D96B20" },
+                          height: 44,
+                          px: 3,
+                          fontSize: '0.875rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.02em',
+                          textTransform: 'none',
+                          backgroundColor: '#F5853F',
+                          color: '#ffffff',
+                          border: '2px solid #1E293B',
+                          borderRadius: '9999px',
+                          boxShadow: '4px 4px 0px 0px #1E293B',
+                          '&:hover': {
+                            backgroundColor: '#D96B20',
+                            boxShadow: '6px 6px 0px 0px #1E293B',
+                            transform: 'translate(-2px,-2px)',
+                          },
+                          '&:active': {
+                            boxShadow: '2px 2px 0px 0px #1E293B',
+                            transform: 'translate(2px,2px)',
+                          },
                         }}
                       >
                         Asignar

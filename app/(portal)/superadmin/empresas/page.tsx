@@ -88,6 +88,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
       <PageHeader
         title="Empresas clientes"
         description="Gestiona las organizaciones activas en la plataforma."
+        accentColor="#8B5CF6"
         action={
           <Button
             component={Link}
@@ -95,19 +96,26 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             variant="contained"
             startIcon={<Plus size={14} strokeWidth={2.5} />}
             sx={{
-              height: 36,
-              px: 2,
-              fontSize: 13,
-              fontWeight: 600,
-              bgcolor: "#F5853F",
-              color: "#000022",
-              boxShadow: "0 4px 14px -4px rgba(245,133,63,0.5)",
-              "&:hover": {
-                bgcolor: "#D96B20",
-                boxShadow: "0 6px 18px -4px rgba(245,133,63,0.6)",
-                transform: "translateY(-1px)",
+              height: 44,
+              px: 3,
+              fontSize: '0.875rem',
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              textTransform: 'none',
+              backgroundColor: '#F5853F',
+              color: '#ffffff',
+              border: '2px solid #1E293B',
+              borderRadius: '9999px',
+              boxShadow: '4px 4px 0px 0px #1E293B',
+              '&:hover': {
+                backgroundColor: '#D96B20',
+                boxShadow: '6px 6px 0px 0px #1E293B',
+                transform: 'translate(-2px,-2px)',
               },
-              transition: "all 0.15s ease",
+              '&:active': {
+                boxShadow: '2px 2px 0px 0px #1E293B',
+                transform: 'translate(2px,2px)',
+              },
             }}
           >
             Nueva empresa
@@ -150,16 +158,15 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             defaultValue={statusFilter}
             sx={{
               height: 40,
-              borderRadius: 0,
-              border: "1px solid",
-              borderColor: "divider",
-              bgcolor: "transparent",
+              borderRadius: '8px',
+              border: '2px solid #CBD5E1',
+              bgcolor: '#FFFFFF',
               px: 1.5,
-              fontSize: 13,
-              color: "text.primary",
-              outline: "none",
-              cursor: "pointer",
-              "&:focus": { borderColor: "primary.main" },
+              fontSize: '13px',
+              color: '#1E293B',
+              outline: 'none',
+              cursor: 'pointer',
+              '&:focus': { borderColor: '#8B5CF6', boxShadow: '3px 3px 0px 0px #8B5CF6' },
             }}
           >
             <option value="all">Todos</option>

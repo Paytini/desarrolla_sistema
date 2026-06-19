@@ -161,6 +161,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
         breadcrumb="SuperAdmin · Operaciones"
         title="Reportes globales"
         description="Vista ejecutiva de vencimientos, sincronización y salud académica por empresa."
+        accentColor="#8B5CF6"
         action={
           <form action={triggerGlobalLearningSyncAction}>
             <SubmitButton>

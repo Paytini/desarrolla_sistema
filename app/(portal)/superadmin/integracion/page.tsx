@@ -56,6 +56,7 @@ export default async function SuperAdminIntegracionPage() {
         breadcrumb="SuperAdmin · Sistema"
         title="Integración WordPress / Tutor"
         description="Diagnóstico del bridge, webhook académico y último evento recibido."
+        accentColor="#8B5CF6"
       />
 
       {/* Status banner */}

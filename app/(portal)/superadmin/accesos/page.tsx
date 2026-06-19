@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { Box, Stack, Typography } from "@mui/material"
+import { Stack } from "@mui/material"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { getSuperadminAccesosSnapshot } from "@/lib/dashboard-cache"
@@ -7,6 +7,7 @@ import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { AccesosTabs, type EmployeeAccessRow, type RhAccessRow } from "@/components/superadmin/AccesosTabs"
+import { PageHeader } from "@/components/superadmin/PageHeader"
 
 const successMessages: Record<string, string> = {
   rh_suspendido: "Usuario RH suspendido.",
@@ -64,25 +65,12 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.16em",
-            color: "text.secondary",
-          }}
-        >
-          SuperAdmin · Sistema
-        </Typography>
-        <Typography variant="h1" sx={{ mt: 0.5, fontSize: 28, lineHeight: 1.2 }}>
-          Control de accesos
-        </Typography>
-        <Typography sx={{ mt: 0.75, fontSize: 13, color: "text.secondary" }}>
-          Administra usuarios RH, empleados activos y suspensiones.
-        </Typography>
-      </Box>
+      <PageHeader
+        breadcrumb="SuperAdmin · Sistema"
+        title="Control de accesos"
+        description="Administra usuarios RH, empleados activos y suspensiones."
+        accentColor="#8B5CF6"
+      />
 
       {success && (
         <DismissibleAlert icon={<CheckCircle2 size={16} />} severity="success">

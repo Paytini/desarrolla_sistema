@@ -61,6 +61,7 @@ export default async function SuperadminDc3Page() {
         breadcrumb="SuperAdmin · Operaciones"
         title="Editor DC-3"
         description="Configura la metadata oficial STPS por curso para emitir constancias DC-3 correctas."
+        accentColor="#8B5CF6"
       />
 
       {/* KPI strip */}
