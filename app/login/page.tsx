@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { GeometricDecor } from "@/components/shared/GeometricDecor"
 
 function EyeIcon({ open }: { open: boolean }) {
   if (open) {
@@ -56,7 +57,7 @@ const QUOTES = [
   {
     text: "Los equipos que aprenden juntos son los que construyen empresas que perduran.",
     author: "Peter Senge",
-    role: "La Quinta Disciplina", 
+    role: "La Quinta Disciplina",
     image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=960&q=75",
   },
   {
@@ -82,6 +83,8 @@ export default function LoginPage() {
   const [loading, setLoading]           = useState(false)
   const [activeIdx, setActiveIdx]       = useState(0)
   const [quoteVisible, setQuoteVisible] = useState(true)
+  const [btnHover, setBtnHover]         = useState(false)
+  const [btnActive, setBtnActive]       = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -125,8 +128,53 @@ export default function LoginPage() {
 
   const quote = QUOTES[activeIdx]
 
+  const btnStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+    width: '100%',
+    padding: '12px 24px',
+    borderRadius: '9999px',
+    backgroundColor: '#F5853F',
+    color: '#FFFFFF',
+    fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+    fontSize: '1rem',
+    fontWeight: 700,
+    border: '2px solid #1E293B',
+    boxShadow: btnActive
+      ? '2px 2px 0px 0px #1E293B'
+      : btnHover
+        ? '6px 6px 0px 0px #1E293B'
+        : '4px 4px 0px 0px #1E293B',
+    cursor: loading ? 'not-allowed' : 'pointer',
+    opacity: loading ? 0.7 : 1,
+    transition: 'transform 200ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 200ms cubic-bezier(0.34,1.56,0.64,1)',
+    transform: btnActive
+      ? 'translate(2px, 2px)'
+      : btnHover
+        ? 'translate(-2px, -2px)'
+        : 'translate(0, 0)',
+    marginTop: '0.35rem',
+  }
+
   return (
-    <div className="login-root">
+    <div
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      style={{
+        backgroundColor: '#FFFDF5',
+        backgroundImage: 'radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px)',
+        backgroundSize: '24px 24px',
+      }}
+    >
+      <GeometricDecor
+        shapes={[
+          { type: 'circle',   color: '#8B5CF6', size: 220, top: -60,  left: -60,  opacity: 0.12 },
+          { type: 'triangle', color: '#FBBF24', size: 90,  top: 40,   right: -20, opacity: 0.18, rotate: 20 },
+          { type: 'circle',   color: '#F472B6', size: 120, bottom: 40, right: 40,  opacity: 0.10 },
+          { type: 'square',   color: '#34D399', size: 60,  bottom: 80, left: -20,  opacity: 0.12, rotate: 25 },
+        ]}
+      />
 
       <aside className="login-quotes-panel">
         <div
@@ -194,12 +242,24 @@ export default function LoginPage() {
           preserveAspectRatio="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M 90 0 C 0 200, 0 600, 90 800 L 180 800 L 180 0 Z" fill="white" />
+          <path d="M 90 0 C 0 200, 0 600, 90 800 L 180 800 L 180 0 Z" fill="#FFFDF5" />
         </svg>
       </div>
 
-      <main className="login-form-panel">
-        <div className="login-card">
+      <main className="login-form-panel" style={{ background: 'transparent' }}>
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '2px solid #1E293B',
+            borderRadius: '20px',
+            boxShadow: '8px 8px 0px 0px #1E293B',
+            padding: '40px',
+            width: '100%',
+            maxWidth: '420px',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
 
           <div className="login-card-logo">
             <Image
@@ -213,7 +273,17 @@ export default function LoginPage() {
           </div>
 
           <header className="login-form-head">
-            <h2 className="login-form-title">Bienvenido de nuevo</h2>
+            <h2
+              style={{
+                fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+                fontSize: '1.75rem',
+                fontWeight: 800,
+                color: '#1E293B',
+                marginBottom: '8px',
+              }}
+            >
+              Bienvenido de nuevo
+            </h2>
             <p className="login-form-subtitle">
               Ingresa tus credenciales para acceder a tu panel
             </p>
@@ -222,7 +292,18 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="login-form-body">
 
             <div className="login-field-group">
-              <label className="login-field-label" htmlFor="lp-email">
+              <label
+                htmlFor="lp-email"
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: '#1E293B',
+                  marginBottom: '6px',
+                  display: 'block',
+                }}
+              >
                 Correo electrónico
               </label>
               <input
@@ -238,7 +319,18 @@ export default function LoginPage() {
             </div>
 
             <div className="login-field-group">
-              <label className="login-field-label" htmlFor="lp-password">
+              <label
+                htmlFor="lp-password"
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: '#1E293B',
+                  marginBottom: '6px',
+                  display: 'block',
+                }}
+              >
                 Contraseña
               </label>
               <div className="login-pw-wrap">
@@ -274,7 +366,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="login-submit-btn"
+              style={btnStyle}
+              onMouseEnter={() => { if (!loading) setBtnHover(true) }}
+              onMouseLeave={() => { setBtnHover(false); setBtnActive(false) }}
+              onMouseDown={() => { if (!loading) setBtnActive(true) }}
+              onMouseUp={() => setBtnActive(false)}
             >
               {loading ? (
                 <span className="login-btn-spinner" aria-hidden />
