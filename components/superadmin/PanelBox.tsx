@@ -1,8 +1,6 @@
 import type { ReactNode } from "react"
-import Box from "@mui/material/Box"
-import Chip from "@mui/material/Chip"
-import Paper from "@mui/material/Paper"
-import Typography from "@mui/material/Typography"
+import { Box, Chip, Paper, Typography } from "@mui/material"
+import { pg } from "@/lib/theme-tokens"
 
 interface PanelBoxProps {
   title: string
@@ -18,32 +16,33 @@ export function PanelBox({ title, description, count, action, children, noPaddin
     <Paper
       elevation={0}
       sx={{
-        borderRadius: 0,
-        border: "1px solid",
-        borderColor: "divider",
-        overflow: "hidden",
+        borderRadius: '16px',
+        border: `2px solid ${pg.ink}`,
+        boxShadow: pg.shadow.md,
+        overflow: 'hidden',
+        backgroundColor: '#FFFFFF',
       }}
     >
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 2,
           px: 2.5,
           py: 2,
-          borderBottom: "1px solid",
-          borderColor: "divider",
+          backgroundColor: '#F8F4EC',
+          borderBottom: `2px solid ${pg.ink}`,
         }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography
               sx={{
-                fontSize: 14,
-                fontWeight: 500,
-                lineHeight: 1.3,
-                color: "text.primary",
+                fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: 'text.primary',
               }}
             >
               {title}
@@ -53,27 +52,27 @@ export function PanelBox({ title, description, count, action, children, noPaddin
                 label={count}
                 size="small"
                 sx={{
-                  height: 18,
-                  fontSize: "10px",
-                  fontVariantNumeric: "tabular-nums",
-                  bgcolor: "action.hover",
-                  color: "text.secondary",
-                  "& .MuiChip-label": { px: 1 },
+                  height: 20,
+                  fontSize: '11px',
+                  fontVariantNumeric: 'tabular-nums',
+                  fontWeight: 700,
+                  backgroundColor: pg.violet,
+                  color: '#FFFFFF',
+                  border: `1.5px solid ${pg.ink}`,
+                  '& .MuiChip-label': { px: 1 },
                 }}
               />
             )}
           </Box>
           {description && (
-            <Typography sx={{ mt: 0.5, fontSize: 12, color: "text.secondary" }}>
+            <Typography sx={{ mt: 0.5, fontSize: '12px', color: 'text.secondary' }}>
               {description}
             </Typography>
           )}
         </Box>
         {action && <Box sx={{ flexShrink: 0 }}>{action}</Box>}
       </Box>
-      <Box sx={noPadding ? undefined : { p: 0 }}>
-        {children}
-      </Box>
+      <Box sx={noPadding ? undefined : { p: 0 }}>{children}</Box>
     </Paper>
   )
 }
