@@ -32,8 +32,8 @@ import {
 
 const ACCENT_MAP: Record<string, string> = {
   "var(--brand)":            "#F5853F",
-  "var(--sidebar-accent-2)": "#2DD4BF",
-  "var(--sidebar-accent-3)": "#A78BFA",
+  "var(--sidebar-accent-2)": "#34D399",
+  "var(--sidebar-accent-3)": "#8B5CF6",
 }
 const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
@@ -62,8 +62,8 @@ function MobileNavLink({
         sx={{
           borderStartStartRadius: 0,
           borderEndStartRadius: 0,
-          borderStartEndRadius: "50px",
-          borderEndEndRadius: "50px",
+          borderStartEndRadius: "9999px",
+          borderEndEndRadius: "9999px",
           mx: 0,
           mb: 0.25,
           pl: "20px",
@@ -75,6 +75,7 @@ function MobileNavLink({
           "&.Mui-selected": {
             background: `linear-gradient(270deg, ${c}, color-mix(in srgb, ${c} 50%, white))`,
             color: "#fff",
+            boxShadow: `3px 0px 0px 0px ${c} inset`,
             "& .nav-icon": { color: "#fff" },
             "&:hover": { background: `linear-gradient(270deg, ${c}, color-mix(in srgb, ${c} 50%, white))` },
           },
