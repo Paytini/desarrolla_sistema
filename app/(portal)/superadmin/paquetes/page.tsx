@@ -1,10 +1,10 @@
-import { CreatePaqueteSheet } from "@/components/superadmin/CreatePaqueteSheet"
 import { PaqueteCard } from "@/components/superadmin/PaqueteCard"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/superadmin/PageHeader"
 import { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
-import { AlertCircle, CheckCircle2, Package, RotateCw } from "lucide-react"
+import { AlertCircle, CheckCircle2, Package, Plus, RotateCw } from "lucide-react"
+import Link from "next/link"
 import {
   assignPackageToCompanyAction,
   syncPackageToCompanyEmployeesAction,
@@ -28,16 +28,11 @@ const successMessages: Record<string, string> = {
 }
 
 const errorMessages: Record<string, string> = {
-  datos:            "Faltan datos obligatorios para crear el paquete.",
-  cursos:           "Debes seleccionar al menos un curso.",
-  bundle:           "No fue posible crear el bundle en Tutor LMS.",
   paquete:          "No fue posible eliminar el paquete.",
   paquete_asignado: "No puedes eliminar un paquete activo en una empresa.",
   asignacion:       "No fue posible asignar el paquete.",
   sync:             "No fue posible sincronizar. Revisa que exista paquete activo y empleados con WP user ID.",
 }
-
-const sheetErrors = new Set(["datos", "cursos", "bundle"])
 
 const TH_SX = {
   fontSize: "10px",
@@ -84,6 +79,38 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
         title="Gestión de paquetes"
         description="Define paquetes con cursos de Tutor LMS, asígnalos a empresas y sincroniza empleados."
         accentColor="#8B5CF6"
+        action={
+          <Link href="/superadmin/paquetes/nuevo" style={{ textDecoration: "none" }}>
+            <Button
+              variant="contained"
+              startIcon={<Plus size={14} strokeWidth={2.5} />}
+              sx={{
+                height: 44,
+                px: 3,
+                fontSize: "0.875rem",
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                textTransform: "none",
+                backgroundColor: "#F5853F",
+                color: "#ffffff",
+                border: "2px solid #1E293B",
+                borderRadius: "9999px",
+                boxShadow: "4px 4px 0px 0px #1E293B",
+                "&:hover": {
+                  backgroundColor: "#D96B20",
+                  boxShadow: "6px 6px 0px 0px #1E293B",
+                  transform: "translate(-2px,-2px)",
+                },
+                "&:active": {
+                  boxShadow: "2px 2px 0px 0px #1E293B",
+                  transform: "translate(2px,2px)",
+                },
+              }}
+            >
+              Nuevo paquete
+            </Button>
+          </Link>
+        }
       />
 
       {success && (
@@ -96,10 +123,6 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
           {detail ? `${errorMessages[error] ?? error} — ${detail}` : (errorMessages[error] ?? error)}
         </Alert>
       )}
-
-      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-        <CreatePaqueteSheet defaultOpen={!!error && sheetErrors.has(error ?? "")} />
-      </Box>
 
       <PanelBox
         title="Catálogo de paquetes"

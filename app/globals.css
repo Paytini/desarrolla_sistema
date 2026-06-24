@@ -188,7 +188,12 @@ body {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(0, 0, 18, 0.55);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 18, 0.52) 0%,
+    rgba(0, 0, 18, 0.38) 50%,
+    rgba(20, 8, 0, 0.72) 100%
+  );
 }
 
 /* Grano fino para acabado premium */

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
-import { Box, LinearProgress, Stack, Typography } from "@mui/material"
+import { Box, Paper, Stack, Typography } from "@mui/material"
+import { pg } from "@/lib/theme-tokens"
 import { getSuperadminEmpresasSnapshot, getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
@@ -12,11 +13,6 @@ import { RenovacionesTable } from "@/components/superadmin/RenovacionesTable"
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   CHART PRIMITIVES — pure SVG, RSC-safe
-   ───────────────────────────────────────────────────────────────────────────── */
-
-/** Multi-segment donut (up to 4 segments) */
 function DonutChart({
   segments,
   size = 130,
@@ -26,12 +22,14 @@ function DonutChart({
   size?: number
   sw?: number
 }) {
-  const cx    = size / 2
-  const r     = (size - sw) / 2
-  const circ  = 2 * Math.PI * r
-  const total = segments.reduce((s, g) => s + g.value, 0)
-  const GAP   = total > 0 ? 3 : 0
-  let cum     = 0
+  const cx      = size / 2
+  const r       = (size - sw) / 2
+  const circ    = 2 * Math.PI * r
+  const total   = segments.reduce((s, g) => s + g.value, 0)
+  const GAP     = total > 0 ? 3 : 0
+  const numSize = Math.round(size * 0.165)
+  const subSize = Math.round(size * 0.072)
+  let cum       = 0
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
@@ -47,43 +45,142 @@ function DonutChart({
             strokeDashoffset={offset} />
         ) : null
       })}
-      <text x={cx} y={cx - 6}  textAnchor="middle" fill="#1E293B" fontSize={22} fontWeight="800" fontFamily="Outfit, system-ui">{total}</text>
-      <text x={cx} y={cx + 12} textAnchor="middle" fill="#64748B" fontSize={9}>cursos total</text>
+      <text x={cx} y={cx + numSize * 0.35} textAnchor="middle" fill="#1E293B" fontSize={numSize} fontWeight="800" fontFamily="Outfit, system-ui">{total}</text>
+      <text x={cx} y={cx + numSize * 0.35 + subSize + 4} textAnchor="middle" fill="#64748B" fontSize={subSize}>cursos total</text>
     </svg>
   )
 }
 
-/** Vertical bar chart for activity over time */
-function ActivityBarChart({ data }: { data: { label: string; value: number }[] }) {
-  const max = Math.max(...data.map((d) => d.value), 1)
+function SparklineKpi({
+  total,
+  data,
+}: {
+  total: number
+  data: { label: string; value: number }[]
+}) {
+  const W = 220, H = 56, padX = 4, padY = 6
+  const vals = data.map((d) => d.value)
+  const max  = Math.max(...vals, 1)
+  const w    = W - padX * 2
+  const h    = H - padY * 2
+  const step = vals.length > 1 ? w / (vals.length - 1) : 0
+
+  const pts = vals.map((v, i) => ({
+    x: padX + i * step,
+    y: padY + h - (v / max) * h,
+  }))
+
+  const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
+  const fill = `${line} L ${pts[pts.length - 1].x.toFixed(1)} ${(padY + h).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(padY + h).toFixed(1)} Z`
+
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-end", gap: 0.5, height: 80 }}>
-      {data.map((d) => {
-        const h = Math.round((d.value / max) * 100)
-        return (
-          <Box key={d.label} sx={{ display: "flex", flex: 1, flexDirection: "column", alignItems: "center", gap: 0.5 }}>
-            <Box
-              sx={{
-                width: "100%",
-                minHeight: "3px",
-                height: `${h}%`,
-                borderRadius: "2px 2px 0 0",
-                bgcolor: d.value > 0 ? "#8B5CF6" : "#E2E8F0",
-              }}
-            />
-            <Typography sx={{ fontSize: 8, lineHeight: 1, color: "text.secondary" }}>
-              {d.label}
-            </Typography>
-          </Box>
-        )
-      })}
-    </Box>
+    <Paper
+      elevation={0}
+      className="pg-hover-lift"
+      sx={{
+        borderRadius: '16px',
+        border: `2px solid ${pg.ink}`,
+        boxShadow: pg.shadow.md,
+        backgroundColor: '#3B82F6',
+        overflow: 'hidden',
+      }}
+    >
+      <Box sx={{ px: 3, pt: 3, pb: 2.5 }}>
+        <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.5 }}>
+          Actividad · 14 días
+        </Typography>
+        <Typography sx={{
+          fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+          fontSize: '2rem', fontWeight: 800, lineHeight: 1.1,
+          fontVariantNumeric: 'tabular-nums',
+          color: '#FFFFFF', mb: 1.5,
+        }}>
+          {total}
+        </Typography>
+        <svg
+          width={W} height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          aria-hidden
+          style={{ display: 'block', width: '100%', height: H }}
+        >
+          <path d={fill} fill="rgba(255,255,255,0.15)" />
+          <path d={line} fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          {pts.map((p, i) => (
+            <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={2.5} fill="rgba(255,255,255,0.9)" />
+          ))}
+        </svg>
+        <Typography sx={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', mt: 0.75 }}>
+          eventos en el portal
+        </Typography>
+      </Box>
+    </Paper>
   )
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   PAGE
-   ───────────────────────────────────────────────────────────────────────────── */
+function CompanyProgressKpi({
+  empresas,
+  globalAvg,
+}: {
+  empresas: { nombre: string; avg: number }[]
+  globalAvg: number
+}) {
+  return (
+    <Paper
+      elevation={0}
+      className="pg-hover-lift"
+      sx={{
+        borderRadius: '16px',
+        border: `2px solid ${pg.ink}`,
+        boxShadow: pg.shadow.md,
+        backgroundColor: pg.ink,
+        overflow: 'hidden',
+      }}
+    >
+      <Box sx={{ px: 3, pt: 3, pb: 2.5 }}>
+        <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.5 }}>
+          Progreso por empresa
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1.75 }}>
+          <Typography sx={{
+            fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+            fontSize: '2rem', fontWeight: 800, lineHeight: 1.1,
+            fontVariantNumeric: 'tabular-nums', color: '#FFFFFF',
+          }}>
+            {globalAvg}%
+          </Typography>
+          <Typography sx={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
+            promedio global
+          </Typography>
+        </Box>
+        <Stack spacing={1.25}>
+          {empresas.slice(0, 5).map((e) => (
+            <Box key={e.nombre} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography sx={{
+                fontSize: 10, color: 'rgba(255,255,255,0.6)',
+                width: 64, flexShrink: 0,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {e.nombre}
+              </Typography>
+              <Box sx={{ flex: 1, height: 6, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                <Box sx={{
+                  height: '100%',
+                  width: `${e.avg}%`,
+                  borderRadius: 999,
+                  bgcolor: e.avg >= 75 ? '#34D399' : e.avg >= 40 ? '#A78BFA' : '#FBBF24',
+                }} />
+              </Box>
+              <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#FFFFFF', width: 26, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                {e.avg}%
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+      </Box>
+    </Paper>
+  )
+}
+
 export default async function SuperadminDashboardPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
@@ -105,7 +202,6 @@ export default async function SuperadminDashboardPage() {
 
   const now = Date.now()
 
-  /* ── KPI numbers ──────────────────────────────────────── */
   const empresasActivas       = empresas.filter((e) => e.activo).length
   const empresasPct           = empresas.length ? Math.round((empresasActivas / empresas.length) * 100) : 0
   const totalEmpleadosActivos = empresas.reduce((s, e) => s + e.empleados.filter((emp) => emp.activo).length, 0)
@@ -118,16 +214,13 @@ export default async function SuperadminDashboardPage() {
     .filter((e) => { const exp = e.paquetes[0]?.fecha_vencimiento; return exp && Math.floor((new Date(exp).getTime() - now) / DAY_MS) <= 30 })
     .map((e) => ({ empresa: e, days: Math.floor((new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) / DAY_MS) }))
     .sort((a, b) => a.days - b.days)
-  const renovacionesPct = empresasActivas ? Math.round((renewals.length / empresasActivas) * 100) : 0
 
-  /* ── E: Estado global de aprendizaje ─────────────────── */
   const allCursos   = empresasConCursos.flatMap((e) => e.empleados.flatMap((emp) => emp.cursos))
   const completados = allCursos.filter((c) => c.completado).length
   const enProgreso  = allCursos.filter((c) => !c.completado && c.progreso_pct > 0).length
   const sinIniciar  = allCursos.filter((c) => c.progreso_pct === 0).length
   const totalCursos = allCursos.length
 
-  /* ── F: Ranking de progreso por empresa ──────────────── */
   const rankingEmpresas = empresasConCursos
     .map((e) => {
       const cursos = e.empleados.flatMap((emp) => emp.cursos)
@@ -138,7 +231,10 @@ export default async function SuperadminDashboardPage() {
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 6)
 
-  /* ── G: Actividad de usuarios — últimos 14 días ──────── */
+  const globalAvg = rankingEmpresas.length
+    ? Math.round(rankingEmpresas.reduce((s, e) => s + e.avg, 0) / rankingEmpresas.length)
+    : 0
+
   const activityMap = new Map<string, number>()
   activityRaw.forEach((ev) => {
     const key = new Date(ev.created_at).toLocaleDateString("es-MX", { month: "short", day: "numeric" })
@@ -151,116 +247,70 @@ export default async function SuperadminDashboardPage() {
   })
   const totalEventos = activityRaw.length
 
+  /* ── H: Adopción de cupos por empresa ───────────────── */
+  const empresasChart = empresas
+    .filter((e) => e.activo && e.asientos_contratados > 0)
+    .sort((a, b) => (b.asientos_usados / b.asientos_contratados) - (a.asientos_usados / a.asientos_contratados))
+    .slice(0, 8)
+    .map((e) => ({
+      nombre:  e.nombre,
+      usados:  e.asientos_usados,
+      total:   e.asientos_contratados,
+      pct:     Math.round((e.asientos_usados / e.asientos_contratados) * 100),
+    }))
+
   return (
     <Stack spacing={3}>
 
-      {/* Row 1 — 4 KPI cards con anillo de progreso */}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
-        <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="green"   ring={empresasPct} />
-        <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="primary" ring={empleadosPct} />
-        <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="blue"    ring={ocupacionPct}    alert={ocupacionPct >= 90} />
-        <KpiCard label="Renovaciones"       value={renewals.length}       sub="empresas vencen en 30 días"                                          borderColor="amber"   ring={renovacionesPct} alert={renewals.length > 0} />
+        <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="emerald" ring={empresasPct} />
+        <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="violet"  ring={empleadosPct} />
+        <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="amber"   ring={ocupacionPct}    alert={ocupacionPct >= 90} />
+        <SparklineKpi total={totalEventos} data={activityData} />
       </Box>
 
-      {/* Row 2 — 3 analysis cards */}
-      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "repeat(3, 1fr)" } }}>
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" } }}>
 
-        {/* E — Estado global de aprendizaje */}
         <SectionCard title="Estado de aprendizaje">
-          <Stack direction="row" spacing={3} sx={{ alignItems: "center" }}>
-            <DonutChart size={130} sw={16} segments={[
-              { value: completados, color: "#34D399", label: "Completados" },
-              { value: enProgreso,  color: "#8B5CF6", label: "En progreso" },
-              { value: sinIniciar,  color: "#F1F5F9", label: "Sin iniciar" },
-            ]} />
-            <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+          <Stack direction="row" spacing={4} sx={{ alignItems: "center", height: "100%" }}>
+            <Box sx={{ flexShrink: 0 }}>
+              <DonutChart size={200} sw={22} segments={[
+                { value: completados, color: "#34D399", label: "Completados" },
+                { value: enProgreso,  color: "#8B5CF6", label: "En progreso" },
+                { value: sinIniciar,  color: "#F1F5F9", label: "Sin iniciar" },
+              ]} />
+            </Box>
+            <Stack spacing={3} sx={{ flex: 1, minWidth: 0 }}>
               {[
-                { label: "Completados",  value: completados, color: "#34D399" },
-                { label: "En progreso",  value: enProgreso,  color: "#8B5CF6" },
-                { label: "Sin iniciar",  value: sinIniciar,  color: "#F1F5F9" },
+                { label: "Completados", value: completados, color: "#34D399" },
+                { label: "En progreso", value: enProgreso,  color: "#8B5CF6" },
+                { label: "Sin iniciar", value: sinIniciar,  color: "#CBD5E1" },
               ].map((s) => (
-                <Stack key={s.label} direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                  <Box sx={{ width: 10, height: 10, flexShrink: 0, borderRadius: "50%", bgcolor: s.color }} />
-                  <Typography sx={{ minWidth: 0, flex: 1, fontSize: 12, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {s.label}
-                  </Typography>
-                  <Typography sx={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "text.primary" }}>
-                    {s.value}
-                  </Typography>
-                  {totalCursos > 0 && (
-                    <Typography sx={{ width: 32, textAlign: "right", fontSize: 10, color: "text.secondary" }}>
-                      {Math.round((s.value / totalCursos) * 100)}%
+                <Box key={s.label}>
+                  <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 0.75 }}>
+                    <Box sx={{ width: 12, height: 12, flexShrink: 0, borderRadius: "50%", bgcolor: s.color }} />
+                    <Typography sx={{ flex: 1, fontSize: 13, fontWeight: 500, color: "text.secondary" }}>
+                      {s.label}
                     </Typography>
-                  )}
-                </Stack>
+                    <Typography sx={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: "tabular-nums", color: "text.primary", fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)' }}>
+                      {s.value}
+                    </Typography>
+                    {totalCursos > 0 && (
+                      <Typography sx={{ width: 36, textAlign: "right", fontSize: 12, fontWeight: 500, color: "text.secondary" }}>
+                        {Math.round((s.value / totalCursos) * 100)}%
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Box sx={{ height: 5, borderRadius: 999, bgcolor: "#F1F5F9", overflow: "hidden" }}>
+                    <Box sx={{ height: "100%", width: totalCursos > 0 ? `${Math.round((s.value / totalCursos) * 100)}%` : "0%", bgcolor: s.color, borderRadius: 999 }} />
+                  </Box>
+                </Box>
               ))}
             </Stack>
           </Stack>
         </SectionCard>
 
-        {/* F — Ranking de progreso por empresa */}
-        <SectionCard title="Progreso por empresa">
-          {rankingEmpresas.length === 0 ? (
-            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-              Sin datos de progreso.
-            </Typography>
-          ) : (
-            <Stack spacing={2}>
-              {rankingEmpresas.map((e) => (
-                <Box key={e.nombre}>
-                  <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
-                    <Typography sx={{ minWidth: 0, flex: 1, fontSize: 12, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {e.nombre}
-                    </Typography>
-                    <Typography sx={{ flexShrink: 0, fontSize: 12, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "text.secondary" }}>
-                      {e.avg}%
-                    </Typography>
-                  </Stack>
-                  <LinearProgress
-                    variant="determinate"
-                    value={e.avg}
-                    sx={{
-                      height: 6,
-                      borderRadius: 999,
-                      bgcolor: "#f1f5f9",
-                      "& .MuiLinearProgress-bar": {
-                        borderRadius: 999,
-                        bgcolor: e.avg >= 75 ? "#34D399" : e.avg >= 40 ? "#8B5CF6" : "#FBBF24",
-                      },
-                    }}
-                  />
-                </Box>
-              ))}
-            </Stack>
-          )}
-        </SectionCard>
-
-        {/* G — Actividad de usuarios */}
-        <SectionCard
-          title="Actividad en el portal"
-          action={
-            <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
-              {totalEventos} eventos · 14 días
-            </Typography>
-          }
-        >
-          <ActivityBarChart data={activityData} />
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1.5, mt: 2, pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
-            {[
-              { label: "Hoy",         value: activityData[activityData.length - 1]?.value ?? 0 },
-              { label: "Ayer",        value: activityData[activityData.length - 2]?.value ?? 0 },
-              { label: "Esta semana", value: activityData.slice(-7).reduce((s, d) => s + d.value, 0) },
-              { label: "Total",       value: totalEventos },
-            ].map((stat) => (
-              <Box key={stat.label}>
-                <Typography sx={{ fontSize: 10, color: "text.secondary" }}>{stat.label}</Typography>
-                <Typography sx={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "text.primary" }}>
-                  {stat.value}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </SectionCard>
+        <CompanyProgressKpi empresas={rankingEmpresas} globalAvg={globalAvg} />
       </Box>
 
       {/* Row 3 — Activity feed + Quick actions */}

@@ -9,9 +9,9 @@ interface OcupacionCardProps {
 function HorizontalBar({ nombre, usados, contratados }: { nombre: string; usados: number; contratados: number }) {
   const pct = contratados ? Math.round((usados / contratados) * 100) : 0
   const barColor =
-    pct >= 90 ? "#dc2626" :
-    pct >= 70 ? "#d97706" :
-    "#1a4f8a"
+    pct >= 90 ? "#F472B6" :
+    pct >= 70 ? "#FBBF24" :
+    "#34D399"
 
   return (
     <Box>
@@ -61,7 +61,7 @@ export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
         <Box sx={{ textAlign: "right" }}>
           <Typography
             variant="h3"
-            sx={{ fontSize: 36, fontWeight: 700, lineHeight: 1, color: ocupacionPct >= 90 ? "error.main" : "text.primary" }}
+            sx={{ fontSize: 36, fontWeight: 700, lineHeight: 1, color: ocupacionPct >= 90 ? "#F472B6" : ocupacionPct >= 70 ? "#FBBF24" : "#1E293B" }}
           >
             {ocupacionPct}%
           </Typography>

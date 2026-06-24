@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { ExternalLink } from "lucide-react"
-import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Chip from "@mui/material/Chip"
@@ -10,7 +9,6 @@ import TableCell from "@mui/material/TableCell"
 import TableRow from "@mui/material/TableRow"
 import Typography from "@mui/material/Typography"
 
-import { avatarColor, getInitials } from "@/components/layout/nav-config"
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
 import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButton"
 import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
@@ -32,21 +30,6 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
       {/* Nombre / correo */}
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Avatar
-            variant="rounded"
-            sx={{
-              width: 36,
-              height: 36,
-              fontSize: 12,
-              fontWeight: 700,
-              borderRadius: "8px",
-              bgcolor: avatarColor(empresa.nombre),
-              color: "#ffffff",
-              flexShrink: 0,
-            }}
-          >
-            {getInitials(empresa.nombre)}
-          </Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography
               sx={{

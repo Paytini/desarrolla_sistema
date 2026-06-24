@@ -31,7 +31,7 @@ export default function CnoSelect({ defaultClave, defaultNombre }: Props) {
   }
 
   return (
-    <Box sx={{ gridColumn: "1 / -1" }}>
+    <Box>
       <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 500, color: "text.primary" }}>
         Ocupación específica{" "}
         <Box component="span" sx={{ fontWeight: 400, color: "text.secondary" }}>
@@ -56,6 +56,7 @@ export default function CnoSelect({ defaultClave, defaultNombre }: Props) {
         renderGroup={(params) => (
           <li key={params.key}>
             <ListSubheader
+              component="div"
               sx={{
                 fontSize: "11px",
                 fontWeight: 700,
@@ -103,7 +104,6 @@ export default function CnoSelect({ defaultClave, defaultNombre }: Props) {
         }}
       />
 
-      {/* Hidden inputs for form submission */}
       <input type="hidden" name="ocupacion_especifica_clave" value={selected?.clave ?? ""} />
       <input type="hidden" name="ocupacion_especifica" value={selected?.denominacion ?? defaultNombre ?? ""} />
     </Box>

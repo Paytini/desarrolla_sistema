@@ -11,6 +11,8 @@ interface PasswordToggleInputProps {
   placeholder?: string
   minLength?: number
   required?: boolean
+  value?: string
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export function PasswordToggleInput({
@@ -18,6 +20,8 @@ export function PasswordToggleInput({
   placeholder,
   minLength,
   required,
+  value,
+  onChange,
 }: PasswordToggleInputProps) {
   const [visible, setVisible] = useState(false)
 
@@ -29,6 +33,8 @@ export function PasswordToggleInput({
       required={required}
       size="small"
       fullWidth
+      value={value}
+      onChange={onChange}
       slotProps={{
         htmlInput: { minLength },
         input: {

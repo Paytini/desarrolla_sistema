@@ -48,8 +48,8 @@ export default async function PortalLayout({
           className="flex-1 overflow-y-auto px-8 py-7"
           style={{
             backgroundColor: '#FFFDF5',
-            backgroundImage: 'radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px)',
-            backgroundSize: '24px 24px',
+            // backgroundImage: 'radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px)',
+            // backgroundSize: '24px 24px',
           }}
         >
           {children}

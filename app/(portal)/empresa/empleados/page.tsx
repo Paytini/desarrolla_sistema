@@ -1,4 +1,5 @@
 import CnoSelect from "@/components/empresa/CnoSelect"
+import CurpInfoButton from "@/components/empresa/CurpInfoButton"
 import DeleteEmployeeButton from "@/components/empresa/DeleteEmployeeButton"
 import EmployeeOnboardingTabs from "@/components/empresa/EmployeeOnboardingTabs"
 import KpiCard from "@/components/shared/KpiCard"
@@ -92,91 +93,94 @@ function getInitials(name: string) {
 
 function ManualEmployeeForm() {
   return (
-    <form action={createEmployeeAction} className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-3">
-        <label className="grid gap-1.5 text-sm">
+    <form action={createEmployeeAction} className="grid gap-3">
+      <div className="grid gap-3 md:grid-cols-3">
+        <label className="grid gap-1 text-sm">
           <span className="font-medium text-slate-700">Apellido paterno</span>
           <input
             name="apellido"
             required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#F5853F]"
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#F5853F]"
           />
         </label>
-        <label className="grid gap-1.5 text-sm">
+        <label className="grid gap-1 text-sm">
           <span className="font-medium text-slate-700">Apellido materno</span>
           <input
             name="apellido_materno"
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#F5853F]"
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#F5853F]"
           />
         </label>
-        <label className="grid gap-1.5 text-sm">
+        <label className="grid gap-1 text-sm">
           <span className="font-medium text-slate-700">Nombre(s)</span>
           <input
             name="nombre"
             required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#F5853F]"
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#F5853F]"
           />
         </label>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-1.5 text-sm">
-          <span className="font-medium text-slate-700">Correo electronico</span>
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="grid gap-1 text-sm">
+          <span className="font-medium text-slate-700">Correo electrónico</span>
           <input
             name="email"
             type="email"
             required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#F5853F]"
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#F5853F]"
           />
         </label>
-        <label className="grid gap-1.5 text-sm">
+        <label className="grid gap-1 text-sm">
           <span className="font-medium text-slate-700">Password temporal</span>
           <input
             name="password"
             type="password"
             minLength={8}
             required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#F5853F]"
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#F5853F]"
           />
         </label>
       </div>
 
-      <div className="rounded-xl border border-[#f0f0f0] bg-[#f8fafc] p-4">
-        <p className="mb-3 text-sm font-semibold text-[#1a1a1a]">Datos para constancia DC-3</p>
-        <div className="grid gap-4">
-          <label className="grid gap-1.5 text-sm">
-            <span className="font-medium text-slate-700">CURP</span>
+      <div className="rounded-xl border border-[#f0f0f0] bg-[#f8fafc] p-3">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Datos para constancia DC-3</p>
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="grid gap-1 text-sm">
+            <span className="flex items-center gap-1.5 font-medium text-slate-700">
+              CURP
+              <CurpInfoButton />
+            </span>
             <input
               name="curp"
               maxLength={18}
               placeholder="18 caracteres"
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 uppercase outline-none transition focus:border-[#F5853F]"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 uppercase outline-none transition focus:border-[#F5853F]"
             />
           </label>
           <CnoSelect />
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-1.5 text-sm">
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="grid gap-1 text-sm">
           <span className="font-medium text-slate-700">Departamento</span>
           <input
             name="departamento"
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#F5853F]"
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#F5853F]"
           />
         </label>
-        <label className="grid gap-1.5 text-sm">
+        <label className="grid gap-1 text-sm">
           <span className="font-medium text-slate-700">Puesto</span>
           <input
             name="puesto"
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#F5853F]"
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#F5853F]"
           />
         </label>
       </div>
 
       <button
         type="submit"
-        className="inline-flex w-fit items-center rounded-full bg-[#F5853F] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#D96B20]"
+        className="inline-flex w-fit items-center rounded-full bg-[#F5853F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#D96B20]"
       >
         Crear empleado
       </button>

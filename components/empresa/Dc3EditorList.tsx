@@ -1,7 +1,7 @@
 "use client"
 
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, RotateCw, Upload, X } from "lucide-react"
-import { useRef, useState, useTransition } from "react"
+import { useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
@@ -41,6 +41,7 @@ type Status = "complete" | "incomplete" | "empty"
 function getStatus(m: CourseMetadata | null): Status {
   if (!m) return "empty"
   const ok =
+    !!m.nombre_curso &&
     m.duracion_horas != null &&
     !!m.area_tematica_nombre &&
     !!m.agente_capacitador_nombre &&
@@ -52,6 +53,7 @@ function getStatus(m: CourseMetadata | null): Status {
 function getCompleteness(m: CourseMetadata | null): number {
   if (!m) return 0
   return [
+    !!m.nombre_curso,
     m.duracion_horas != null,
     !!m.area_tematica_nombre,
     !!m.agente_capacitador_nombre,
@@ -69,11 +71,18 @@ const STATUS_CONFIG: Record<
   empty:      { label: "Sin datos",  bg: "#f8fafc", color: "#64748b", border: "#e2e8f0", dot: "#94a3b8"  },
 }
 
-// ── Field label helper ───────────────────────────────────────────────
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <Box sx={{ display: "grid", gap: 0.75 }}>
-      <Typography sx={{ fontSize: 12, fontWeight: 500, color: "text.secondary" }}>
+      <Typography
+        sx={{
+          fontSize: "10px",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: "#0f172a",
+        }}
+      >
         {label}
         {required && <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>*</Box>}
       </Typography>
@@ -82,7 +91,26 @@ function Field({ label, required, children }: { label: string; required?: boolea
   )
 }
 
-// ── Course editor card ───────────────────────────────────────────────
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 0.5 }}>
+      <Typography
+        sx={{
+          fontSize: "9px",
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: "0.12em",
+          color: "#94a3b8",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {children}
+      </Typography>
+      <Box sx={{ flex: 1, height: "1px", bgcolor: "divider" }} />
+    </Box>
+  )
+}
+
 function CourseEditorCard({
   course,
   action,
@@ -102,6 +130,13 @@ function CourseEditorCard({
   const [uploadingFirma, setUploadingFirma] = useState(false)
   const [uploadError, setUploadError]   = useState<string | null>(null)
   const fileInputRef                    = useRef<HTMLInputElement>(null)
+  const cardRef                         = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (defaultOpen && cardRef.current) {
+      setTimeout(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150)
+    }
+  }, [])
   const [isSyncing, startSyncTransition] = useTransition()
   const [syncSuccess, setSyncSuccess]   = useState(false)
   const [syncError, setSyncError]       = useState<string | null>(null)
@@ -171,6 +206,7 @@ function CourseEditorCard({
 
   return (
     <Paper
+      ref={cardRef}
       elevation={0}
       sx={{
         borderRadius: "16px",
@@ -181,7 +217,6 @@ function CourseEditorCard({
         "&:hover": { boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
       }}
     >
-      {/* Collapsed header */}
       <Box
         component="button"
         type="button"
@@ -202,10 +237,8 @@ function CourseEditorCard({
           "&:hover": { bgcolor: "action.hover" },
         }}
       >
-        {/* Status dot */}
         <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: cfg.dot, flexShrink: 0 }} />
 
-        {/* Course info */}
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography
             sx={{
@@ -240,7 +273,6 @@ function CourseEditorCard({
           </Box>
         </Box>
 
-        {/* Right badges */}
         <Box sx={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 1 }}>
           {saved && (
             <Chip
@@ -268,7 +300,7 @@ function CourseEditorCard({
                 color: status === "complete" ? "#15803d" : "#b45309",
               }}
             >
-              {completeness}/5
+              {completeness}/6
             </Typography>
           )}
           <Chip
@@ -292,7 +324,6 @@ function CourseEditorCard({
         </Box>
       </Box>
 
-      {/* Expanded form */}
       {open && (
         <Box
           sx={{
@@ -303,7 +334,6 @@ function CourseEditorCard({
             py: 2.5,
           }}
         >
-          {/* Sync bar */}
           <Paper
             elevation={0}
             sx={{
@@ -388,8 +418,9 @@ function CourseEditorCard({
             <input type="hidden" name="wp_curso_id" value={course.wp_curso_id} />
             <input type="hidden" name="firma_url"   value={firmaUrl} />
 
-            {/* Nombre override */}
-            <Field label="Nombre del curso (sobreescribe el título en el PDF)">
+            <SectionLabel>Datos del curso</SectionLabel>
+
+            <Field label="Nombre del curso" required>
               <TextField
                 name="nombre_curso"
                 defaultValue={m?.nombre_curso ?? ""}
@@ -399,7 +430,6 @@ function CourseEditorCard({
               />
             </Field>
 
-            {/* Duración + área nombre + área clave */}
             <Box
               sx={{
                 display: "grid",
@@ -438,11 +468,12 @@ function CourseEditorCard({
               </Field>
             </Box>
 
-            {/* Agente + registro */}
+            <SectionLabel>Agente capacitador</SectionLabel>
+
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "1fr 180px" },
+                gridTemplateColumns: { xs: "1fr", sm: "1fr 200px" },
                 gap: 1.5,
               }}
             >
@@ -466,100 +497,200 @@ function CourseEditorCard({
               </Field>
             </Box>
 
-            {/* Instructor + firma */}
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                gap: 1.5,
-              }}
-            >
-              <Field label="Nombre del instructor" required>
-                <TextField
-                  name="instructor_nombre"
-                  defaultValue={m?.instructor_nombre ?? ""}
-                  placeholder="Lic. Juan García"
-                  size="small"
-                  fullWidth
-                />
-              </Field>
+            <SectionLabel>Instructor</SectionLabel>
 
-              <Field label="Firma del instructor" required>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {firmaUrl ? (
-                    <>
+            <Field label="Nombre del instructor" required>
+              <TextField
+                name="instructor_nombre"
+                defaultValue={m?.instructor_nombre ?? ""}
+                placeholder="Lic. Juan García"
+                size="small"
+                fullWidth
+              />
+            </Field>
+
+            <Field label="Firma del instructor" required>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  style={{ display: "none" }}
+                  onChange={handleFirmaChange}
+                />
+
+                {firmaUrl ? (
+                  <Box
+                    sx={{
+                      borderRadius: "12px",
+                      border: "2px solid #1E293B",
+                      overflow: "hidden",
+                      boxShadow: "3px 3px 0px 0px #1E293B",
+                    }}
+                  >
+                    {/* Signature pad area — dot grid background */}
+                    <Box
+                      sx={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minHeight: 100,
+                        py: 3,
+                        px: 4,
+                        bgcolor: "#ffffff",
+                        backgroundImage:
+                          "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
+                        backgroundSize: "18px 18px",
+                      }}
+                    >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={proxyUrl}
                         alt="Firma del instructor"
                         style={{
-                          height: 40,
-                          width: 112,
-                          borderRadius: 8,
-                          border: "1px solid #e2e8f0",
+                          maxHeight: 80,
+                          maxWidth: "100%",
                           objectFit: "contain",
-                          padding: 4,
-                          background: "#fff",
+                          position: "relative",
+                          zIndex: 1,
                         }}
                       />
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        disabled={uploadingFirma}
-                        onClick={() => fileInputRef.current?.click()}
-                        sx={{ height: 30, fontSize: 12, borderColor: "divider", color: "text.secondary" }}
-                      >
-                        {uploadingFirma ? "Subiendo…" : "Cambiar"}
-                      </Button>
-                      <IconButton
-                        size="small"
-                        onClick={() => setFirmaUrl("")}
-                        sx={{
-                          width: 30,
-                          height: 30,
-                          border: "1px solid",
-                          borderColor: "divider",
-                          color: "text.secondary",
-                          "&:hover": { borderColor: "error.main", color: "error.main", bgcolor: "rgba(239,68,68,0.06)" },
-                        }}
-                      >
-                        <X size={14} />
-                      </IconButton>
-                    </>
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      disabled={uploadingFirma}
-                      onClick={() => fileInputRef.current?.click()}
-                      startIcon={<Upload size={14} strokeWidth={2} />}
+                    </Box>
+
+                    {/* Bottom action bar */}
+                    <Box
                       sx={{
-                        height: 36,
-                        fontSize: 13,
-                        borderStyle: "dashed",
-                        borderColor: "divider",
-                        color: "text.secondary",
-                        "&:hover": { borderColor: "primary.main", color: "primary.main", bgcolor: "rgba(245,133,63,0.04)" },
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        borderTop: "1.5px solid #e2e8f0",
+                        bgcolor: "#f8fafc",
+                        px: 2,
+                        py: 1,
                       }}
                     >
-                      {uploadingFirma ? "Subiendo…" : "Subir firma"}
-                    </Button>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    style={{ display: "none" }}
-                    onChange={handleFirmaChange}
-                  />
-                </Box>
-                {uploadError && (
-                  <Typography sx={{ mt: 0.75, fontSize: 12, color: "error.main" }}>
-                    {uploadError}
-                  </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                        <CheckCircle2 size={12} strokeWidth={2.5} style={{ color: "#22c55e" }} />
+                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#15803d" }}>
+                          Firma cargada
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", gap: 0.75 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          disabled={uploadingFirma}
+                          onClick={() => fileInputRef.current?.click()}
+                          sx={{
+                            height: 26,
+                            fontSize: 11,
+                            px: 1.25,
+                            borderRadius: "6px",
+                            borderColor: "#CBD5E1",
+                            color: "#64748b",
+                            "&:hover": { borderColor: "#94a3b8", bgcolor: "transparent" },
+                          }}
+                        >
+                          {uploadingFirma ? "Subiendo…" : "Cambiar"}
+                        </Button>
+                        <IconButton
+                          size="small"
+                          onClick={() => setFirmaUrl("")}
+                          sx={{
+                            width: 26,
+                            height: 26,
+                            borderRadius: "6px",
+                            border: "1px solid #CBD5E1",
+                            color: "#94a3b8",
+                            "&:hover": {
+                              borderColor: "#fca5a5",
+                              color: "#ef4444",
+                              bgcolor: "rgba(239,68,68,0.06)",
+                            },
+                          }}
+                        >
+                          <X size={12} />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box
+                    onClick={() => !uploadingFirma && fileInputRef.current?.click()}
+                    sx={{
+                      borderRadius: "12px",
+                      border: "2px dashed",
+                      borderColor: uploadingFirma ? "#8B5CF6" : "#CBD5E1",
+                      bgcolor: uploadingFirma ? "rgba(139,92,246,0.03)" : "#fafafa",
+                      cursor: uploadingFirma ? "default" : "pointer",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1,
+                      py: 3.5,
+                      transition: "all 0.18s ease",
+                      "&:hover": uploadingFirma
+                        ? {}
+                        : {
+                            borderColor: "#8B5CF6",
+                            bgcolor: "rgba(139,92,246,0.04)",
+                            boxShadow: "3px 3px 0px 0px rgba(139,92,246,0.18)",
+                          },
+                    }}
+                  >
+                    {uploadingFirma ? (
+                      <>
+                        <Box
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            border: "2.5px solid #e2e8f0",
+                            borderTopColor: "#8B5CF6",
+                            animation: "spin 0.7s linear infinite",
+                            "@keyframes spin": { to: { transform: "rotate(360deg)" } },
+                          }}
+                        />
+                        <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#8B5CF6" }}>
+                          Subiendo firma…
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Box
+                          sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "10px",
+                            bgcolor: "#f1f5f9",
+                            border: "1.5px solid #e2e8f0",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            mb: 0.25,
+                          }}
+                        >
+                          <Upload size={18} strokeWidth={1.5} style={{ color: "#64748b" }} />
+                        </Box>
+                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>
+                          Subir firma del instructor
+                        </Typography>
+                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+                          PNG, JPG o WEBP
+                        </Typography>
+                      </>
+                    )}
+                  </Box>
                 )}
-              </Field>
-            </Box>
+
+                {uploadError && (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 0.75 }}>
+                    <AlertCircle size={12} strokeWidth={2} style={{ color: "#dc2626" }} />
+                    <Typography sx={{ fontSize: 12, color: "error.main" }}>{uploadError}</Typography>
+                  </Box>
+                )}
+            </Field>
 
             {/* Footer */}
             <Box
@@ -610,7 +741,6 @@ function CourseEditorCard({
   )
 }
 
-// ── Filter tabs ──────────────────────────────────────────────────────
 type FilterValue = "all" | Status
 
 const FILTERS: { value: FilterValue; label: string }[] = [
@@ -620,15 +750,16 @@ const FILTERS: { value: FilterValue; label: string }[] = [
   { value: "empty",      label: "Sin datos" },
 ]
 
-// ── Main exported list ───────────────────────────────────────────────
 export default function Dc3EditorList({
   courses,
   action,
   syncAction,
+  openCourseId,
 }: {
   courses: CourseEntry[]
   action: SaveAction
   syncAction: SyncAction
+  openCourseId?: number | null
 }) {
   const [filter, setFilter] = useState<FilterValue>("all")
 
@@ -718,6 +849,7 @@ export default function Dc3EditorList({
               course={course}
               action={action}
               syncAction={syncAction}
+              defaultOpen={course.wp_curso_id === openCourseId}
             />
           ))
         )}

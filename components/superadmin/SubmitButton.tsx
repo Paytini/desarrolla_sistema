@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
 import type { ComponentProps } from "react"
+import { useFormStatus } from "react-dom"
 import { Loader2 } from "lucide-react"
 import Button from "@mui/material/Button"
 
 type SubmitButtonProps = Omit<ComponentProps<typeof Button>, "type" | "disabled">
 
-export function SubmitButton({ children, onClick, sx, ...props }: SubmitButtonProps) {
-  const [pending, setPending] = useState(false)
+function Inner({ children, sx, ...props }: SubmitButtonProps) {
+  const { pending } = useFormStatus()
 
   return (
     <Button
@@ -19,14 +19,14 @@ export function SubmitButton({ children, onClick, sx, ...props }: SubmitButtonPr
           ? <Loader2 size={13} strokeWidth={2} style={{ animation: "spin 0.8s linear infinite" }} />
           : undefined
       }
-      onClick={(e) => {
-        setPending(true)
-        if (typeof onClick === "function") onClick(e)
-      }}
       sx={{ gap: 0.5, ...sx }}
       {...props}
     >
       {children}
     </Button>
   )
+}
+
+export function SubmitButton(props: SubmitButtonProps) {
+  return <Inner {...props} />
 }

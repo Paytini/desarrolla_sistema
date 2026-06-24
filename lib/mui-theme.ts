@@ -110,6 +110,7 @@ export const muiTheme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             borderRadius: '8px',
+            backgroundColor: '#FFFFFF',
             '& fieldset': { borderColor: '#CBD5E1', borderWidth: '2px' },
             '&:hover fieldset': { borderColor: '#8B5CF6', borderWidth: '2px' },
             '&.Mui-focused fieldset': {
@@ -122,7 +123,30 @@ export const muiTheme = createTheme({
       },
     },
     MuiInputBase: {
-      styleOverrides: { root: { fontSize: '0.875rem' } },
+      styleOverrides: {
+        root: {
+          fontSize: '0.875rem',
+          backgroundColor: '#FFFFFF',
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          color: '#1E293B',
+          fontWeight: 600,
+          '&.Mui-focused': { color: '#1E293B' },
+          '&.MuiInputLabel-shrink': { color: '#1E293B' },
+        },
+      },
+    },
+    MuiFormLabel: {
+      styleOverrides: {
+        root: {
+          color: '#1E293B',
+          '&.Mui-focused': { color: '#1E293B' },
+        },
+      },
     },
     MuiChip: {
       styleOverrides: {

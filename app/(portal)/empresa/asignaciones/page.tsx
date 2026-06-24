@@ -2,7 +2,7 @@ import { auth } from "@/auth"
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusNotice from "@/components/shared/StatusNotice"
-import { BookOpen, Package, Users } from "lucide-react"
+import { BookOpen, Check, Package, Search, Users } from "lucide-react"
 import { getRhAsignacionesSnapshot } from "@/lib/dashboard-cache"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { readSearchParam } from "@/lib/search-params"
@@ -62,7 +62,15 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
 
   const activePackage = empresa.paquetes[0]?.paquete
   const packageCourses = (activePackage?.cursos ?? []) as PortalPackageCourseRecord[]
-  const empleados = empresa.empleados as AssignmentEmployee[]
+  const allEmpleados = empresa.empleados as AssignmentEmployee[]
+
+  const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
+  const empleados = searchQuery
+    ? allEmpleados.filter((e) =>
+        `${e.nombre} ${e.apellido}`.toLowerCase().includes(searchQuery) ||
+        e.email.toLowerCase().includes(searchQuery)
+      )
+    : allEmpleados
 
   return (
     <div className="space-y-6">
@@ -78,7 +86,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
       <div className="grid gap-4 sm:grid-cols-3">
         <KpiCard label="Paquete activo" value={activePackage?.nombre ?? "Sin paquete"} sub="Catálogo disponible" icon={Package} borderColor="amber" />
         <KpiCard label="Cursos disponibles" value={String(packageCourses.length)} sub="Para asignar a empleados" icon={BookOpen} borderColor="orange" />
-        <KpiCard label="Empleados activos" value={String(empleados.length)} sub="Elegibles para asignación" icon={Users} borderColor="charcoal" />
+        <KpiCard label="Empleados activos" value={String(allEmpleados.length)} sub="Elegibles para asignación" icon={Users} borderColor="charcoal" />
       </div>
 
       {!activePackage ? (
@@ -90,16 +98,45 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
 
       {activePackage && packageCourses.length > 0 ? (
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-950">Asignaciones por empleado</h2>
-            <p className="text-xs text-slate-400">
-              Selecciona los cursos para cada colaborador y guarda.
-            </p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-slate-950">
+              Asignaciones por empleado
+              {searchQuery && (
+                <span className="ml-2 text-sm font-normal text-slate-400">
+                  {empleados.length} resultado{empleados.length !== 1 ? "s" : ""}
+                </span>
+              )}
+            </h2>
+            <form className="flex gap-2">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="Buscar empleado..."
+                  className="w-56 rounded-xl border border-slate-200 py-2 pl-8 pr-3 text-sm outline-none transition focus:border-[#F5853F]"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Buscar
+              </button>
+              {searchQuery && (
+                <a
+                  href="?"
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-50"
+                >
+                  Limpiar
+                </a>
+              )}
+            </form>
           </div>
 
           {empleados.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-white px-4 py-8 text-center text-sm text-slate-500">
-              No hay empleados activos para asignar cursos.
+              {searchQuery ? `Sin resultados para "${searchQuery}".` : "No hay empleados activos para asignar cursos."}
             </div>
           ) : null}
 
@@ -111,72 +148,78 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
             return (
               <article
                 key={empleado.id}
-                className="rounded-xl border border-[#f0f0f0] bg-white p-5"
+                className="overflow-hidden rounded-2xl border border-[#ebebeb] bg-white shadow-sm"
               >
-                <form action={assignEmployeeCoursesAction} className="space-y-4">
+                <form action={assignEmployeeCoursesAction}>
                   <input type="hidden" name="empleado_id" value={empleado.id} />
 
-                  <div className="flex items-center justify-between gap-4">
+                  {/* Employee header */}
+                  <div className="flex items-center justify-between gap-4 border-b border-[#f5f5f5] px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-xs font-bold text-[#F5853F]">
                         {initials}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-950">
+                        <p className="text-sm font-semibold text-slate-900">
                           {empleado.nombre} {empleado.apellido}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="truncate text-xs text-slate-400">
                           {empleado.email}
                           {empleado.departamento ? ` · ${empleado.departamento}` : ""}
                           {empleado.puesto ? ` · ${empleado.puesto}` : ""}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-slate-400">
-                        {assignedCount}/{packageCourses.length} asignados
+                    <div className="flex shrink-0 items-center gap-2.5">
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                        {assignedCount}/{packageCourses.length} cursos
                       </span>
                       <button
                         type="submit"
-                        className="rounded-full bg-[#F5853F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#D96B20]"
+                        className="rounded-full bg-[#F5853F] px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-[#D96B20]"
                       >
                         Guardar
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {/* Course grid */}
+                  <div className="grid gap-2 p-4 sm:grid-cols-2 xl:grid-cols-3">
                     {packageCourses.map((course) => (
                       <label
                         key={`${empleado.id}-${course.wp_curso_id}`}
-                        className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-[#f0f0f0] bg-white transition hover:border-[#F5853F]/30 hover:bg-[#fff2eb]/30"
+                        className="group flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-[#F5853F]/30 hover:bg-[#fff8f5] has-[:checked]:border-[#F5853F]/40 has-[:checked]:bg-[#fff8f5]"
                       >
+                        <input
+                          type="checkbox"
+                          name="course_ids"
+                          value={course.wp_curso_id}
+                          defaultChecked={assignedSet.has(course.wp_curso_id)}
+                          className="sr-only"
+                        />
+
+                        {/* Thumbnail */}
                         {course.portada_url ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
                             src={course.portada_url}
                             alt=""
-                            className="h-[75px] w-[130px] shrink-0 rounded-l-xl object-cover"
+                            className="h-10 w-10 shrink-0 rounded-lg object-cover"
                           />
                         ) : (
-                          <div className="flex h-[60px] w-[107px] shrink-0 items-center justify-center rounded-l-xl bg-[#fff2eb]">
-                            <span className="text-lg font-bold text-[#F5853F]/30">
-                              {course.nombre_curso.charAt(0).toUpperCase()}
-                            </span>
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                            <BookOpen size={16} className="text-slate-400" />
                           </div>
                         )}
-                        <div className="flex flex-1 items-start gap-2 py-2 pr-2.5">
-                          <input
-                            type="checkbox"
-                            name="course_ids"
-                            value={course.wp_curso_id}
-                            defaultChecked={assignedSet.has(course.wp_curso_id)}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#F5853F]"
-                          />
-                          <span className="text-sm text-slate-700">
-                            {course.nombre_curso}
-                            <span className="block text-xs text-slate-400">ID: {course.wp_curso_id}</span>
-                          </span>
+
+                        {/* Course name */}
+                        <p className="line-clamp-2 min-w-0 flex-1 text-xs font-medium leading-snug text-slate-700">
+                          {course.nombre_curso}
+                        </p>
+
+                        {/* Visual checkbox indicator */}
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-[#F5853F] group-has-[:checked]:bg-[#F5853F]">
+                          <Check size={10} className="hidden text-white group-has-[:checked]:block" strokeWidth={3} />
                         </div>
                       </label>
                     ))}

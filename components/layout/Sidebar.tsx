@@ -69,11 +69,11 @@ function NavItemRow({ item, pathname, accentColor }: { item: NavItem; pathname: 
           className="sb-icon"
           sx={{ minWidth: 0, mr: "8px", color: "inherit", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "color 0.15s ease" }}
         >
-          <i className={item.icon} style={{ fontSize: "1.375rem", lineHeight: 1 }} />
+          <i className={item.icon.replace(/-line$/, "-fill")} style={{ fontSize: "1.375rem", lineHeight: 1 }} />
         </ListItemIcon>
         <ListItemText
           primary={item.label}
-          slotProps={{ primary: { sx: { fontSize: "0.875rem", fontWeight: active ? 600 : 400, letterSpacing: "0.01em", lineHeight: 1, color: "inherit" } } }}
+          slotProps={{ primary: { sx: { fontSize: "0.875rem", fontWeight: active ? 700 : 600, letterSpacing: "0.01em", lineHeight: 1, color: "inherit" } } }}
           sx={{ my: 0 }}
         />
       </ListItemButton>
@@ -123,7 +123,6 @@ export default function Sidebar({ rol }: { rol: Rol; nombre?: string; empresa?: 
         zIndex: 20,
       }}
     >
-      {/* ═══════════ Logo ═══════════ */}
       <Box
         sx={{
           flexShrink: 0,
@@ -144,7 +143,6 @@ export default function Sidebar({ rol }: { rol: Rol; nombre?: string; empresa?: 
         </Link>
       </Box>
 
-      {/* ═══════════ Navigation ═══════════ */}
       <Box
         sx={{
           flex: 1,
@@ -179,23 +177,40 @@ export default function Sidebar({ rol }: { rol: Rol; nombre?: string; empresa?: 
         )}
       </Box>
 
-      {/* Decorative circles — passive, no interaction */}
-      <Box aria-hidden sx={{ position: "absolute", bottom: 16, left: 0, right: 0, pointerEvents: "none", zIndex: 0 }}>
-        <Box sx={{
-          position: "absolute", bottom: 8, left: 12,
-          width: 40, height: 40, borderRadius: "50%",
-          bgcolor: "#8B5CF6", opacity: 0.10,
-        }} />
-        <Box sx={{
-          position: "absolute", bottom: 0, left: 36,
-          width: 28, height: 28, borderRadius: "50%",
-          bgcolor: "#FBBF24", opacity: 0.12,
-        }} />
-        <Box sx={{
-          position: "absolute", bottom: 20, left: 56,
-          width: 20, height: 20, borderRadius: "50%",
-          bgcolor: "#F472B6", opacity: 0.10,
-        }} />
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "45%",
+          zIndex: 0,
+          overflow: "hidden",
+          pointerEvents: "none",
+        }}
+      >
+        <Box
+          component="img"
+          src="https://images.pexels.com/photos/34001133/pexels-photo-34001133.jpeg?w=520&h=600"
+          alt=""
+          sx={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center top",
+            display: "block",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(to bottom, #FFFFFF 0%, rgba(255,255,255,0) 35%)",
+          }}
+        />
       </Box>
     </Box>
   )

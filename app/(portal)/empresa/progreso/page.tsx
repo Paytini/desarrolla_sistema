@@ -1,9 +1,10 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
-import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
+import { AlertCircle, BarChart3, BookOpen, CheckCircle, Search } from "lucide-react"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 
@@ -15,9 +16,16 @@ function getInitials(name: string) {
     .join("")
 }
 
-export default async function EmpresaProgresoPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
+
+  const params = await searchParams
+  const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
 
   const empresa = await prisma.empresa.findUnique({
     where: { id: session.user.empresa_id },
@@ -53,6 +61,12 @@ export default async function EmpresaProgresoPage() {
   )
 
   const empleados = empresa.empleados
+  const filteredEmpleados = searchQuery
+    ? empleados.filter((e) =>
+        `${e.nombre} ${e.apellido}`.toLowerCase().includes(searchQuery) ||
+        e.email.toLowerCase().includes(searchQuery)
+      )
+    : empleados
   const allCourses = empleados.flatMap((e) => e.cursos)
   const averageProgress = allCourses.length
     ? Math.round(allCourses.reduce((sum, c) => sum + c.progreso_pct, 0) / allCourses.length)
@@ -121,18 +135,47 @@ export default async function EmpresaProgresoPage() {
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         {/* Employee progress */}
         <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-slate-950">
-            Avance por empleado
-            <span className="ml-2 text-sm font-normal text-slate-400">{empleados.length}</span>
-          </h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-slate-950">
+              Avance por empleado
+              <span className="ml-2 text-sm font-normal text-slate-400">
+                {searchQuery ? `${filteredEmpleados.length} de ${empleados.length}` : empleados.length}
+              </span>
+            </h2>
+            <form className="flex gap-2">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="Buscar empleado..."
+                  className="w-52 rounded-xl border border-slate-200 py-1.5 pl-8 pr-3 text-sm outline-none transition focus:border-[#F5853F]"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Buscar
+              </button>
+              {searchQuery && (
+                <a
+                  href="?"
+                  className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50"
+                >
+                  Limpiar
+                </a>
+              )}
+            </form>
+          </div>
 
-          {empleados.length === 0 ? (
+          {filteredEmpleados.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-              No hay empleados activos con progreso para mostrar.
+              {searchQuery ? `Sin resultados para "${searchQuery}".` : "No hay empleados activos con progreso para mostrar."}
             </div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
-              {empleados.map((empleado) => {
+              {filteredEmpleados.map((empleado) => {
                 const courses = empleado.cursos
                 const avg = courses.length
                   ? Math.round(courses.reduce((s, c) => s + c.progreso_pct, 0) / courses.length)

@@ -5,11 +5,15 @@ export function RingChart({
   size = 56,
   sw = 6,
   color,
+  trackColor = "#E2E8F0",
+  textColor,
 }: {
   pct: number
   size?: number
   sw?: number
   color: string
+  trackColor?: string
+  textColor?: string
 }) {
   const value = Math.min(pct, 100)
   return (
@@ -19,7 +23,7 @@ export function RingChart({
         value={100}
         size={size}
         thickness={sw}
-        sx={{ position: "absolute", color: "#EFEAE3" }}
+        sx={{ position: "absolute", color: trackColor }}
       />
       <CircularProgress
         variant="determinate"
@@ -37,7 +41,7 @@ export function RingChart({
           justifyContent: "center",
         }}
       >
-        <Typography sx={{ fontSize: 11, fontWeight: 700, color: "text.primary" }}>
+        <Typography sx={{ fontSize: 11, fontWeight: 700, color: textColor ?? "text.primary" }}>
           {pct}%
         </Typography>
       </Box>
