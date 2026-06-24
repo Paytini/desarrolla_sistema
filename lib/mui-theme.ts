@@ -106,23 +106,23 @@ export const muiTheme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: '6px',
-            backgroundColor: '#F3F4F6',
-            '& fieldset': { borderColor: 'transparent', borderWidth: '2px' },
-            '&:hover fieldset': { borderColor: '#E5E7EB', borderWidth: '2px' },
-            '&.Mui-focused': { backgroundColor: '#FFFFFF' },
+            borderRadius: '8px',
+            backgroundColor: '#FFFFFF',
+            '& fieldset': { borderColor: '#E5E7EB', borderWidth: '1px' },
+            '&:hover fieldset': { borderColor: '#D1D5DB', borderWidth: '1px' },
             '&.Mui-focused fieldset': {
               borderColor: '#3B82F6',
               borderWidth: '2px',
-              boxShadow: 'none',
             },
           },
+          '& .MuiOutlinedInput-input::placeholder': { color: '#9CA3AF', opacity: 1 },
+          '& .MuiSelect-select': { backgroundColor: '#FFFFFF' },
         },
       },
     },
     MuiInputBase: {
       styleOverrides: {
-        root: { fontSize: '0.875rem', backgroundColor: '#F3F4F6' },
+        root: { fontSize: '0.875rem' },
       },
     },
     MuiInputLabel: {
