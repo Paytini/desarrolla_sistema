@@ -41,16 +41,13 @@ function AlertIcon() {
   )
 }
 
-
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail]     = useState("")
+  const [email, setEmail]       = useState("")
   const [password, setPassword] = useState("")
-  const [showPw, setShowPw]   = useState(false)
-  const [error, setError]     = useState("")
-  const [loading, setLoading] = useState(false)
-  const [btnHover, setBtnHover]   = useState(false)
-  const [btnActive, setBtnActive] = useState(false)
+  const [showPw, setShowPw]     = useState(false)
+  const [error, setError]       = useState("")
+  const [loading, setLoading]   = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -75,202 +72,147 @@ export default function LoginPage() {
     else                           setError("Rol no reconocido")
   }
 
-
-  const btnStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.5rem',
-    width: '100%',
-    padding: '12px 24px',
-    borderRadius: '9999px',
-    backgroundColor: '#F5853F',
-    color: '#FFFFFF',
-    fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
-    fontSize: '1rem',
-    fontWeight: 700,
-    border: '2px solid #1E293B',
-    boxShadow: btnActive
-      ? '2px 2px 0px 0px #1E293B'
-      : btnHover
-        ? '6px 6px 0px 0px #1E293B'
-        : '4px 4px 0px 0px #1E293B',
-    cursor: loading ? 'not-allowed' : 'pointer',
-    opacity: loading ? 0.7 : 1,
-    transition: 'transform 200ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 200ms cubic-bezier(0.34,1.56,0.64,1)',
-    transform: btnActive
-      ? 'translate(2px, 2px)'
-      : btnHover
-        ? 'translate(-2px, -2px)'
-        : 'translate(0, 0)',
-    marginTop: '0.35rem',
-  }
-
   return (
-    <div
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      style={{
-        backgroundColor: '#F8FAFC',
-        backgroundImage: 'radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px)',
-        backgroundSize: '28px 28px',
-      }}
-    >
-      <GeometricDecor
-        shapes={[
-          { type: 'circle',   color: '#8B5CF6', size: 260, top: -80,   left: -80,  opacity: 0.10 },
-          { type: 'triangle', color: '#F5853F', size: 100, top: 60,    right: 40,  opacity: 0.14, rotate: 15 },
-          { type: 'circle',   color: '#F472B6', size: 140, bottom: 60, right: -40, opacity: 0.09 },
-          { type: 'square',   color: '#34D399', size: 70,  bottom: 100,left: 40,   opacity: 0.10, rotate: 30 },
-        ]}
-      />
+    <div className="flex min-h-screen">
+      {/* Left panel — flat blue color block */}
+      <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between overflow-hidden bg-[#3B82F6] p-12">
+        <GeometricDecor
+          shapes={[
+            { type: 'circle', color: '#FFFFFF', size: 320, top: -80,    right: -80,   opacity: 0.07 },
+            { type: 'circle', color: '#FFFFFF', size: 200, bottom: 40,  left: -60,    opacity: 0.05 },
+            { type: 'square', color: '#FFFFFF', size: 120, bottom: 160, right: '10%', opacity: 0.06, rotate: 45 },
+          ]}
+        />
 
-      {/* Main layout: illustration · card · illustration */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        maxWidth: '1120px',
-        padding: '2rem 1.5rem',
-        gap: '2.5rem',
-        position: 'relative',
-        zIndex: 1,
-      }}>
-
-        {/* Left illustration */}
-        <div className="hidden lg:flex" style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/illustrations/studying.svg"
-            alt=""
-            aria-hidden
-            style={{ width: 300, height: 'auto', transform: 'scaleX(-1)', opacity: 0.92 }}
+        <div className="relative z-10">
+          <Image
+            src="/assets/logo_desarrolla_cropped.png"
+            alt="Desarrolla360"
+            width={180}
+            height={48}
+            className="h-10 w-auto object-contain"
+            style={{ filter: 'brightness(0) invert(1)' }}
+            priority
           />
         </div>
 
-        {/* Card */}
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          border: '2px solid #1E293B',
-          borderRadius: '20px',
-          boxShadow: '8px 8px 0px 0px #1E293B',
-          width: '100%',
-          maxWidth: '420px',
-          flexShrink: 0,
-          overflow: 'hidden',
-        }}>
+        <div className="relative z-10">
+          <p
+            className="text-4xl font-bold text-white leading-tight"
+            style={{ letterSpacing: '-0.02em', fontFamily: '"Outfit", system-ui, sans-serif' }}
+          >
+            Capacitación<br />con cumplimiento<br />STPS integrado.
+          </p>
+          <p className="mt-4 text-blue-100 text-base font-medium">
+            DC-3 automático · Progreso en tiempo real · Portal B2B
+          </p>
+        </div>
 
-          {/* Orange header strip with logo */}
-          <div style={{
-            backgroundColor: '#F5853F',
-            borderBottom: '2px solid #1E293B',
-            padding: '24px 40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
+        <div className="relative z-10 text-blue-200 text-xs">
+          © 2026 Desarrolla360
+        </div>
+      </div>
+
+      {/* Right panel — white form */}
+      <div className="flex flex-1 items-center justify-center bg-white px-8 py-12">
+        <div className="w-full max-w-sm">
+          {/* Mobile-only logo */}
+          <div className="flex justify-center mb-8 lg:hidden">
             <Image
               src="/assets/logo_desarrolla_cropped.png"
               alt="Desarrolla360"
-              width={200}
-              height={60}
+              width={160}
+              height={48}
               className="h-10 w-auto object-contain"
-              style={{ filter: 'brightness(0) invert(1)' }}
               priority
             />
           </div>
 
-          {/* Form body */}
-          <div style={{ padding: '36px 40px 32px' }}>
-            <header style={{ marginBottom: '28px' }}>
-              <h2 style={{
-                fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
-                fontSize: '1.875rem',
-                fontWeight: 800,
-                color: '#1E293B',
-                marginBottom: '6px',
-                lineHeight: 1.1,
-              }}>
-                Bienvenido de nuevo
-              </h2>
-              <p className="login-form-subtitle">
-                Ingresa tus credenciales para acceder a tu panel
-              </p>
-            </header>
+          <header className="mb-8">
+            <h1
+              className="text-3xl font-bold text-[#111827]"
+              style={{ letterSpacing: '-0.02em', fontFamily: '"Outfit", system-ui, sans-serif' }}
+            >
+              Bienvenido de nuevo
+            </h1>
+            <p className="mt-2 text-sm text-[#6B7280]">
+              Ingresa tus credenciales para acceder a tu panel
+            </p>
+          </header>
 
-            <form onSubmit={handleSubmit} className="login-form-body">
-              <div className="login-field-group">
-                <label htmlFor="lp-email" style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1E293B', marginBottom: '6px', display: 'block' }}>
-                  Correo electrónico
-                </label>
-                <input
-                  id="lp-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="correo@empresa.com"
-                  required
-                  autoComplete="email"
-                  className="login-field-input"
-                />
-              </div>
-
-              <div className="login-field-group">
-                <label htmlFor="lp-password" style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#1E293B', marginBottom: '6px', display: 'block' }}>
-                  Contraseña
-                </label>
-                <div className="login-pw-wrap">
-                  <input
-                    id="lp-password"
-                    type={showPw ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    autoComplete="current-password"
-                    className="login-field-input login-field-input--pw"
-                  />
-                  <button type="button" onClick={() => setShowPw((v) => !v)} className="login-pw-toggle" tabIndex={-1} aria-label={showPw ? "Ocultar contraseña" : "Ver contraseña"}>
-                    <EyeIcon open={showPw} />
-                  </button>
-                </div>
-              </div>
-
-              {error ? (
-                <div className="login-error-box" role="alert">
-                  <AlertIcon />
-                  <span>{error}</span>
-                </div>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={loading}
-                style={btnStyle}
-                onMouseEnter={() => { if (!loading) setBtnHover(true) }}
-                onMouseLeave={() => { setBtnHover(false); setBtnActive(false) }}
-                onMouseDown={() => { if (!loading) setBtnActive(true) }}
-                onMouseUp={() => setBtnActive(false)}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="lp-email"
+                className="text-[11px] font-semibold uppercase tracking-wider text-[#111827]"
               >
-                {loading ? <span className="login-btn-spinner" aria-hidden /> : <><span>Entrar al portal</span><ArrowIcon /></>}
-              </button>
-            </form>
+                Correo electrónico
+              </label>
+              <input
+                id="lp-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="correo@empresa.com"
+                required
+                autoComplete="email"
+                className="h-12 w-full rounded-md bg-gray-100 px-4 text-sm text-[#111827] outline-none placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#3B82F6] transition-all duration-200"
+              />
+            </div>
 
-            <p className="login-card-footer">© 2026 Desarrolla360 · Portal Empresarial</p>
-          </div>
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="lp-password"
+                className="text-[11px] font-semibold uppercase tracking-wider text-[#111827]"
+              >
+                Contraseña
+              </label>
+              <div className="relative">
+                <input
+                  id="lp-password"
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                  className="h-12 w-full rounded-md bg-gray-100 px-4 pr-11 text-sm text-[#111827] outline-none placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#3B82F6] transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  tabIndex={-1}
+                  aria-label={showPw ? "Ocultar contraseña" : "Ver contraseña"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <EyeIcon open={showPw} />
+                </button>
+              </div>
+            </div>
+
+            {error ? (
+              <div role="alert" className="flex items-center gap-2 rounded-md bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                <AlertIcon />
+                <span>{error}</span>
+              </div>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-1 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#3B82F6] text-sm font-semibold text-white transition-all duration-200 hover:bg-blue-600 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              {loading
+                ? <span className="d360-spinner" aria-hidden />
+                : <><span>Entrar al portal</span><ArrowIcon /></>
+              }
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-xs text-gray-400">
+            © 2026 Desarrolla360 · Portal Empresarial
+          </p>
         </div>
-
-        {/* Right illustration */}
-        <div className="hidden lg:flex" style={{ flex: 1, justifyContent: 'flex-start', alignItems: 'center' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/illustrations/certificate.svg"
-            alt=""
-            aria-hidden
-            style={{ width: 260, height: 'auto', opacity: 0.92 }}
-          />
-        </div>
-
       </div>
     </div>
   )
