@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 import { Box, Chip, Paper, Typography } from "@mui/material"
-import { pg } from "@/lib/theme-tokens"
 
 interface PanelBoxProps {
   title: string
@@ -16,9 +15,7 @@ export function PanelBox({ title, description, count, action, children, noPaddin
     <Paper
       elevation={0}
       sx={{
-        borderRadius: '16px',
-        border: `2px solid ${pg.ink}`,
-        boxShadow: pg.shadow.md,
+        borderRadius: '8px',
         overflow: 'hidden',
         backgroundColor: '#FFFFFF',
       }}
@@ -31,18 +28,18 @@ export function PanelBox({ title, description, count, action, children, noPaddin
           gap: 2,
           px: 2.5,
           py: 2,
-          backgroundColor: '#F8F4EC',
-          borderBottom: `2px solid ${pg.ink}`,
+          backgroundColor: '#F3F4F6',
+          borderBottom: '1px solid #E5E7EB',
         }}
       >
         <Box sx={{ minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography
               sx={{
-                fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+                fontFamily: '"Outfit", system-ui, sans-serif',
                 fontSize: '1rem',
                 fontWeight: 700,
-                color: 'text.primary',
+                color: '#111827',
               }}
             >
               {title}
@@ -56,16 +53,16 @@ export function PanelBox({ title, description, count, action, children, noPaddin
                   fontSize: '11px',
                   fontVariantNumeric: 'tabular-nums',
                   fontWeight: 700,
-                  backgroundColor: pg.violet,
+                  backgroundColor: '#3B82F6',
                   color: '#FFFFFF',
-                  border: `1.5px solid ${pg.ink}`,
+                  border: 'none',
                   '& .MuiChip-label': { px: 1 },
                 }}
               />
             )}
           </Box>
           {description && (
-            <Typography sx={{ mt: 0.5, fontSize: '12px', color: 'text.secondary' }}>
+            <Typography sx={{ mt: 0.5, fontSize: '12px', color: '#6B7280' }}>
               {description}
             </Typography>
           )}

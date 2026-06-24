@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
 import { Box, Paper, Typography } from "@mui/material"
-import { pg } from "@/lib/theme-tokens"
 
 type SectionCardProps = {
   title: string
@@ -15,9 +14,7 @@ export function SectionCard({ title, description, action, disableContentPadding,
     <Paper
       elevation={0}
       sx={{
-        borderRadius: '16px',
-        border: `2px solid ${pg.ink}`,
-        boxShadow: pg.shadow.md,
+        borderRadius: '8px',
         overflow: 'hidden',
         backgroundColor: '#FFFFFF',
       }}
@@ -30,23 +27,23 @@ export function SectionCard({ title, description, action, disableContentPadding,
           gap: 2,
           px: 3,
           py: 2,
-          backgroundColor: '#F8F4EC',
-          borderBottom: `2px solid ${pg.ink}`,
+          backgroundColor: '#F3F4F6',
+          borderBottom: '1px solid #E5E7EB',
         }}
       >
         <Box>
           <Typography
             sx={{
-              fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+              fontFamily: '"Outfit", system-ui, sans-serif',
               fontSize: '1rem',
               fontWeight: 700,
-              color: 'text.primary',
+              color: '#111827',
             }}
           >
             {title}
           </Typography>
           {description && (
-            <Typography sx={{ mt: 0.25, fontSize: '0.75rem', color: 'text.secondary' }}>
+            <Typography sx={{ mt: 0.25, fontSize: '0.75rem', color: '#6B7280' }}>
               {description}
             </Typography>
           )}
