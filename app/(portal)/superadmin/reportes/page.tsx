@@ -172,7 +172,6 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
         }
       />
 
-      {/* Alerts */}
       {success && (
         <Alert severity="success" icon={<CheckCircle2 size={16} />} sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}>
           {detail ? `${successMessages[success] ?? success} — ${detail}` : (successMessages[success] ?? success)}
@@ -184,7 +183,6 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
         </Alert>
       )}
 
-      {/* KPIs */}
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", lg: "repeat(4,1fr)" } }}>
         <KpiCard label="Avance promedio global"  value={`${averageProgress}%`}  sub="Promedio ponderado de cursos"   borderColor="primary" />
         <KpiCard label="Renovaciones en 30 d"    value={renewalsIn30Days}        sub="Empresas activas por vencer"    borderColor="primary" alert={renewalsIn30Days > 0} />
@@ -192,10 +190,8 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
         <KpiCard label="Empleados activos"        value={totalEmpleadosActivos}   sub="Base laboral activa total"      borderColor="primary" />
       </Box>
 
-      {/* Two-column layout */}
       <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "1fr", xl: "1fr 1fr" } }}>
 
-        {/* Vencimientos */}
         <Paper elevation={0} sx={{ overflow: "hidden", borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "background.paper" }}>
           <Box sx={{ borderBottom: "1px solid #f1f5f9", px: 3, py: 2 }}>
             <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>Control de vencimientos</Typography>
@@ -204,7 +200,6 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
             </Typography>
           </Box>
           <Box sx={{ p: 2.5, display: "grid", gap: 2 }}>
-            {/* Tramo summary */}
             <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1 }}>
               {[
                 { label: "Vencidos", value: renewalsOverdue, danger: true,  warn: false },
@@ -300,7 +295,6 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
           </Box>
         </Paper>
 
-        {/* Sync status */}
         <Paper elevation={0} sx={{ overflow: "hidden", borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "background.paper" }}>
           <Box sx={{ borderBottom: "1px solid #f1f5f9", px: 3, py: 2 }}>
             <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>
@@ -311,7 +305,6 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
             </Typography>
           </Box>
           <Box sx={{ p: 2.5, display: "grid", gap: 2 }}>
-            {/* Sync summary */}
             <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1 }}>
               {[
                 { label: "OK",      value: syncOk,      bg: "#f0fdf4", border: "#bbf7d0", color: "#16a34a" },

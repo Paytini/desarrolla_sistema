@@ -26,16 +26,12 @@ export default async function PortalLayout({
       <Sidebar rol={rol} nombre={nombre} empresa={empresa} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="relative flex h-[76px] shrink-0 items-center gap-3 border-b-2 border-[#1E293B] bg-white px-4 md:px-6">
-          {/* Mobile hamburger */}
           <MobileNav rol={rol} nombre={nombre} empresa={empresa} />
 
-          {/* Left — greeting */}
           <PortalGreeting nombre={nombre} rol={rol} />
 
-          {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Right — search + fullscreen + user menu */}
           <div className="flex shrink-0 items-center gap-2">
             {rol === "SUPERADMIN" && <SuperadminSearchBar />}
             {rol === "RH" && <RhSearchBar />}
@@ -48,8 +44,6 @@ export default async function PortalLayout({
           className="flex-1 overflow-y-auto px-8 py-7"
           style={{
             backgroundColor: '#FFFDF5',
-            // backgroundImage: 'radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px)',
-            // backgroundSize: '24px 24px',
           }}
         >
           {children}

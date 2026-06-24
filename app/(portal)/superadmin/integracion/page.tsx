@@ -59,7 +59,6 @@ export default async function SuperAdminIntegracionPage() {
         accentColor="#8B5CF6"
       />
 
-      {/* Status banner */}
       {bridgeReachable ? (
         <Alert
           severity="success"
@@ -82,7 +81,6 @@ export default async function SuperAdminIntegracionPage() {
         </Alert>
       )}
 
-      {/* Status cards */}
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
         {statusCards.map(({ label, ok, description }) => (
           <Paper
@@ -118,9 +116,7 @@ export default async function SuperAdminIntegracionPage() {
         ))}
       </Box>
 
-      {/* Bridge detail */}
       <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-        {/* Card header */}
         <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Plug size={16} style={{ color: "#F5853F" }} />

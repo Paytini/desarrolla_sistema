@@ -133,7 +133,6 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        {/* Employee progress */}
         <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-base font-semibold text-slate-950">
@@ -264,7 +263,6 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
           )}
         </section>
 
-        {/* Course summaries */}
         <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
           <h2 className="mb-4 text-base font-semibold text-slate-950">
             Resumen por curso

@@ -22,7 +22,6 @@ export default function CnoSelect({ defaultClave, defaultNombre }: Props) {
 
   const [selected, setSelected] = useState<CnoEntry | null>(initialEntry)
 
-  // Only include subareas (not area headers) as selectable options
   const options = CNO_CATALOG.filter((e) => !e.esArea)
 
   function getAreaLabel(clave: string): string {

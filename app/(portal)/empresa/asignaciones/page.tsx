@@ -153,7 +153,6 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                 <form action={assignEmployeeCoursesAction}>
                   <input type="hidden" name="empleado_id" value={empleado.id} />
 
-                  {/* Employee header */}
                   <div className="flex items-center justify-between gap-4 border-b border-[#f5f5f5] px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-xs font-bold text-[#F5853F]">
@@ -183,7 +182,6 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                     </div>
                   </div>
 
-                  {/* Course grid */}
                   <div className="grid gap-2 p-4 sm:grid-cols-2 xl:grid-cols-3">
                     {packageCourses.map((course) => (
                       <label
@@ -198,7 +196,6 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                           className="sr-only"
                         />
 
-                        {/* Thumbnail */}
                         {course.portada_url ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
@@ -212,12 +209,10 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                           </div>
                         )}
 
-                        {/* Course name */}
                         <p className="line-clamp-2 min-w-0 flex-1 text-xs font-medium leading-snug text-slate-700">
                           {course.nombre_curso}
                         </p>
 
-                        {/* Visual checkbox indicator */}
                         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-[#F5853F] group-has-[:checked]:bg-[#F5853F]">
                           <Check size={10} className="hidden text-white group-has-[:checked]:block" strokeWidth={3} />
                         </div>

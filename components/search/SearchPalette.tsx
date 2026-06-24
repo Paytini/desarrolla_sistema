@@ -45,7 +45,6 @@ export default function SearchPalette<T,>({
     navigator.platform.toUpperCase().includes("MAC")
   const kbd = isMac ? "⌘K" : "Ctrl K"
 
-  // ⌘K / Ctrl+K
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -57,7 +56,6 @@ export default function SearchPalette<T,>({
     return () => document.removeEventListener("keydown", handler)
   }, [])
 
-  // Focus input on open
   useEffect(() => {
     if (open) {
       const t = setTimeout(() => inputRef.current?.focus(), 60)
@@ -74,7 +72,6 @@ export default function SearchPalette<T,>({
         const res = await fetch(searchUrl(q))
         if (res.ok) setResults(await res.json())
       } catch {
-        // silently fail
       } finally {
         setLoading(false)
       }
@@ -137,7 +134,6 @@ export default function SearchPalette<T,>({
 
   return (
     <>
-      {/* Trigger pill */}
       <Box
         component="button"
         type="button"
@@ -200,7 +196,6 @@ export default function SearchPalette<T,>({
         </Box>
       </Box>
 
-      {/* Modal palette */}
       <Modal
         open={open}
         onClose={close}
@@ -231,7 +226,6 @@ export default function SearchPalette<T,>({
               outline: "none",
             }}
           >
-            {/* Accent bar */}
             <Box
               sx={{
                 height: 3,
@@ -240,7 +234,6 @@ export default function SearchPalette<T,>({
               }}
             />
 
-            {/* Input row */}
             <Box
               sx={{
                 display: "flex",
@@ -304,7 +297,6 @@ export default function SearchPalette<T,>({
               )}
             </Box>
 
-            {/* Results */}
             <Box
               ref={resultsRef}
               sx={{ maxHeight: 360, overflowY: "auto", overscrollBehavior: "contain" }}
@@ -323,7 +315,6 @@ export default function SearchPalette<T,>({
               )}
             </Box>
 
-            {/* Footer hints */}
             <Divider />
             <Box
               sx={{

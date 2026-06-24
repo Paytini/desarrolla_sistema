@@ -247,7 +247,6 @@ export default async function SuperadminDashboardPage() {
   })
   const totalEventos = activityRaw.length
 
-  /* ── H: Adopción de cupos por empresa ───────────────── */
   const empresasChart = empresas
     .filter((e) => e.activo && e.asientos_contratados > 0)
     .sort((a, b) => (b.asientos_usados / b.asientos_contratados) - (a.asientos_usados / a.asientos_contratados))
@@ -313,13 +312,11 @@ export default async function SuperadminDashboardPage() {
         <CompanyProgressKpi empresas={rankingEmpresas} globalAvg={globalAvg} />
       </Box>
 
-      {/* Row 3 — Activity feed + Quick actions */}
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 280px" } }}>
         <ActivityFeed items={recentEvents} />
         <QuickActions />
       </Box>
 
-      {/* Row 4 — Ocupación + Renovaciones */}
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 300px" } }}>
         <OcupacionCard ocupacionPct={ocupacionPct} empresas={empresas} />
         <RenovacionesTable renewals={renewals} />
