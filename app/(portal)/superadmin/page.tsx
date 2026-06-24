@@ -75,11 +75,12 @@ function SparklineKpi({
   return (
     <Paper
       elevation={0}
-      className="pg-hover-lift"
       sx={{
         borderRadius: '16px',
         backgroundColor: '#3B82F6',
         overflow: 'hidden',
+        transition: 'transform 200ms',
+        '&:hover': { transform: 'scale(1.02)' },
       }}
     >
       <Box sx={{ px: 3, pt: 3, pb: 2.5 }}>
@@ -124,11 +125,12 @@ function CompanyProgressKpi({
   return (
     <Paper
       elevation={0}
-      className="pg-hover-lift"
       sx={{
         borderRadius: '16px',
         backgroundColor: '#111827',
         overflow: 'hidden',
+        transition: 'transform 200ms',
+        '&:hover': { transform: 'scale(1.02)' },
       }}
     >
       <Box sx={{ px: 3, pt: 3, pb: 2.5 }}>
