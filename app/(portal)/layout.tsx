@@ -20,12 +20,12 @@ export default async function PortalLayout({
   const rol     = session.user.rol     as "SUPERADMIN" | "RH" | "EMPLEADO"
   const nombre  = session.user.nombre  as string
   const empresa = session.user.empresa as string | undefined
-
+  
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar rol={rol} nombre={nombre} empresa={empresa} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="relative flex h-[76px] shrink-0 items-center gap-3 border-b-2 border-[#1E293B] bg-white px-4 md:px-6">
+        <header className="relative flex h-16 shrink-0 items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 md:px-6">
           <MobileNav rol={rol} nombre={nombre} empresa={empresa} />
 
           <PortalGreeting nombre={nombre} rol={rol} />
@@ -40,12 +40,7 @@ export default async function PortalLayout({
             <TopbarUserMenu nombre={nombre} rol={rol} />
           </div>
         </header>
-        <main
-          className="flex-1 overflow-y-auto px-8 py-7"
-          style={{
-            backgroundColor: '#FFFDF5',
-          }}
-        >
+        <main className="flex-1 overflow-y-auto px-8 py-7 bg-[#F3F4F6]">
           {children}
         </main>
       </div>

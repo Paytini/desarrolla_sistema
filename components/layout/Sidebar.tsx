@@ -11,7 +11,6 @@ import ListItemText from "@mui/material/ListItemText"
 import Typography from "@mui/material/Typography"
 
 import {
-  defaultNavAccent,
   homeHrefForRole,
   isActive,
   navEmpleado,
@@ -23,51 +22,39 @@ import {
 
 const EW = 260
 
-const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)":            "#F5853F",
-  "var(--sidebar-accent-2)": "#34D399",
-  "var(--sidebar-accent-3)": "#8B5CF6",
-}
-const ra = (raw: string) => ACCENT_MAP[raw] ?? raw
-
-function NavItemRow({ item, pathname, accentColor }: { item: NavItem; pathname: string; accentColor: string }) {
+function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
   const active = isActive(item.href, pathname, item.exact)
-  const accent = ra(accentColor)
 
   return (
     <Link href={item.href} prefetch style={{ textDecoration: "none", color: "inherit", display: "block" }}>
       <ListItemButton
         selected={active}
         sx={{
-          borderStartStartRadius: 0,
-          borderEndStartRadius: 0,
-          borderStartEndRadius: "9999px",
-          borderEndEndRadius: "9999px",
-          mx: 0,
+          borderRadius: '8px',
+          mx: 1,
           mb: 0.5,
-          pl: "44px",
-          pr: "28px",
+          pl: "12px",
+          pr: "12px",
           py: "10px",
           minHeight: 44,
-          color: "#64748B",
-          transition: "background 0.2s ease, color 0.2s ease",
+          color: "#6B7280",
+          transition: "background-color 200ms, color 200ms",
           "&.Mui-selected": {
-            background: `linear-gradient(270deg, ${accent}, color-mix(in srgb, ${accent} 60%, white))`,
-            color: "#fff",
-            boxShadow: `3px 0px 0px 0px ${accent} inset`,
-            "& .sb-icon": { color: "#fff" },
-            "&:hover": { background: `linear-gradient(270deg, ${accent}, color-mix(in srgb, ${accent} 60%, white))` },
+            backgroundColor: '#3B82F6',
+            color: '#FFFFFF',
+            "& .sb-icon": { color: '#FFFFFF' },
+            "&:hover": { backgroundColor: '#2563EB' },
           },
           "&:hover:not(.Mui-selected)": {
-            bgcolor: "rgba(139,92,246,0.06)",
-            color: "#1E293B",
-            "& .sb-icon": { color: "#1E293B" },
+            backgroundColor: '#E5E7EB',
+            color: '#111827',
+            "& .sb-icon": { color: '#111827' },
           },
         }}
       >
         <ListItemIcon
           className="sb-icon"
-          sx={{ minWidth: 0, mr: "8px", color: "inherit", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "color 0.15s ease" }}
+          sx={{ minWidth: 0, mr: "8px", color: "inherit", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "color 200ms" }}
         >
           <i className={item.icon.replace(/-line$/, "-fill")} style={{ fontSize: "1.375rem", lineHeight: 1 }} />
         </ListItemIcon>
@@ -81,7 +68,7 @@ function NavItemRow({ item, pathname, accentColor }: { item: NavItem; pathname: 
   )
 }
 
-function SectionLabel({ heading, accent, first }: { heading: string; accent: string; first: boolean }) {
+function SectionLabel({ heading, first }: { heading: string; first: boolean }) {
   return (
     <Typography
       sx={{
@@ -89,8 +76,7 @@ function SectionLabel({ heading, accent, first }: { heading: string; accent: str
         fontWeight: 700,
         textTransform: "uppercase",
         letterSpacing: "0.12em",
-        color: ra(accent),
-        opacity: 0.6,
+        color: "#9CA3AF",
         px: "20px",
         mt: first ? 1 : 2.5,
         mb: 0.5,
@@ -117,8 +103,7 @@ export default function Sidebar({ rol }: { rol: Rol; nombre?: string; empresa?: 
         flexShrink: 0,
         display: { xs: "none", md: "flex" },
         flexDirection: "column",
-        backgroundColor: "#FFFFFF",
-        borderRight: "2px solid #1E293B",
+        backgroundColor: "#F3F4F6",
         overflow: "hidden",
         zIndex: 20,
       }}
@@ -126,11 +111,12 @@ export default function Sidebar({ rol }: { rol: Rol; nombre?: string; empresa?: 
       <Box
         sx={{
           flexShrink: 0,
-          height: 76,
+          height: 64,
           display: "flex",
           alignItems: "center",
           px: "16px",
-          borderBottom: "1px solid var(--border)",
+          backgroundColor: "#FFFFFF",
+          borderBottom: "1px solid #E5E7EB",
         }}
       >
         <Link href={homeHref} style={{ display: "block", textDecoration: "none", width: "100%" }}>
@@ -138,7 +124,7 @@ export default function Sidebar({ rol }: { rol: Rol; nombre?: string; empresa?: 
           <img
             src="/assets/logo_desarrolla_cropped.png"
             alt="Desarrolla360"
-            style={{ width: "100%", height: "auto", maxHeight: "48px", display: "block", objectFit: "contain", objectPosition: "left center" }}
+            style={{ width: "100%", height: "auto", maxHeight: "40px", display: "block", objectFit: "contain", objectPosition: "left center" }}
           />
         </Link>
       </Box>
@@ -151,66 +137,30 @@ export default function Sidebar({ rol }: { rol: Rol; nombre?: string; empresa?: 
           py: 1,
           "&::-webkit-scrollbar":       { width: 3 },
           "&::-webkit-scrollbar-track": { bgcolor: "transparent" },
-          "&::-webkit-scrollbar-thumb": { bgcolor: "var(--mui-palette-action-selected)", borderRadius: 2 },
+          "&::-webkit-scrollbar-thumb": { bgcolor: "#D1D5DB", borderRadius: 2 },
         }}
       >
         {rol === "SUPERADMIN" ? (
           navSuperAdminSections.map((section, si) => (
             <Box key={section.heading}>
-              <SectionLabel heading={section.heading} accent={section.accent} first={si === 0} />
+              <SectionLabel heading={section.heading} first={si === 0} />
               <List disablePadding>
                 {section.items.map((item) => (
-                  <NavItemRow key={item.href} item={item} pathname={pathname} accentColor={section.accent} />
+                  <NavItemRow key={item.href} item={item} pathname={pathname} />
                 ))}
               </List>
             </Box>
           ))
         ) : (
           <>
-            <SectionLabel heading={rol === "RH" ? "Menú" : "Mi espacio"} accent={defaultNavAccent} first />
+            <SectionLabel heading={rol === "RH" ? "Menú" : "Mi espacio"} first />
             <List disablePadding>
               {(rol === "RH" ? navRH : navEmpleado).map((item) => (
-                <NavItemRow key={item.href} item={item} pathname={pathname} accentColor={defaultNavAccent} />
+                <NavItemRow key={item.href} item={item} pathname={pathname} />
               ))}
             </List>
           </>
         )}
-      </Box>
-
-      <Box
-        aria-hidden
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "45%",
-          zIndex: 0,
-          overflow: "hidden",
-          pointerEvents: "none",
-        }}
-      >
-        <Box
-          component="img"
-          src="https://images.pexels.com/photos/34001133/pexels-photo-34001133.jpeg?w=520&h=600"
-          alt=""
-          sx={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center top",
-            display: "block",
-          }}
-        />
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(to bottom, #FFFFFF 0%, rgba(255,255,255,0) 35%)",
-          }}
-        />
       </Box>
     </Box>
   )
