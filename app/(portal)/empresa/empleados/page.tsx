@@ -142,7 +142,7 @@ function ManualEmployeeForm() {
         </label>
       </div>
 
-      <div className="rounded-xl border border-[#f0f0f0] bg-[#f8fafc] p-3">
+      <div className="rounded-lg bg-gray-50 p-3">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Datos para constancia DC-3</p>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
@@ -270,7 +270,7 @@ function CsvEmployeeImportForm() {
           />
         </label>
 
-        <div className="max-w-full overflow-hidden rounded-xl border border-[#f0f0f0] bg-white p-4 shadow-sm">
+        <div className="max-w-full overflow-hidden rounded-lg bg-white p-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
@@ -296,13 +296,13 @@ function CsvEmployeeImportForm() {
 
             <a
               href="/api/templates/empleados-csv"
-              className="inline-flex self-start items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-100"
+              className="inline-flex self-start items-center rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-slate-800 transition-all duration-200 hover:bg-gray-200"
             >
               Descargar plantilla CSV
             </a>
           </div>
 
-          <div className="mt-4 max-w-full overflow-x-auto rounded-xl border border-[#f0f0f0] bg-white shadow-inner">
+          <div className="mt-4 max-w-full overflow-x-auto rounded-lg bg-white">
             <table className="min-w-[1280px] border-separate border-spacing-0 text-sm">
               <thead>
                 <tr className="bg-slate-100 text-center text-xs font-semibold text-slate-500">
@@ -440,7 +440,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
         <KpiCard label="Con alertas" value={String(employeesWithAccessIssues)} sub="Error de acceso" icon={AlertCircle} borderColor="amber" />
       </div>
 
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-[#f0f0f0] bg-white px-5 py-4">
+      <div className="flex items-center justify-between gap-4 rounded-lg bg-white px-5 py-4">
         <div>
           <p className="text-sm font-semibold text-slate-950">Sincronización académica</p>
           <p className="text-xs text-slate-400">
@@ -464,7 +464,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
         />
       </section>
 
-      <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
+      <section className="rounded-lg bg-white p-5">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base font-semibold text-slate-950">
             Plantilla actual
@@ -537,7 +537,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
             return (
               <div
                 key={empleado.id}
-                className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3 transition hover:bg-slate-50/50"
+                className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
               >
                 <div
                   className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${

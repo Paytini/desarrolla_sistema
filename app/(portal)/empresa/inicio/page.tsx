@@ -47,7 +47,7 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3.5 transition hover:border-primary/30 hover:shadow-sm"
+      className="flex items-center gap-3 rounded-lg bg-white px-4 py-3.5 transition-all duration-200 hover:bg-gray-100 hover:scale-[1.02]"
     >
       <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
         <Icon size={15} strokeWidth={2} />
@@ -144,7 +144,7 @@ export default async function EmpresaInicio() {
           />
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-10 py-6">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-white px-10 py-6">
           <RingChart pct={averageProgress} />
           <p className="text-xs font-medium text-slate-500">Avance global</p>
         </div>

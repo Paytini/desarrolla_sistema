@@ -107,7 +107,7 @@ export default async function EmpresaConstanciasPage() {
       </div>
 
       <div className="space-y-5">
-        <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
+        <section className="rounded-lg bg-white p-5">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-[#1a1a1a]">
               Constancias emitidas
@@ -117,7 +117,7 @@ export default async function EmpresaConstanciasPage() {
               <a
                 href="/api/constancias/zip"
                 download
-                className="rounded-xl border border-[#f0f0f0] px-3 py-1.5 text-xs font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]"
+                className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition-all duration-200 hover:bg-gray-200"
               >
                 Descargar ZIP
               </a>
@@ -125,7 +125,7 @@ export default async function EmpresaConstanciasPage() {
           </div>
 
           {constancias.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-[#f8fafc] px-4 py-8 text-center text-sm text-[#94a3b8]">
+            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
               Aún no hay constancias emitidas para los empleados activos.
             </div>
           ) : (
@@ -135,7 +135,7 @@ export default async function EmpresaConstanciasPage() {
                 return (
                   <div
                     key={constancia.id}
-                    className="flex items-center gap-3 rounded-xl border border-[#f0f0f0] bg-white px-4 py-3 transition hover:bg-[#f8fafc]"
+                    className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
                   >
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-xs font-bold text-[#F5853F]">
                       {initials}
@@ -158,7 +158,7 @@ export default async function EmpresaConstanciasPage() {
                           href={constancia.wp_cert_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="rounded-xl border border-[#f0f0f0] px-3 py-1.5 text-xs font-semibold text-[#1a1a1a] transition hover:bg-[#f8fafc]"
+                          className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition-all duration-200 hover:bg-gray-200"
                         >
                           Ver
                         </a>
@@ -179,7 +179,7 @@ export default async function EmpresaConstanciasPage() {
           )}
         </section>
 
-        <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
+        <section className="rounded-lg bg-white p-5">
           <h2 className="mb-4 text-base font-semibold text-[#1a1a1a]">
             Pendientes por aparecer
             <span className="ml-2 text-sm font-normal text-[#94a3b8]">

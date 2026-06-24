@@ -133,7 +133,7 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
+        <section className="rounded-lg bg-white p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-base font-semibold text-slate-950">
               Avance por empleado
@@ -169,7 +169,7 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
           </div>
 
           {filteredEmpleados.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
               {searchQuery ? `Sin resultados para "${searchQuery}".` : "No hay empleados activos con progreso para mostrar."}
             </div>
           ) : (
@@ -220,7 +220,7 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
                 return (
                   <div
                     key={empleado.id}
-                    className="rounded-xl border border-[#f0f0f0] bg-slate-50/40 p-4"
+                    className="rounded-lg bg-gray-50 p-4"
                   >
                     <div className="mb-3 flex items-center gap-2.5">
                       <div
@@ -263,14 +263,14 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
           )}
         </section>
 
-        <section className="rounded-xl border border-[#f0f0f0] bg-white p-5">
+        <section className="rounded-lg bg-white p-5">
           <h2 className="mb-4 text-base font-semibold text-slate-950">
             Resumen por curso
             <span className="ml-2 text-sm font-normal text-slate-400">{courseSummaries.length}</span>
           </h2>
 
           {courseSummaries.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
               Aún no hay cursos sincronizados.
             </div>
           ) : (
@@ -278,7 +278,7 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
               {courseSummaries.map((course) => {
                 const thumb = thumbnailMap.get(course.courseId)
                 return (
-                  <div key={course.courseId} className="overflow-hidden rounded-xl border border-[#f0f0f0] bg-white">
+                  <div key={course.courseId} className="overflow-hidden rounded-lg bg-white">
                     {thumb ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={thumb} alt="" className="h-[90px] w-full object-cover" />

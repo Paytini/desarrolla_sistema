@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
 import { Box, Paper, Stack, Typography } from "@mui/material"
-import { pg } from "@/lib/theme-tokens"
 import { getSuperadminEmpresasSnapshot, getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
@@ -79,8 +78,6 @@ function SparklineKpi({
       className="pg-hover-lift"
       sx={{
         borderRadius: '16px',
-        border: `2px solid ${pg.ink}`,
-        boxShadow: pg.shadow.md,
         backgroundColor: '#3B82F6',
         overflow: 'hidden',
       }}
@@ -130,9 +127,7 @@ function CompanyProgressKpi({
       className="pg-hover-lift"
       sx={{
         borderRadius: '16px',
-        border: `2px solid ${pg.ink}`,
-        boxShadow: pg.shadow.md,
-        backgroundColor: pg.ink,
+        backgroundColor: '#111827',
         overflow: 'hidden',
       }}
     >

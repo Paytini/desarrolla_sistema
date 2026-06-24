@@ -135,7 +135,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
           </div>
 
           {empleados.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-white px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
               {searchQuery ? `Sin resultados para "${searchQuery}".` : "No hay empleados activos para asignar cursos."}
             </div>
           ) : null}
@@ -148,7 +148,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
             return (
               <article
                 key={empleado.id}
-                className="overflow-hidden rounded-2xl border border-[#ebebeb] bg-white shadow-sm"
+                className="overflow-hidden rounded-lg bg-white"
               >
                 <form action={assignEmployeeCoursesAction}>
                   <input type="hidden" name="empleado_id" value={empleado.id} />
