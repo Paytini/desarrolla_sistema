@@ -1,3 +1,14 @@
+export const fd = {
+  primary:    '#3B82F6',
+  secondary:  '#10B981',
+  accent:     '#F59E0B',
+  muted:      '#F3F4F6',
+  border:     '#E5E7EB',
+  foreground: '#111827',
+  background: '#FFFFFF',
+} as const
+
+// Legacy — will be removed in Task 9 after all consumers are migrated
 export const pg = {
   orange:  '#F5853F',
   violet:  '#8B5CF6',
