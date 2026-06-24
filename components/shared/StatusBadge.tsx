@@ -10,12 +10,12 @@ type StatusBadgeProps = {
 }
 
 const variantColors: Record<BadgeVariant, { bg: string; color: string; dot: string }> = {
-  green:  { bg: "#DCFCE7", color: "#15803D", dot: "#34D399" },
-  amber:  { bg: "#FEF9C3", color: "#854D0E", dot: "#FBBF24" },
-  red:    { bg: "#FEE2E2", color: "#B91C1C", dot: "#EF4444" },
+  green:  { bg: "#D1FAE5", color: "#065F46", dot: "#10B981" },
+  amber:  { bg: "#FEF3C7", color: "#92400E", dot: "#F59E0B" },
+  red:    { bg: "#FEE2E2", color: "#991B1B", dot: "#EF4444" },
   slate:  { bg: "#F1F5F9", color: "#475569", dot: "#94A3B8" },
-  blue:   { bg: "#EDE9FE", color: "#5B21B6", dot: "#8B5CF6" },
-  orange: { bg: "#FFEDD5", color: "#9A3412", dot: "#F5853F" },
+  blue:   { bg: "#DBEAFE", color: "#1D4ED8", dot: "#3B82F6" },
+  orange: { bg: "#FEF3C7", color: "#92400E", dot: "#F59E0B" },
 }
 
 export default function StatusBadge({ variant, children, dot }: StatusBadgeProps) {
@@ -36,7 +36,7 @@ export default function StatusBadge({ variant, children, dot }: StatusBadgeProps
       sx={{
         height: 24,
         borderRadius: "9999px",
-        border: "2px solid #1E293B",
+        border: "none",
         bgcolor: c.bg,
         color: c.color,
         fontSize: "11px",
