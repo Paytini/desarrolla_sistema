@@ -1,6 +1,6 @@
 import { Paper, Box, Typography } from "@mui/material"
 import { RingChart } from "@/components/shared/RingChart"
-import { pg } from "@/lib/theme-tokens"
+import { fd } from "@/lib/theme-tokens"
 import type { LucideIcon } from "lucide-react"
 
 export type KpiBorderColor =
@@ -17,38 +17,37 @@ type KpiCardProps = {
   ring?: number
 }
 
-const accentMap: Record<KpiBorderColor, { bg: string; text: string; lightBg: string }> = {
-  violet:      { bg: '#8B5CF6', text: '#FFFFFF', lightBg: '#F5F3FF' },
-  pink:        { bg: '#F472B6', text: '#FFFFFF', lightBg: '#FDF2F8' },
-  amber:       { bg: '#FBBF24', text: pg.ink,    lightBg: '#FFFBEB' },
-  emerald:     { bg: '#34D399', text: pg.ink,    lightBg: '#ECFDF5' },
-  charcoal:    { bg: pg.ink,    text: '#FFFFFF', lightBg: '#F8FAFC' },
-  blue:        { bg: '#3B82F6', text: '#FFFFFF', lightBg: '#EFF6FF' },
-  green:       { bg: '#34D399', text: pg.ink,    lightBg: '#ECFDF5' },
-  orange:      { bg: pg.orange, text: '#FFFFFF', lightBg: '#FFF7ED' },
-  rose:        { bg: '#EF4444', text: '#FFFFFF', lightBg: '#FEF2F2' },
-  primary:     { bg: '#8B5CF6', text: '#FFFFFF', lightBg: '#F5F3FF' },
-  destructive: { bg: '#EF4444', text: '#FFFFFF', lightBg: '#FEF2F2' },
+const accentMap: Record<KpiBorderColor, { bg: string; text: string }> = {
+  violet:      { bg: '#8B5CF6', text: '#FFFFFF' },
+  pink:        { bg: '#F472B6', text: '#FFFFFF' },
+  amber:       { bg: '#F59E0B', text: fd.foreground },
+  emerald:     { bg: '#10B981', text: fd.foreground },
+  charcoal:    { bg: fd.foreground, text: '#FFFFFF' },
+  blue:        { bg: '#3B82F6', text: '#FFFFFF' },
+  green:       { bg: '#10B981', text: fd.foreground },
+  orange:      { bg: '#F59E0B', text: fd.foreground },
+  rose:        { bg: '#EF4444', text: '#FFFFFF' },
+  primary:     { bg: '#3B82F6', text: '#FFFFFF' },
+  destructive: { bg: '#EF4444', text: '#FFFFFF' },
 }
 
 export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "violet", alert = false, ring }: KpiCardProps) {
   const { bg, text } = accentMap[alert ? "destructive" : borderColor]
 
-  const isLight      = text === pg.ink
-  const textSecondary = isLight ? 'rgba(30,41,59,0.6)' : 'rgba(255,255,255,0.7)'
-  const ringArc      = isLight ? 'rgba(30,41,59,0.75)' : 'rgba(255,255,255,0.92)'
-  const ringTrack    = isLight ? 'rgba(30,41,59,0.15)' : 'rgba(255,255,255,0.22)'
+  const isLight       = text === fd.foreground
+  const textSecondary = isLight ? 'rgba(17,24,39,0.6)' : 'rgba(255,255,255,0.7)'
+  const ringArc       = isLight ? 'rgba(17,24,39,0.75)' : 'rgba(255,255,255,0.92)'
+  const ringTrack     = isLight ? 'rgba(17,24,39,0.15)' : 'rgba(255,255,255,0.22)'
 
   return (
     <Paper
       elevation={0}
-      className="pg-hover-lift"
       sx={{
-        borderRadius: '16px',
-        border: `2px solid ${pg.ink}`,
-        boxShadow: pg.shadow.md,
+        borderRadius: '8px',
         backgroundColor: bg,
         overflow: 'hidden',
+        transition: 'transform 200ms',
+        '&:hover': { transform: 'scale(1.02)' },
       }}
     >
       <Box sx={{ px: 3, pt: 3, pb: 2.5 }}>
@@ -63,7 +62,6 @@ export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "
                 borderRadius: '50%',
                 bgcolor: 'rgba(255,255,255,0.2)',
                 color: text,
-                border: `2px solid ${isLight ? 'rgba(30,41,59,0.25)' : 'rgba(255,255,255,0.35)'}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -89,7 +87,7 @@ export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "
 
         <Typography
           sx={{
-            fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
+            fontFamily: '"Outfit", system-ui, sans-serif',
             fontSize: '2rem',
             fontWeight: 800,
             lineHeight: 1.1,
