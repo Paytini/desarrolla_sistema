@@ -188,7 +188,7 @@ export default async function EmpresaConstanciasPage() {
           </h2>
 
           {pendingCertificates.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#f0f0f0] bg-[#f8fafc] px-4 py-5 text-center text-sm text-[#64748b]">
+            <div className="rounded-lg bg-gray-50 px-4 py-5 text-center text-sm text-gray-400">
               Todo lo emitido ya está reflejado. No hay pendientes.
             </div>
           ) : (
