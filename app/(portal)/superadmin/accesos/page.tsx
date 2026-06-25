@@ -7,7 +7,7 @@ import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { AccesosTabs, type EmployeeAccessRow, type RhAccessRow } from "@/components/superadmin/AccesosTabs"
-import { PageHeader } from "@/components/superadmin/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 
 const successMessages: Record<string, string> = {
   rh_suspendido: "Usuario RH suspendido.",
@@ -66,10 +66,8 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
   return (
     <Stack spacing={3}>
       <PageHeader
-        breadcrumb="SuperAdmin · Sistema"
         title="Control de accesos"
         description="Administra usuarios RH, empleados activos y suspensiones."
-        accentColor="#8B5CF6"
       />
 
       {success && (

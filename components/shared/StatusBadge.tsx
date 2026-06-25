@@ -1,7 +1,7 @@
 import Chip from "@mui/material/Chip"
 import Box from "@mui/material/Box"
 
-type BadgeVariant = "green" | "amber" | "red" | "slate" | "blue" | "orange"
+type BadgeVariant = "green" | "amber" | "red" | "slate" | "blue"
 
 type StatusBadgeProps = {
   variant: BadgeVariant
@@ -10,12 +10,11 @@ type StatusBadgeProps = {
 }
 
 const variantColors: Record<BadgeVariant, { bg: string; color: string; dot: string }> = {
-  green:  { bg: "#D1FAE5", color: "#065F46", dot: "#10B981" },
-  amber:  { bg: "#FEF3C7", color: "#92400E", dot: "#F59E0B" },
-  red:    { bg: "#FEE2E2", color: "#991B1B", dot: "#EF4444" },
-  slate:  { bg: "#F1F5F9", color: "#475569", dot: "#94A3B8" },
-  blue:   { bg: "#DBEAFE", color: "#1D4ED8", dot: "#3B82F6" },
-  orange: { bg: "#FEF3C7", color: "#92400E", dot: "#F59E0B" },
+  green: { bg: "#D1FAE5", color: "#065F46", dot: "#10B981" },
+  amber: { bg: "#FEF3C7", color: "#92400E", dot: "#F59E0B" },
+  red:   { bg: "#FEE2E2", color: "#991B1B", dot: "#EF4444" },
+  slate: { bg: "#F1F5F9", color: "#475569", dot: "#94A3B8" },
+  blue:  { bg: "#DBEAFE", color: "#1D4ED8", dot: "#3B82F6" },
 }
 
 export default function StatusBadge({ variant, children, dot }: StatusBadgeProps) {

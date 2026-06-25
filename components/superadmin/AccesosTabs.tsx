@@ -20,6 +20,7 @@ import {
 import { alpha } from "@mui/material/styles"
 import { Pause, Play, Trash2, Users, UserX, type LucideIcon } from "lucide-react"
 import { ConfirmIconButton } from "@/components/shared/ConfirmIconButton"
+import { SearchInput } from "@/components/shared/SearchInput"
 import { getInitials } from "@/components/layout/nav-config"
 import { deleteEmployeeAsSuperAdminAction, toggleRhUserStatusAction } from "@/app/(portal)/superadmin/accesos/actions"
 
@@ -182,23 +183,58 @@ type AccesosTabsProps = {
 }
 
 export function AccesosTabs({ rhUsers, employees }: AccesosTabsProps) {
-  const [tab, setTab] = useState<"rh" | "empleados">("rh")
+  const [tab, setTab]         = useState<"rh" | "empleados">("rh")
+  const [rhSearch, setRhSearch]   = useState("")
+  const [empSearch, setEmpSearch] = useState("")
+
+  const filteredRh = rhSearch.trim()
+    ? rhUsers.filter((u) => {
+        const q = rhSearch.toLowerCase()
+        return (
+          u.nombre.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          u.empresaNombre.toLowerCase().includes(q)
+        )
+      })
+    : rhUsers
+
+  const filteredEmp = empSearch.trim()
+    ? employees.filter((e) => {
+        const q = empSearch.toLowerCase()
+        return (
+          e.nombre.toLowerCase().includes(q) ||
+          e.apellido.toLowerCase().includes(q) ||
+          e.email.toLowerCase().includes(q) ||
+          e.empresaNombre.toLowerCase().includes(q)
+        )
+      })
+    : employees
 
   return (
-    <Paper variant="outlined" sx={{ borderRadius: 0, p: 2.5, boxShadow: 1 }}>
-      <Tabs value={tab} onChange={(_, value: "rh" | "empleados") => setTab(value)}>
+    <Paper elevation={0} sx={{ borderRadius: '8px', backgroundColor: '#FFFFFF' }}>
+      <Tabs value={tab} onChange={(_, value: "rh" | "empleados") => setTab(value)} sx={{ px: 2.5, pt: 1, borderBottom: '1px solid #E5E7EB' }}>
         <Tab value="rh" label={`Usuarios RH (${rhUsers.length})`} />
         <Tab value="empleados" label={`Empleados (${employees.length})`} />
       </Tabs>
 
       {tab === "rh" && (
-        <Stack spacing={2} sx={{ mt: 3 }}>
-          <SectionHeader
-            title="Usuarios RH por empresa"
-            description="Pausa o reactiva accesos sin necesidad de eliminar la cuenta."
-          />
+        <Stack spacing={2} sx={{ p: 2.5 }}>
+          <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+            <SectionHeader
+              title="Usuarios RH por empresa"
+              description="Pausa o reactiva accesos sin necesidad de eliminar la cuenta."
+            />
+            <SearchInput
+              value={rhSearch}
+              onChange={setRhSearch}
+              placeholder="Buscar por nombre, email o empresa…"
+              width={280}
+            />
+          </Box>
           {rhUsers.length === 0 ? (
             <EmptyState icon={Users} label="Aún no hay usuarios RH registrados." />
+          ) : filteredRh.length === 0 ? (
+            <EmptyState icon={Users} label={`Sin resultados para "${rhSearch}".`} />
           ) : (
             <Table>
               <TableHead>
@@ -213,7 +249,7 @@ export function AccesosTabs({ rhUsers, employees }: AccesosTabsProps) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rhUsers.map((user) => (
+                {filteredRh.map((user) => (
                   <TableRow key={user.id} hover>
                     <TableCell sx={cellSx}>
                       <RowIdentity name={user.nombre} email={user.email} avatarLabel={user.nombre} />
@@ -239,8 +275,9 @@ export function AccesosTabs({ rhUsers, employees }: AccesosTabsProps) {
                     </TableCell>
                     <TableCell sx={{ ...cellSx, textAlign: "right" }}>
                       <ConfirmIconButton
+                        showLabel
                         tone={user.activo ? "outline" : "brand"}
-                        icon={user.activo ? <Pause size={14} /> : <Play size={14} />}
+                        icon={user.activo ? <Pause size={13} /> : <Play size={13} />}
                         label={user.activo ? "Suspender" : "Reactivar"}
                         title={user.activo ? `¿Suspender a ${user.nombre}?` : `¿Reactivar a ${user.nombre}?`}
                         description={
@@ -262,13 +299,23 @@ export function AccesosTabs({ rhUsers, employees }: AccesosTabsProps) {
       )}
 
       {tab === "empleados" && (
-        <Stack spacing={2} sx={{ mt: 3 }}>
-          <SectionHeader
-            title="Empleados del portal"
-            description="Elimina accesos cuando sea necesario liberar una cuenta."
-          />
+        <Stack spacing={2} sx={{ p: 2.5 }}>
+          <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+            <SectionHeader
+              title="Empleados del portal"
+              description="Elimina accesos cuando sea necesario liberar una cuenta."
+            />
+            <SearchInput
+              value={empSearch}
+              onChange={setEmpSearch}
+              placeholder="Buscar por nombre, email o empresa…"
+              width={280}
+            />
+          </Box>
           {employees.length === 0 ? (
             <EmptyState icon={UserX} label="Aún no hay empleados registrados." />
+          ) : filteredEmp.length === 0 ? (
+            <EmptyState icon={UserX} label={`Sin resultados para "${empSearch}".`} />
           ) : (
             <Table>
               <TableHead>
@@ -284,7 +331,7 @@ export function AccesosTabs({ rhUsers, employees }: AccesosTabsProps) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {employees.map((emp) => (
+                {filteredEmp.map((emp) => (
                   <TableRow key={emp.id} hover>
                     <TableCell sx={cellSx}>
                       <RowIdentity
@@ -325,8 +372,9 @@ export function AccesosTabs({ rhUsers, employees }: AccesosTabsProps) {
                     </TableCell>
                     <TableCell sx={{ ...cellSx, textAlign: "right" }}>
                       <ConfirmIconButton
+                        showLabel
                         tone="outline-destructive"
-                        icon={<Trash2 size={14} />}
+                        icon={<Trash2 size={13} />}
                         label="Eliminar"
                         title={`¿Eliminar a ${emp.nombre} ${emp.apellido}?`}
                         description="Esta acción eliminará al empleado del portal y también intentará remover su usuario en WordPress/Tutor LMS."

@@ -1,5 +1,6 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
+import { RingChart } from "@/components/shared/RingChart"
 import StatusBadge from "@/components/shared/StatusBadge"
 import EmployeeLearningRefresh from "@/components/empleado/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
@@ -33,28 +34,6 @@ function getCourseUrl(
   return siteUrl ? `${siteUrl}/?p=${courseId}` : null
 }
 
-function RingChart({ pct }: { pct: number }) {
-  const r     = 28
-  const circ  = 2 * Math.PI * r
-  const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 80 ? "#F5853F" : pct >= 40 ? "#f59e0b" : "#f43f5e"
-  return (
-    <svg width={72} height={72} viewBox="0 0 72 72" aria-hidden="true">
-      <circle cx={36} cy={36} r={r} fill="none" stroke="#e2e8f0" strokeWidth={7} />
-      <circle
-        cx={36} cy={36} r={r}
-        fill="none" stroke={color} strokeWidth={7}
-        strokeLinecap="round"
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
-        transform="rotate(-90 36 36)"
-      />
-      <text x={36} y={40} textAnchor="middle" fill="#1a1a1a" fontSize={13} fontWeight={700}>
-        {pct}%
-      </text>
-    </svg>
-  )
-}
 
 export default async function EmpleadoCursos() {
   const session = await getSession()
@@ -182,7 +161,12 @@ export default async function EmpleadoCursos() {
           </Typography>
           <Typography sx={{ mt: 0.5, fontSize: 11, color: "#64748b" }}>promedio</Typography>
           <Box sx={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
-            <RingChart pct={avancePromedio} />
+            <RingChart
+              pct={avancePromedio}
+              size={72}
+              sw={7}
+              color={avancePromedio >= 80 ? "#10B981" : avancePromedio >= 40 ? "#F59E0B" : "#EF4444"}
+            />
           </Box>
         </Paper>
       </Box>

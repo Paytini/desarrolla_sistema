@@ -1,7 +1,8 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
-import { AlertCircle, BarChart3, BookOpen, CheckCircle, Search } from "lucide-react"
+import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
+import { SearchInput } from "@/components/shared/SearchInput"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
@@ -142,25 +143,22 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
               </span>
             </h2>
             <form className="flex gap-2">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  name="q"
-                  defaultValue={searchQuery}
-                  placeholder="Buscar empleado..."
-                  className="w-52 rounded-xl border border-slate-200 py-1.5 pl-8 pr-3 text-sm outline-none transition focus:border-[#F5853F]"
-                />
-              </div>
+              <SearchInput
+                name="q"
+                defaultValue={searchQuery}
+                placeholder="Buscar empleado..."
+                width={208}
+              />
               <button
                 type="submit"
-                className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
               >
                 Buscar
               </button>
               {searchQuery && (
                 <a
                   href="?"
-                  className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50"
+                  className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
                 >
                   Limpiar
                 </a>

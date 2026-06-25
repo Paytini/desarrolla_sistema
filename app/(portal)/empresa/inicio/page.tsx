@@ -1,37 +1,11 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
+import { RingChart } from "@/components/shared/RingChart"
 import { Award, BarChart3, ChevronRight, ClipboardList, Package, Users, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
-
-function RingChart({ pct }: { pct: number }) {
-  const r = 38
-  const circ = 2 * Math.PI * r
-  const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 80 ? "#F5853F" : pct >= 50 ? "#f59e0b" : "#f43f5e"
-  return (
-    <svg width={96} height={96} viewBox="0 0 96 96" aria-hidden="true">
-      <circle cx={48} cy={48} r={r} fill="none" stroke="#e2e8f0" strokeWidth={9} />
-      <circle
-        cx={48}
-        cy={48}
-        r={r}
-        fill="none"
-        stroke={color}
-        strokeWidth={9}
-        strokeLinecap="round"
-        strokeDasharray={circ}
-        strokeDashoffset={offset}
-        transform="rotate(-90 48 48)"
-      />
-      <text x={48} y={53} textAnchor="middle" fill="#0f172a" fontSize={16} fontWeight={700}>
-        {pct}%
-      </text>
-    </svg>
-  )
-}
 
 function QuickLink({
   href,
@@ -145,7 +119,12 @@ export default async function EmpresaInicio() {
         </div>
 
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-white px-10 py-6">
-          <RingChart pct={averageProgress} />
+          <RingChart
+            pct={averageProgress}
+            size={96}
+            sw={9}
+            color={averageProgress >= 80 ? "#10B981" : averageProgress >= 50 ? "#F59E0B" : "#EF4444"}
+          />
           <p className="text-xs font-medium text-slate-500">Avance global</p>
         </div>
       </div>

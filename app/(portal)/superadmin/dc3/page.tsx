@@ -3,7 +3,7 @@ import { getSuperadminDc3Snapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
-import { PageHeader } from "@/components/superadmin/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { FileText } from "lucide-react"
 import { redirect } from "next/navigation"
 import { saveDc3MetadataAction, syncDc3MetadataAction } from "./actions"
@@ -49,10 +49,8 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        breadcrumb="SuperAdmin · Operaciones"
         title="Editor DC-3"
         description="Configura la metadata oficial STPS por curso para emitir constancias DC-3 correctas."
-        accentColor="#8B5CF6"
       />
 
       {total === 0 ? (

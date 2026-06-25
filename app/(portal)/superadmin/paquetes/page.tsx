@@ -1,6 +1,6 @@
 import { PaqueteCard } from "@/components/superadmin/PaqueteCard"
 import { PanelBox } from "@/components/superadmin/PanelBox"
-import { PageHeader } from "@/components/superadmin/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { AlertCircle, CheckCircle2, Package, Plus, RotateCw } from "lucide-react"
@@ -75,10 +75,8 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        breadcrumb="SuperAdmin · Operaciones"
         title="Gestión de paquetes"
         description="Define paquetes con cursos de Tutor LMS, asígnalos a empresas y sincroniza empleados."
-        accentColor="#8B5CF6"
         action={
           <Link href="/superadmin/paquetes/nuevo" style={{ textDecoration: "none" }}>
             <Button

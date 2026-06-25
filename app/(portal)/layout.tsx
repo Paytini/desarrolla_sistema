@@ -23,7 +23,7 @@ export default async function PortalLayout({
   
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar rol={rol} nombre={nombre} empresa={empresa} />
+      <Sidebar rol={rol} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="relative flex h-16 shrink-0 items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 md:px-6">
           <MobileNav rol={rol} nombre={nombre} empresa={empresa} />

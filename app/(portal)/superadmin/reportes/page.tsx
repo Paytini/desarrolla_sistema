@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { PageHeader } from "@/components/superadmin/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { SubmitButton } from "@/components/superadmin/SubmitButton"
 import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react"
 import KpiCard from "@/components/shared/KpiCard"
@@ -158,10 +158,8 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        breadcrumb="SuperAdmin · Operaciones"
         title="Reportes globales"
         description="Vista ejecutiva de vencimientos, sincronización y salud académica por empresa."
-        accentColor="#8B5CF6"
         action={
           <form action={triggerGlobalLearningSyncAction}>
             <SubmitButton>

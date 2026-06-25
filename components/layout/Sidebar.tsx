@@ -88,7 +88,7 @@ function SectionLabel({ heading, first }: { heading: string; first: boolean }) {
   )
 }
 
-export default function Sidebar({ rol }: { rol: Rol; nombre?: string; empresa?: string }) {
+export default function Sidebar({ rol }: { rol: Rol }) {
   const pathname = usePathname()
   const homeHref = homeHrefForRole(rol)
 

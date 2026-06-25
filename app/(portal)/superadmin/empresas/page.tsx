@@ -2,20 +2,19 @@ import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
 import { EmpresaRow } from "@/components/superadmin/EmpresaRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
-import { PageHeader } from "@/components/superadmin/PageHeader"
-import { AlertCircle, Building2, CheckCircle2, Plus, Search, X } from "lucide-react"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { AlertCircle, Building2, CheckCircle2, Plus, X } from "lucide-react"
 import Link from "next/link"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
-import InputAdornment from "@mui/material/InputAdornment"
 import Table from "@mui/material/Table"
 import TableBody from "@mui/material/TableBody"
 import TableCell from "@mui/material/TableCell"
 import TableHead from "@mui/material/TableHead"
 import TableRow from "@mui/material/TableRow"
-import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
+import { SearchInput } from "@/components/shared/SearchInput"
 
 const successMessages: Record<string, string> = {
   empresa_creada:     "Empresa creada correctamente con su usuario RH inicial.",
@@ -88,7 +87,6 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
       <PageHeader
         title="Empresas clientes"
         description="Gestiona las organizaciones activas en la plataforma."
-        accentColor="#8B5CF6"
         action={
           <Link href="/superadmin/empresas/nueva" style={{ textDecoration: 'none' }}>
             <Button
@@ -136,24 +134,11 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
 
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1.5 }}>
         <Box component="form" method="GET" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
-          <TextField
+          <SearchInput
             name="q"
             defaultValue={q}
             placeholder="Buscar empresa o RFC…"
-            size="small"
-            sx={{ 
-               bgcolor: '#FFFFFF',
-              width: 224 
-            }}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search size={14} style={{ color: "#94a3b8" }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
+            width={224}
           />
           <Box
             component="select"

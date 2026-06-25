@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
 import { getTutorLearningWebhookDiagnostics } from "@/lib/webhook-monitor"
-import { PageHeader } from "@/components/superadmin/PageHeader"
+import { PageHeader } from "@/components/shared/PageHeader"
 import { CheckCircle2, Plug, XCircle } from "lucide-react"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
@@ -53,10 +53,8 @@ export default async function SuperAdminIntegracionPage() {
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        breadcrumb="SuperAdmin · Sistema"
         title="Integración WordPress / Tutor"
         description="Diagnóstico del bridge, webhook académico y último evento recibido."
-        accentColor="#8B5CF6"
       />
 
       {bridgeReachable ? (

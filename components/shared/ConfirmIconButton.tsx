@@ -20,6 +20,7 @@ type ConfirmIconButtonProps = {
   icon: ReactNode
   label: string
   tone?: ConfirmIconButtonTone
+  showLabel?: boolean
   title: string
   description: string
   confirmLabel: string
@@ -48,10 +49,17 @@ const toneSx: Record<ConfirmIconButtonTone, SystemStyleObject<Theme>> = {
   },
 }
 
+const toneButtonProps: Record<ConfirmIconButtonTone, { variant: "contained" | "outlined"; color: "primary" | "inherit" | "error" }> = {
+  brand:                 { variant: "contained", color: "primary" },
+  outline:               { variant: "outlined",  color: "inherit" },
+  "outline-destructive": { variant: "outlined",  color: "error" },
+}
+
 export function ConfirmIconButton({
   icon,
   label,
   tone = "outline",
+  showLabel = false,
   title,
   description,
   confirmLabel,
@@ -60,19 +68,33 @@ export function ConfirmIconButton({
   hiddenFields,
 }: ConfirmIconButtonProps) {
   const [open, setOpen] = useState(false)
+  const { variant, color } = toneButtonProps[tone]
 
   return (
     <>
-      <Tooltip title={label}>
-        <IconButton
-          aria-label={label}
+      {showLabel ? (
+        <Button
           size="small"
+          variant={variant}
+          color={color}
+          startIcon={icon}
           onClick={() => setOpen(true)}
-          sx={[{ width: 32, height: 32 }, toneSx[tone]]}
+          sx={{ fontSize: "0.8125rem", fontWeight: 600, whiteSpace: "nowrap" }}
         >
-          {icon}
-        </IconButton>
-      </Tooltip>
+          {label}
+        </Button>
+      ) : (
+        <Tooltip title={label}>
+          <IconButton
+            aria-label={label}
+            size="small"
+            onClick={() => setOpen(true)}
+            sx={[{ width: 32, height: 32 }, toneSx[tone]]}
+          >
+            {icon}
+          </IconButton>
+        </Tooltip>
+      )}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
