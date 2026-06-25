@@ -1,5 +1,5 @@
 import { PageSkeleton } from "@/components/shared/PageSkeleton"
 
-export default function PortalLoading() {
+export default function InicioLoading() {
   return <PageSkeleton />
 }

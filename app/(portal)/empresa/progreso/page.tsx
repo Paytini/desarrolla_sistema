@@ -124,7 +124,12 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Progreso" description="Avance y actividad de cursos por colaborador" accentColor="#F5853F" />
+      <PageHeader
+        title="Progreso"
+        description="Avance y actividad de cursos por colaborador"
+        accentColor="#F5853F"
+        breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Progreso" }]}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Avance promedio" value={`${averageProgress}%`} sub="Todos los cursos" icon={BarChart3} borderColor="orange" />

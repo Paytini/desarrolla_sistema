@@ -32,6 +32,7 @@ export default async function EmpleadoConstanciasPage() {
         title="Mis constancias"
         description="Evidencia DC-3 oficial STPS de tus cursos completados"
         accentColor="#34D399"
+        breadcrumbs={[{ label: "Mi espacio" }, { label: "Constancias" }]}
       />
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
@@ -194,7 +195,7 @@ export default async function EmpleadoConstanciasPage() {
                         "&:hover": { bgcolor: "#D96B20" },
                       }}
                     >
-                      DC-3
+                      Descargar DC-3
                     </Button>
                   </Box>
                 </Box>

@@ -6,6 +6,7 @@ import EmployeeLearningRefresh from "@/components/empleado/EmployeeLearningRefre
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCourseRecord } from "@/lib/learning-types"
+import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import {
   buildWordPressCourseLaunchUrl,
@@ -73,7 +74,6 @@ export default async function EmpleadoCursos() {
 
   if (session.user.empresa_id) {
     try {
-      const { prisma } = await import("@/lib/prisma")
       const pkg = await prisma.empresa.findUnique({
         where: { id: session.user.empresa_id },
         select: {
@@ -101,7 +101,6 @@ export default async function EmpleadoCursos() {
 
   if (session.user.empresa_id && cursos.length > 0) {
     try {
-      const { prisma } = await import("@/lib/prisma")
       const wpIds = cursos.map((c) => c.wp_curso_id)
       const [dc3MetaRecords, pkgCourses] = await Promise.all([
         prisma.cursoDc3Metadata.findMany({
@@ -132,6 +131,7 @@ export default async function EmpleadoCursos() {
         title={`¡Hola, ${empleado.nombre}!`}
         description="Tu ruta de capacitación activa"
         accentColor="#34D399"
+        breadcrumbs={[{ label: "Mi espacio" }, { label: "Mis cursos" }]}
       />
 
       {/* KPI strip */}
@@ -198,7 +198,7 @@ export default async function EmpleadoCursos() {
           }}
         >
           <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Aún no tienes cursos sincronizados. Pide a RH o a SuperAdmin que ejecute la sincronización.
+            Tu ruta de aprendizaje está siendo preparada.
           </Typography>
         </Paper>
       ) : (
@@ -376,7 +376,7 @@ export default async function EmpleadoCursos() {
                           "&:hover": { bgcolor: curso.completado ? "#D96B20" : "#333" },
                         }}
                       >
-                        {curso.completado ? "Repasar curso" : "Continuar curso"}
+                        {curso.completado ? "Repasar" : curso.progreso_pct > 0 ? "Continuar" : "Iniciar"}
                       </Button>
                     ) : (
                       <Typography sx={{ textAlign: "center", fontSize: 11, color: "#94a3b8" }}>

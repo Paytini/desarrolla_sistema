@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+import { PageSkeleton } from "@/components/shared/PageSkeleton"
 import EmpleadoSearchBar from "@/components/search/EmpleadoSearchBar"
 import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
 import { MobileNav } from "@/components/layout/MobileNav"
@@ -6,6 +8,7 @@ import RhSearchBar from "@/components/search/RhSearchBar"
 import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import Sidebar from "@/components/layout/Sidebar"
 import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu"
+import { OnboardingTour } from "@/components/layout/OnboardingTour"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 
@@ -19,6 +22,7 @@ export default async function PortalLayout({
 
   const rol     = session.user.rol     as "SUPERADMIN" | "RH" | "EMPLEADO"
   const nombre  = session.user.nombre  as string
+  const email   = session.user.email   ?? nombre
   const empresa = session.user.empresa as string | undefined
   
   return (
@@ -41,9 +45,15 @@ export default async function PortalLayout({
           </div>
         </header>
         <main className="flex-1 overflow-y-auto px-8 py-7 bg-[#F3F4F6]">
-          {children}
+          <Suspense fallback={<PageSkeleton />}>
+            {children}
+          </Suspense>
         </main>
       </div>
+
+      {(rol === "RH" || rol === "EMPLEADO") && (
+        <OnboardingTour rol={rol} userId={email} />
+      )}
     </div>
   )
 }

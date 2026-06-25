@@ -1,7 +1,8 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
+import { ZipDownloadButton } from "@/components/empresa/ZipDownloadButton"
 import { Award, Clock, Users } from "lucide-react"
-import { formatDateTime } from "@/lib/format"
+import { formatDateTime, getInitials } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
@@ -48,13 +49,6 @@ async function getCompanyCertificatesRecord(empresaId: number) {
   })
 }
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("")
-}
 
 export default async function EmpresaConstanciasPage() {
   const session = await getSession()
@@ -98,7 +92,12 @@ export default async function EmpresaConstanciasPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Constancias DC-3" description="Constancias de habilidades laborales para cumplimiento STPS" accentColor="#F5853F" />
+      <PageHeader
+        title="Constancias DC-3"
+        description="Constancias de habilidades laborales para cumplimiento STPS"
+        accentColor="#F5853F"
+        breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Constancias DC-3" }]}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard label="Constancias emitidas" value={String(constancias.length)} sub="Total registradas" icon={Award} borderColor="orange" />
@@ -114,13 +113,7 @@ export default async function EmpresaConstanciasPage() {
               <span className="ml-2 text-sm font-normal text-[#94a3b8]">{constancias.length}</span>
             </h2>
             {constancias.length > 0 ? (
-              <a
-                href="/api/constancias/zip"
-                download
-                className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition-all duration-200 hover:bg-gray-200"
-              >
-                Descargar ZIP
-              </a>
+              <ZipDownloadButton count={constancias.length} />
             ) : null}
           </div>
 

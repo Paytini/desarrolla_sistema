@@ -13,7 +13,7 @@ import {
   normalizeEmployeeSearchQuery,
 } from "@/lib/company-employees"
 import { getRhEmpleadosSnapshot } from "@/lib/dashboard-cache"
-import { formatDate } from "@/lib/format"
+import { formatDate, getInitials } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -83,13 +83,6 @@ function buildEmployeeListPath(query: string, status: string) {
   return serialized ? `/empresa/empleados?${serialized}` : "/empresa/empleados"
 }
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("")
-}
 
 function ManualEmployeeForm() {
   return (
@@ -423,7 +416,12 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Empleados" description="Gestión de la plantilla de colaboradores" accentColor="#F5853F" />
+      <PageHeader
+        title="Empleados"
+        description="Gestión de la plantilla de colaboradores"
+        accentColor="#F5853F"
+        breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Empleados" }]}
+      />
 
       {success ? (
         <StatusNotice tone="success" message={getSuccessMessage(success, params) ?? success} />
