@@ -187,7 +187,6 @@ export default function LoginPage() {
         </div>
       </aside>
 
-      {/* Wave divider — visible solo en escritorio */}
       <div className="login-wave-divider" aria-hidden="true">
         <svg
           viewBox="0 0 180 800"
