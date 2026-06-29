@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { signOut } from "next-auth/react"
+import { LogOut, Menu } from "lucide-react"
 
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
@@ -33,7 +34,7 @@ import {
 const ACCENT_MAP: Record<string, string> = {
   "var(--brand)":            "#F5853F",
   "var(--sidebar-accent-2)": "#34D399",
-  "var(--sidebar-accent-3)": "#8B5CF6",
+  "var(--sidebar-accent-3)": "#3B82F6",
 }
 const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
@@ -50,6 +51,7 @@ function MobileNavLink({
 }) {
   const active = isActive(item.href, pathname, item.exact)
   const c      = resolveAccent(accentColor)
+  const Icon   = item.icon
 
   return (
     <Link
@@ -91,7 +93,7 @@ function MobileNavLink({
           className="nav-icon"
           sx={{ minWidth: 0, color: "inherit", transition: "color 0.15s ease", flexShrink: 0 }}
         >
-          <i className={item.icon} style={{ fontSize: "1.25rem", lineHeight: 1 }} />
+          <Icon size={20} strokeWidth={active ? 2.2 : 1.8} />
         </ListItemIcon>
         <ListItemText
           primary={item.label}
@@ -133,7 +135,7 @@ export function MobileNav({
           "&:hover": { bgcolor: "action.hover", color: "text.primary" },
         }}
       >
-        <i className="ri-menu-line" style={{ fontSize: "1.125rem", lineHeight: 1 }} />
+        <Menu size={18} strokeWidth={1.8} />
       </IconButton>
 
       <Drawer
@@ -273,7 +275,7 @@ export function MobileNav({
               transition: "background-color 0.15s ease, color 0.15s ease",
             }}
           >
-            <i className="ri-logout-box-r-line" style={{ fontSize: "1.125rem", lineHeight: 1, flexShrink: 0 }} />
+            <LogOut size={18} strokeWidth={1.8} style={{ flexShrink: 0 }} />
             <span>Cerrar sesión</span>
           </Box>
         </Box>

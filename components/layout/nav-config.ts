@@ -1,5 +1,19 @@
+import {
+  Award,
+  BarChart3,
+  BookOpen,
+  Building2,
+  ClipboardList,
+  FileText,
+  LayoutDashboard,
+  Package,
+  Share2,
+  Users,
+  type LucideIcon,
+} from "lucide-react"
+
 export type Rol = "SUPERADMIN" | "RH" | "EMPLEADO"
-export type NavItem = { label: string; href: string; icon: string; exact?: boolean }
+export type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean }
 export type NavSection = { heading: string; accent: string; items: NavItem[] }
 
 export const defaultNavAccent = "var(--brand)"
@@ -9,40 +23,40 @@ export const navSuperAdminSections: NavSection[] = [
     heading: "Principal",
     accent: "var(--brand)",
     items: [
-      { label: "Dashboard",      href: "/superadmin",             icon: "ri-home-smile-line",    exact: true },
-      { label: "Empresas",       href: "/superadmin/empresas",    icon: "ri-building-2-line" },
+      { label: "Dashboard",      href: "/superadmin",             icon: LayoutDashboard, exact: true },
+      { label: "Empresas",       href: "/superadmin/empresas",    icon: Building2 },
     ],
   },
   {
     heading: "Operaciones",
     accent: "var(--sidebar-accent-2)",
     items: [
-      { label: "Paquetes",       href: "/superadmin/paquetes",    icon: "ri-box-3-line" },
-      { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: "ri-file-text-line" },
-      { label: "Reportes",       href: "/superadmin/reportes",    icon: "ri-bar-chart-line" },
-      { label: "Accesos",        href: "/superadmin/accesos",     icon: "ri-group-line" },
+      { label: "Paquetes",       href: "/superadmin/paquetes",    icon: Package },
+      { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText },
+      { label: "Reportes",       href: "/superadmin/reportes",    icon: BarChart3 },
+      { label: "Accesos",        href: "/superadmin/accesos",     icon: Users },
     ],
   },
   {
     heading: "Sistema",
     accent: "var(--sidebar-accent-3)",
     items: [
-      { label: "Integración WP", href: "/superadmin/integracion", icon: "ri-plug-line" },
+      { label: "Integración WP", href: "/superadmin/integracion", icon: Share2 },
     ],
   },
 ]
 
 export const navRH: NavItem[] = [
-  { label: "Inicio",        href: "/empresa/inicio",       icon: "ri-home-smile-line",   exact: true },
-  { label: "Empleados",     href: "/empresa/empleados",    icon: "ri-group-line" },
-  { label: "Asignaciones",  href: "/empresa/asignaciones", icon: "ri-clipboard-line" },
-  { label: "Progreso",      href: "/empresa/progreso",     icon: "ri-bar-chart-line" },
-  { label: "Constancias",   href: "/empresa/constancias",  icon: "ri-award-line" },
+  { label: "Inicio",        href: "/empresa/inicio",       icon: LayoutDashboard, exact: true },
+  { label: "Empleados",     href: "/empresa/empleados",    icon: Users },
+  { label: "Asignaciones",  href: "/empresa/asignaciones", icon: ClipboardList },
+  { label: "Progreso",      href: "/empresa/progreso",     icon: BarChart3 },
+  { label: "Constancias",   href: "/empresa/constancias",  icon: Award },
 ]
 
 export const navEmpleado: NavItem[] = [
-  { label: "Mis cursos",      href: "/empleado/cursos",      icon: "ri-book-open-line" },
-  { label: "Mis constancias", href: "/empleado/constancias", icon: "ri-award-line" },
+  { label: "Mis cursos",      href: "/empleado/cursos",      icon: BookOpen },
+  { label: "Mis constancias", href: "/empleado/constancias", icon: Award },
 ]
 
 export const roleLabel: Record<Rol, string> = {
