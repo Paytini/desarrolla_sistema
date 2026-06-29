@@ -1,19 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import Box from "@mui/material/Box"
-import Divider from "@mui/material/Divider"
-import IconButton from "@mui/material/IconButton"
 import List from "@mui/material/List"
 import ListItemButton from "@mui/material/ListItemButton"
 import ListItemIcon from "@mui/material/ListItemIcon"
 import ListItemText from "@mui/material/ListItemText"
-import Tooltip from "@mui/material/Tooltip"
 import Typography from "@mui/material/Typography"
 
 import {
@@ -27,8 +22,7 @@ import {
   type Rol,
 } from "@/components/layout/nav-config"
 
-const COLLAPSED_W = 76
-const EXPANDED_W  = 288
+const SIDEBAR_W = 288
 
 const SIDEBAR_FONT = '"Plus Jakarta Sans", system-ui, "Segoe UI", Arial, sans-serif'
 
@@ -46,12 +40,10 @@ const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
 function NavItemRow({
   item,
-  collapsed,
   pathname,
   accentColor,
 }: {
   item: NavItem
-  collapsed: boolean
   pathname: string
   accentColor: string
 }) {
@@ -59,47 +51,46 @@ function NavItemRow({
   const Icon   = item.icon
   const c      = resolveAccent(accentColor)
 
-  const button = (
-    <ListItemButton
-      selected={active}
-      sx={{
-        borderRadius: "8px",
-        mx: 1,
-        mb: 0.25,
-        px: 1.25,
-        py: 0.875,
-        minHeight: 40,
-        justifyContent: collapsed ? "center" : "flex-start",
-        gap: collapsed ? 0 : 1,
-        color: "text.primary",
-        "&.Mui-selected": {
-          bgcolor: `${c}1F`,
-          color: "text.primary",
-          boxShadow: `inset 3px 0 0 0 ${c}`,
-          "& .nav-icon": { color: c },
-          "&:hover": { bgcolor: `${c}2A` },
-        },
-        "&:hover:not(.Mui-selected)": {
-          bgcolor: "rgba(255,255,255,0.55)",
-          color: "text.primary",
-          "& .nav-icon": { color: c },
-        },
-        transition: "background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease",
-      }}
-    >
-      <ListItemIcon
-        className="nav-icon"
+  return (
+    <Link href={item.href} prefetch style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+      <ListItemButton
+        selected={active}
         sx={{
-          minWidth: 0,
-          mr: collapsed ? 0 : 0.5,
-          color: active ? c : "inherit",
-          transition: "color 0.15s ease",
-          flexShrink: 0,
+          borderRadius: "8px",
+          mx: 1,
+          mb: 0.25,
+          px: 1.25,
+          py: 0.875,
+          minHeight: 40,
+          gap: 1,
+          color: "text.primary",
+          "&.Mui-selected": {
+            bgcolor: `${c}1F`,
+            color: "text.primary",
+            boxShadow: `inset 3px 0 0 0 ${c}`,
+            "& .nav-icon": { color: c },
+            "&:hover": { bgcolor: `${c}2A` },
+          },
+          "&:hover:not(.Mui-selected)": {
+            bgcolor: "rgba(255,255,255,0.55)",
+            color: "text.primary",
+            "& .nav-icon": { color: c },
+          },
+          transition: "background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease",
         }}
       >
-        <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
-      </ListItemIcon>
-      {!collapsed && (
+        <ListItemIcon
+          className="nav-icon"
+          sx={{
+            minWidth: 0,
+            mr: 0.5,
+            color: active ? c : "inherit",
+            transition: "color 0.15s ease",
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
+        </ListItemIcon>
         <ListItemText
           primary={item.label}
           slotProps={{
@@ -115,25 +106,9 @@ function NavItemRow({
           }}
           sx={{ my: 0 }}
         />
-      )}
-    </ListItemButton>
-  )
-
-  const linked = (
-    <Link href={item.href} prefetch style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-      {button}
+      </ListItemButton>
     </Link>
   )
-
-  if (collapsed) {
-    return (
-      <Tooltip title={item.label} placement="right" arrow>
-        {linked}
-      </Tooltip>
-    )
-  }
-
-  return linked
 }
 
 export default function Sidebar({
@@ -144,20 +119,7 @@ export default function Sidebar({
   empresa?: string
 }) {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
   const homeHref  = homeHrefForRole(rol)
-
-  useEffect(() => {
-    try { setCollapsed(localStorage.getItem("sidebar-collapsed") === "true") } catch {}
-  }, [])
-
-  function toggle() {
-    setCollapsed((prev) => {
-      const next = !prev
-      try { localStorage.setItem("sidebar-collapsed", String(next)) } catch {}
-      return next
-    })
-  }
 
   return (
     <Box
@@ -166,12 +128,11 @@ export default function Sidebar({
         position: "sticky",
         top: 0,
         height: "100vh",
-        width: collapsed ? COLLAPSED_W : EXPANDED_W,
+        width: SIDEBAR_W,
         flexShrink: 0,
         display: { xs: "none", md: "flex" },
         flexDirection: "column",
         overflow: "visible",
-        transition: "width 0.3s ease",
         zIndex: 20,
         fontFamily: SIDEBAR_FONT,
       }}
@@ -202,34 +163,6 @@ export default function Sidebar({
         />
       </Box>
 
-      {/* collapse toggle */}
-      <IconButton
-        onClick={toggle}
-        size="small"
-        aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
-        sx={{
-          position: "absolute",
-          right: -14,
-          top: 22,
-          zIndex: 30,
-          width: 28,
-          height: 28,
-          p: 0,
-          bgcolor: "#FFFFFF",
-          border: "1px solid",
-          borderColor: SIDEBAR_BORDER,
-          boxShadow: "0 2px 8px rgba(124,58,237,0.18)",
-          "&:hover": {
-            bgcolor: "#FFFFFF",
-            borderColor: "#8B5CF6",
-            boxShadow: "0 0 12px -2px rgba(139,92,246,0.55)",
-          },
-          transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-        }}
-      >
-        {collapsed ? <ChevronRight size={13} strokeWidth={2.5} /> : <ChevronLeft size={13} strokeWidth={2.5} />}
-      </IconButton>
-
       {/* inner content — clips overflow */}
       <Box sx={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
         {/* Logo row */}
@@ -239,35 +172,24 @@ export default function Sidebar({
             flexShrink: 0,
             display: "flex",
             alignItems: "center",
-            justifyContent: collapsed ? "center" : "flex-start",
-            px: collapsed ? 1.5 : 2,
+            px: 2,
             borderBottom: "1px solid",
             borderColor: SIDEBAR_BORDER,
           }}
         >
-          {collapsed ? (
+          <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
             <Image
-              src="/assets/logo_corta.png"
-              alt="D360"
-              width={34}
-              height={34}
-              style={{ objectFit: "contain", width: 34, height: 34 }}
+              src="/assets/logo_desarrolla_cropped.png"
+              alt="Desarrolla360"
+              width={1554}
+              height={461}
+              style={{ height: 36, width: "auto", objectFit: "contain" }}
             />
-          ) : (
-            <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-              <Image
-                src="/assets/logo_desarrolla_cropped.png"
-                alt="Desarrolla360"
-                width={1554}
-                height={461}
-                style={{ height: 36, width: "auto", objectFit: "contain" }}
-              />
-            </Link>
-          )}
+          </Link>
         </Box>
 
         {/* Empresa chip */}
-        {!collapsed && empresa && rol !== "SUPERADMIN" && (
+        {empresa && rol !== "SUPERADMIN" && (
           <Box
             sx={{
               mx: 1.5,
@@ -298,28 +220,24 @@ export default function Sidebar({
           {rol === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
               <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
-                {collapsed ? (
-                  si > 0 && <Divider sx={{ mx: 1.5, my: 1, borderColor: SIDEBAR_BORDER }} />
-                ) : (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2.5, mt: si > 0 ? 2 : 0.5, mb: 0.75 }}>
-                    <Box
-                      sx={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        bgcolor: resolveAccent(section.accent),
-                        flexShrink: 0,
-                        boxShadow: `0 0 6px 0 ${resolveAccent(section.accent)}`,
-                      }}
-                    />
-                    <Typography variant="overline" sx={{ fontFamily: SIDEBAR_FONT, color: resolveAccent(section.accent), lineHeight: 1 }}>
-                      {section.heading}
-                    </Typography>
-                  </Box>
-                )}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2.5, mt: si > 0 ? 2 : 0.5, mb: 0.75 }}>
+                  <Box
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      bgcolor: resolveAccent(section.accent),
+                      flexShrink: 0,
+                      boxShadow: `0 0 6px 0 ${resolveAccent(section.accent)}`,
+                    }}
+                  />
+                  <Typography variant="overline" sx={{ fontFamily: SIDEBAR_FONT, color: resolveAccent(section.accent), lineHeight: 1 }}>
+                    {section.heading}
+                  </Typography>
+                </Box>
                 <List disablePadding>
                   {section.items.map((item) => (
-                    <NavItemRow key={item.href} item={item} collapsed={collapsed} pathname={pathname} accentColor={section.accent} />
+                    <NavItemRow key={item.href} item={item} pathname={pathname} accentColor={section.accent} />
                   ))}
                 </List>
               </Box>
@@ -327,7 +245,7 @@ export default function Sidebar({
           ) : (
             <List disablePadding>
               {(rol === "RH" ? navRH : navEmpleado).map((item) => (
-                <NavItemRow key={item.href} item={item} collapsed={collapsed} pathname={pathname} accentColor={defaultNavAccent} />
+                <NavItemRow key={item.href} item={item} pathname={pathname} accentColor={defaultNavAccent} />
               ))}
             </List>
           )}
