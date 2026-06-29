@@ -148,7 +148,7 @@ export default function SearchPalette<T,>({
           px: { xs: 1, sm: 2 },
           border: "1px solid",
           borderColor: "divider",
-          borderRadius: 0,
+          borderRadius: "8px",
           bgcolor: "background.default",
           cursor: "pointer",
           fontSize: "0.8125rem",
@@ -157,7 +157,7 @@ export default function SearchPalette<T,>({
           transition: "border-color 0.2s ease, box-shadow 0.2s ease",
           "&:hover": {
             borderColor: "primary.main",
-            boxShadow: "0 0 0 3px rgba(245,133,63,0.08)",
+            boxShadow: "0 0 0 3px rgba(59,130,246,0.08)",
           },
         }}
       >
@@ -182,7 +182,7 @@ export default function SearchPalette<T,>({
             alignItems: "center",
             border: "1px solid",
             borderColor: "divider",
-            borderRadius: "10px",
+            borderRadius: "6px",
             px: 0.875,
             py: 0.25,
             fontFamily: "monospace",
@@ -221,19 +221,11 @@ export default function SearchPalette<T,>({
               borderRadius: "16px",
               border: "1px solid",
               borderColor: "divider",
-              boxShadow: "0 25px 60px rgba(0,0,34,0.15), 0 8px 24px rgba(0,0,34,0.08)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.12)",
               overflow: "hidden",
               outline: "none",
             }}
           >
-            <Box
-              sx={{
-                height: 3,
-                background:
-                  "linear-gradient(to right, #F5853F, #2DD4BF, #A78BFA)",
-              }}
-            />
-
             <Box
               sx={{
                 display: "flex",
@@ -249,10 +241,10 @@ export default function SearchPalette<T,>({
                 <Loader2
                   size={17}
                   strokeWidth={2}
-                  style={{ flexShrink: 0, color: "#F5853F", animation: "spin 0.8s linear infinite" }}
+                  style={{ flexShrink: 0, color: "#3B82F6", animation: "spin 0.8s linear infinite" }}
                 />
               ) : (
-                <Search size={17} strokeWidth={2} style={{ flexShrink: 0, color: "#858382" }} />
+                <Search size={17} strokeWidth={2} style={{ flexShrink: 0, color: "#9CA3AF" }} />
               )}
 
               <InputBase
@@ -340,7 +332,7 @@ export default function SearchPalette<T,>({
                     sx={{
                       border: "1px solid",
                       borderColor: "divider",
-                      borderRadius: "5px",
+                      borderRadius: "6px",
                       px: 0.75,
                       py: 0.25,
                       fontFamily: "monospace",
@@ -391,7 +383,7 @@ function PaletteEmpty({ text, showIcon }: { text: string; showIcon?: boolean }) 
             justifyContent: "center",
             width: 44,
             height: 44,
-            borderRadius: "12px",
+            borderRadius: "8px",
             border: "1px solid",
             borderColor: "divider",
             bgcolor: "background.default",
