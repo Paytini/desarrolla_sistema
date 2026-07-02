@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { verifyTurnstileToken } from "@/lib/turnstile"
 
 const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
 if (!authSecret) {
@@ -36,11 +37,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email:    { label: "Email",    type: "email" },
-        password: { label: "Password", type: "password" },
+        email:          { label: "Email",          type: "email" },
+        password:       { label: "Password",       type: "password" },
+        turnstileToken: { label: "Turnstile Token", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!credentials?.email || !credentials?.password) return null
+
+        const remoteIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+        const captchaValid = await verifyTurnstileToken(
+          credentials.turnstileToken as string | undefined,
+          remoteIp
+        )
+        if (!captchaValid) return null
 
         try {
           const usuario = await prisma.usuario.findUnique({

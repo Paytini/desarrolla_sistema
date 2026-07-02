@@ -425,6 +425,11 @@ body {
 
 .login-pw-toggle:hover { color: #374151; background: rgba(0, 0, 0, 0.04); }
 
+.login-turnstile {
+  display: flex;
+  justify-content: center;
+}
+
 .login-error-box {
   display: flex;
   align-items: center;
@@ -453,19 +458,19 @@ body {
   color: #fff;
   background: var(--brand);
   border: none;
-  border-radius: 0.7rem;
+  border-radius: 6px;
   cursor: pointer;
-  box-shadow: 0 6px 16px -6px rgba(217, 107, 32, 0.55);
-  transition: transform 0.15s, box-shadow 0.2s, background 0.15s;
+  box-shadow: none;
+  transition: transform 200ms, background-color 200ms;
 }
 
 .login-submit-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 22px -8px rgba(217, 107, 32, 0.6);
+  transform: scale(1.05);
+  box-shadow: none;
   background: var(--brand-warm);
 }
 
-.login-submit-btn:active:not(:disabled) { transform: translateY(0); }
+.login-submit-btn:active:not(:disabled) { transform: scale(0.98); }
 .login-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
 .login-btn-spinner {

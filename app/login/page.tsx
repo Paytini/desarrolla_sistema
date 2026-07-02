@@ -4,6 +4,7 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { TurnstileWidget } from "@/components/login/TurnstileWidget"
 
 function EyeIcon({ open }: { open: boolean }) {
   if (open) {
@@ -82,6 +83,8 @@ export default function LoginPage() {
   const [loading, setLoading]           = useState(false)
   const [activeIdx, setActiveIdx]       = useState(0)
   const [quoteVisible, setQuoteVisible] = useState(true)
+  const [turnstileToken, setTurnstileToken] = useState("")
+  const [widgetKey, setWidgetKey]       = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -102,14 +105,22 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (!turnstileToken) {
+      setError("Completa la verificación de seguridad")
+      return
+    }
+
     setLoading(true)
     setError("")
 
-    const result = await signIn("credentials", { email, password, redirect: false })
+    const result = await signIn("credentials", { email, password, turnstileToken, redirect: false })
 
     if (result?.error) {
       setError("Correo o contraseña incorrectos")
       setLoading(false)
+      setTurnstileToken("")
+      setWidgetKey((k) => k + 1)
       return
     }
 
@@ -263,6 +274,14 @@ export default function LoginPage() {
               </div>
             </div>
 
+            <div className="login-turnstile">
+              <TurnstileWidget
+                key={widgetKey}
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken("")}
+              />
+            </div>
+
             {error ? (
               <div className="login-error-box" role="alert">
                 <AlertIcon />
@@ -272,7 +291,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !turnstileToken}
               className="login-submit-btn"
             >
               {loading ? (
