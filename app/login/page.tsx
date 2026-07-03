@@ -74,6 +74,11 @@ const QUOTES = [
   },
 ]
 
+const BLOCKED_MESSAGES: Record<string, string> = {
+  empresa_suspendida: "Tu empresa fue suspendida. Contacta a Desarrolla360 para reactivar tu acceso.",
+  empresa_vencida: "El acceso de tu empresa venció. Contacta a Desarrolla360 para renovarlo.",
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail]               = useState("")
@@ -117,7 +122,7 @@ export default function LoginPage() {
     const result = await signIn("credentials", { email, password, turnstileToken, redirect: false })
 
     if (result?.error) {
-      setError("Correo o contraseña incorrectos")
+      setError(BLOCKED_MESSAGES[result.code ?? ""] ?? "Correo o contraseña incorrectos")
       setLoading(false)
       setTurnstileToken("")
       setWidgetKey((k) => k + 1)
