@@ -431,8 +431,8 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <KpiCard label="Paquete activo" value={paqueteActivo} icon={Package} borderColor="amber" />
-        <KpiCard label="Activos" value={String(empleadosActivos)} sub="Con acceso vigente" icon={Users} borderColor="orange" />
+        <KpiCard label="Paquete activo" value={paqueteActivo} icon={Package} borderColor="violet" />
+        <KpiCard label="Activos" value={String(empleadosActivos)} sub="Con acceso vigente" icon={Users} borderColor="emerald" />
         <KpiCard label="Cupos disponibles" value={String(cuposDisponibles)} sub="Antes del límite" icon={ShieldCheck} borderColor="charcoal" />
         <KpiCard label="Suspendidos" value={String(empleadosInactivos)} icon={UserX} borderColor="rose" />
         <KpiCard label="Con alertas" value={String(employeesWithAccessIssues)} sub="Error de acceso" icon={AlertCircle} borderColor="amber" />

@@ -25,7 +25,7 @@ const accentMap: Record<KpiBorderColor, { bg: string; text: string }> = {
   charcoal:    { bg: fd.foreground, text: '#FFFFFF' },
   blue:        { bg: '#3B82F6', text: '#FFFFFF' },
   green:       { bg: '#10B981', text: fd.foreground },
-  orange:      { bg: '#F59E0B', text: fd.foreground },
+  orange:      { bg: '#F97316', text: '#FFFFFF' },
   rose:        { bg: '#EF4444', text: '#FFFFFF' },
   primary:     { bg: '#3B82F6', text: '#FFFFFF' },
   destructive: { bg: '#EF4444', text: '#FFFFFF' },

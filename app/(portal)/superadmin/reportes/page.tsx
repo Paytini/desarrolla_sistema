@@ -183,9 +183,9 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", lg: "repeat(4,1fr)" } }}>
         <KpiCard label="Avance promedio global"  value={`${averageProgress}%`}  sub="Promedio ponderado de cursos"   borderColor="primary" />
-        <KpiCard label="Renovaciones en 30 d"    value={renewalsIn30Days}        sub="Empresas activas por vencer"    borderColor="primary" alert={renewalsIn30Days > 0} />
-        <KpiCard label="Empresas con error"       value={companiesWithErrors}     sub="Requieren atención de sync"     borderColor="primary" alert={companiesWithErrors > 0} />
-        <KpiCard label="Empleados activos"        value={totalEmpleadosActivos}   sub="Base laboral activa total"      borderColor="primary" />
+        <KpiCard label="Renovaciones en 30 d"    value={renewalsIn30Days}        sub="Empresas activas por vencer"    borderColor="amber" alert={renewalsIn30Days > 0} />
+        <KpiCard label="Empresas con error"       value={companiesWithErrors}     sub="Requieren atención de sync"     borderColor="charcoal" alert={companiesWithErrors > 0} />
+        <KpiCard label="Empleados activos"        value={totalEmpleadosActivos}   sub="Base laboral activa total"      borderColor="emerald" />
       </Box>
 
       <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "1fr", xl: "1fr 1fr" } }}>
