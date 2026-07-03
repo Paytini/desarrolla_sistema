@@ -135,7 +135,7 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
         <KpiCard label="Avance promedio" value={`${averageProgress}%`} sub="Todos los cursos" icon={BarChart3} borderColor="orange" />
         <KpiCard label="Con rezago" value={String(employeesWithDelay)} sub="Avance < 25% o con error" icon={AlertCircle} borderColor="amber" />
         <KpiCard label="Cursos iniciados" value={String(startedCourses)} sub="Con actividad real" icon={BookOpen} borderColor="charcoal" />
-        <KpiCard label="Cursos completados" value={String(completedCourses)} sub="Cerrados por empleados" icon={CheckCircle} borderColor="green" />
+        <KpiCard label="Cursos completados" value={String(completedCourses)} sub="Cerrados por empleados" icon={CheckCircle} borderColor="emerald" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">

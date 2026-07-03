@@ -12,7 +12,6 @@ import ListItemText from "@mui/material/ListItemText"
 import Typography from "@mui/material/Typography"
 
 import {
-  defaultNavAccent,
   homeHrefForRole,
   isActive,
   navEmpleado,
@@ -21,6 +20,7 @@ import {
   type NavItem,
   type Rol,
 } from "@/components/layout/nav-config"
+import { kpiColorMap } from "@/lib/kpi-colors"
 
 const SIDEBAR_W = 288
 
@@ -40,15 +40,13 @@ const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 function NavItemRow({
   item,
   pathname,
-  accentColor,
 }: {
   item: NavItem
   pathname: string
-  accentColor: string
 }) {
   const active = isActive(item.href, pathname, item.exact)
   const Icon   = item.icon
-  const c      = resolveAccent(accentColor)
+  const { bg, text } = kpiColorMap[item.color]
 
   return (
     <Link href={item.href} prefetch style={{ textDecoration: "none", color: "inherit", display: "block" }}>
@@ -64,18 +62,17 @@ function NavItemRow({
           gap: 1,
           color: "text.primary",
           "&.Mui-selected": {
-            bgcolor: `${c}1F`,
-            color: "text.primary",
-            boxShadow: `inset 3px 0 0 0 ${c}`,
-            "& .nav-icon": { color: c },
-            "&:hover": { bgcolor: `${c}2A` },
+            bgcolor: bg,
+            color: text,
+            "& .nav-icon": { color: text },
+            "&:hover": { bgcolor: bg, filter: "brightness(0.94)" },
           },
           "&:hover:not(.Mui-selected)": {
-            bgcolor: "rgba(255,255,255,0.55)",
+            bgcolor: `${bg}14`,
             color: "text.primary",
-            "& .nav-icon": { color: c },
+            "& .nav-icon": { color: bg },
           },
-          transition: "background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease",
+          transition: "background-color 0.15s ease, color 0.15s ease",
         }}
       >
         <ListItemIcon
@@ -83,7 +80,7 @@ function NavItemRow({
           sx={{
             minWidth: 0,
             mr: 0.5,
-            color: active ? c : "inherit",
+            color: active ? text : "inherit",
             transition: "color 0.15s ease",
             flexShrink: 0,
           }}
@@ -207,7 +204,7 @@ export default function Sidebar({
                 </Box>
                 <List disablePadding>
                   {section.items.map((item) => (
-                    <NavItemRow key={item.href} item={item} pathname={pathname} accentColor={section.accent} />
+                    <NavItemRow key={item.href} item={item} pathname={pathname} />
                   ))}
                 </List>
               </Box>
@@ -215,7 +212,7 @@ export default function Sidebar({
           ) : (
             <List disablePadding>
               {(rol === "RH" ? navRH : navEmpleado).map((item) => (
-                <NavItemRow key={item.href} item={item} pathname={pathname} accentColor={defaultNavAccent} />
+                <NavItemRow key={item.href} item={item} pathname={pathname} />
               ))}
             </List>
           )}

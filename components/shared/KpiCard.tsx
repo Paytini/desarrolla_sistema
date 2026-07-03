@@ -1,11 +1,10 @@
 import { Paper, Box, Typography } from "@mui/material"
 import { RingChart } from "@/components/shared/RingChart"
 import { fd } from "@/lib/theme-tokens"
+import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import type { LucideIcon } from "lucide-react"
 
-export type KpiBorderColor =
-  | "violet" | "pink" | "amber" | "emerald" | "charcoal"
-  | "blue" | "green" | "orange" | "rose" | "primary" | "destructive"
+export type KpiBorderColor = KpiColorKey
 
 type KpiCardProps = {
   label: string
@@ -17,22 +16,8 @@ type KpiCardProps = {
   ring?: number
 }
 
-const accentMap: Record<KpiBorderColor, { bg: string; text: string }> = {
-  violet:      { bg: '#8B5CF6', text: '#FFFFFF' },
-  pink:        { bg: '#F472B6', text: '#FFFFFF' },
-  amber:       { bg: '#F59E0B', text: fd.foreground },
-  emerald:     { bg: '#10B981', text: fd.foreground },
-  charcoal:    { bg: fd.foreground, text: '#FFFFFF' },
-  blue:        { bg: '#3B82F6', text: '#FFFFFF' },
-  green:       { bg: '#10B981', text: fd.foreground },
-  orange:      { bg: '#F97316', text: '#FFFFFF' },
-  rose:        { bg: '#EF4444', text: '#FFFFFF' },
-  primary:     { bg: '#3B82F6', text: '#FFFFFF' },
-  destructive: { bg: '#EF4444', text: '#FFFFFF' },
-}
-
 export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "violet", alert = false, ring }: KpiCardProps) {
-  const { bg, text } = accentMap[alert ? "destructive" : borderColor]
+  const { bg, text } = kpiColorMap[alert ? "rose" : borderColor]
 
   const isLight       = text === fd.foreground
   const textSecondary = isLight ? 'rgba(17,24,39,0.6)' : 'rgba(255,255,255,0.7)'

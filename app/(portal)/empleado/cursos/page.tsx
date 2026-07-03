@@ -136,7 +136,7 @@ export default async function EmpleadoCursos() {
 
       {/* KPI strip */}
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", xl: "repeat(4,1fr)" } }}>
-        <KpiCard label="Completados"  value={String(cursosCompletados)} sub={`de ${cursos.length} cursos`} icon={CheckCircle} borderColor="green" />
+        <KpiCard label="Completados"  value={String(cursosCompletados)} sub={`de ${cursos.length} cursos`} icon={CheckCircle} borderColor="emerald" />
         <KpiCard label="En progreso"  value={String(cursosEnProgreso)}  sub="iniciados"  icon={BookOpen} borderColor="amber" />
         <KpiCard label="Sin iniciar"  value={String(cursosPendientes)}  sub="pendientes" icon={Clock}    borderColor="charcoal" />
 

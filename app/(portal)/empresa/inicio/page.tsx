@@ -101,7 +101,7 @@ export default async function EmpresaInicio() {
           value={String(totalConstancias)}
           sub="Total acumulado"
           icon={Award}
-          borderColor="green"
+          borderColor="emerald"
         />
       </div>
 
