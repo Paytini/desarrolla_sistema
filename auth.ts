@@ -1,8 +1,17 @@
 import NextAuth from "next-auth"
+import { CredentialsSignin } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { verifyTurnstileToken } from "@/lib/turnstile"
+import { getEmpresaAccessStatus } from "@/lib/empresa-status"
+
+class EmpresaBloqueadaError extends CredentialsSignin {
+  constructor(reason: "suspendida" | "vencida") {
+    super()
+    this.code = reason === "suspendida" ? "empresa_suspendida" : "empresa_vencida"
+  }
+}
 
 const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
 if (!authSecret) {
@@ -69,6 +78,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           )
           if (!valida) return null
 
+          if (usuario.rol !== "SUPERADMIN" && usuario.empresa_id) {
+            const status = await getEmpresaAccessStatus(usuario.empresa_id)
+            if (status.blocked) {
+              throw new EmpresaBloqueadaError(status.reason)
+            }
+          }
+
           await prisma.usuario.update({
             where: { id: usuario.id },
             data:  { ultimo_acceso: new Date() },
@@ -83,6 +99,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             empresa: usuario.empresa?.nombre ?? null,
           }
         } catch (error) {
+          if (error instanceof EmpresaBloqueadaError) throw error
+
           console.error("Credentials login failed while reading database", {
             message: error instanceof Error ? error.message : String(error),
             hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
