@@ -28,7 +28,6 @@ const SIDEBAR_FONT = '"Plus Jakarta Sans", system-ui, "Segoe UI", Arial, sans-se
 
 const SIDEBAR_BG      = "#FFFFFF"
 const SIDEBAR_BORDER  = "#E3D7F5"
-const SIDEBAR_CHIP_BG = "#FFFFFF"
 const SIDEBAR_OVERLAY = "linear-gradient(to bottom, rgba(139,92,246,0) 0%, rgba(139,92,246,0.10) 45%, rgba(139,92,246,0.55) 100%)"
 
 const ACCENT_MAP: Record<string, string> = {
@@ -113,10 +112,8 @@ function NavItemRow({
 
 export default function Sidebar({
   rol,
-  empresa,
 }: {
   rol: Rol
-  empresa?: string
 }) {
   const pathname = usePathname()
   const homeHref  = homeHrefForRole(rol)
@@ -187,33 +184,6 @@ export default function Sidebar({
             />
           </Link>
         </Box>
-
-        {/* Empresa chip */}
-        {empresa && rol !== "SUPERADMIN" && (
-          <Box
-            sx={{
-              mx: 1.5,
-              mt: 1.5,
-              flexShrink: 0,
-              px: 1.5,
-              py: 1.25,
-              borderRadius: "8px",
-              bgcolor: SIDEBAR_CHIP_BG,
-              border: "1px solid",
-              borderColor: SIDEBAR_BORDER,
-            }}
-          >
-            <Typography variant="overline" sx={{ fontFamily: SIDEBAR_FONT, display: "block", color: "#7C3AED", lineHeight: 1, mb: 0.5 }}>
-              Empresa
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ fontFamily: SIDEBAR_FONT, fontWeight: 600, color: "text.primary", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-            >
-              {empresa}
-            </Typography>
-          </Box>
-        )}
 
         {/* Navigation */}
         <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>

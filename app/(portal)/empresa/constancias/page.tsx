@@ -153,7 +153,7 @@ export default async function EmpresaConstanciasPage() {
                           rel="noreferrer"
                           className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition-all duration-200 hover:bg-gray-200"
                         >
-                          Ver
+                          Ver Diploma
                         </a>
                       ) : null}
                       <a

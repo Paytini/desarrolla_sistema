@@ -55,7 +55,6 @@ export default async function EmpleadoConstanciasPage() {
       ) : null}
 
       <Box sx={{ display: "grid", gap: 2.5 }}>
-        {/* Available certificates */}
         <Paper elevation={0} sx={{ borderRadius: 2.5, border: "1px solid #f0f0f0", bgcolor: "background.paper", p: 2.5 }}>
           <Box sx={{ mb: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
@@ -175,7 +174,7 @@ export default async function EmpleadoConstanciasPage() {
                           "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0" },
                         }}
                       >
-                        Ver
+                        Ver Diploma
                       </Button>
                     ) : null}
                     <Button
@@ -204,7 +203,6 @@ export default async function EmpleadoConstanciasPage() {
           )}
         </Paper>
 
-        {/* Pending certificates */}
         {pendingCertificates.length > 0 ? (
           <Paper elevation={0} sx={{ borderRadius: 2.5, border: "1px solid #f0f0f0", bgcolor: "background.paper", p: 2.5 }}>
             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mb: 2 }}>
