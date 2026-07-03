@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/session"
+import { getEmpresaAccessStatus } from "@/lib/empresa-status"
 import { redirect } from "next/navigation"
 
 export default async function EmpresaLayout({
@@ -7,7 +8,10 @@ export default async function EmpresaLayout({
   children: React.ReactNode
 }) {
   const session = await getSession()
-  if (!session || session.user.rol !== "RH") redirect("/login")
+  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
+
+  const status = await getEmpresaAccessStatus(session.user.empresa_id)
+  if (status.blocked) redirect(`/cuenta-suspendida?reason=${status.reason}`)
 
   return <>{children}</>
 }
