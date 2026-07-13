@@ -131,7 +131,6 @@ export default function Sidebar({
         fontFamily: SIDEBAR_FONT,
       }}
     >
-      {/* background + right border */}
       <Box
         aria-hidden
         sx={{
