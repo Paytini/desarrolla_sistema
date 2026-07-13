@@ -409,7 +409,6 @@ function CourseEditorCard({
             </Box>
           </Paper>
 
-          {/* Form */}
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -527,7 +526,6 @@ function CourseEditorCard({
                       boxShadow: "3px 3px 0px 0px #1E293B",
                     }}
                   >
-                    {/* Signature pad area — dot grid background */}
                     <Box
                       sx={{
                         position: "relative",
@@ -557,7 +555,6 @@ function CourseEditorCard({
                       />
                     </Box>
 
-                    {/* Bottom action bar */}
                     <Box
                       sx={{
                         display: "flex",
@@ -692,7 +689,6 @@ function CourseEditorCard({
                 )}
             </Field>
 
-            {/* Footer */}
             <Box
               sx={{
                 display: "flex",
@@ -775,7 +771,6 @@ export default function Dc3EditorList({
 
   return (
     <Box sx={{ display: "grid", gap: 2 }}>
-      {/* Filter pills */}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
         {FILTERS.map(({ value, label }) => {
           const active = filter === value
@@ -824,7 +819,6 @@ export default function Dc3EditorList({
         })}
       </Box>
 
-      {/* Course cards */}
       <Box sx={{ display: "grid", gap: 1 }}>
         {filtered.length === 0 ? (
           <Box

@@ -56,7 +56,6 @@ export default function EmployeeLearningRefresh({
         })
       }
     } catch {
-      // La sincronizacion es oportunista: si Tutor/WordPress falla, conservamos la vista actual.
     } finally {
       requestInFlight.current = false
     }

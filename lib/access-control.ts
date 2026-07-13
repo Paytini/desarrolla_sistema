@@ -153,7 +153,6 @@ export async function togglePortalUserStatus(
     throw new Error("Usuario no encontrado")
   }
 
-  // Only SUPERADMIN can toggle other SUPERADMIN accounts
   if (usuario.rol === "SUPERADMIN" && callerRole !== "SUPERADMIN") {
     throw new Error("No autorizado para modificar una cuenta de SUPERADMIN")
   }

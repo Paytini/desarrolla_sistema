@@ -27,7 +27,6 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
         "&:last-child td": { borderBottom: 0 },
       }}
     >
-      {/* Nombre / correo */}
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box sx={{ minWidth: 0 }}>
@@ -58,14 +57,12 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
         </Box>
       </TableCell>
 
-      {/* RFC */}
       <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", sm: "table-cell" } }}>
         <Typography sx={{ fontFamily: "monospace", fontSize: 12, color: "text.secondary" }}>
           {empresa.rfc ?? "—"}
         </Typography>
       </TableCell>
 
-      {/* Paquete */}
       <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", md: "table-cell" } }}>
         <Chip
           label={paquete}
@@ -80,7 +77,6 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
         />
       </TableCell>
 
-      {/* Cupos */}
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <SeatDonut used={activos} total={empresa.asientos_contratados} size={48} />
@@ -93,14 +89,12 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
         </Box>
       </TableCell>
 
-      {/* Alta */}
       <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", lg: "table-cell" } }}>
         <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
           {formatDate(empresa.created_at)}
         </Typography>
       </TableCell>
 
-      {/* Estado */}
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Chip
           label={empresa.activo ? "Activa" : "Suspendida"}
@@ -119,7 +113,6 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
         />
       </TableCell>
 
-      {/* Acciones */}
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.75 }}>
           <Button

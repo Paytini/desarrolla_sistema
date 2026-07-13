@@ -7,12 +7,9 @@ import TextField from "@mui/material/TextField"
 
 type SearchInputProps = {
   placeholder?: string
-  /** Controlled value — use for client-side filtering */
   value?: string
   onChange?: (value: string) => void
-  /** Uncontrolled default — use for URL-based (server) filtering */
   defaultValue?: string
-  /** HTML name attribute — required for URL-based forms */
   name?: string
   width?: number | string
 }

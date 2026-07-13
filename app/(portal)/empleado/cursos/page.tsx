@@ -35,7 +35,6 @@ function getCourseUrl(
   return siteUrl ? `${siteUrl}/?p=${courseId}` : null
 }
 
-
 export default async function EmpleadoCursos() {
   const session = await getSession()
   if (!session || session.user.rol !== "EMPLEADO" || !session.user.empresa_id) {
@@ -134,13 +133,11 @@ export default async function EmpleadoCursos() {
         breadcrumbs={[{ label: "Mi espacio" }, { label: "Mis cursos" }]}
       />
 
-      {/* KPI strip */}
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", xl: "repeat(4,1fr)" } }}>
         <KpiCard label="Completados"  value={String(cursosCompletados)} sub={`de ${cursos.length} cursos`} icon={CheckCircle} borderColor="emerald" />
         <KpiCard label="En progreso"  value={String(cursosEnProgreso)}  sub="iniciados"  icon={BookOpen} borderColor="amber" />
         <KpiCard label="Sin iniciar"  value={String(cursosPendientes)}  sub="pendientes" icon={Clock}    borderColor="charcoal" />
 
-        {/* Avance global with ring chart */}
         <Paper
           elevation={0}
           sx={{
@@ -185,7 +182,6 @@ export default async function EmpleadoCursos() {
         </Alert>
       ) : null}
 
-      {/* Course grid */}
       {cursos.length === 0 ? (
         <Paper
           elevation={0}
@@ -228,7 +224,6 @@ export default async function EmpleadoCursos() {
                   bgcolor: "background.paper",
                 }}
               >
-                {/* Thumbnail */}
                 {thumbnail ? (
                   <Box sx={{ position: "relative" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -279,7 +274,6 @@ export default async function EmpleadoCursos() {
                 )}
 
                 <Box sx={{ display: "flex", flex: 1, flexDirection: "column", p: 2 }}>
-                  {/* Title + badge */}
                   <Box sx={{ mb: 1, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
                     <Typography
                       sx={{
@@ -299,7 +293,6 @@ export default async function EmpleadoCursos() {
                     </StatusBadge>
                   </Box>
 
-                  {/* Description */}
                   {pkgMeta?.descripcion && (
                     <Typography
                       sx={{
@@ -316,7 +309,6 @@ export default async function EmpleadoCursos() {
                     </Typography>
                   )}
 
-                  {/* Meta row */}
                   {(pkgMeta?.num_lecciones || hasDc3) && (
                     <Box sx={{ mb: 1, display: "flex", gap: 1.5 }}>
                       {pkgMeta?.num_lecciones && (
@@ -332,7 +324,6 @@ export default async function EmpleadoCursos() {
                     </Box>
                   )}
 
-                  {/* Progress bar */}
                   <Box sx={{ mb: 0.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>Avance</Typography>
                     <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a" }}>{curso.progreso_pct}%</Typography>
@@ -341,21 +332,18 @@ export default async function EmpleadoCursos() {
                     <Box sx={{ height: "100%", borderRadius: "999px", bgcolor: barColor, width: `${curso.progreso_pct}%` }} />
                   </Box>
 
-                  {/* Error notice */}
                   {hasError && curso.acceso_error ? (
                     <Box sx={{ mb: 1.5, borderRadius: 2, bgcolor: "#fff1f2", px: 1.5, py: 1 }}>
                       <Typography sx={{ fontSize: 11, color: "#881337" }}>{curso.acceso_error}</Typography>
                     </Box>
                   ) : null}
 
-                  {/* Completion date */}
                   {curso.completado && curso.fecha_completado ? (
                     <Typography sx={{ mb: 1.5, fontSize: "11px", color: "#94a3b8" }}>
                       Completado: {formatDateTime(curso.fecha_completado)}
                     </Typography>
                   ) : null}
 
-                  {/* CTA */}
                   <Box sx={{ mt: "auto" }}>
                     {launchUrl ? (
                       <Button
@@ -391,7 +379,6 @@ export default async function EmpleadoCursos() {
         </Box>
       )}
 
-      {/* Constancias banner */}
       {cursosCompletados > 0 ? (
         <Paper
           elevation={0}

@@ -5,19 +5,16 @@ import { PDFDocument, PDFImage, StandardFonts, rgb } from "pdf-lib"
 import { prisma } from "@/lib/prisma"
 
 const POS = {
-  // DATOS DEL TRABAJADOR
   nombre:           { x: 40,  y: 590, size: 10 },
   curpStartX:       31,
   curpY:            559,
   curpStep:         14.6,
   ocupacion:        { x: 305, y: 559, size: 9 },
   puesto:           { x: 40,  y: 535, size: 10 },
-  // DATOS DE LA EMPRESA
   razonSocial:      { x: 40,  y: 475, size: 10 },
   rfcStartX:        32,
   rfcY:             442,
   rfcStep:          14,
-  // DATOS DEL PROGRAMA
   curso:            { x: 32,  y: 390, size: 9  },
   duracion:         { x: 32,  y: 364, size: 10 },
   fechas: {
@@ -32,18 +29,14 @@ const POS = {
   },
   areaTematica:     { x: 32,  y: 339, size: 10 },
   agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
-  // FIRMAS
   instructorFirma:  { x: 85,  y: 220, w: 90,  h: 27 },
   instructorNombre: { x: 90,  y: 216, size: 7 },
-  // LOGO
   logoFirma: { x: 32, y: 735, w: 140, h: 42 },
   logoMask: { x: 0, y: 715, w: 612, h: 78 },
-  // CONTROL INTERNO
   folio:            { x: 430, y: 60,  size: 8 },
   emision:          { x: 430, y: 50,  size: 8 },
 } as const
 
-// Color corporativo para los datos estampados
 const TEXTO_COLOR = rgb(0.04, 0.18, 0.62)
 
 export class Dc3MissingFieldsError extends Error {
@@ -197,7 +190,7 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   )
 
   while (pdf.getPageCount() > 1) {
-    pdf.removePage(pdf.getPageCount() - 1) // elimino la pagina 2
+    pdf.removePage(pdf.getPageCount() - 1)
   }
 
   return await pdf.save()
@@ -234,10 +227,6 @@ function formatHoras(horas: number) {
   return Number.isInteger(horas) ? String(horas) : horas.toFixed(1).replace(/\.0$/, "")
 }
 
-/**
- * Lee bytes de imagen desde una URL externa (https://) o desde el filesystem local (/ruta...).
- * Permite que las firmas guardadas en Vercel Blob funcionen igual que las locales.
- */
 async function fetchImageBytes(urlOrPath: string): Promise<Buffer> {
   if (urlOrPath.startsWith("http://") || urlOrPath.startsWith("https://")) {
     let parsed: URL

@@ -110,7 +110,6 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
 
       <Box component="form" ref={formRef} action={formAction} noValidate>
 
-        {/* Hidden inputs for steps not currently rendered */}
         {step !== 0 && (
           <>
             <input type="hidden" name="nombre"    value={values.nombre}   />
@@ -134,7 +133,6 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
           </>
         )}
 
-        {/* ── Paso 0: Info empresa ─────────────────────────────────────── */}
         {step === 0 && (
           <Box sx={{ display: "grid", gap: 2.5 }}>
             {state?.error === "datos" && (
@@ -182,7 +180,6 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
           </Box>
         )}
 
-        {/* ── Paso 1: Admin RH ─────────────────────────────────────────── */}
         {step === 1 && (
           <Box sx={{ display: "grid", gap: 2.5 }}>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
@@ -230,7 +227,6 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
           </Box>
         )}
 
-        {/* ── Paso 2: Plan + resumen ───────────────────────────────────── */}
         {step === 2 && (
           <Box
             sx={{
@@ -301,7 +297,6 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
               </Box>
             </Box>
 
-            {/* Card de resumen */}
             <Box
               sx={{
                 bgcolor: "#F8F4EC",
@@ -344,7 +339,6 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
           </Box>
         )}
 
-        {/* ── Navegación ───────────────────────────────────────────────── */}
         <Box
           sx={{
             display: "flex",

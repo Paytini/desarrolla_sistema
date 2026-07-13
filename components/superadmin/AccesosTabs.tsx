@@ -24,11 +24,6 @@ import { SearchInput } from "@/components/shared/SearchInput"
 import { getInitials } from "@/components/layout/nav-config"
 import { deleteEmployeeAsSuperAdminAction, toggleRhUserStatusAction } from "@/app/(portal)/superadmin/accesos/actions"
 
-// NOTA (MUI v9.1.1 en este proyecto): `fontSize`, `fontWeight`, `fontFamily` y `color` no son
-// props directos válidos de `Typography`, y `alignItems` no es prop directo válido de `Stack`.
-// Deben pasarse vía `sx={{ ... }}`. Este es el patrón a seguir en toda la migración a MUI,
-// no algo específico de esta página — no "simplificar" a props directos en futuras páginas.
-
 export type RhAccessRow = {
   id: number
   nombre: string

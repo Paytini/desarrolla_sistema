@@ -116,8 +116,6 @@ export default function RhSearchBar() {
   )
 }
 
-// ─── Shared primitives ────────────────────────────────────────────────────────
-
 function GroupHeader({
   icon: Icon,
   label,

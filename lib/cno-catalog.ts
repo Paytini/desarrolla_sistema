@@ -1,9 +1,7 @@
-// Catálogo Nacional de Ocupaciones (CNO) — STPS México
-// Fuente: DC-3 Reverso, áreas y subáreas ocupacionales
 export type CnoEntry = {
   clave: string
   denominacion: string
-  esArea: boolean // true = área principal, false = subárea (más específica)
+  esArea: boolean
 }
 
 export const CNO_CATALOG: CnoEntry[] = [
@@ -75,7 +73,5 @@ export const CNO_CATALOG: CnoEntry[] = [
   { clave: "11.3", denominacion: "Difusión cultural",                                           esArea: false },
 ]
 
-// Áreas principales (primer nivel) para agrupar el <select>
 export const CNO_AREAS = CNO_CATALOG.filter((e) => e.esArea)
-// Subáreas (nivel específico que va en el DC-3)
 export const CNO_SUBAREAS = CNO_CATALOG.filter((e) => !e.esArea)

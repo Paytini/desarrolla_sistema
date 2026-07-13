@@ -4,7 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* ── Desarrolla360 brand variables ─────────────────────── */
   --surface: #ffffff;
   --surface-strong: #ffffff;
   --brand: #F5853F;
@@ -44,7 +43,6 @@
   --sidebar-border: oklch(0.918 0.008 55);
   --sidebar-ring: oklch(0.685 0.178 44);
 
-  /* ── Flat Design tokens ─────────────────────────────────── */
   --fd-background: #FFFFFF;
   --fd-foreground: #111827;
   --fd-primary:    #3B82F6;
@@ -107,7 +105,6 @@ body {
   font-family: var(--font-sans);
 }
 
-/* ─── SHARED SPINNER ─── */
 .d360-spinner {
   width: 1.5rem;
   height: 1.5rem;
@@ -135,11 +132,6 @@ body {
     font-family: var(--font-heading);
   }
 }
-
-/* ═══════════════════════════════════════════════
-   LOGIN — Split layout: panel marca oscuro (izq) + form (der)
-   Editorial · navy de marca #000022 + acento naranja #F5853F
-   ═══════════════════════════════════════════════ */
 
 .login-root {
   min-height: 100svh;

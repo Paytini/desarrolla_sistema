@@ -16,7 +16,6 @@ export default async function NuevaEmpresaPage() {
 
   return (
     <Box sx={{ maxWidth: 840, mx: "auto" }}>
-      {/* Header */}
       <Box sx={{ mb: 5 }}>
         <Link
           href="/superadmin/empresas"

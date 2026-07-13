@@ -143,7 +143,6 @@ export default function Sidebar({
           pointerEvents: "none",
         }}
       >
-        {/* orange overlay — fades in across the bottom half */}
         <Box
           sx={{
             position: "absolute",
@@ -156,9 +155,7 @@ export default function Sidebar({
         />
       </Box>
 
-      {/* inner content — clips overflow */}
       <Box sx={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-        {/* Logo row */}
         <Box
           sx={{
             height: 64,
@@ -181,7 +178,6 @@ export default function Sidebar({
           </Link>
         </Box>
 
-        {/* Navigation */}
         <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>
           {rol === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (

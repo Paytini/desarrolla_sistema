@@ -42,7 +42,6 @@ export function PaqueteCard({
         "&:hover": { boxShadow: "0 4px 16px rgba(0,0,0,0.07)" },
       }}
     >
-      {/* ── Header ───────────────────────────── */}
       <Box sx={{ px: 2.5, pt: 2.5, pb: 1.75, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
         <Box sx={{ minWidth: 0 }}>
           <Typography sx={{ fontSize: 15, fontWeight: 700, color: "#0f172a", lineHeight: 1.3 }}>
@@ -73,7 +72,6 @@ export function PaqueteCard({
         />
       </Box>
 
-      {/* ── Stats chips ──────────────────────── */}
       <Box sx={{ px: 2.5, pb: 2, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
         <Chip
           icon={<BookOpen size={11} />}
@@ -114,7 +112,6 @@ export function PaqueteCard({
         )}
       </Box>
 
-      {/* ── Notas operativas ─────────────────── */}
       {paquete.notas_operativas && (
         <Box
           sx={{
@@ -134,7 +131,6 @@ export function PaqueteCard({
         </Box>
       )}
 
-      {/* ── Course list ──────────────────────── */}
       {paquete.cursos.length > 0 && (
         <Box sx={{ flex: 1, borderTop: "1px solid #f1f5f9" }}>
           {paquete.cursos.map((curso, index) => {
@@ -202,7 +198,6 @@ export function PaqueteCard({
         </Box>
       )}
 
-      {/* ── Footer ───────────────────────────── */}
       <Box
         sx={{
           display: "flex",

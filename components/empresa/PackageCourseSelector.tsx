@@ -84,7 +84,6 @@ export default function PackageCourseSelector({
     <Box sx={{ display: "grid", gap: 1.5 }}>
       <input type="hidden" name={inputName} value={selectedPayload} />
 
-      {/* Search + count */}
       <Box
         sx={{
           display: "flex",
@@ -106,7 +105,6 @@ export default function PackageCourseSelector({
         </Typography>
       </Box>
 
-      {/* Course list */}
       <Box
         sx={{
           borderRadius: 2,

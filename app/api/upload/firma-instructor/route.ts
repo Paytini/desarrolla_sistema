@@ -6,7 +6,7 @@ import { getSession } from "@/lib/session"
 export const runtime = "nodejs"
 
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
-const MAX_SIZE_BYTES = 2 * 1024 * 1024 // 2 MB. que no sea pesado
+const MAX_SIZE_BYTES = 2 * 1024 * 1024
 
 export async function POST(request: NextRequest) {
   const session = await getSession()

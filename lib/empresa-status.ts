@@ -17,8 +17,6 @@ export async function getEmpresaAccessStatus(empresaId: number): Promise<Empresa
     },
   })
 
-  // La FK Usuario.empresa_id -> Empresa.id garantiza que empresa exista;
-  // esta rama es defensiva para que el tipo de retorno de Prisma compile.
   if (!empresa) return { blocked: false, reason: null }
   if (!empresa.activo) return { blocked: true, reason: "suspendida" }
 

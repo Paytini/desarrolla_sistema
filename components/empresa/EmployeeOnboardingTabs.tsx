@@ -44,7 +44,6 @@ export default function EmployeeOnboardingTabs({
         p: 3,
       }}
     >
-      {/* Header row */}
       <Box
         sx={{
           display: "flex",
@@ -105,7 +104,6 @@ export default function EmployeeOnboardingTabs({
         </Tabs>
       </Box>
 
-      {/* Description cards */}
       <Box
         sx={{
           mt: 1.5,
@@ -140,7 +138,6 @@ export default function EmployeeOnboardingTabs({
         ))}
       </Box>
 
-      {/* Panels */}
       <Box
         role="tabpanel"
         id="employee-onboarding-manual"

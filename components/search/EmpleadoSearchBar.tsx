@@ -110,8 +110,6 @@ export default function EmpleadoSearchBar() {
   )
 }
 
-// ─── Shared primitives ────────────────────────────────────────────────────────
-
 function GroupHeader({
   icon: Icon,
   label,

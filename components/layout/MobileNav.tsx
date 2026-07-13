@@ -153,7 +153,6 @@ export function MobileNav({
           },
         }}
       >
-        {/* Logo */}
         <Box
           sx={{
             height: 64,
@@ -176,7 +175,6 @@ export function MobileNav({
           </Link>
         </Box>
 
-        {/* Empresa chip */}
         {empresa && rol !== "SUPERADMIN" && (
           <Box
             sx={{
@@ -200,7 +198,6 @@ export function MobileNav({
           </Box>
         )}
 
-        {/* Nav */}
         <Box sx={{ flex: 1, overflowY: "auto", py: 1.5 }}>
           {rol === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
@@ -249,7 +246,6 @@ export function MobileNav({
           )}
         </Box>
 
-        {/* Footer */}
         <Divider />
         <Box sx={{ flexShrink: 0, px: 1, pt: 1, pb: 0.5 }}>
           <Box

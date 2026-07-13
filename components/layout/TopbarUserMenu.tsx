@@ -117,7 +117,6 @@ export function TopbarUserMenu({ nombre, rol }: TopbarUserMenuProps) {
                 overflow: "hidden",
               }}
             >
-              {/* User header */}
               <Box
                 sx={{
                   display: "flex",
@@ -153,7 +152,6 @@ export function TopbarUserMenu({ nombre, rol }: TopbarUserMenuProps) {
 
               <Divider />
 
-              {/* Logout */}
               <Box
                 component="button"
                 onClick={() => signOut({ callbackUrl: "/login" })}
@@ -184,7 +182,6 @@ export function TopbarUserMenu({ nombre, rol }: TopbarUserMenuProps) {
         )}
       </Popper>
 
-      {/* Click-outside backdrop */}
       {open && (
         <Box
           onClick={() => setOpen(false)}

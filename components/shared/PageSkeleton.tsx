@@ -5,7 +5,6 @@ function SkeletonBox({ className }: { className: string }) {
 export function PageSkeleton() {
   return (
     <div className="animate-pulse space-y-6">
-      {/* PageHeader skeleton */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2 border-l-4 border-gray-200 pl-4">
           <SkeletonBox className="h-3 w-24" />
@@ -14,7 +13,6 @@ export function PageSkeleton() {
         </div>
       </div>
 
-      {/* KPI cards skeleton */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="rounded-xl bg-white p-5 space-y-3">
@@ -28,7 +26,6 @@ export function PageSkeleton() {
         ))}
       </div>
 
-      {/* Content area skeleton */}
       <div className="rounded-xl bg-white p-5 space-y-4">
         <SkeletonBox className="h-5 w-36" />
         <div className="space-y-2">

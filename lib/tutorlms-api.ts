@@ -74,7 +74,6 @@ async function tutorApiRequest<T>(path: string, init?: RequestInit): Promise<T> 
         message = errorBody.message
       }
     } catch {
-      // Ignore parsing issues and keep the default message.
     }
 
     throw new Error(message)

@@ -113,11 +113,9 @@ export function OnboardingTour({
       }}
     >
       <DialogContent sx={{ p: 0 }}>
-        {/* Accent stripe */}
         <Box sx={{ height: 4, bgcolor: "#3B82F6" }} />
 
         <Box sx={{ px: 3.5, pt: 3, pb: 3.5 }}>
-          {/* Icon + heading */}
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 2.5 }}>
             <Box
               sx={{
@@ -144,12 +142,10 @@ export function OnboardingTour({
             </Box>
           </Box>
 
-          {/* Body */}
           <Typography sx={{ fontSize: "0.875rem", color: "#4B5563", lineHeight: 1.7, mb: 3.5 }}>
             {current.body}
           </Typography>
 
-          {/* Step dots */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 3 }}>
             {steps.map((_, i) => (
               <Box
@@ -165,7 +161,6 @@ export function OnboardingTour({
             ))}
           </Box>
 
-          {/* Actions */}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <Button
               size="small"

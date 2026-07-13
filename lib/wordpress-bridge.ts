@@ -297,7 +297,6 @@ async function bridgeRequest<T>(path: string, init?: RequestInit): Promise<T> {
         message = errorBody.message
       }
     } catch {
-      // Ignore JSON parsing errors and use the default message.
     }
 
     throw new Error(message)

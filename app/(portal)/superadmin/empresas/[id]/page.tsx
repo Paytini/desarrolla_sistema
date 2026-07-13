@@ -146,7 +146,6 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
 
   return (
     <Box sx={{ display: "grid", gap: 2.5 }}>
-      {/* Back + header */}
       <Box sx={{ display: "grid", gap: 1.5 }}>
         <Link
           href="/superadmin/empresas"
@@ -226,9 +225,7 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
 
       <Divider sx={{ borderColor: "#f1f5f9" }} />
 
-      {/* Summary row */}
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "180px 1fr 180px" } }}>
-        {/* Donut */}
         <PanelBox title="Avance">
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, px: 2, pb: 2 }}>
             <DonutChart pct={avgProgress} size={150} />
@@ -252,7 +249,6 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
           </Box>
         </PanelBox>
 
-        {/* Employee progress bars */}
         <PanelBox title="Progreso por empleado" description="Mayor a menor">
           <Box sx={{ p: 2.5 }}>
             {empleadoStats.length === 0 ? (
@@ -300,7 +296,6 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
           </Box>
         </PanelBox>
 
-        {/* Seat + package */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <PanelBox title="Cupos">
             <Box sx={{ p: 2 }}>
@@ -357,7 +352,6 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
         </Box>
       </Box>
 
-      {/* Course breakdown */}
       {courseStats.length > 0 && (
         <PanelBox
           title="Avance por curso"
@@ -413,7 +407,6 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
         </PanelBox>
       )}
 
-      {/* Employee table */}
       <PanelBox
         title="Detalle de empleados"
         count={activeEmpleados.length}
@@ -517,7 +510,6 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
         )}
       </PanelBox>
 
-      {/* Internal notes */}
       {empresa.notas && (
         <PanelBox title="Notas internas">
           <Box sx={{ p: 2.5 }}>

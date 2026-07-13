@@ -197,7 +197,6 @@ async function upsertEmployeeCertificatesFromBridge(
     try {
       await prisma.$transaction(operations)
     } catch (err) {
-      // P2002 = unique constraint violation — another concurrent sync already created these records
       if (
         err instanceof Error &&
         (err as { code?: string }).code !== "P2002"
