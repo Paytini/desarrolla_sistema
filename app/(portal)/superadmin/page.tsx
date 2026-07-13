@@ -182,6 +182,9 @@ export default async function SuperadminDashboardPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now()
+
   const [{ empresas }, { empresas: empresasConCursos }, recentEvents, activityRaw] = await Promise.all([
     getSuperadminEmpresasSnapshot(),
     getSuperadminReportesSnapshot(),
@@ -191,13 +194,11 @@ export default async function SuperadminDashboardPage() {
       select: { id: true, actor_nombre: true, actor_rol: true, accion: true, entidad_tipo: true, resumen: true, created_at: true },
     }),
     prisma.auditoriaEvento.findMany({
-      where: { created_at: { gte: new Date(Date.now() - 14 * DAY_MS) } },
+      where: { created_at: { gte: new Date(now - 14 * DAY_MS) } },
       select: { created_at: true },
       orderBy: { created_at: "asc" },
     }),
   ])
-
-  const now = Date.now()
 
   const empresasActivas       = empresas.filter((e) => e.activo).length
   const empresasPct           = empresas.length ? Math.round((empresasActivas / empresas.length) * 100) : 0
@@ -238,22 +239,11 @@ export default async function SuperadminDashboardPage() {
     activityMap.set(key, (activityMap.get(key) ?? 0) + 1)
   })
   const activityData = Array.from({ length: 14 }, (_, i) => {
-    const d     = new Date(Date.now() - (13 - i) * DAY_MS)
+    const d     = new Date(now - (13 - i) * DAY_MS)
     const label = d.toLocaleDateString("es-MX", { month: "short", day: "numeric" })
     return { label: d.getDate().toString(), value: activityMap.get(label) ?? 0 }
   })
   const totalEventos = activityRaw.length
-
-  const empresasChart = empresas
-    .filter((e) => e.activo && e.asientos_contratados > 0)
-    .sort((a, b) => (b.asientos_usados / b.asientos_contratados) - (a.asientos_usados / a.asientos_contratados))
-    .slice(0, 8)
-    .map((e) => ({
-      nombre:  e.nombre,
-      usados:  e.asientos_usados,
-      total:   e.asientos_contratados,
-      pct:     Math.round((e.asientos_usados / e.asientos_contratados) * 100),
-    }))
 
   return (
     <Stack spacing={3}>

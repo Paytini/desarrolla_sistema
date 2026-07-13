@@ -45,23 +45,29 @@ export default function SearchPalette<T,>({
     navigator.platform.toUpperCase().includes("MAC")
   const kbd = isMac ? "⌘K" : "Ctrl K"
 
+  const close = useCallback(() => {
+    setOpen(false)
+    setQuery("")
+    setResults(null)
+    setSelectedIdx(-1)
+  }, [])
+
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault()
-        setOpen((p) => !p)
+        if (open) close()
+        else setOpen(true)
       }
     }
     document.addEventListener("keydown", handler)
     return () => document.removeEventListener("keydown", handler)
-  }, [])
+  }, [open, close])
 
   useEffect(() => {
-    if (open) {
-      const t = setTimeout(() => inputRef.current?.focus(), 60)
-      return () => clearTimeout(t)
-    }
-    setSelectedIdx(-1)
+    if (!open) return
+    const t = setTimeout(() => inputRef.current?.focus(), 60)
+    return () => clearTimeout(t)
   }, [open])
 
   const doSearch = useCallback(
@@ -83,13 +89,6 @@ export default function SearchPalette<T,>({
     const t = setTimeout(() => doSearch(query), 280)
     return () => clearTimeout(t)
   }, [query, doSearch])
-
-  function close() {
-    setOpen(false)
-    setQuery("")
-    setResults(null)
-    setSelectedIdx(-1)
-  }
 
   function getItems() {
     if (!resultsRef.current) return []

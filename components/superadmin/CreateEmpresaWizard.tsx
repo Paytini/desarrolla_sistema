@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useRef, useState } from "react"
+import { useActionState, useRef, useState } from "react"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
@@ -90,11 +90,12 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
     if (validateCurrentStep()) setStep((s) => s + 1)
   }
 
-  useEffect(() => {
-    if (!state?.error) return
-    if (state.error === "email_rh" || state.error === "usuario_rh") setStep(1)
-    if (state.error === "datos") setStep(0)
-  }, [state])
+  const [handledState, setHandledState] = useState(state)
+  if (state !== handledState) {
+    setHandledState(state)
+    if (state?.error === "email_rh" || state?.error === "usuario_rh") setStep(1)
+    if (state?.error === "datos") setStep(0)
+  }
 
   const isRhError = state?.error === "email_rh" || state?.error === "usuario_rh"
 

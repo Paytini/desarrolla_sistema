@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { signOut } from "next-auth/react"
 
 import Avatar from "@mui/material/Avatar"
@@ -20,14 +20,14 @@ interface TopbarUserMenuProps {
 
 export function TopbarUserMenu({ nombre, rol }: TopbarUserMenuProps) {
   const [open, setOpen] = useState(false)
-  const anchorRef = useRef<HTMLButtonElement>(null)
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
   const color    = avatarColor(nombre)
   const initials = getInitials(nombre)
 
   return (
     <>
       <Box
-        ref={anchorRef}
+        ref={setAnchorEl}
         component="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="true"
@@ -97,7 +97,7 @@ export function TopbarUserMenu({ nombre, rol }: TopbarUserMenuProps) {
 
       <Popper
         open={open}
-        anchorEl={anchorRef.current}
+        anchorEl={anchorEl}
         placement="bottom-end"
         transition
         disablePortal={false}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useTransition } from "react"
+import { useCallback, useEffect, useRef, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
 type EmployeeLearningRefreshProps = {
@@ -18,7 +18,7 @@ export default function EmployeeLearningRefresh({
   const requestInFlight = useRef(false)
   const latestSyncAtRef = useRef<string | null>(null)
 
-  async function refreshLearning(force: boolean) {
+  const refreshLearning = useCallback(async (force: boolean) => {
     if (requestInFlight.current) {
       return
     }
@@ -59,7 +59,7 @@ export default function EmployeeLearningRefresh({
     } finally {
       requestInFlight.current = false
     }
-  }
+  }, [router])
 
   useEffect(() => {
     if (!autoRefresh || didAutoRefresh.current) {
@@ -68,7 +68,7 @@ export default function EmployeeLearningRefresh({
 
     didAutoRefresh.current = true
     void refreshLearning(true)
-  }, [autoRefresh])
+  }, [autoRefresh, refreshLearning])
 
   useEffect(() => {
     if (!pollIntervalMs || pollIntervalMs < 15_000) {
@@ -84,7 +84,7 @@ export default function EmployeeLearningRefresh({
     }, pollIntervalMs)
 
     return () => window.clearInterval(intervalId)
-  }, [isPending, pollIntervalMs])
+  }, [isPending, pollIntervalMs, refreshLearning])
 
   return null
 }

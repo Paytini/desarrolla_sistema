@@ -136,6 +136,7 @@ function CourseEditorCard({
     if (defaultOpen && cardRef.current) {
       setTimeout(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [isSyncing, startSyncTransition] = useTransition()
   const [syncSuccess, setSyncSuccess]   = useState(false)

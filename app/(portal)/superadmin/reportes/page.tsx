@@ -85,6 +85,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
   const detail  = readDecodedSearchParam(params, "detail")
 
   const { empresas } = await getSuperadminReportesSnapshot()
+  // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
 
   const companyStats = empresas.map((empresa) => {

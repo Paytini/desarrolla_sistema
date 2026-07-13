@@ -1,4 +1,3 @@
-import Image from "next/image"
 import Link from "next/link"
 import { PageHeader } from "@/components/shared/PageHeader"
 
@@ -46,6 +45,7 @@ function PortalDiagramSection() {
         <div className="min-h-[22rem] overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-50 shadow-inner">
           {diagramUrl ? (
             isDiagramImageUrl(diagramUrl) ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={diagramUrl}
                 alt="Diagrama de arquitectura del portal Desarrolla360"
