@@ -36,7 +36,7 @@ export function PanelBox({ title, description, count, action, children, noPaddin
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography
               sx={{
-                fontFamily: '"Outfit", system-ui, sans-serif',
+                fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
                 fontSize: '1rem',
                 fontWeight: 700,
                 color: '#111827',

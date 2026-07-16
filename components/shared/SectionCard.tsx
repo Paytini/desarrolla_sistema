@@ -34,7 +34,7 @@ export function SectionCard({ title, description, action, disableContentPadding,
         <Box>
           <Typography
             sx={{
-              fontFamily: '"Outfit", system-ui, sans-serif',
+              fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
               fontSize: '1rem',
               fontWeight: 700,
               color: '#111827',

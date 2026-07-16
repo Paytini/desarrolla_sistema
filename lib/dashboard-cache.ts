@@ -37,8 +37,11 @@ const getSuperadminReportesSnapshotCached = unstable_cache(
             id: true,
             activo: true,
             wp_user_id: true,
+            nombre: true,
+            apellido: true,
             cursos: {
               select: {
+                nombre_curso: true,
                 progreso_pct: true,
                 completado: true,
                 acceso_estado: true,

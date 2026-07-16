@@ -47,7 +47,7 @@ export function PageHeader({
         )}
         <h1
           style={{
-            fontFamily: '"Outfit", system-ui, sans-serif',
+            fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
             fontSize: '1.75rem',
             fontWeight: 800,
             lineHeight: 1.2,
