@@ -31,8 +31,8 @@ function getString(formData: FormData, key: string) {
 
 function sanitizeReturnTo(path: string | null | undefined) {
   const value = (path ?? "").trim()
-  if (!value.startsWith("/empresa/empleados")) {
-    return "/empresa/empleados"
+  if (!value.startsWith("/company/employees")) {
+    return "/company/employees"
   }
 
   return value
@@ -510,7 +510,7 @@ export async function createEmployeeAction(formData: FormData) {
   const password = getString(formData, "password")
 
   if (!nombre || !apellido || !email || !password) {
-    redirect("/empresa/empleados?error=datos")
+    redirect("/company/employees?error=datos")
   }
 
   const result = await createEmployeeForEmpresa({
@@ -528,36 +528,36 @@ export async function createEmployeeAction(formData: FormData) {
     actor,
   })
 
-  revalidatePath("/empresa/empleados")
-  revalidatePath("/empresa/asignaciones")
-  revalidatePath("/empleado/cursos")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/company/employees")
+  revalidatePath("/company/assignments")
+  revalidatePath("/employee/courses")
+  revalidatePath("/superadmin/reports")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   if (!result.ok) {
-    redirect(`/empresa/empleados?error=${result.code}`)
+    redirect(`/company/employees?error=${result.code}`)
   }
 
   if (result.code === "empleado_creado_sync") {
     if (result.hasActivePackage) {
-      redirect("/empresa/empleados?success=empleado_creado_sync&error=asignacion_manual")
+      redirect("/company/employees?success=empleado_creado_sync&error=asignacion_manual")
     }
-    redirect("/empresa/empleados?success=empleado_creado_sync")
+    redirect("/company/employees?success=empleado_creado_sync")
   }
 
   if (result.code === "empleado_creado_bridge_error") {
     if (result.hasActivePackage) {
-      redirect("/empresa/empleados?success=empleado_creado&error=asignacion_manual")
+      redirect("/company/employees?success=empleado_creado&error=asignacion_manual")
     }
-    redirect("/empresa/empleados?success=empleado_creado&error=bridge_sync")
+    redirect("/company/employees?success=empleado_creado&error=bridge_sync")
   }
 
   if (result.hasActivePackage) {
-    redirect("/empresa/empleados?success=empleado_creado&error=asignacion_manual")
+    redirect("/company/employees?success=empleado_creado&error=asignacion_manual")
   }
 
-  redirect("/empresa/empleados?success=empleado_creado")
+  redirect("/company/employees?success=empleado_creado")
 }
 
 export async function importEmployeesCsvAction(formData: FormData) {
@@ -568,22 +568,22 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const file = formData.get("archivo_csv")
 
   if (!(file instanceof File) || file.size === 0) {
-    redirect("/empresa/empleados?error=csv_file")
+    redirect("/company/employees?error=csv_file")
   }
 
   if (!file.name.toLowerCase().endsWith(".csv")) {
-    redirect("/empresa/empleados?error=csv_file")
+    redirect("/company/employees?error=csv_file")
   }
 
   const csvText = await file.text()
   const rows = parseCsvText(csvText)
 
   if (rows.length < 2) {
-    redirect("/empresa/empleados?error=csv_empty")
+    redirect("/company/employees?error=csv_empty")
   }
 
   if (rows.length - 1 > CSV_IMPORT_LIMIT) {
-    redirect("/empresa/empleados?error=csv_limit")
+    redirect("/company/employees?error=csv_limit")
   }
 
   const [headerRow, ...dataRows] = rows
@@ -591,16 +591,16 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const normalizedCsv = normalizeCsvEmployees(dataRows, headers, fallbackPassword)
 
   if (normalizedCsv.missingPassword) {
-    redirect("/empresa/empleados?error=csv_password_required")
+    redirect("/company/employees?error=csv_password_required")
   }
 
   if (normalizedCsv.employees.length === 0) {
-    redirect("/empresa/empleados?error=csv_empty")
+    redirect("/company/employees?error=csv_empty")
   }
 
   const empresaContext = await loadEmpresaProvisioningContext(empresaId)
   if (!empresaContext) {
-    redirect("/empresa/empleados?error=empresa")
+    redirect("/company/employees?error=empresa")
   }
 
   const candidateEmails = normalizedCsv.employees.map((employee) => employee.email)
@@ -627,7 +627,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
   ])
 
   if (!beforeSeatSnapshot) {
-    redirect("/empresa/empleados?error=empresa")
+    redirect("/company/employees?error=empresa")
   }
 
   const existingEmails = new Set([
@@ -642,7 +642,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const availableSeats = Math.max(empresaContext.asientos_contratados - activeEmployees, 0)
 
   if (availableSeats <= 0) {
-    redirect("/empresa/empleados?error=cupos")
+    redirect("/company/employees?error=cupos")
   }
 
   const employeesToCreate = availableEmployees.slice(0, availableSeats)
@@ -753,16 +753,16 @@ export async function importEmployeesCsvAction(formData: FormData) {
     },
   })
 
-  revalidatePath("/empresa/empleados")
-  revalidatePath("/empresa/inicio")
-  revalidatePath("/empresa/progreso")
-  revalidatePath("/empresa/constancias")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/company/employees")
+  revalidatePath("/company/home")
+  revalidatePath("/company/progress")
+  revalidatePath("/company/certificates")
+  revalidatePath("/superadmin/reports")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(
-    `/empresa/empleados?success=csv_imported&created=${created}&synced=${synced}&warnings=${bridgeWarnings}&skipped=${skipped}`
+    `/company/employees?success=csv_imported&created=${created}&synced=${synced}&warnings=${bridgeWarnings}&skipped=${skipped}`
   )
 }
 
@@ -850,8 +850,8 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
     },
   })
 
-  revalidatePath("/empresa/empleados")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/company/employees")
+  revalidatePath("/superadmin/reports")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect(withStatus(returnTo, "success", empleado.activo ? "empleado_suspendido" : "empleado_activado"))
@@ -885,11 +885,11 @@ export async function deleteEmployeeAction(formData: FormData) {
     redirect(withStatus(returnTo, "error", errorCode))
   }
 
-  revalidatePath("/empresa/empleados")
-  revalidatePath("/empresa/inicio")
-  revalidatePath("/empresa/progreso")
-  revalidatePath("/superadmin/accesos")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/company/employees")
+  revalidatePath("/company/home")
+  revalidatePath("/company/progress")
+  revalidatePath("/superadmin/access")
+  revalidatePath("/superadmin/reports")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect(withStatus(returnTo, "success", "empleado_eliminado"))
@@ -914,14 +914,14 @@ export async function triggerCompanyLearningSyncAction() {
     resumen: `${actor.nombre} solicito sincronizacion de aprendizaje para su empresa.`,
   })
 
-  revalidatePath("/empresa/empleados")
-  revalidatePath("/empresa/inicio")
-  revalidatePath("/empresa/progreso")
-  revalidatePath("/empleado/cursos")
-  revalidatePath("/empleado/constancias")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/company/employees")
+  revalidatePath("/company/home")
+  revalidatePath("/company/progress")
+  revalidatePath("/employee/courses")
+  revalidatePath("/employee/certificates")
+  revalidatePath("/superadmin/reports")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
-  redirect(`/empresa/empleados?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
+  redirect(`/company/employees?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
 }

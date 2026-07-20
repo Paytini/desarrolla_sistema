@@ -117,7 +117,7 @@ export function EmpresaRow({ empresa }: { empresa: Empresa }) {
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.75 }}>
           <Button
             component={Link}
-            href={`/superadmin/empresas/${empresa.id}`}
+            href={`/superadmin/companies/${empresa.id}`}
             size="small"
             variant="outlined"
             startIcon={<ExternalLink size={11} strokeWidth={2} />}

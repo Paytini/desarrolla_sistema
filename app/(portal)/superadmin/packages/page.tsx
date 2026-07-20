@@ -142,7 +142,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
     if (sort !== "recientes") qs.set("sort", sort)
     if (p > 1) qs.set("page", String(p))
     const str = qs.toString()
-    return `/superadmin/paquetes${str ? `?${str}` : ""}`
+    return `/superadmin/packages${str ? `?${str}` : ""}`
   }
 
   return (
@@ -151,7 +151,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
         title="Gestión de paquetes"
         description="Define paquetes con cursos de Tutor LMS, asígnalos a empresas y sincroniza empleados."
         action={
-          <Link href="/superadmin/paquetes/nuevo" style={{ textDecoration: "none" }}>
+          <Link href="/superadmin/packages/nuevo" style={{ textDecoration: "none" }}>
             <Button
               variant="contained"
               startIcon={<Plus size={14} strokeWidth={2.5} />}
@@ -204,7 +204,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
             </Button>
             {hasFilters && (
               <Link
-                href="/superadmin/paquetes"
+                href="/superadmin/packages"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",

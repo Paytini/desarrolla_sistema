@@ -219,7 +219,7 @@ export default function Sidebar({
 
         {rol === "SUPERADMIN" && (
           <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
-            <Link href="/superadmin/integracion" style={{ textDecoration: "none" }}>
+            <Link href="/superadmin/integration" style={{ textDecoration: "none" }}>
               <Box
                 sx={{
                   borderRadius: "14px",

@@ -148,7 +148,7 @@ export default async function EmpresaDetailPage({ params }: PageProps) {
     <Box sx={{ display: "grid", gap: 2.5 }}>
       <Box sx={{ display: "grid", gap: 1.5 }}>
         <Link
-          href="/superadmin/empresas"
+          href="/superadmin/companies"
           style={{
             display: "inline-flex",
             alignItems: "center",

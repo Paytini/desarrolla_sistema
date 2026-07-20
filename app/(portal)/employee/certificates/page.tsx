@@ -1,6 +1,6 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
-import EmployeeLearningRefresh from "@/components/empleado/EmployeeLearningRefresh"
+import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
@@ -65,7 +65,7 @@ export default async function EmpleadoConstanciasPage() {
             {constancias.length > 0 ? (
               <Button
                 component="a"
-                href="/api/constancias/zip"
+                href="/api/certificates/zip"
                 download
                 variant="outlined"
                 size="small"
@@ -178,7 +178,7 @@ export default async function EmpleadoConstanciasPage() {
                     ) : null}
                     <Button
                       component="a"
-                      href={`/api/constancias/${constancia.id}/dc3`}
+                      href={`/api/certificates/${constancia.id}/dc3`}
                       target="_blank"
                       rel="noreferrer"
                       variant="contained"

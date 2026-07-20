@@ -10,7 +10,7 @@ export function ZipDownloadButton({ count }: { count: number }) {
     if (status === "loading") return
     setStatus("loading")
     try {
-      const res = await fetch("/api/constancias/zip")
+      const res = await fetch("/api/certificates/zip")
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)

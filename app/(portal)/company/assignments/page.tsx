@@ -78,7 +78,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
       <PageHeader
         title="Asignación de cursos"
         description="Asigna cursos del paquete activo a cada colaborador"
-        breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Asignaciones" }]}
+        breadcrumbs={[{ label: "Empresa", href: "/company/home" }, { label: "Asignaciones" }]}
       />
 
       {success ? (

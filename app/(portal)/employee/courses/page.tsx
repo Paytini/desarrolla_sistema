@@ -2,7 +2,7 @@ import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { RingChart } from "@/components/shared/RingChart"
 import StatusBadge from "@/components/shared/StatusBadge"
-import EmployeeLearningRefresh from "@/components/empleado/EmployeeLearningRefresh"
+import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCourseRecord } from "@/lib/learning-types"
@@ -417,7 +417,7 @@ export default async function EmpleadoCursos() {
           </Box>
           <Button
             component="a"
-            href="/empleado/constancias"
+            href="/employee/certificates"
             variant="contained"
             disableElevation
             sx={{

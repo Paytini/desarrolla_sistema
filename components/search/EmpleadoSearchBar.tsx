@@ -18,7 +18,7 @@ type SearchResults    = { cursos: CursoResult[]; constancias: ConstanciaResult[]
 export default function EmpleadoSearchBar() {
   return (
     <SearchPalette<SearchResults>
-      searchUrl={(q) => `/api/internal/empleado-search?q=${encodeURIComponent(q)}`}
+      searchUrl={(q) => `/api/internal/employee-search?q=${encodeURIComponent(q)}`}
       placeholder="Buscar cursos o constancias..."
       triggerLabel="Buscar mis cursos"
       renderGroups={(results, query, onClose) => {
@@ -43,7 +43,7 @@ export default function EmpleadoSearchBar() {
               <Box component="section">
                 <GroupHeader icon={BookOpen} label="Mis cursos" count={results.cursos.length} />
                 {results.cursos.map((c) => (
-                  <ResultRow key={c.id} href="/empleado/cursos" onClose={onClose}>
+                  <ResultRow key={c.id} href="/employee/courses" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"
@@ -71,7 +71,7 @@ export default function EmpleadoSearchBar() {
               <Box component="section">
                 <GroupHeader icon={Award} label="Constancias" count={results.constancias.length} />
                 {results.constancias.map((c) => (
-                  <ResultRow key={c.id} href="/empleado/constancias" onClose={onClose}>
+                  <ResultRow key={c.id} href="/employee/certificates" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"

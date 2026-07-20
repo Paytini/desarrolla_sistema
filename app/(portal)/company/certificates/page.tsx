@@ -1,6 +1,6 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { ZipDownloadButton } from "@/components/empresa/ZipDownloadButton"
+import { ZipDownloadButton } from "@/components/company/ZipDownloadButton"
 import { Award, Clock, Users } from "lucide-react"
 import { formatDateTime, getInitials } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
@@ -95,7 +95,7 @@ export default async function EmpresaConstanciasPage() {
       <PageHeader
         title="Constancias DC-3"
         description="Constancias de habilidades laborales para cumplimiento STPS"
-        breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Constancias DC-3" }]}
+        breadcrumbs={[{ label: "Empresa", href: "/company/home" }, { label: "Constancias DC-3" }]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -156,7 +156,7 @@ export default async function EmpresaConstanciasPage() {
                         </a>
                       ) : null}
                       <a
-                        href={`/api/constancias/${constancia.id}/dc3`}
+                        href={`/api/certificates/${constancia.id}/dc3`}
                         target="_blank"
                         rel="noreferrer"
                         className="rounded-xl bg-[#3579F5] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#2A61D6]"

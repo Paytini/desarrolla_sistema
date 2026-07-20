@@ -109,16 +109,16 @@ export default async function EmpresaInicio() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
         <div className="grid gap-3 sm:grid-cols-2">
-          <QuickLink href="/empresa/empleados" label="Gestión de empleados" Icon={Users} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
-          <QuickLink href="/empresa/asignaciones" label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
+          <QuickLink href="/company/employees" label="Gestión de empleados" Icon={Users} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
+          <QuickLink href="/company/assignments" label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
           <QuickLink
-            href="/empresa/progreso"
+            href="/company/progress"
             label="Progreso y trayectorias"
             Icon={BarChart3}
             iconCls="bg-[#EAF1FE] text-[#3579F5]"
           />
           <QuickLink
-            href="/empresa/constancias"
+            href="/company/certificates"
             label="Constancias DC-3"
             Icon={Award}
             iconCls="bg-[#EAF1FE] text-[#3579F5]"

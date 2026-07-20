@@ -157,7 +157,7 @@ function CourseEditorCard({
       const fd = new FormData()
       fd.append("file", file)
       fd.append("nombre", `instructor-${course.wp_curso_id}`)
-      const res  = await fetch("/api/upload/firma-instructor", { method: "POST", body: fd })
+      const res  = await fetch("/api/upload/instructor-signature", { method: "POST", body: fd })
       const data = await res.json()
       if (!res.ok) { setUploadError(data.error ?? "Error subiendo la firma"); return }
       setFirmaUrl(data.url as string)
@@ -203,7 +203,7 @@ function CourseEditorCard({
   }
 
   const isBlobUrl = firmaUrl.includes("blob.vercel-storage.com")
-  const proxyUrl  = isBlobUrl ? `/api/upload/firma-proxy?url=${encodeURIComponent(firmaUrl)}` : firmaUrl
+  const proxyUrl  = isBlobUrl ? `/api/upload/signature-proxy?url=${encodeURIComponent(firmaUrl)}` : firmaUrl
 
   return (
     <Paper

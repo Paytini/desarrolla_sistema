@@ -127,7 +127,7 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
       <PageHeader
         title="Progreso"
         description="Avance y actividad de cursos por colaborador"
-        breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Progreso" }]}
+        breadcrumbs={[{ label: "Empresa", href: "/company/home" }, { label: "Progreso" }]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

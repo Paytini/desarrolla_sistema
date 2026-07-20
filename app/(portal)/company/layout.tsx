@@ -11,7 +11,7 @@ export default async function EmpresaLayout({
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
   const status = await getEmpresaAccessStatus(session.user.empresa_id)
-  if (status.blocked) redirect(`/cuenta-suspendida?reason=${status.reason}`)
+  if (status.blocked) redirect(`/account-suspended?reason=${status.reason}`)
 
   return <>{children}</>
 }

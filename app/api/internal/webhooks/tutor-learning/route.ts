@@ -121,13 +121,13 @@ export async function POST(request: Request) {
       certificates_updated: result.certificatesUpdated,
     })
 
-    revalidatePath("/empleado/cursos")
-    revalidatePath("/empleado/constancias")
+    revalidatePath("/employee/courses")
+    revalidatePath("/employee/certificates")
 
     if (payload.company_id) {
-      revalidatePath("/empresa/inicio")
-      revalidatePath("/empresa/progreso")
-      revalidatePath("/empresa/constancias")
+      revalidatePath("/company/home")
+      revalidatePath("/company/progress")
+      revalidatePath("/company/certificates")
       revalidateTag(empresaCacheRootTag(payload.company_id), "max")
       revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     }

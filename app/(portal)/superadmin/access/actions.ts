@@ -20,7 +20,7 @@ export async function toggleRhUserStatusAction(formData: FormData) {
 
   const userId = getInt(formData, "user_id")
   if (!userId) {
-    redirect("/superadmin/accesos?error=usuario")
+    redirect("/superadmin/access?error=usuario")
   }
 
   try {
@@ -37,12 +37,12 @@ export async function toggleRhUserStatusAction(formData: FormData) {
       },
     })
 
-    revalidatePath("/superadmin/accesos")
-    revalidatePath("/superadmin/reportes")
+    revalidatePath("/superadmin/access")
+    revalidatePath("/superadmin/reports")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect(`/superadmin/accesos?success=${usuario.activo ? "rh_suspendido" : "rh_activado"}`)
+    redirect(`/superadmin/access?success=${usuario.activo ? "rh_suspendido" : "rh_activado"}`)
   } catch {
-    redirect("/superadmin/accesos?error=usuario")
+    redirect("/superadmin/access?error=usuario")
   }
 }
 
@@ -52,7 +52,7 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
 
   const empleadoId = getInt(formData, "empleado_id")
   if (!empleadoId) {
-    redirect("/superadmin/accesos?error=empleado")
+    redirect("/superadmin/access?error=empleado")
   }
 
   let deletedEmployee: Awaited<ReturnType<typeof deleteEmployeeRecord>> | null = null
@@ -63,17 +63,17 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
       source: "SUPERADMIN",
     })
   } catch {
-    redirect("/superadmin/accesos?error=empleado")
+    redirect("/superadmin/access?error=empleado")
   }
 
-  revalidatePath("/superadmin/accesos")
-  revalidatePath("/empresa/empleados")
-  revalidatePath("/empresa/inicio")
-  revalidatePath("/empresa/progreso")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/superadmin/access")
+  revalidatePath("/company/employees")
+  revalidatePath("/company/home")
+  revalidatePath("/company/progress")
+  revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   if (deletedEmployee) {
     revalidateTag(empresaCacheRootTag(deletedEmployee.empresa_id), "max")
   }
-  redirect("/superadmin/accesos?success=empleado_eliminado")
+  redirect("/superadmin/access?success=empleado_eliminado")
 }

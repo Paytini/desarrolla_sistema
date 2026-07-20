@@ -61,7 +61,7 @@ export function RenovacionesTable({ renewals }: { renewals: Renewal[] }) {
         renewals.length > 6 ? (
           <Typography
             component={Link}
-            href="/superadmin/reportes"
+            href="/superadmin/reports"
             sx={{ fontSize: 11, fontWeight: 600, color: "primary.main", textDecoration: "none", "&:hover": { opacity: 0.75 } }}
           >
             Ver todos →

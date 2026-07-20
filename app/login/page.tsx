@@ -133,9 +133,9 @@ export default function LoginPage() {
     const session = await res.json()
     const rol     = session?.user?.rol
 
-    if      (rol === "SUPERADMIN") router.push("/superadmin/empresas")
-    else if (rol === "RH")         router.push("/empresa/inicio")
-    else if (rol === "EMPLEADO")   router.push("/empleado/cursos")
+    if      (rol === "SUPERADMIN") router.push("/superadmin/companies")
+    else if (rol === "RH")         router.push("/company/home")
+    else if (rol === "EMPLEADO")   router.push("/employee/courses")
     else                           setError("Rol no reconocido")
   }
 

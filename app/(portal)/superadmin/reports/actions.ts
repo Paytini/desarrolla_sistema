@@ -50,12 +50,12 @@ export async function triggerGlobalLearningSyncAction() {
     resumen: `${actor.nombre} solicito sincronizacion global de aprendizaje.`,
   })
 
-  revalidatePath("/superadmin/reportes")
-  revalidatePath("/empleado/cursos")
-  revalidatePath("/empleado/constancias")
+  revalidatePath("/superadmin/reports")
+  revalidatePath("/employee/courses")
+  revalidatePath("/employee/certificates")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
-  redirect(`/superadmin/reportes?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
+  redirect(`/superadmin/reports?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
 }
 
 export async function retryCompanySyncAction(formData: FormData) {
@@ -64,7 +64,7 @@ export async function retryCompanySyncAction(formData: FormData) {
   const empresaId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
 
   if (!empresaId) {
-    redirect("/superadmin/reportes?error=sync_retry")
+    redirect("/superadmin/reports?error=sync_retry")
   }
 
   let packageSyncError: string | null = null
@@ -93,19 +93,19 @@ export async function retryCompanySyncAction(formData: FormData) {
     },
   })
 
-  revalidatePath("/superadmin/reportes")
-  revalidatePath("/superadmin/paquetes")
-  revalidatePath("/empresa/empleados")
-  revalidatePath("/empresa/progreso")
-  revalidatePath("/empleado/cursos")
-  revalidatePath("/empleado/constancias")
+  revalidatePath("/superadmin/reports")
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/company/employees")
+  revalidatePath("/company/progress")
+  revalidatePath("/employee/courses")
+  revalidatePath("/employee/certificates")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
 
   if (packageSyncError) {
     const detail = encodeURIComponent(packageSyncError)
-    redirect(`/superadmin/reportes?success=sync_retry_partial&detail=${detail}`)
+    redirect(`/superadmin/reports?success=sync_retry_partial&detail=${detail}`)
   }
 
-  redirect(`/superadmin/reportes?success=${queued ? "sync_retry_ok" : "sync_retry_queue_busy"}`)
+  redirect(`/superadmin/reports?success=${queued ? "sync_retry_ok" : "sync_retry_queue_busy"}`)
 }

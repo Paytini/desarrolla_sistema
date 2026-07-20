@@ -92,7 +92,7 @@ export async function createPackageAction(formData: FormData) {
   const selectedCoursesRaw = getString(formData, "selected_courses_json")
 
   if (!nombre || !selectedCoursesRaw) {
-    redirect("/superadmin/paquetes/nuevo?error=datos")
+    redirect("/superadmin/packages/nuevo?error=datos")
   }
 
   let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> = []
@@ -112,11 +112,11 @@ export async function createPackageAction(formData: FormData) {
       }))
       .filter((course) => Number.isInteger(course.wpCourseId) && course.nombreCurso)
   } catch {
-    redirect("/superadmin/paquetes/nuevo?error=cursos")
+    redirect("/superadmin/packages/nuevo?error=cursos")
   }
 
   if (parsedCourses.length === 0) {
-    redirect("/superadmin/paquetes/nuevo?error=cursos")
+    redirect("/superadmin/packages/nuevo?error=cursos")
   }
 
   const wpBundleId = wpBundleIdRaw ? Number.parseInt(wpBundleIdRaw, 10) : NaN
@@ -128,7 +128,7 @@ export async function createPackageAction(formData: FormData) {
       const detail = encodeURIComponent(
         "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS."
       )
-      redirect(`/superadmin/paquetes/nuevo?error=bundle&detail=${detail}`)
+      redirect(`/superadmin/packages/nuevo?error=bundle&detail=${detail}`)
     }
 
     try {
@@ -143,7 +143,7 @@ export async function createPackageAction(formData: FormData) {
       resolvedBundleName = bundle.title
     } catch (error) {
       const detail = encodeURIComponent(getBundleErrorMessage(error))
-      redirect(`/superadmin/paquetes/nuevo?error=bundle&detail=${detail}`)
+      redirect(`/superadmin/packages/nuevo?error=bundle&detail=${detail}`)
     }
   }
 
@@ -183,10 +183,10 @@ export async function createPackageAction(formData: FormData) {
     },
   })
 
-  revalidatePath("/superadmin/paquetes")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/superadmin/paquetes?success=paquete_creado")
+  redirect("/superadmin/packages?success=paquete_creado")
 }
 
 export async function deletePackageAction(formData: FormData) {
@@ -195,7 +195,7 @@ export async function deletePackageAction(formData: FormData) {
   const paqueteId = getInteger(getString(formData, "paquete_id"))
 
   if (!paqueteId) {
-    redirect("/superadmin/paquetes?error=paquete")
+    redirect("/superadmin/packages?error=paquete")
   }
 
   const paquete = await prisma.paquete.findUnique({
@@ -217,7 +217,7 @@ export async function deletePackageAction(formData: FormData) {
   })
 
   if (!paquete || !paquete.activo) {
-    redirect("/superadmin/paquetes?error=paquete")
+    redirect("/superadmin/packages?error=paquete")
   }
 
   if (paquete.empresas.length > 0) {
@@ -227,7 +227,7 @@ export async function deletePackageAction(formData: FormData) {
     const detail = encodeURIComponent(
       `Primero cambia o desactiva el paquete activo en: ${companyNames}.`
     )
-    redirect(`/superadmin/paquetes?error=paquete_asignado&detail=${detail}`)
+    redirect(`/superadmin/packages?error=paquete_asignado&detail=${detail}`)
   }
 
   await prisma.paquete.update({
@@ -246,11 +246,11 @@ export async function deletePackageAction(formData: FormData) {
     },
   })
 
-  revalidatePath("/superadmin/paquetes")
-  revalidatePath("/superadmin/empresas")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/companies")
+  revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/superadmin/paquetes?success=paquete_eliminado")
+  redirect("/superadmin/packages?success=paquete_eliminado")
 }
 
 export async function assignPackageToCompanyAction(formData: FormData) {
@@ -262,7 +262,7 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   const fechaVencimientoRaw = getString(formData, "fecha_vencimiento")
 
   if (!empresaId || !paqueteId) {
-    redirect("/superadmin/paquetes?error=asignacion")
+    redirect("/superadmin/packages?error=asignacion")
   }
 
   await prisma.$transaction([
@@ -314,14 +314,14 @@ export async function assignPackageToCompanyAction(formData: FormData) {
     },
   })
 
-  revalidatePath("/superadmin/paquetes")
-  revalidatePath("/superadmin/empresas")
-  revalidatePath("/superadmin/reportes")
-  revalidatePath("/empresa/inicio")
-  revalidatePath("/empresa/empleados")
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/companies")
+  revalidatePath("/superadmin/reports")
+  revalidatePath("/company/home")
+  revalidatePath("/company/employees")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
-  redirect("/superadmin/paquetes?success=paquete_asignado")
+  redirect("/superadmin/packages?success=paquete_asignado")
 }
 
 export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
@@ -330,7 +330,7 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
 
   const empresaId = getInteger(getString(formData, "empresa_id"))
   if (!empresaId) {
-    redirect("/superadmin/paquetes?error=sync")
+    redirect("/superadmin/packages?error=sync")
   }
 
   try {
@@ -348,7 +348,7 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
       },
     })
     const detail = encodeURIComponent(getSyncErrorMessage(error))
-    redirect(`/superadmin/paquetes?error=sync&detail=${detail}`)
+    redirect(`/superadmin/packages?error=sync&detail=${detail}`)
   }
 
   await createAuditEvent({
@@ -360,12 +360,12 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
     resumen: `${actor.nombre} sincronizo paquete activo con empleados de la empresa.`,
   })
 
-  revalidatePath("/superadmin/paquetes")
-  revalidatePath("/superadmin/reportes")
-  revalidatePath("/empresa/empleados")
-  revalidatePath("/empresa/progreso")
-  revalidatePath("/empleado/cursos")
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/reports")
+  revalidatePath("/company/employees")
+  revalidatePath("/company/progress")
+  revalidatePath("/employee/courses")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
-  redirect("/superadmin/paquetes?success=sync_ok")
+  redirect("/superadmin/packages?success=sync_ok")
 }

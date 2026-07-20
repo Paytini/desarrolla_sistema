@@ -152,11 +152,11 @@ export async function createCompanyAction(
     excludeUsuarioId: actor.usuarioId,
   })
 
-  revalidatePath("/superadmin/empresas")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/superadmin/companies")
+  revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(empresaCacheRootTag(createdResult.empresaId), "max")
-  redirect("/superadmin/empresas?success=empresa_creada")
+  redirect("/superadmin/companies?success=empresa_creada")
 }
 
 export async function toggleCompanyStatusAction(formData: FormData) {
@@ -165,7 +165,7 @@ export async function toggleCompanyStatusAction(formData: FormData) {
 
   const empresaId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
   if (!empresaId) {
-    redirect("/superadmin/empresas?error=empresa")
+    redirect("/superadmin/companies?error=empresa")
   }
 
   const empresa = await prisma.empresa.findUnique({
@@ -174,7 +174,7 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   })
 
   if (!empresa) {
-    redirect("/superadmin/empresas?error=empresa")
+    redirect("/superadmin/companies?error=empresa")
   }
 
   await prisma.empresa.update({
@@ -200,10 +200,10 @@ export async function toggleCompanyStatusAction(formData: FormData) {
     excludeUsuarioId: actor.usuarioId,
   })
 
-  revalidatePath("/superadmin/empresas")
-  revalidatePath("/superadmin/reportes")
+  revalidatePath("/superadmin/companies")
+  revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
-  redirect(`/superadmin/empresas?success=${empresa.activo ? "empresa_suspendida" : "empresa_activada"}`)
+  redirect(`/superadmin/companies?success=${empresa.activo ? "empresa_suspendida" : "empresa_activada"}`)
 }
 

@@ -18,7 +18,7 @@ export default async function NuevaEmpresaPage() {
     <Box sx={{ maxWidth: 840, mx: "auto" }}>
       <Box sx={{ mb: 5 }}>
         <Link
-          href="/superadmin/empresas"
+          href="/superadmin/companies"
           style={{
             display:     "inline-flex",
             alignItems:  "center",

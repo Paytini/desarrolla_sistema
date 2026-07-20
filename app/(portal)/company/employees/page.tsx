@@ -1,7 +1,7 @@
-import CnoSelect from "@/components/empresa/CnoSelect"
-import CurpInfoButton from "@/components/empresa/CurpInfoButton"
-import DeleteEmployeeButton from "@/components/empresa/DeleteEmployeeButton"
-import EmployeeOnboardingTabs from "@/components/empresa/EmployeeOnboardingTabs"
+import CnoSelect from "@/components/company/CnoSelect"
+import CurpInfoButton from "@/components/company/CurpInfoButton"
+import DeleteEmployeeButton from "@/components/company/DeleteEmployeeButton"
+import EmployeeOnboardingTabs from "@/components/company/EmployeeOnboardingTabs"
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
@@ -80,7 +80,7 @@ function buildEmployeeListPath(query: string, status: string) {
   if (query) searchParams.set("q", query)
   if (status !== "all") searchParams.set("status", status)
   const serialized = searchParams.toString()
-  return serialized ? `/empresa/empleados?${serialized}` : "/empresa/empleados"
+  return serialized ? `/company/employees?${serialized}` : "/company/employees"
 }
 
 
@@ -288,7 +288,7 @@ function CsvEmployeeImportForm() {
             </div>
 
             <a
-              href="/api/templates/empleados-csv"
+              href="/api/templates/employees-csv"
               className="inline-flex self-start items-center rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-slate-800 transition-all duration-200 hover:bg-gray-200"
             >
               Descargar plantilla CSV
@@ -408,10 +408,10 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
     matchesEmployeeFilters(e, { query, status })
   )
   const currentListPath = buildEmployeeListPath(searchQuery, status)
-  const exportHref = `/api/empresa/empleados/export${
-    currentListPath === "/empresa/empleados"
+  const exportHref = `/api/company/employees/export${
+    currentListPath === "/company/employees"
       ? ""
-      : currentListPath.replace("/empresa/empleados", "")
+      : currentListPath.replace("/company/employees", "")
   }`
 
   return (
@@ -419,7 +419,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
       <PageHeader
         title="Empleados"
         description="Gestión de la plantilla de colaboradores"
-        breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Empleados" }]}
+        breadcrumbs={[{ label: "Empresa", href: "/company/home" }, { label: "Empleados" }]}
       />
 
       {success ? (
@@ -501,7 +501,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
           </button>
           {(searchQuery || status !== "all") ? (
             <a
-              href="/empresa/empleados"
+              href="/company/employees"
               className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Limpiar

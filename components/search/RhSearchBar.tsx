@@ -17,7 +17,7 @@ type SearchResults  = { empleados: EmpleadoResult[]; cursos: CursoResult[] }
 export default function RhSearchBar() {
   return (
     <SearchPalette<SearchResults>
-      searchUrl={(q) => `/api/internal/rh-search?q=${encodeURIComponent(q)}`}
+      searchUrl={(q) => `/api/internal/hr-search?q=${encodeURIComponent(q)}`}
       placeholder="Buscar empleados o cursos..."
       triggerLabel="Buscar en el portal"
       renderGroups={(results, query, onClose) => {
@@ -42,7 +42,7 @@ export default function RhSearchBar() {
               <Box component="section">
                 <GroupHeader icon={Users} label="Empleados" count={results.empleados.length} />
                 {results.empleados.map((e) => (
-                  <ResultRow key={e.id} href="/empresa/empleados" onClose={onClose}>
+                  <ResultRow key={e.id} href="/company/employees" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"
@@ -77,7 +77,7 @@ export default function RhSearchBar() {
               <Box component="section">
                 <GroupHeader icon={BookOpen} label="Cursos del paquete" count={results.cursos.length} />
                 {results.cursos.map((c) => (
-                  <ResultRow key={c.wp_curso_id} href="/empresa/progreso" onClose={onClose}>
+                  <ResultRow key={c.wp_curso_id} href="/company/progress" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"

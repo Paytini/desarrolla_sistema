@@ -44,7 +44,7 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    fetch("/api/internal/notificaciones")
+    fetch("/api/internal/notifications")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data) return
@@ -59,7 +59,7 @@ export function NotificationBell() {
     setOpen(next)
     if (next && unreadCount > 0) {
       setUnreadCount(0)
-      fetch("/api/internal/notificaciones", { method: "PATCH" }).catch(() => {})
+      fetch("/api/internal/notifications", { method: "PATCH" }).catch(() => {})
     }
   }
 

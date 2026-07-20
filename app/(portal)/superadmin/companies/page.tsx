@@ -79,7 +79,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
     if (statusFilter !== "all") qs.set("status", statusFilter)
     if (p > 1) qs.set("page", String(p))
     const str = qs.toString()
-    return `/superadmin/empresas${str ? `?${str}` : ""}`
+    return `/superadmin/companies${str ? `?${str}` : ""}`
   }
 
   return (
@@ -88,7 +88,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
         title="Empresas clientes"
         description="Gestiona las organizaciones activas en la plataforma."
         action={
-          <Link href="/superadmin/empresas/nueva" style={{ textDecoration: 'none' }}>
+          <Link href="/superadmin/companies/nueva" style={{ textDecoration: 'none' }}>
             <Button
               variant="contained"
               startIcon={<Plus size={14} strokeWidth={2.5} />}
@@ -150,7 +150,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
           </Button>
           {(q || statusFilter !== "all") && (
             <Link
-              href="/superadmin/empresas"
+              href="/superadmin/companies"
               style={{
                 display: "inline-flex",
                 alignItems: "center",

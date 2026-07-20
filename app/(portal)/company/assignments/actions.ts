@@ -47,7 +47,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   const selectedCourseIds = parseCourseIds(formData.getAll("course_ids"))
 
   if (!empleadoId) {
-    redirect("/empresa/asignaciones?error=datos")
+    redirect("/company/assignments?error=datos")
   }
 
   const [empleado, empresa] = await Promise.all([
@@ -85,12 +85,12 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   ])
 
   if (!empleado || !empresa) {
-    redirect("/empresa/asignaciones?error=empleado")
+    redirect("/company/assignments?error=empleado")
   }
 
   const activePackage = empresa.paquetes[0]
   if (!activePackage) {
-    redirect("/empresa/asignaciones?error=paquete")
+    redirect("/company/assignments?error=paquete")
   }
 
   const packageCourses = activePackage.paquete.cursos as PortalPackageCourseRecord[]
@@ -109,7 +109,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     })
 
   if (selectedCourseIds.length > 0 && validSelectedCourses.length === 0) {
-    redirect("/empresa/asignaciones?error=cursos")
+    redirect("/company/assignments?error=cursos")
   }
 
   await replaceEmployeePackageCourses(empleado.id, validSelectedCourses)
@@ -121,12 +121,12 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       : `Se te asignaron ${courseNames.length} cursos nuevos.`
 
   if (validSelectedCourses.length === 0) {
-    revalidatePath("/empresa/asignaciones")
-    revalidatePath("/empresa/progreso")
-    revalidatePath("/empleado/cursos")
+    revalidatePath("/company/assignments")
+    revalidatePath("/company/progress")
+    revalidatePath("/employee/courses")
     revalidateTag(empresaCacheRootTag(empresaId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect("/empresa/asignaciones?success=limpio_local")
+    redirect("/company/assignments?success=limpio_local")
   }
 
   if (!empleado.wp_user_id || !isWordPressBridgeConfigured()) {
@@ -135,12 +135,12 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       titulo: "Nuevo curso asignado",
       mensaje: courseAssignmentMessage,
     })
-    revalidatePath("/empresa/asignaciones")
-    revalidatePath("/empresa/progreso")
-    revalidatePath("/empleado/cursos")
+    revalidatePath("/company/assignments")
+    revalidatePath("/company/progress")
+    revalidatePath("/employee/courses")
     revalidateTag(empresaCacheRootTag(empresaId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect("/empresa/asignaciones?success=asignado_local")
+    redirect("/company/assignments?success=asignado_local")
   }
 
   try {
@@ -209,11 +209,11 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       mensaje: syncFailMensaje,
     })
 
-    revalidatePath("/empresa/asignaciones")
-    revalidatePath("/empleado/cursos")
+    revalidatePath("/company/assignments")
+    revalidatePath("/employee/courses")
     revalidateTag(empresaCacheRootTag(empresaId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect("/empresa/asignaciones?success=asignado_local&error=bridge_sync")
+    redirect("/company/assignments?success=asignado_local&error=bridge_sync")
   }
 
   await notifyUsuarioByEmail(empleado.email, {
@@ -222,10 +222,10 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     mensaje: courseAssignmentMessage,
   })
 
-  revalidatePath("/empresa/asignaciones")
-  revalidatePath("/empresa/progreso")
-  revalidatePath("/empleado/cursos")
+  revalidatePath("/company/assignments")
+  revalidatePath("/company/progress")
+  revalidatePath("/employee/courses")
   revalidateTag(empresaCacheRootTag(empresaId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/empresa/asignaciones?success=asignado_sync")
+  redirect("/company/assignments?success=asignado_sync")
 }
