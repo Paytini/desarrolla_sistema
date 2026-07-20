@@ -2,8 +2,11 @@ import { redirect } from "next/navigation"
 import { Box, Paper, Stack, Typography } from "@mui/material"
 import { getSuperadminEmpresasSnapshot, getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
+import { checkAndNotifyExpiringPackages } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { ActivityFeed } from "@/components/superadmin/ActivityFeed"
+import { DashboardGreeting } from "@/components/superadmin/DashboardGreeting"
+import { LearningActivityChart, type ActivityPoint, type ActivitySeries } from "@/components/superadmin/LearningActivityChart"
 import { QuickActions } from "@/components/superadmin/QuickActions"
 import { SectionCard } from "@/components/shared/SectionCard"
 import KpiCard from "@/components/shared/KpiCard"
@@ -33,93 +36,43 @@ function DonutChart({
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
       <circle cx={cx} cy={cx} r={r} fill="none" stroke="#E2E8F0" strokeWidth={sw} />
-      {total > 0 && segments.map((seg, i) => {
-        const len    = (seg.value / total) * circ - GAP
-        const offset = circ / 4 - (cum / total) * circ
-        cum += seg.value
-        return len > 0 ? (
-          <circle key={i} cx={cx} cy={cx} r={r} fill="none"
-            stroke={seg.color} strokeWidth={sw} strokeLinecap="butt"
-            strokeDasharray={`${len} ${circ - len}`}
-            strokeDashoffset={offset} />
-        ) : null
-      })}
-      <text x={cx} y={cx + numSize * 0.35} textAnchor="middle" fill="#1E293B" fontSize={numSize} fontWeight="800" fontFamily="Outfit, system-ui">{total}</text>
+      {total > 0 && (() => {
+        const SWEEP_MS  = 900
+        const BASE_DELAY = 150
+        return segments.map((seg, i) => {
+          const len      = (seg.value / total) * circ - GAP
+          const offset   = circ / 4 - (cum / total) * circ
+          const segStart = cum
+          cum += seg.value
+          const delayMs = BASE_DELAY + Math.round((segStart / total) * SWEEP_MS)
+          const durMs   = Math.round((seg.value / total) * SWEEP_MS)
+          const lenNorm    = len / circ
+          const offsetNorm = offset / circ
+          return len > 0 ? (
+            <circle key={i} cx={cx} cy={cx} r={r} fill="none"
+              stroke={seg.color} strokeWidth={sw} strokeLinecap="butt"
+              pathLength={1}
+              strokeDasharray={`${lenNorm} ${1 - lenNorm}`}
+              className="donut-draw-in"
+              style={{
+                "--donut-offset-start": offsetNorm + lenNorm,
+                "--donut-offset-final": offsetNorm,
+                animationDelay: `${delayMs}ms`,
+                animationDuration: `${durMs}ms`,
+              } as React.CSSProperties} />
+          ) : null
+        })
+      })()}
+      <text x={cx} y={cx + numSize * 0.35} textAnchor="middle" fill="#1E293B" fontSize={numSize} fontWeight="800" fontFamily="var(--font-outfit, Outfit), system-ui">{total}</text>
       <text x={cx} y={cx + numSize * 0.35 + subSize + 4} textAnchor="middle" fill="#64748B" fontSize={subSize}>cursos total</text>
     </svg>
   )
 }
 
-function SparklineKpi({
-  total,
-  data,
-}: {
-  total: number
-  data: { label: string; value: number }[]
-}) {
-  const W = 220, H = 56, padX = 4, padY = 6
-  const vals = data.map((d) => d.value)
-  const max  = Math.max(...vals, 1)
-  const w    = W - padX * 2
-  const h    = H - padY * 2
-  const step = vals.length > 1 ? w / (vals.length - 1) : 0
-
-  const pts = vals.map((v, i) => ({
-    x: padX + i * step,
-    y: padY + h - (v / max) * h,
-  }))
-
-  const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
-  const fill = `${line} L ${pts[pts.length - 1].x.toFixed(1)} ${(padY + h).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(padY + h).toFixed(1)} Z`
-
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        borderRadius: '16px',
-        backgroundColor: '#3B82F6',
-        overflow: 'hidden',
-        transition: 'transform 200ms',
-        '&:hover': { transform: 'scale(1.02)' },
-      }}
-    >
-      <Box sx={{ px: 3, pt: 3, pb: 2.5 }}>
-        <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.5 }}>
-          Actividad · 14 días
-        </Typography>
-        <Typography sx={{
-          fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
-          fontSize: '2rem', fontWeight: 800, lineHeight: 1.1,
-          fontVariantNumeric: 'tabular-nums',
-          color: '#FFFFFF', mb: 1.5,
-        }}>
-          {total}
-        </Typography>
-        <svg
-          width={W} height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          aria-hidden
-          style={{ display: 'block', width: '100%', height: H }}
-        >
-          <path d={fill} fill="rgba(255,255,255,0.15)" />
-          <path d={line} fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-          {pts.map((p, i) => (
-            <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={2.5} fill="rgba(255,255,255,0.9)" />
-          ))}
-        </svg>
-        <Typography sx={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', mt: 0.75 }}>
-          eventos en el portal
-        </Typography>
-      </Box>
-    </Paper>
-  )
-}
 
 function CompanyProgressKpi({
-  empresas,
   globalAvg,
 }: {
-  empresas: { nombre: string; avg: number }[]
   globalAvg: number
 }) {
   return (
@@ -127,52 +80,30 @@ function CompanyProgressKpi({
       elevation={0}
       sx={{
         borderRadius: '16px',
-        backgroundColor: '#111827',
+        backgroundColor: 'var(--kpi-bg, #111827)',
+        border: '1px solid var(--kpi-border, transparent)',
+        boxShadow: 'var(--kpi-shadow, none)',
         overflow: 'hidden',
         transition: 'transform 200ms',
         '&:hover': { transform: 'scale(1.02)' },
       }}
     >
       <Box sx={{ px: 3, pt: 3, pb: 2.5 }}>
-        <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.5 }}>
+        <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--kpi-text-secondary, rgba(255,255,255,0.55))', textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.5 }}>
           Progreso por empresa
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1.75 }}>
           <Typography sx={{
             fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)',
             fontSize: '2rem', fontWeight: 800, lineHeight: 1.1,
-            fontVariantNumeric: 'tabular-nums', color: '#FFFFFF',
+            fontVariantNumeric: 'tabular-nums', color: 'var(--kpi-text, #FFFFFF)',
           }}>
             {globalAvg}%
           </Typography>
-          <Typography sx={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)' }}>
+          <Typography sx={{ fontSize: '0.75rem', color: 'var(--kpi-text-secondary, rgba(255,255,255,0.55))' }}>
             promedio global
           </Typography>
         </Box>
-        <Stack spacing={1.25}>
-          {empresas.slice(0, 5).map((e) => (
-            <Box key={e.nombre} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography sx={{
-                fontSize: 10, color: 'rgba(255,255,255,0.6)',
-                width: 64, flexShrink: 0,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {e.nombre}
-              </Typography>
-              <Box sx={{ flex: 1, height: 6, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                <Box sx={{
-                  height: '100%',
-                  width: `${e.avg}%`,
-                  borderRadius: 999,
-                  bgcolor: e.avg >= 75 ? '#34D399' : e.avg >= 40 ? '#A78BFA' : '#FBBF24',
-                }} />
-              </Box>
-              <Typography sx={{ fontSize: 10, fontWeight: 700, color: '#FFFFFF', width: 26, textAlign: 'right', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
-                {e.avg}%
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
       </Box>
     </Paper>
   )
@@ -182,21 +113,18 @@ export default async function SuperadminDashboardPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
+  await checkAndNotifyExpiringPackages().catch(() => {})
+
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
 
-  const [{ empresas }, { empresas: empresasConCursos }, recentEvents, activityRaw] = await Promise.all([
+  const [{ empresas }, { empresas: empresasConCursos }, recentEvents] = await Promise.all([
     getSuperadminEmpresasSnapshot(),
     getSuperadminReportesSnapshot(),
     prisma.auditoriaEvento.findMany({
       orderBy: { created_at: "desc" },
       take: 12,
       select: { id: true, actor_nombre: true, actor_rol: true, accion: true, entidad_tipo: true, resumen: true, created_at: true },
-    }),
-    prisma.auditoriaEvento.findMany({
-      where: { created_at: { gte: new Date(now - 14 * DAY_MS) } },
-      select: { created_at: true },
-      orderBy: { created_at: "asc" },
     }),
   ])
 
@@ -233,26 +161,51 @@ export default async function SuperadminDashboardPage() {
     ? Math.round(rankingEmpresas.reduce((s, e) => s + e.avg, 0) / rankingEmpresas.length)
     : 0
 
-  const activityMap = new Map<string, number>()
-  activityRaw.forEach((ev) => {
-    const key = new Date(ev.created_at).toLocaleDateString("es-MX", { month: "short", day: "numeric" })
-    activityMap.set(key, (activityMap.get(key) ?? 0) + 1)
+  const ACTIVITY_DAYS = 14
+  const COMPANY_LINE_COLORS = ["#3579F5", "#161B23", "rgba(53,121,245,0.5)", "rgba(22,27,35,0.4)", "#8AB4F8"]
+
+  const activityDayKeys = Array.from({ length: ACTIVITY_DAYS }, (_, i) =>
+    new Date(now - (ACTIVITY_DAYS - 1 - i) * DAY_MS).toISOString().slice(0, 10)
+  )
+
+  const empresaActivitySeries: ActivitySeries[] = empresasConCursos.map((e, i) => {
+    const dayCounts = new Map<string, number>()
+    e.empleados.forEach((emp) => {
+      emp.cursos.forEach((c) => {
+        const key = new Date(c.ultima_sincronizacion).toISOString().slice(0, 10)
+        if (activityDayKeys.includes(key)) dayCounts.set(key, (dayCounts.get(key) ?? 0) + 1)
+      })
+    })
+    return {
+      nombre: e.nombre,
+      color: COMPANY_LINE_COLORS[i % COMPANY_LINE_COLORS.length],
+      data: activityDayKeys.map((day) => ({ day, value: dayCounts.get(day) ?? 0 })),
+    }
   })
-  const activityData = Array.from({ length: 14 }, (_, i) => {
-    const d     = new Date(now - (13 - i) * DAY_MS)
-    const label = d.toLocaleDateString("es-MX", { month: "short", day: "numeric" })
-    return { label: d.getDate().toString(), value: activityMap.get(label) ?? 0 }
-  })
-  const totalEventos = activityRaw.length
+
+  const globalActivitySeries: ActivityPoint[] = activityDayKeys.map((day, i) => ({
+    day,
+    value: empresaActivitySeries.reduce((s, series) => s + series.data[i].value, 0),
+  }))
 
   return (
     <Stack spacing={3}>
 
+      <DashboardGreeting nombre={session.user.nombre as string} />
+
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
-        <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="emerald" ring={empresasPct} />
-        <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="violet"  ring={empleadosPct} />
-        <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="amber"   ring={ocupacionPct}    alert={ocupacionPct >= 90} />
-        <SparklineKpi total={totalEventos} data={activityData} />
+        <Box className="kpi-animate" sx={{ display: "flex" }}>
+          <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="emerald" ring={empresasPct} />
+        </Box>
+        <Box className="kpi-animate" sx={{ display: "flex" }}>
+          <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="violet"  ring={empleadosPct} />
+        </Box>
+        <Box className="kpi-animate" sx={{ display: "flex" }}>
+          <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="amber"   ring={ocupacionPct}    alert={ocupacionPct >= 90} />
+        </Box>
+        <Box className="kpi-animate" sx={{ display: "flex" }}>
+          <CompanyProgressKpi globalAvg={globalAvg} />
+        </Box>
       </Box>
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" } }}>
@@ -296,7 +249,7 @@ export default async function SuperadminDashboardPage() {
           </Stack>
         </SectionCard>
 
-        <CompanyProgressKpi empresas={rankingEmpresas} globalAvg={globalAvg} />
+        <LearningActivityChart global={globalActivitySeries} porEmpresa={empresaActivitySeries} />
       </Box>
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 280px" } }}>

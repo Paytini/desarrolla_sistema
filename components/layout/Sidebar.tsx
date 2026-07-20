@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
+import { LifeBuoy } from "lucide-react"
 
 import Box from "@mui/material/Box"
 import List from "@mui/material/List"
@@ -24,16 +25,16 @@ import { kpiColorMap } from "@/lib/kpi-colors"
 
 const SIDEBAR_W = 288
 
-const SIDEBAR_FONT = '"Plus Jakarta Sans", system-ui, "Segoe UI", Arial, sans-serif'
+const SIDEBAR_FONT = 'var(--font-plus-jakarta-sans, "Plus Jakarta Sans"), system-ui, "Segoe UI", Arial, sans-serif'
 
-const SIDEBAR_BG      = "#FFFFFF"
-const SIDEBAR_BORDER  = "#E3D7F5"
-const SIDEBAR_OVERLAY = "linear-gradient(to bottom, rgba(139,92,246,0) 0%, rgba(139,92,246,0.10) 45%, rgba(139,92,246,0.55) 100%)"
+const SIDEBAR_BG      = "var(--sidebar-bg-v4, #FFFFFF)"
+const SIDEBAR_BORDER  = "var(--sidebar-border-v4, #E3D7F5)"
+const SIDEBAR_OVERLAY = "var(--sidebar-overlay-v4, linear-gradient(to bottom, rgba(139,92,246,0) 0%, rgba(139,92,246,0.10) 45%, rgba(139,92,246,0.55) 100%))"
 
 const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)":            "#F5853F",
-  "var(--sidebar-accent-2)": "#34D399",
-  "var(--sidebar-accent-3)": "#3B82F6",
+  "var(--brand)":            "#3579F5",
+  "var(--sidebar-accent-2)": "#3579F5",
+  "var(--sidebar-accent-3)": "#3579F5",
 }
 const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
@@ -47,6 +48,9 @@ function NavItemRow({
   const active = isActive(item.href, pathname, item.exact)
   const Icon   = item.icon
   const { bg, text } = kpiColorMap[item.color]
+  const activeBg   = `var(--nav-active-bg, ${bg})`
+  const activeText = `var(--nav-active-text, ${text})`
+  const hoverBg     = `var(--nav-hover-bg, ${bg}14)`
 
   return (
     <Link href={item.href} prefetch style={{ textDecoration: "none", color: "inherit", display: "block" }}>
@@ -62,15 +66,15 @@ function NavItemRow({
           gap: 1,
           color: "text.primary",
           "&.Mui-selected": {
-            bgcolor: bg,
-            color: text,
-            "& .nav-icon": { color: text },
-            "&:hover": { bgcolor: bg, filter: "brightness(0.94)" },
+            bgcolor: activeBg,
+            color: activeText,
+            "& .nav-icon": { color: activeText },
+            "&:hover": { bgcolor: activeBg, filter: "brightness(0.94)" },
           },
           "&:hover:not(.Mui-selected)": {
-            bgcolor: `${bg}14`,
+            bgcolor: hoverBg,
             color: "text.primary",
-            "& .nav-icon": { color: bg },
+            "& .nav-icon": { color: activeBg },
           },
           transition: "background-color 0.15s ease, color 0.15s ease",
         }}
@@ -212,6 +216,36 @@ export default function Sidebar({
             </List>
           )}
         </Box>
+
+        {rol === "SUPERADMIN" && (
+          <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
+            <Link href="/superadmin/integracion" style={{ textDecoration: "none" }}>
+              <Box
+                sx={{
+                  borderRadius: "14px",
+                  bgcolor: "var(--panel-ink-v4, #161B23)",
+                  px: 2,
+                  py: 1.75,
+                  transition: "transform 150ms ease",
+                  "&:hover": { transform: "scale(1.015)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
+                  <LifeBuoy size={15} strokeWidth={2} color="#3579F5" />
+                  <Typography sx={{ fontSize: "0.6875rem", fontWeight: 700, color: "#3579F5", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Soporte
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}>
+                  Centro de ayuda
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}>
+                  Guías de DC-3, integración WordPress y estado del sistema.
+                </Typography>
+              </Box>
+            </Link>
+          </Box>
+        )}
       </Box>
     </Box>
   )

@@ -95,7 +95,6 @@ export default async function EmpresaConstanciasPage() {
       <PageHeader
         title="Constancias DC-3"
         description="Constancias de habilidades laborales para cumplimiento STPS"
-        accentColor="#F5853F"
         breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Constancias DC-3" }]}
       />
 
@@ -130,7 +129,7 @@ export default async function EmpresaConstanciasPage() {
                     key={constancia.id}
                     className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-xs font-bold text-[#F5853F]">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF1FE] text-xs font-bold text-[#3579F5]">
                       {initials}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -160,7 +159,7 @@ export default async function EmpresaConstanciasPage() {
                         href={`/api/constancias/${constancia.id}/dc3`}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded-xl bg-[#F5853F] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#D96B20]"
+                        className="rounded-xl bg-[#3579F5] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#2A61D6]"
                       >
                         DC-3
                       </a>

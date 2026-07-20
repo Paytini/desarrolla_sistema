@@ -17,13 +17,13 @@ export const muiTheme = createTheme({
   shadows: Array(25).fill('none') as Shadows,
   shape: { borderRadius: 8 },
   typography: {
-    fontFamily: '"Outfit", system-ui, "Segoe UI", Arial, sans-serif',
-    h1: { fontFamily: '"Outfit", system-ui, sans-serif', fontWeight: 800, fontSize: '1.75rem', lineHeight: 1.2, letterSpacing: '-0.02em' },
-    h2: { fontFamily: '"Outfit", system-ui, sans-serif', fontWeight: 700, fontSize: '1.375rem', lineHeight: 1.25, letterSpacing: '-0.02em' },
-    h3: { fontFamily: '"Outfit", system-ui, sans-serif', fontWeight: 700, fontSize: '1.125rem', lineHeight: 1.3 },
-    h4: { fontFamily: '"Outfit", system-ui, sans-serif', fontWeight: 700, fontSize: '1rem', lineHeight: 1.35 },
-    h5: { fontFamily: '"Outfit", system-ui, sans-serif', fontWeight: 700, fontSize: '0.9rem' },
-    h6: { fontFamily: '"Outfit", system-ui, sans-serif', fontWeight: 700, fontSize: '0.875rem' },
+    fontFamily: 'var(--font-outfit, "Outfit"), system-ui, "Segoe UI", Arial, sans-serif',
+    h1: { fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif', fontWeight: 800, fontSize: '1.75rem', lineHeight: 1.2, letterSpacing: '-0.02em' },
+    h2: { fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif', fontWeight: 700, fontSize: '1.375rem', lineHeight: 1.25, letterSpacing: '-0.02em' },
+    h3: { fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif', fontWeight: 700, fontSize: '1.125rem', lineHeight: 1.3 },
+    h4: { fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif', fontWeight: 700, fontSize: '1rem', lineHeight: 1.35 },
+    h5: { fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif', fontWeight: 700, fontSize: '0.9rem' },
+    h6: { fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif', fontWeight: 700, fontSize: '0.875rem' },
     subtitle1: { fontWeight: 600, letterSpacing: '-0.01em' },
     subtitle2: { fontWeight: 600, letterSpacing: '-0.01em' },
     body1:     { fontSize: '0.9375rem' },
@@ -203,7 +203,7 @@ export const muiTheme = createTheme({
     MuiDialogTitle: {
       styleOverrides: {
         root: {
-          fontFamily: '"Outfit", system-ui, sans-serif',
+          fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
           fontWeight: 700,
           fontSize: '1.125rem',
           paddingBottom: '8px',
@@ -226,7 +226,7 @@ export const muiTheme = createTheme({
     MuiAvatar: {
       styleOverrides: {
         root: {
-          fontFamily: '"Outfit", system-ui, sans-serif',
+          fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
           fontWeight: 700,
           border: 'none',
         },
@@ -238,5 +238,17 @@ export const muiTheme = createTheme({
         bar:  { borderRadius: '9999px' },
       },
     },
+  },
+})
+
+// designV4: monochrome + single-accent palette, shared by all portal roles.
+export const muiThemeV4 = createTheme(muiTheme, {
+  palette: {
+    primary:    { main: '#3579F5', dark: '#2A61D6', light: '#6B9EF8', contrastText: '#FFFFFF' },
+    info:       { main: '#3579F5' },
+    background: { default: '#F8F9FC', paper: '#FEFEFE' },
+    text:       { primary: '#161B23', secondary: '#6B7280' },
+    divider:    '#CED5E0',
+    action:     { hover: 'rgba(53,121,245,0.06)', selected: 'rgba(53,121,245,0.10)' },
   },
 })

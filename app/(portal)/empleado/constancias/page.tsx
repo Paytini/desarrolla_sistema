@@ -31,7 +31,6 @@ export default async function EmpleadoConstanciasPage() {
       <PageHeader
         title="Mis constancias"
         description="Evidencia DC-3 oficial STPS de tus cursos completados"
-        accentColor="#34D399"
         breadcrumbs={[{ label: "Mi espacio" }, { label: "Constancias" }]}
       />
 
@@ -126,10 +125,10 @@ export default async function EmpleadoConstanciasPage() {
                       height: 36,
                       flexShrink: 0,
                       borderRadius: 2,
-                      bgcolor: "#fff2eb",
+                      bgcolor: "#EAF1FE",
                       fontSize: "11px",
                       fontWeight: 700,
-                      color: "#F5853F",
+                      color: "#3579F5",
                     }}
                   >
                     {constancia.nombre_curso.charAt(0).toUpperCase()}
@@ -189,9 +188,9 @@ export default async function EmpleadoConstanciasPage() {
                         borderRadius: 2,
                         fontSize: 11,
                         fontWeight: 600,
-                        bgcolor: "#F5853F",
+                        bgcolor: "#3579F5",
                         color: "#fff",
-                        "&:hover": { bgcolor: "#D96B20" },
+                        "&:hover": { bgcolor: "#2A61D6" },
                       }}
                     >
                       Descargar DC-3

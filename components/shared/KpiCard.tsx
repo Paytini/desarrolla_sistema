@@ -28,25 +28,34 @@ export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "
     <Paper
       elevation={0}
       sx={{
-        borderRadius: '8px',
-        backgroundColor: bg,
+        borderRadius: 'var(--kpi-radius, 8px)',
+        backgroundColor: `var(--kpi-bg, ${bg})`,
+        border: '1px solid var(--kpi-border, transparent)',
+        boxShadow: 'var(--kpi-shadow, none)',
         overflow: 'hidden',
         transition: 'transform 200ms',
         '&:hover': { transform: 'scale(1.02)' },
       }}
     >
-      <Box sx={{ px: 3, pt: 3, pb: 2.5 }}>
-        <Box sx={{ mb: 2 }}>
+      <Box sx={{ px: 'var(--kpi-px, 24px)', pt: 'var(--kpi-pt, 24px)', pb: 'var(--kpi-pb, 20px)' }}>
+        <Box sx={{ mb: 2, display: 'var(--kpi-icon-display, flex)' }}>
           {ring !== undefined ? (
-            <RingChart pct={ring} color={ringArc} trackColor={ringTrack} textColor={text} size={52} sw={5} />
+            <RingChart
+              pct={ring}
+              color={`var(--kpi-ring-arc, ${ringArc})`}
+              trackColor={`var(--kpi-ring-track, ${ringTrack})`}
+              textColor={`var(--kpi-text, ${text})`}
+              size={52}
+              sw={5}
+            />
           ) : Icon ? (
             <Box
               sx={{
                 width: 44,
                 height: 44,
                 borderRadius: '50%',
-                bgcolor: 'rgba(255,255,255,0.2)',
-                color: text,
+                bgcolor: 'var(--kpi-icon-bg, rgba(255,255,255,0.2))',
+                color: `var(--kpi-icon-color, ${text})`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -61,7 +70,7 @@ export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "
           sx={{
             fontSize: '0.8125rem',
             fontWeight: 600,
-            color: textSecondary,
+            color: `var(--kpi-text-secondary, ${textSecondary})`,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
             mb: 0.5,
@@ -70,25 +79,33 @@ export default function KpiCard({ label, value, sub, icon: Icon, borderColor = "
           {label}
         </Typography>
 
-        <Typography
+        <Box
           sx={{
-            fontFamily: '"Outfit", system-ui, sans-serif',
-            fontSize: '2rem',
-            fontWeight: 800,
-            lineHeight: 1.1,
-            fontVariantNumeric: 'tabular-nums',
-            color: text,
-            mb: sub ? 0.5 : 0,
+            display: 'flex',
+            flexDirection: 'var(--kpi-value-direction, column)',
+            alignItems: 'var(--kpi-value-align, flex-start)',
+            gap: 'var(--kpi-value-gap, 4px)',
           }}
         >
-          {value}
-        </Typography>
-
-        {sub && (
-          <Typography sx={{ fontSize: '0.75rem', color: textSecondary }}>
-            {sub}
+          <Typography
+            sx={{
+              fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
+              fontSize: '2rem',
+              fontWeight: 800,
+              lineHeight: 1.1,
+              fontVariantNumeric: 'tabular-nums',
+              color: `var(--kpi-text, ${text})`,
+            }}
+          >
+            {value}
           </Typography>
-        )}
+
+          {sub && (
+            <Typography sx={{ fontSize: '0.75rem', color: `var(--kpi-text-secondary, ${textSecondary})` }}>
+              {sub}
+            </Typography>
+          )}
+        </Box>
       </Box>
     </Paper>
   )

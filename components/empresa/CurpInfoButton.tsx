@@ -21,7 +21,7 @@ export default function CurpInfoButton() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Información sobre el formato CURP"
-        className="text-slate-400 transition-colors hover:text-[#F5853F]"
+        className="text-slate-400 transition-colors hover:text-[#3579F5]"
       >
         <Info size={13} />
       </button>
@@ -71,7 +71,7 @@ export default function CurpInfoButton() {
 function Row({ pos, desc }: { pos: string; desc: string }) {
   return (
     <div className="flex items-start gap-2 text-[11px] text-slate-600">
-      <span className="shrink-0 rounded bg-orange-50 px-1.5 py-0.5 font-mono text-[10px] text-[#F5853F]">
+      <span className="shrink-0 rounded bg-[#EAF1FE] px-1.5 py-0.5 font-mono text-[10px] text-[#3579F5]">
         {pos}
       </span>
       <span className="leading-relaxed">{desc}</span>

@@ -22,6 +22,7 @@ export default function SuperadminSearchBar() {
       searchUrl={(q) => `/api/internal/superadmin-search?q=${encodeURIComponent(q)}`}
       placeholder="Buscar empresas, empleados, paquetes..."
       triggerLabel="Buscar en el portal"
+      triggerWidth="100%"
       renderGroups={(results, query, onClose) => {
         const hasResults =
           results.empresas.length > 0 ||
@@ -99,7 +100,7 @@ export default function SuperadminSearchBar() {
                     onClose={onClose}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                      <LetterAvatar letter={p.nombre[0]} variant="orange" />
+                      <LetterAvatar letter={p.nombre[0]} variant="slate" />
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                         {p.nombre}
                       </Typography>
@@ -187,11 +188,10 @@ function ResultRow({
   )
 }
 
-function LetterAvatar({ letter, variant }: { letter: string; variant: "blue" | "slate" | "orange" }) {
+function LetterAvatar({ letter, variant }: { letter: string; variant: "blue" | "slate" }) {
   const colors = {
-    blue:   { bgcolor: "rgba(245,133,63,0.1)",  color: "#F5853F" },
-    slate:  { bgcolor: "#f1f5f9",               color: "#64748b" },
-    orange: { bgcolor: "#ffedd5",               color: "#ea580c" },
+    blue:  { bgcolor: "rgba(53,121,245,0.1)", color: "#3579F5" },
+    slate: { bgcolor: "#f1f5f9",              color: "#64748b" },
   }[variant]
 
   return (

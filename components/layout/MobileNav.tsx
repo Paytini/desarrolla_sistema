@@ -32,9 +32,9 @@ import {
 } from "@/components/layout/nav-config"
 
 const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)":            "#F5853F",
-  "var(--sidebar-accent-2)": "#34D399",
-  "var(--sidebar-accent-3)": "#3B82F6",
+  "var(--brand)":            "#3579F5",
+  "var(--sidebar-accent-2)": "#3579F5",
+  "var(--sidebar-accent-3)": "#3579F5",
 }
 const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
@@ -277,7 +277,7 @@ export function MobileNav({
         </Box>
         <Divider />
         <Box sx={{ flexShrink: 0, px: 1.5, py: 1.5, display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Avatar sx={{ width: 32, height: 32, fontSize: 11, background: "linear-gradient(135deg,#F5853F,#A78BFA)", color: "#fff", flexShrink: 0 }}>
+          <Avatar sx={{ width: 32, height: 32, fontSize: 11, background: "linear-gradient(135deg,#3579F5,#6B9EF8)", color: "#fff", flexShrink: 0 }}>
             {initials}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>

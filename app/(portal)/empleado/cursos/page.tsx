@@ -129,7 +129,6 @@ export default async function EmpleadoCursos() {
       <PageHeader
         title={`¡Hola, ${empleado.nombre}!`}
         description="Tu ruta de capacitación activa"
-        accentColor="#34D399"
         breadcrumbs={[{ label: "Mi espacio" }, { label: "Mis cursos" }]}
       />
 
@@ -145,7 +144,7 @@ export default async function EmpleadoCursos() {
             overflow: "hidden",
             borderRadius: 2.5,
             border: "1px solid #f0f0f0",
-            borderLeft: "4px solid #F5853F",
+            borderLeft: "4px solid #3579F5",
             bgcolor: "background.paper",
             p: 2.5,
           }}
@@ -162,7 +161,7 @@ export default async function EmpleadoCursos() {
               pct={avancePromedio}
               size={72}
               sw={7}
-              color={avancePromedio >= 80 ? "#10B981" : avancePromedio >= 40 ? "#F59E0B" : "#EF4444"}
+              color="#3579F5"
             />
           </Box>
         </Paper>
@@ -207,7 +206,7 @@ export default async function EmpleadoCursos() {
             const pkgMeta    = pkgCourseMap.get(curso.wp_curso_id)
             const hasError   = curso.acceso_estado === "ERROR"
             const enProgreso = !curso.completado && curso.progreso_pct > 0
-            const barColor   = curso.completado ? "#34D399" : enProgreso ? "#8B5CF6" : "#94a3b8"
+            const barColor   = curso.progreso_pct > 0 ? "#3579F5" : "#94a3b8"
             const duracionLabel = dc3Meta?.duracion_horas ? `${Math.round(dc3Meta.duracion_horas)}h` : null
             const hasDc3     = !!dc3Meta
 
@@ -248,8 +247,8 @@ export default async function EmpleadoCursos() {
                     )}
                   </Box>
                 ) : (
-                  <Box sx={{ position: "relative", display: "flex", height: 96, alignItems: "center", justifyContent: "center", bgcolor: "#fff2eb" }}>
-                    <Typography sx={{ fontSize: 30, fontWeight: 800, color: "#F5853F", opacity: 0.4 }}>
+                  <Box sx={{ position: "relative", display: "flex", height: 96, alignItems: "center", justifyContent: "center", bgcolor: "#EAF1FE" }}>
+                    <Typography sx={{ fontSize: 30, fontWeight: 800, color: "#3579F5", opacity: 0.4 }}>
                       {curso.nombre_curso.charAt(0).toUpperCase()}
                     </Typography>
                     {duracionLabel && (
@@ -317,7 +316,7 @@ export default async function EmpleadoCursos() {
                         </Typography>
                       )}
                       {hasDc3 && (
-                        <Typography sx={{ fontSize: "11px", fontWeight: 600, color: "#F5853F" }}>
+                        <Typography sx={{ fontSize: "11px", fontWeight: 600, color: "#3579F5" }}>
                           🏅 DC-3
                         </Typography>
                       )}
@@ -359,9 +358,9 @@ export default async function EmpleadoCursos() {
                           py: 1.25,
                           fontSize: 13,
                           fontWeight: 600,
-                          bgcolor: curso.completado ? "#F5853F" : "#1a1a1a",
+                          bgcolor: curso.completado ? "#3579F5" : "#1a1a1a",
                           color: "#fff",
-                          "&:hover": { bgcolor: curso.completado ? "#D96B20" : "#333" },
+                          "&:hover": { bgcolor: curso.completado ? "#2A61D6" : "#333" },
                         }}
                       >
                         {curso.completado ? "Repasar" : curso.progreso_pct > 0 ? "Continuar" : "Iniciar"}
@@ -402,8 +401,8 @@ export default async function EmpleadoCursos() {
               height: 36,
               flexShrink: 0,
               borderRadius: 2,
-              bgcolor: "#fff2eb",
-              color: "#F5853F",
+              bgcolor: "#EAF1FE",
+              color: "#3579F5",
             }}
           >
             <Award size={16} strokeWidth={2} />
@@ -428,9 +427,9 @@ export default async function EmpleadoCursos() {
               py: 1,
               fontSize: 13,
               fontWeight: 600,
-              bgcolor: "#F5853F",
+              bgcolor: "#3579F5",
               color: "#fff",
-              "&:hover": { bgcolor: "#D96B20" },
+              "&:hover": { bgcolor: "#2A61D6" },
             }}
           >
             Ver constancias

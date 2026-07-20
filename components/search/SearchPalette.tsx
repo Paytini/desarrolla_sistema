@@ -22,6 +22,7 @@ interface SearchPaletteProps<T> {
   placeholder:   string
   triggerLabel:  string
   minChars?:     number
+  triggerWidth?: number | string
   renderGroups:  (results: T, query: string, onClose: () => void) => ReactNode
 }
 
@@ -30,6 +31,7 @@ export default function SearchPalette<T,>({
   placeholder,
   triggerLabel,
   minChars = 2,
+  triggerWidth,
   renderGroups,
 }: SearchPaletteProps<T>) {
   const [open, setOpen]           = useState(false)
@@ -143,7 +145,7 @@ export default function SearchPalette<T,>({
           alignItems: "center",
           gap: 1.25,
           height: 40,
-          width: { xs: 40, sm: 280 },
+          width: { xs: 40, sm: triggerWidth ?? 280 },
           px: { xs: 1, sm: 2 },
           border: "1px solid",
           borderColor: "divider",

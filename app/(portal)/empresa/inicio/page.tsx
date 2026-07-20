@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import { RingChart } from "@/components/shared/RingChart"
 import { Award, BarChart3, ChevronRight, ClipboardList, Package, Users, type LucideIcon } from "lucide-react"
 import Link from "next/link"
+import { checkAndNotifyExpiringPackages } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -35,6 +36,8 @@ function QuickLink({
 export default async function EmpresaInicio() {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
+
+  await checkAndNotifyExpiringPackages().catch(() => {})
 
   const empresa = await prisma.empresa.findUnique({
     where: { id: session.user.empresa_id },
@@ -70,7 +73,6 @@ export default async function EmpresaInicio() {
       <PageHeader
         title={empresa.nombre}
         description="Panel de operación académica"
-        accentColor="#F5853F"
         breadcrumbs={[{ label: "Empresa" }]}
       />
 
@@ -107,19 +109,19 @@ export default async function EmpresaInicio() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
         <div className="grid gap-3 sm:grid-cols-2">
-          <QuickLink href="/empresa/empleados" label="Gestión de empleados" Icon={Users} iconCls="bg-[#fff2eb] text-[#F5853F]" />
-          <QuickLink href="/empresa/asignaciones" label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#fff2eb] text-[#F5853F]" />
+          <QuickLink href="/empresa/empleados" label="Gestión de empleados" Icon={Users} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
+          <QuickLink href="/empresa/asignaciones" label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
           <QuickLink
             href="/empresa/progreso"
             label="Progreso y trayectorias"
             Icon={BarChart3}
-            iconCls="bg-[#fff2eb] text-[#F5853F]"
+            iconCls="bg-[#EAF1FE] text-[#3579F5]"
           />
           <QuickLink
             href="/empresa/constancias"
             label="Constancias DC-3"
             Icon={Award}
-            iconCls="bg-[#fff2eb] text-[#F5853F]"
+            iconCls="bg-[#EAF1FE] text-[#3579F5]"
           />
         </div>
 
@@ -128,7 +130,7 @@ export default async function EmpresaInicio() {
             pct={averageProgress}
             size={96}
             sw={9}
-            color={averageProgress >= 80 ? "#10B981" : averageProgress >= 50 ? "#F59E0B" : "#EF4444"}
+            color="#3579F5"
           />
           <p className="text-xs font-medium text-slate-500">Avance global</p>
         </div>

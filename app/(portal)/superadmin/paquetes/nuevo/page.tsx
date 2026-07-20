@@ -25,7 +25,7 @@ const LABEL_SX = {
   fontWeight: 700,
   textTransform: "uppercase" as const,
   letterSpacing: "0.08em",
-  color: "#1E293B",
+  color: "text.primary",
   mb: 0.75,
   display: "block",
 }
@@ -185,11 +185,7 @@ export default async function NuevoPaquetePage({ searchParams }: PageProps) {
 
         <Divider />
 
-        <SubmitButton
-          fullWidth
-          variant="contained"
-          sx={{ bgcolor: "#F5853F", color: "#ffffff", "&:hover": { bgcolor: "#D96B20" } }}
-        >
+        <SubmitButton fullWidth variant="contained">
           Guardar paquete
         </SubmitButton>
       </Box>
