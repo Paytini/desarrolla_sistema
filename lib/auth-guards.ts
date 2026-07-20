@@ -19,7 +19,7 @@ export async function requireRhSession() {
 
   const status = await getEmpresaAccessStatus(session.user.empresa_id)
   if (status.blocked) {
-    redirect(`/cuenta-suspendida?reason=${status.reason}`)
+    redirect(`/account-suspended?reason=${status.reason}`)
   }
 
   return session
