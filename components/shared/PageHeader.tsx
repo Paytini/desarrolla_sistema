@@ -15,7 +15,7 @@ export function PageHeader({
   title,
   description,
   action,
-  accentColor = '#3B82F6',
+  accentColor = '#3579F5',
   breadcrumbs,
 }: PageHeaderProps) {
   return (

@@ -11,6 +11,7 @@ import {
 } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { notifySuperadmins } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 
 function getString(formData: FormData, key: string) {
@@ -142,6 +143,15 @@ export async function createCompanyAction(
     })
   }
 
+  await notifySuperadmins({
+    tipo:       "EMPRESA_CREADA",
+    titulo:     "Nueva empresa registrada",
+    mensaje:    `${actor.nombre} creó la empresa ${nombre}.`,
+    entidadTipo: "EMPRESA",
+    entidadId:  createdResult.empresaId,
+    excludeUsuarioId: actor.usuarioId,
+  })
+
   revalidatePath("/superadmin/empresas")
   revalidatePath("/superadmin/reportes")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
@@ -179,6 +189,15 @@ export async function toggleCompanyStatusAction(formData: FormData) {
     entidadId: empresaId,
     empresaId,
     resumen: `${actor.nombre} ${empresa.activo ? "suspendio" : "reactivo"} la empresa ${empresa.nombre}.`,
+  })
+
+  await notifySuperadmins({
+    tipo:       empresa.activo ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
+    titulo:     empresa.activo ? "Empresa suspendida" : "Empresa reactivada",
+    mensaje:    `${actor.nombre} ${empresa.activo ? "suspendió" : "reactivó"} la empresa ${empresa.nombre}.`,
+    entidadTipo: "EMPRESA",
+    entidadId:  empresaId,
+    excludeUsuarioId: actor.usuarioId,
   })
 
   revalidatePath("/superadmin/empresas")

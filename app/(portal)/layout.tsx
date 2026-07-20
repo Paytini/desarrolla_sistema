@@ -1,10 +1,11 @@
 import { Suspense } from "react"
 import { Urbanist, Epilogue } from "next/font/google"
-import { AdminThemeProvider } from "@/components/providers/AdminThemeProvider"
+import { PortalThemeProvider } from "@/components/providers/PortalThemeProvider"
 import { PageSkeleton } from "@/components/shared/PageSkeleton"
 import EmpleadoSearchBar from "@/components/search/EmpleadoSearchBar"
 import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
 import { MobileNav } from "@/components/layout/MobileNav"
+import { NotificationBell } from "@/components/layout/NotificationBell"
 import { PortalGreeting } from "@/components/layout/PortalGreeting"
 import RhSearchBar from "@/components/search/RhSearchBar"
 import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
@@ -41,34 +42,34 @@ export default async function PortalLayout({
   const nombre  = session.user.nombre  as string
   const email   = session.user.email   ?? nombre
   const empresa = session.user.empresa as string | undefined
-  
-  const isAdminV4 = rol === "SUPERADMIN"
+  const isSuperAdmin = rol === "SUPERADMIN"
 
   const content = (
-    <div
-      className={cn(
-        "flex h-screen overflow-hidden",
-        isAdminV4 && cn(urbanist.variable, epilogue.variable, "role-admin-v4")
-      )}
-    >
+    <div className={cn("flex h-screen overflow-hidden", urbanist.variable, epilogue.variable, "portal-v4")}>
       <Sidebar rol={rol} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="relative flex h-16 shrink-0 items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 md:px-6">
           <MobileNav rol={rol} nombre={nombre} empresa={empresa} />
 
-          <PortalGreeting nombre={nombre} rol={rol} />
+          {isSuperAdmin ? (
+            <div className="flex-1" style={{ maxWidth: 560 }}>
+              <SuperadminSearchBar />
+            </div>
+          ) : (
+            <PortalGreeting nombre={nombre} rol={rol} />
+          )}
 
           <div className="flex-1" />
 
           <div className="flex shrink-0 items-center gap-2">
-            {rol === "SUPERADMIN" && <SuperadminSearchBar />}
             {rol === "RH" && <RhSearchBar />}
             {rol === "EMPLEADO" && <EmpleadoSearchBar />}
+            <NotificationBell />
             <FullscreenToggle />
             <TopbarUserMenu nombre={nombre} rol={rol} />
           </div>
         </header>
-        <main className={cn("flex-1 overflow-y-auto px-8 py-7", isAdminV4 ? "bg-[#F8F9FC]" : "bg-[#F3F4F6]")}>
+        <main className="flex-1 overflow-y-auto bg-[#F8F9FC] px-8 py-7">
           <Suspense fallback={<PageSkeleton />}>
             {children}
           </Suspense>
@@ -81,7 +82,5 @@ export default async function PortalLayout({
     </div>
   )
 
-  return isAdminV4 ? (
-    <AdminThemeProvider>{content}</AdminThemeProvider>
-  ) : content
+  return <PortalThemeProvider>{content}</PortalThemeProvider>
 }

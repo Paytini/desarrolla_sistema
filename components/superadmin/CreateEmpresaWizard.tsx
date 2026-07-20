@@ -30,7 +30,7 @@ const LABEL_SX = {
   fontWeight: 700,
   textTransform: "uppercase" as const,
   letterSpacing: "0.08em",
-  color: "#1E293B",
+  color: "text.primary",
   mb: 0.75,
   display: "block",
 }
@@ -300,10 +300,10 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
 
             <Box
               sx={{
-                bgcolor: "#F8F4EC",
-                border: "2px solid #1E293B",
+                bgcolor: "background.default",
+                border: "1px solid",
+                borderColor: "divider",
                 borderRadius: "16px",
-                boxShadow: "4px 4px 0px 0px #1E293B",
                 p: 2.5,
                 alignSelf: "start",
               }}
@@ -364,11 +364,6 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
               type="button"
               onClick={handleNext}
               variant="contained"
-              sx={{
-                bgcolor: "#F5853F",
-                color: "#FFFFFF",
-                "&:hover": { bgcolor: "#D96B20" },
-              }}
             >
               Siguiente →
             </Button>
@@ -377,12 +372,7 @@ export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
               type="submit"
               variant="contained"
               disabled={pending}
-              sx={{
-                bgcolor: "#F5853F",
-                color: "#FFFFFF",
-                "&:hover": { bgcolor: "#D96B20" },
-                "&.Mui-disabled": { opacity: 0.7 },
-              }}
+              sx={{ "&.Mui-disabled": { opacity: 0.7 } }}
             >
               {pending ? "Creando…" : "Crear empresa"}
             </Button>

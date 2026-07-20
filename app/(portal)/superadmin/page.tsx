@@ -2,8 +2,10 @@ import { redirect } from "next/navigation"
 import { Box, Paper, Stack, Typography } from "@mui/material"
 import { getSuperadminEmpresasSnapshot, getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
+import { checkAndNotifyExpiringPackages } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { ActivityFeed } from "@/components/superadmin/ActivityFeed"
+import { DashboardGreeting } from "@/components/superadmin/DashboardGreeting"
 import { LearningActivityChart, type ActivityPoint, type ActivitySeries } from "@/components/superadmin/LearningActivityChart"
 import { QuickActions } from "@/components/superadmin/QuickActions"
 import { SectionCard } from "@/components/shared/SectionCard"
@@ -111,6 +113,8 @@ export default async function SuperadminDashboardPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
+  await checkAndNotifyExpiringPackages().catch(() => {})
+
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
 
@@ -186,6 +190,8 @@ export default async function SuperadminDashboardPage() {
 
   return (
     <Stack spacing={3}>
+
+      <DashboardGreeting nombre={session.user.nombre as string} />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
         <Box className="kpi-animate" sx={{ display: "flex" }}>

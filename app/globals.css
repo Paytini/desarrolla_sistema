@@ -118,7 +118,7 @@ body {
   to { transform: rotate(360deg); }
 }
 
-.role-admin-v4 {
+.portal-v4 {
   --font-outfit: var(--font-urbanist);
   --font-plus-jakarta-sans: var(--font-epilogue);
   font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
@@ -144,7 +144,7 @@ body {
 
   --sidebar-bg-v4: #FEFEFE;
   --sidebar-border-v4: #CED5E0;
-  --sidebar-overlay-v4: linear-gradient(to bottom, rgba(53, 121, 245, 0) 0%, rgba(53, 121, 245, 0.08) 45%, rgba(53, 121, 245, 0.35) 100%);
+  --sidebar-overlay-v4: none;
 
   --nav-active-bg: rgba(53, 121, 245, 0.12);
   --nav-active-text: #3579F5;
@@ -158,23 +158,23 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.role-admin-v4 .kpi-animate {
+.portal-v4 .kpi-animate {
   animation: kpi-rise-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.role-admin-v4 .kpi-animate > * {
+.portal-v4 .kpi-animate > * {
   flex: 1 1 0% !important;
   width: 100% !important;
   min-width: 0 !important;
 }
 
-.role-admin-v4 .kpi-animate:nth-of-type(1) { animation-delay: 0ms; }
-.role-admin-v4 .kpi-animate:nth-of-type(2) { animation-delay: 60ms; }
-.role-admin-v4 .kpi-animate:nth-of-type(3) { animation-delay: 120ms; }
-.role-admin-v4 .kpi-animate:nth-of-type(4) { animation-delay: 180ms; }
+.portal-v4 .kpi-animate:nth-of-type(1) { animation-delay: 0ms; }
+.portal-v4 .kpi-animate:nth-of-type(2) { animation-delay: 60ms; }
+.portal-v4 .kpi-animate:nth-of-type(3) { animation-delay: 120ms; }
+.portal-v4 .kpi-animate:nth-of-type(4) { animation-delay: 180ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  .role-admin-v4 .kpi-animate { animation: none; }
+  .portal-v4 .kpi-animate { animation: none; }
 }
 
 @keyframes donut-segment-draw {
@@ -182,7 +182,7 @@ body {
   to   { stroke-dashoffset: var(--donut-offset-final); }
 }
 
-.role-admin-v4 .donut-draw-in {
+.portal-v4 .donut-draw-in {
   animation-name: donut-segment-draw;
   animation-timing-function: linear;
   animation-fill-mode: both;
@@ -193,13 +193,13 @@ body {
   to   { stroke-dasharray: 1; stroke-dashoffset: 0; }
 }
 
-.role-admin-v4 .line-draw-in {
+.portal-v4 .line-draw-in {
   animation: line-draw-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .role-admin-v4 .donut-draw-in,
-  .role-admin-v4 .line-draw-in {
+  .portal-v4 .donut-draw-in,
+  .portal-v4 .line-draw-in {
     animation: none;
   }
 }

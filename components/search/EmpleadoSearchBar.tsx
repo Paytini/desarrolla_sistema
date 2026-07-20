@@ -51,11 +51,11 @@ export default function EmpleadoSearchBar() {
                           width: 24,
                           height: 24,
                           borderRadius: "6px",
-                          bgcolor: "rgba(245,133,63,0.1)",
+                          bgcolor: "rgba(53,121,245,0.1)",
                           flexShrink: 0,
                         }}
                       >
-                        <BookOpen size={11} strokeWidth={2} style={{ color: "#F5853F" }} />
+                        <BookOpen size={11} strokeWidth={2} style={{ color: "#3579F5" }} />
                       </Avatar>
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                         {c.nombre_curso}

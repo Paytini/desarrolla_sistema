@@ -1,4 +1,5 @@
 import { decodeHtmlEntities } from "@/lib/format"
+import { notifyEmpleadoNewConstancias } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import {
   bridgeGetStudentCertificates,
@@ -155,6 +156,8 @@ async function upsertEmployeeCertificatesFromBridge(
     existingCertificates.map((certificate) => [certificate.wp_curso_id, certificate])
   )
 
+  const newCertificateCourseTitles: string[] = []
+
   const operations = certificates
     .filter(hasWpCourseId)
     .map((certificate) => {
@@ -180,11 +183,14 @@ async function upsertEmployeeCertificatesFromBridge(
         return null
       }
 
+      const nombreCurso = decodeHtmlEntities(certificate.title)
+      newCertificateCourseTitles.push(nombreCurso)
+
       return prisma.constancia.create({
         data: {
           empleado_id: empleadoId,
           wp_curso_id: certificate.wp_course_id,
-          nombre_curso: decodeHtmlEntities(certificate.title),
+          nombre_curso: nombreCurso,
           folio: buildCertificateFolio(empleadoId, certificate.wp_course_id, fechaEmision.toISOString()),
           wp_cert_url: certificateUrl,
           fecha_emision: fechaEmision,
@@ -196,6 +202,9 @@ async function upsertEmployeeCertificatesFromBridge(
   if (operations.length > 0) {
     try {
       await prisma.$transaction(operations)
+      if (newCertificateCourseTitles.length > 0) {
+        await notifyEmpleadoNewConstancias(empleadoId, newCertificateCourseTitles).catch(() => {})
+      }
     } catch (err) {
       if (
         err instanceof Error &&

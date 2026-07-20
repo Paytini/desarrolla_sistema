@@ -118,8 +118,8 @@ export default function EmployeeOnboardingTabs({
             sx={{
               borderRadius: 2,
               border: "1px solid",
-              borderColor: activeTab === tab.id ? "rgba(245,133,63,0.3)" : "divider",
-              bgcolor: activeTab === tab.id ? "rgba(245,133,63,0.04)" : "background.default",
+              borderColor: activeTab === tab.id ? "rgba(53,121,245,0.3)" : "divider",
+              bgcolor: activeTab === tab.id ? "rgba(53,121,245,0.04)" : "background.default",
               px: 2,
               py: 1.5,
               transition: "all 0.15s ease",

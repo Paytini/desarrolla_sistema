@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { requireRhSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
 import { replaceEmployeePackageCourses } from "@/lib/course-sync"
+import { notifyEmpresaRH, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
 import {
@@ -61,6 +62,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
         wp_user_id: true,
         nombre: true,
         apellido: true,
+        email: true,
       },
     }),
     prisma.empresa.findUnique({
@@ -112,6 +114,12 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
 
   await replaceEmployeePackageCourses(empleado.id, validSelectedCourses)
 
+  const courseNames = validSelectedCourses.map((course) => course.nombre_curso)
+  const courseAssignmentMessage =
+    courseNames.length === 1
+      ? `Se te asignó el curso "${courseNames[0]}".`
+      : `Se te asignaron ${courseNames.length} cursos nuevos.`
+
   if (validSelectedCourses.length === 0) {
     revalidatePath("/empresa/asignaciones")
     revalidatePath("/empresa/progreso")
@@ -122,6 +130,11 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   }
 
   if (!empleado.wp_user_id || !isWordPressBridgeConfigured()) {
+    await notifyUsuarioByEmail(empleado.email, {
+      tipo: "CURSO_ASIGNADO",
+      titulo: "Nuevo curso asignado",
+      mensaje: courseAssignmentMessage,
+    })
     revalidatePath("/empresa/asignaciones")
     revalidatePath("/empresa/progreso")
     revalidatePath("/empleado/cursos")
@@ -178,12 +191,36 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       await prisma.$transaction(upsertOperations)
     }
   } catch {
+    await notifyUsuarioByEmail(empleado.email, {
+      tipo: "CURSO_ASIGNADO",
+      titulo: "Nuevo curso asignado",
+      mensaje: courseAssignmentMessage,
+    })
+
+    const syncFailMensaje = `Falló la sincronización con WordPress al asignar cursos a ${empleado.nombre} ${empleado.apellido} (${empresa.nombre}).`
+    await notifyEmpresaRH(empresaId, {
+      tipo: "SYNC_FALLIDO",
+      titulo: "Sincronización fallida",
+      mensaje: `Falló la sincronización con WordPress al asignar cursos a ${empleado.nombre} ${empleado.apellido}.`,
+    })
+    await notifySuperadmins({
+      tipo: "SYNC_FALLIDO",
+      titulo: "Sincronización fallida",
+      mensaje: syncFailMensaje,
+    })
+
     revalidatePath("/empresa/asignaciones")
     revalidatePath("/empleado/cursos")
     revalidateTag(empresaCacheRootTag(empresaId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/empresa/asignaciones?success=asignado_local&error=bridge_sync")
   }
+
+  await notifyUsuarioByEmail(empleado.email, {
+    tipo: "CURSO_ASIGNADO",
+    titulo: "Nuevo curso asignado",
+    mensaje: courseAssignmentMessage,
+  })
 
   revalidatePath("/empresa/asignaciones")
   revalidatePath("/empresa/progreso")

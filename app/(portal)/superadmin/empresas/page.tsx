@@ -92,28 +92,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             <Button
               variant="contained"
               startIcon={<Plus size={14} strokeWidth={2.5} />}
-              sx={{
-                height: 44,
-                px: 3,
-                fontSize: '0.875rem',
-                fontWeight: 700,
-                letterSpacing: '0.02em',
-                textTransform: 'none',
-                backgroundColor: '#F5853F',
-                color: '#ffffff',
-                border: '2px solid #1E293B',
-                borderRadius: '9999px',
-                boxShadow: '4px 4px 0px 0px #1E293B',
-                '&:hover': {
-                  backgroundColor: '#D96B20',
-                  boxShadow: '6px 6px 0px 0px #1E293B',
-                  transform: 'translate(-2px,-2px)',
-                },
-                '&:active': {
-                  boxShadow: '2px 2px 0px 0px #1E293B',
-                  transform: 'translate(2px,2px)',
-                },
-              }}
+              sx={{ height: 44, px: 3, borderRadius: '10px' }}
             >
               Nueva empresa
             </Button>

@@ -116,7 +116,7 @@ export default async function SuperAdminIntegracionPage() {
       <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
         <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Plug size={16} style={{ color: "#F5853F" }} />
+            <Plug size={16} style={{ color: "#3579F5" }} />
             <Typography sx={{ fontSize: 15, fontWeight: 600, color: "text.primary" }}>
               Estado del bridge
             </Typography>

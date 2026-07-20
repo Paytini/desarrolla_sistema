@@ -241,8 +241,8 @@ export const muiTheme = createTheme({
   },
 })
 
-// designV4: monochrome + single-accent palette, scoped to the SUPERADMIN role only.
-export const muiThemeAdminV4 = createTheme(muiTheme, {
+// designV4: monochrome + single-accent palette, shared by all portal roles.
+export const muiThemeV4 = createTheme(muiTheme, {
   palette: {
     primary:    { main: '#3579F5', dark: '#2A61D6', light: '#6B9EF8', contrastText: '#FFFFFF' },
     info:       { main: '#3579F5' },

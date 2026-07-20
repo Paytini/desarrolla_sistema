@@ -78,7 +78,6 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
       <PageHeader
         title="Asignación de cursos"
         description="Asigna cursos del paquete activo a cada colaborador"
-        accentColor="#F5853F"
         breadcrumbs={[{ label: "Empresa", href: "/empresa/inicio" }, { label: "Asignaciones" }]}
       />
 
@@ -158,7 +157,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
 
                   <div className="flex items-center justify-between gap-4 border-b border-[#f5f5f5] px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#fff2eb] text-xs font-bold text-[#F5853F]">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF1FE] text-xs font-bold text-[#3579F5]">
                         {initials}
                       </div>
                       <div className="min-w-0">
@@ -178,7 +177,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                       </span>
                       <button
                         type="submit"
-                        className="rounded-full bg-[#F5853F] px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-[#D96B20]"
+                        className="rounded-full bg-[#3579F5] px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-[#2A61D6]"
                       >
                         Guardar
                       </button>
@@ -189,7 +188,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                     {packageCourses.map((course) => (
                       <label
                         key={`${empleado.id}-${course.wp_curso_id}`}
-                        className="group flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-[#F5853F]/30 hover:bg-[#fff8f5] has-[:checked]:border-[#F5853F]/40 has-[:checked]:bg-[#fff8f5]"
+                        className="group flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-[#3579F5]/30 hover:bg-[#F3F8FE] has-[:checked]:border-[#3579F5]/40 has-[:checked]:bg-[#F3F8FE]"
                       >
                         <input
                           type="checkbox"
@@ -216,7 +215,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                           {course.nombre_curso}
                         </p>
 
-                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-[#F5853F] group-has-[:checked]:bg-[#F5853F]">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-[#3579F5] group-has-[:checked]:bg-[#3579F5]">
                           <Check size={10} className="hidden text-white group-has-[:checked]:block" strokeWidth={3} />
                         </div>
                       </label>
