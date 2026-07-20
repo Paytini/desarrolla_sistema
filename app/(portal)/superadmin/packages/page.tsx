@@ -151,7 +151,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
         title="Gestión de paquetes"
         description="Define paquetes con cursos de Tutor LMS, asígnalos a empresas y sincroniza empleados."
         action={
-          <Link href="/superadmin/packages/nuevo" style={{ textDecoration: "none" }}>
+          <Link href="/superadmin/packages/new" style={{ textDecoration: "none" }}>
             <Button
               variant="contained"
               startIcon={<Plus size={14} strokeWidth={2.5} />}

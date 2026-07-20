@@ -92,7 +92,7 @@ export async function createPackageAction(formData: FormData) {
   const selectedCoursesRaw = getString(formData, "selected_courses_json")
 
   if (!nombre || !selectedCoursesRaw) {
-    redirect("/superadmin/packages/nuevo?error=datos")
+    redirect("/superadmin/packages/new?error=datos")
   }
 
   let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> = []
@@ -112,11 +112,11 @@ export async function createPackageAction(formData: FormData) {
       }))
       .filter((course) => Number.isInteger(course.wpCourseId) && course.nombreCurso)
   } catch {
-    redirect("/superadmin/packages/nuevo?error=cursos")
+    redirect("/superadmin/packages/new?error=cursos")
   }
 
   if (parsedCourses.length === 0) {
-    redirect("/superadmin/packages/nuevo?error=cursos")
+    redirect("/superadmin/packages/new?error=cursos")
   }
 
   const wpBundleId = wpBundleIdRaw ? Number.parseInt(wpBundleIdRaw, 10) : NaN
@@ -128,7 +128,7 @@ export async function createPackageAction(formData: FormData) {
       const detail = encodeURIComponent(
         "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS."
       )
-      redirect(`/superadmin/packages/nuevo?error=bundle&detail=${detail}`)
+      redirect(`/superadmin/packages/new?error=bundle&detail=${detail}`)
     }
 
     try {
@@ -143,7 +143,7 @@ export async function createPackageAction(formData: FormData) {
       resolvedBundleName = bundle.title
     } catch (error) {
       const detail = encodeURIComponent(getBundleErrorMessage(error))
-      redirect(`/superadmin/packages/nuevo?error=bundle&detail=${detail}`)
+      redirect(`/superadmin/packages/new?error=bundle&detail=${detail}`)
     }
   }
 

@@ -88,7 +88,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
         title="Empresas clientes"
         description="Gestiona las organizaciones activas en la plataforma."
         action={
-          <Link href="/superadmin/companies/nueva" style={{ textDecoration: 'none' }}>
+          <Link href="/superadmin/companies/new" style={{ textDecoration: 'none' }}>
             <Button
               variant="contained"
               startIcon={<Plus size={14} strokeWidth={2.5} />}
