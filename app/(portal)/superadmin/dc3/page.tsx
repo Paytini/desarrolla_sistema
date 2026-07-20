@@ -1,4 +1,4 @@
-import Dc3EditorList, { type CourseEntry } from "@/components/empresa/Dc3EditorList"
+import Dc3EditorList, { type CourseEntry } from "@/components/company/Dc3EditorList"
 import { getSuperadminDc3Snapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"

@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 
 import { SubmitButton } from "@/components/superadmin/SubmitButton"
-import PackageCourseSelector from "@/components/empresa/PackageCourseSelector"
+import PackageCourseSelector from "@/components/company/PackageCourseSelector"
 import { getSession } from "@/lib/session"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { createPackageAction } from "../actions"
