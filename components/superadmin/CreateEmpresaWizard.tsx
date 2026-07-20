@@ -11,7 +11,7 @@ import Stepper from "@mui/material/Stepper"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 
-import { createCompanyAction } from "@/app/(portal)/superadmin/empresas/actions"
+import { createCompanyAction } from "@/app/(portal)/superadmin/companies/actions"
 import { PasswordToggleInput } from "@/components/superadmin/PasswordToggleInput"
 import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 

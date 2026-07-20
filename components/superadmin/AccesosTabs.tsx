@@ -22,7 +22,7 @@ import { Pause, Play, Trash2, Users, UserX, type LucideIcon } from "lucide-react
 import { ConfirmIconButton } from "@/components/shared/ConfirmIconButton"
 import { SearchInput } from "@/components/shared/SearchInput"
 import { getInitials } from "@/components/layout/nav-config"
-import { deleteEmployeeAsSuperAdminAction, toggleRhUserStatusAction } from "@/app/(portal)/superadmin/accesos/actions"
+import { deleteEmployeeAsSuperAdminAction, toggleRhUserStatusAction } from "@/app/(portal)/superadmin/access/actions"
 
 export type RhAccessRow = {
   id: number

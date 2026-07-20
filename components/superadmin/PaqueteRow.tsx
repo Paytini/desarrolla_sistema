@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 
 import DeletePackageButton from "@/components/superadmin/DeletePackageButton"
-import { deletePackageAction } from "@/app/(portal)/superadmin/paquetes/actions"
+import { deletePackageAction } from "@/app/(portal)/superadmin/packages/actions"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
 import type { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities, formatDate } from "@/lib/format"
