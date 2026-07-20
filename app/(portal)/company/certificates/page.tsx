@@ -1,6 +1,6 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { ZipDownloadButton } from "@/components/company/ZipDownloadButton"
+import { ZipDownloadButton } from "@/components/empresa/ZipDownloadButton"
 import { Award, Clock, Users } from "lucide-react"
 import { formatDateTime, getInitials } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
