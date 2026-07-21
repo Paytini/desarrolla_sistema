@@ -18,20 +18,20 @@ type CompanyEmployee = {
 }
 type EmployeeCourse = PortalCourseRecord
 type CompanyCertificate = PortalCertificateRecord & {
-  empleadoNombre: string
-  empleadoEmail: string
+  employeeName: string
+  employeeEmail: string
 }
 type PendingCertificate = {
   id: string
-  empleadoNombre: string
-  empleadoEmail: string
+  employeeName: string
+  employeeEmail: string
   courseName: string
   completedAt: Date | null
 }
 
-async function getCompanyCertificatesRecord(empresaId: number) {
+async function getCompanyCertificatesRecord(companyId: number) {
   return prisma.empresa.findUnique({
-    where: { id: empresaId },
+    where: { id: companyId },
     include: {
       empleados: {
         where: { activo: true },
@@ -50,36 +50,36 @@ async function getCompanyCertificatesRecord(empresaId: number) {
 }
 
 
-export default async function EmpresaConstanciasPage() {
+export default async function CompanyCertificatesPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
-  const empresa = await getCompanyCertificatesRecord(session.user.empresa_id)
-  if (!empresa) redirect("/login")
+  const company = await getCompanyCertificatesRecord(session.user.empresa_id)
+  if (!company) redirect("/login")
 
-  const constancias: CompanyCertificate[] = empresa.empleados.flatMap(
-    (empleado: CompanyEmployee) =>
-      empleado.constancias.map((constancia: PortalCertificateRecord) => ({
-        ...constancia,
-        empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
-        empleadoEmail: empleado.email,
+  const certificates: CompanyCertificate[] = company.empleados.flatMap(
+    (employee: CompanyEmployee) =>
+      employee.constancias.map((certificate: PortalCertificateRecord) => ({
+        ...certificate,
+        employeeName: `${employee.nombre} ${employee.apellido}`.trim(),
+        employeeEmail: employee.email,
       }))
   )
 
-  const pendingCertificates: PendingCertificate[] = empresa.empleados.flatMap(
-    (empleado: CompanyEmployee) => {
+  const pendingCertificates: PendingCertificate[] = company.empleados.flatMap(
+    (employee: CompanyEmployee) => {
       const existingCourseIds = new Set(
-        empleado.constancias.map((c: PortalCertificateRecord) => c.wp_curso_id)
+        employee.constancias.map((c: PortalCertificateRecord) => c.wp_curso_id)
       )
-      return empleado.cursos
+      return employee.cursos
         .filter(
           (course: EmployeeCourse) =>
             course.completado && !existingCourseIds.has(course.wp_curso_id)
         )
         .map((course: EmployeeCourse) => ({
-          id: `${empleado.id}-${course.wp_curso_id}`,
-          empleadoNombre: `${empleado.nombre} ${empleado.apellido}`.trim(),
-          empleadoEmail: empleado.email,
+          id: `${employee.id}-${course.wp_curso_id}`,
+          employeeName: `${employee.nombre} ${employee.apellido}`.trim(),
+          employeeEmail: employee.email,
           courseName: course.nombre_curso,
           completedAt: course.fecha_completado,
         }))
@@ -87,7 +87,7 @@ export default async function EmpresaConstanciasPage() {
   )
 
   const employeesWithCertificates = new Set(
-    constancias.map((c: CompanyCertificate) => c.empleadoEmail)
+    certificates.map((c: CompanyCertificate) => c.employeeEmail)
   ).size
 
   return (
@@ -99,7 +99,7 @@ export default async function EmpresaConstanciasPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard label="Constancias emitidas" value={String(constancias.length)} sub="Total registradas" icon={Award} borderColor="orange" />
+        <KpiCard label="Constancias emitidas" value={String(certificates.length)} sub="Total registradas" icon={Award} borderColor="orange" />
         <KpiCard label="Empleados con constancia" value={String(employeesWithCertificates)} sub="Al menos una emitida" icon={Users} borderColor="charcoal" />
         <KpiCard label="Pendientes" value={String(pendingCertificates.length)} sub="Cursos sin constancia aún" icon={Clock} borderColor="amber" />
       </div>
@@ -109,24 +109,24 @@ export default async function EmpresaConstanciasPage() {
           <div className="mb-4 flex items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-[#1a1a1a]">
               Constancias emitidas
-              <span className="ml-2 text-sm font-normal text-[#94a3b8]">{constancias.length}</span>
+              <span className="ml-2 text-sm font-normal text-[#94a3b8]">{certificates.length}</span>
             </h2>
-            {constancias.length > 0 ? (
-              <ZipDownloadButton count={constancias.length} />
+            {certificates.length > 0 ? (
+              <ZipDownloadButton count={certificates.length} />
             ) : null}
           </div>
 
-          {constancias.length === 0 ? (
+          {certificates.length === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
               Aún no hay constancias emitidas para los empleados activos.
             </div>
           ) : (
             <div className="space-y-2">
-              {constancias.map((constancia: CompanyCertificate) => {
-                const initials = getInitials(constancia.empleadoNombre)
+              {certificates.map((certificate: CompanyCertificate) => {
+                const initials = getInitials(certificate.employeeName)
                 return (
                   <div
-                    key={constancia.id}
+                    key={certificate.id}
                     className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
                   >
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF1FE] text-xs font-bold text-[#3579F5]">
@@ -134,20 +134,20 @@ export default async function EmpresaConstanciasPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-[#1a1a1a]">
-                        {constancia.nombre_curso}
+                        {certificate.nombre_curso}
                       </p>
                       <p className="truncate text-xs text-[#64748b]">
-                        {constancia.empleadoNombre} · Folio:{" "}
-                        <span className="font-mono">{constancia.folio}</span>
+                        {certificate.employeeName} · Folio:{" "}
+                        <span className="font-mono">{certificate.folio}</span>
                       </p>
                     </div>
                     <p className="hidden shrink-0 text-xs text-[#94a3b8] sm:block">
-                      {formatDateTime(constancia.fecha_emision)}
+                      {formatDateTime(certificate.fecha_emision)}
                     </p>
                     <div className="flex shrink-0 gap-1.5">
-                      {constancia.wp_cert_url ? (
+                      {certificate.wp_cert_url ? (
                         <a
-                          href={constancia.wp_cert_url}
+                          href={certificate.wp_cert_url}
                           target="_blank"
                           rel="noreferrer"
                           className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition-all duration-200 hover:bg-gray-200"
@@ -156,7 +156,7 @@ export default async function EmpresaConstanciasPage() {
                         </a>
                       ) : null}
                       <a
-                        href={`/api/certificates/${constancia.id}/dc3`}
+                        href={`/api/certificates/${certificate.id}/dc3`}
                         target="_blank"
                         rel="noreferrer"
                         className="rounded-xl bg-[#3579F5] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#2A61D6]"
@@ -191,14 +191,14 @@ export default async function EmpresaConstanciasPage() {
                   className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-3"
                 >
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-xs font-bold text-amber-700">
-                    {getInitials(item.empleadoNombre)}
+                    {getInitials(item.employeeName)}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-amber-950">
                       {item.courseName}
                     </p>
                     <p className="truncate text-xs text-amber-700">
-                      {item.empleadoNombre}
+                      {item.employeeName}
                       {item.completedAt
                         ? ` · Completado: ${formatDateTime(item.completedAt)}`
                         : ""}
