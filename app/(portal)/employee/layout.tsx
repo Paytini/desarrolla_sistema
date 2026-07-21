@@ -2,7 +2,7 @@ import { getSession } from "@/lib/session"
 import { getCompanyAccessStatus } from "@/lib/company-status"
 import { redirect } from "next/navigation"
 
-export default async function EmpleadoLayout({
+export default async function EmployeeLayout({
   children,
 }: {
   children: React.ReactNode
