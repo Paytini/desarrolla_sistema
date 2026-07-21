@@ -13,17 +13,17 @@ import Button from "@mui/material/Button"
 import Paper from "@mui/material/Paper"
 import Typography from "@mui/material/Typography"
 
-export default async function EmpleadoConstanciasPage() {
+export default async function EmployeeCertificatesPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "EMPLEADO" || !session.user.empresa_id) {
     redirect("/login")
   }
 
   const learningData = await getEmployeeLearningData(session.user.email ?? "")
-  const empleado     = learningData?.empleado
-  if (!empleado) redirect("/login")
+  const employee     = learningData?.empleado
+  if (!employee) redirect("/login")
 
-  const constancias         = (empleado.constancias ?? []) as PortalCertificateRecord[]
+  const certificates        = (employee.constancias ?? []) as PortalCertificateRecord[]
   const pendingCertificates = (learningData?.pendingCertificates ?? []) as PortalCourseRecord[]
 
   return (
@@ -35,7 +35,7 @@ export default async function EmpleadoConstanciasPage() {
       />
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
-        <KpiCard label="Emitidas"   value={String(constancias.length)}         sub="Listas para descarga"      icon={Award}  borderColor="orange" />
+        <KpiCard label="Emitidas"   value={String(certificates.length)}        sub="Listas para descarga"      icon={Award}  borderColor="orange" />
         <KpiCard label="Pendientes" value={String(pendingCertificates.length)} sub="Cursos sin constancia aún" icon={Clock}  borderColor="amber" />
       </Box>
 
@@ -60,9 +60,9 @@ export default async function EmpleadoConstanciasPage() {
               <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
                 Constancias disponibles
               </Typography>
-              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>{constancias.length}</Typography>
+              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>{certificates.length}</Typography>
             </Box>
-            {constancias.length > 0 ? (
+            {certificates.length > 0 ? (
               <Button
                 component="a"
                 href="/api/certificates/zip"
@@ -83,7 +83,7 @@ export default async function EmpleadoConstanciasPage() {
             ) : null}
           </Box>
 
-          {constancias.length === 0 ? (
+          {certificates.length === 0 ? (
             <Box
               sx={{
                 borderRadius: 2,
@@ -100,9 +100,9 @@ export default async function EmpleadoConstanciasPage() {
             </Box>
           ) : (
             <Box sx={{ display: "grid", gap: 1 }}>
-              {constancias.map((constancia) => (
+              {certificates.map((certificate) => (
                 <Box
-                  key={constancia.id}
+                  key={certificate.id}
                   sx={{
                     display: "flex",
                     alignItems: "center",
@@ -131,7 +131,7 @@ export default async function EmpleadoConstanciasPage() {
                       color: "#3579F5",
                     }}
                   >
-                    {constancia.nombre_curso.charAt(0).toUpperCase()}
+                    {certificate.nombre_curso.charAt(0).toUpperCase()}
                   </Box>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
@@ -144,22 +144,22 @@ export default async function EmpleadoConstanciasPage() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {constancia.nombre_curso}
+                      {certificate.nombre_curso}
                     </Typography>
                     <Typography sx={{ fontSize: 11, color: "#64748b" }}>
                       Folio:{" "}
                       <Box component="span" sx={{ fontFamily: "monospace" }}>
-                        {constancia.folio}
+                        {certificate.folio}
                       </Box>
                       {" · "}
-                      {formatDateTime(constancia.fecha_emision)}
+                      {formatDateTime(certificate.fecha_emision)}
                     </Typography>
                   </Box>
                   <Box sx={{ display: "flex", flexShrink: 0, gap: 0.75 }}>
-                    {constancia.wp_cert_url ? (
+                    {certificate.wp_cert_url ? (
                       <Button
                         component="a"
-                        href={constancia.wp_cert_url}
+                        href={certificate.wp_cert_url}
                         target="_blank"
                         rel="noreferrer"
                         variant="outlined"
@@ -178,7 +178,7 @@ export default async function EmpleadoConstanciasPage() {
                     ) : null}
                     <Button
                       component="a"
-                      href={`/api/certificates/${constancia.id}/dc3`}
+                      href={`/api/certificates/${certificate.id}/dc3`}
                       target="_blank"
                       rel="noreferrer"
                       variant="contained"
