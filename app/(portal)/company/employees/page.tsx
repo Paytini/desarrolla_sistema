@@ -383,7 +383,7 @@ function CsvEmployeeImportForm() {
   )
 }
 
-export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) {
+export default async function CompanyEmployeesPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
@@ -394,17 +394,17 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
 
-  const empresa = await getRhEmpleadosSnapshot(session.user.empresa_id)
-  if (!empresa) redirect("/login")
+  const company = await getRhEmpleadosSnapshot(session.user.empresa_id)
+  if (!company) redirect("/login")
 
-  const empleadosActivos = empresa.empleados.filter((e) => e.activo).length
-  const empleadosInactivos = empresa.empleados.length - empleadosActivos
-  const cuposDisponibles = Math.max(empresa.asientos_contratados - empleadosActivos, 0)
-  const paqueteActivo = empresa.paquetes[0]?.paquete?.nombre ?? "Sin paquete"
-  const employeesWithAccessIssues = empresa.empleados.filter((e) =>
+  const activeEmployees = company.empleados.filter((e) => e.activo).length
+  const inactiveEmployees = company.empleados.length - activeEmployees
+  const availableSeats = Math.max(company.asientos_contratados - activeEmployees, 0)
+  const activePackage = company.paquetes[0]?.paquete?.nombre ?? "Sin paquete"
+  const employeesWithAccessIssues = company.empleados.filter((e) =>
     e.cursos.some((c) => c.acceso_estado === "ERROR")
   ).length
-  const filteredEmployees = empresa.empleados.filter((e) =>
+  const filteredEmployees = company.empleados.filter((e) =>
     matchesEmployeeFilters(e, { query, status })
   )
   const currentListPath = buildEmployeeListPath(searchQuery, status)
@@ -430,10 +430,10 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <KpiCard label="Paquete activo" value={paqueteActivo} icon={Package} borderColor="violet" />
-        <KpiCard label="Activos" value={String(empleadosActivos)} sub="Con acceso vigente" icon={Users} borderColor="emerald" />
-        <KpiCard label="Cupos disponibles" value={String(cuposDisponibles)} sub="Antes del límite" icon={ShieldCheck} borderColor="charcoal" />
-        <KpiCard label="Suspendidos" value={String(empleadosInactivos)} icon={UserX} borderColor="rose" />
+        <KpiCard label="Paquete activo" value={activePackage} icon={Package} borderColor="violet" />
+        <KpiCard label="Activos" value={String(activeEmployees)} sub="Con acceso vigente" icon={Users} borderColor="emerald" />
+        <KpiCard label="Cupos disponibles" value={String(availableSeats)} sub="Antes del límite" icon={ShieldCheck} borderColor="charcoal" />
+        <KpiCard label="Suspendidos" value={String(inactiveEmployees)} icon={UserX} borderColor="rose" />
         <KpiCard label="Con alertas" value={String(employeesWithAccessIssues)} sub="Error de acceso" icon={AlertCircle} borderColor="amber" />
       </div>
 
@@ -466,7 +466,7 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
           <h2 className="text-base font-semibold text-slate-950">
             Plantilla actual
             <span className="ml-2 text-sm font-normal text-slate-400">
-              {filteredEmployees.length} de {empresa.empleados.length}
+              {filteredEmployees.length} de {company.empleados.length}
             </span>
           </h2>
           <a
@@ -510,37 +510,37 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
         </form>
 
         <div className="space-y-2">
-          {empresa.empleados.length === 0 ? (
+          {company.empleados.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               Aún no hay empleados registrados para esta empresa.
             </div>
           ) : null}
 
-          {empresa.empleados.length > 0 && filteredEmployees.length === 0 ? (
+          {company.empleados.length > 0 && filteredEmployees.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               No encontramos empleados que coincidan con ese filtro.
             </div>
           ) : null}
 
-          {filteredEmployees.map((empleado) => {
-            const activeCourseCount = empleado.cursos.filter(
+          {filteredEmployees.map((employee) => {
+            const activeCourseCount = employee.cursos.filter(
               (c) => c.acceso_estado === "ACTIVE"
             ).length
-            const errorCourseCount = empleado.cursos.filter(
+            const errorCourseCount = employee.cursos.filter(
               (c) => c.acceso_estado === "ERROR"
             ).length
-            const initials = getInitials(`${empleado.nombre} ${empleado.apellido}`)
+            const initials = getInitials(`${employee.nombre} ${employee.apellido}`)
 
             return (
               <div
-                key={empleado.id}
+                key={employee.id}
                 className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
               >
                 <div
                   className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
                     errorCourseCount > 0
                       ? "bg-rose-50 text-rose-700"
-                      : empleado.activo
+                      : employee.activo
                         ? "bg-[#EAF1FE] text-[#3579F5]"
                         : "bg-slate-100 text-slate-500"
                   }`}
@@ -551,10 +551,10 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="truncate text-sm font-semibold text-slate-950">
-                      {empleado.nombre} {empleado.apellido}
+                      {employee.nombre} {employee.apellido}
                     </p>
-                    <StatusBadge variant={empleado.activo ? "green" : "slate"} dot>
-                      {empleado.activo ? "Activo" : "Suspendido"}
+                    <StatusBadge variant={employee.activo ? "green" : "slate"} dot>
+                      {employee.activo ? "Activo" : "Suspendido"}
                     </StatusBadge>
                     {errorCourseCount > 0 && (
                       <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800">
@@ -563,36 +563,36 @@ export default async function EmpresaEmpleadosPage({ searchParams }: PageProps) 
                     )}
                   </div>
                   <p className="truncate text-xs text-slate-500">
-                    {empleado.email}
-                    {empleado.departamento ? ` · ${empleado.departamento}` : ""}
-                    {empleado.puesto ? ` · ${empleado.puesto}` : ""}
+                    {employee.email}
+                    {employee.departamento ? ` · ${employee.departamento}` : ""}
+                    {employee.puesto ? ` · ${employee.puesto}` : ""}
                   </p>
                 </div>
 
                 <div className="hidden text-right text-xs text-slate-500 md:block">
                   <p className="font-medium text-slate-700">{activeCourseCount} cursos activos</p>
-                  <p>Alta: {formatDate(empleado.created_at)}</p>
+                  <p>Alta: {formatDate(employee.created_at)}</p>
                 </div>
 
                 <div className="flex shrink-0 gap-1.5">
                   <form action={toggleEmployeeStatusAction}>
-                    <input type="hidden" name="empleado_id" value={empleado.id} />
+                    <input type="hidden" name="empleado_id" value={employee.id} />
                     <input type="hidden" name="return_to" value={currentListPath} />
                     <button
                       type="submit"
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                        empleado.activo
+                        employee.activo
                           ? "bg-[#1a1a1a] text-white hover:bg-[#333]"
                           : "bg-[#3579F5] text-white hover:bg-[#2A61D6]"
                       }`}
                     >
-                      {empleado.activo ? "Suspender" : "Reactivar"}
+                      {employee.activo ? "Suspender" : "Reactivar"}
                     </button>
                   </form>
                   <DeleteEmployeeButton
                     action={deleteEmployeeAction}
-                    empleadoId={empleado.id}
-                    employeeName={`${empleado.nombre} ${empleado.apellido}`.trim()}
+                    empleadoId={employee.id}
+                    employeeName={`${employee.nombre} ${employee.apellido}`.trim()}
                     returnTo={currentListPath}
                   />
                 </div>

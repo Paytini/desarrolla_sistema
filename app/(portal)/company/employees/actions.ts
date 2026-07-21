@@ -47,7 +47,7 @@ function withStatus(path: string, key: "success" | "error", value: string) {
   return query ? `${pathname}?${query}` : pathname
 }
 
-type EmpresaProvisioningContext = {
+type CompanyProvisioningContext = {
   id: number
   nombre: string
   asientos_contratados: number
@@ -63,7 +63,7 @@ type EmpresaProvisioningContext = {
 }
 
 type EmployeeProvisioningInput = {
-  empresaId: number
+  companyId: number
   nombre: string
   apellido: string
   apellidoMaterno?: string | null
@@ -74,13 +74,13 @@ type EmployeeProvisioningInput = {
   ocupacionEspecificaClave?: string | null
   ocupacionEspecifica?: string | null
   password: string
-  empresaContext?: EmpresaProvisioningContext
+  companyContext?: CompanyProvisioningContext
   actor: AuditActor
 }
 
-async function loadEmpresaProvisioningContext(empresaId: number) {
+async function loadCompanyProvisioningContext(companyId: number) {
   return prisma.empresa.findUnique({
-    where: { id: empresaId },
+    where: { id: companyId },
     select: {
       id: true,
       nombre: true,
@@ -107,11 +107,11 @@ async function loadEmpresaProvisioningContext(empresaId: number) {
   })
 }
 
-async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
-  const empresaContext =
-    input.empresaContext ?? (await loadEmpresaProvisioningContext(input.empresaId))
+async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
+  const companyContext =
+    input.companyContext ?? (await loadCompanyProvisioningContext(input.companyId))
 
-  if (!empresaContext) {
+  if (!companyContext) {
     return {
       ok: false as const,
       code: "empresa",
@@ -138,7 +138,7 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     }
   }
 
-  const beforeSeatSnapshot = await getCompanySeatSnapshot(input.empresaId)
+  const beforeSeatSnapshot = await getCompanySeatSnapshot(input.companyId)
 
   if (!beforeSeatSnapshot) {
     return {
@@ -148,23 +148,23 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12)
-  const activePackage = empresaContext.paquetes[0]
+  const activePackage = companyContext.paquetes[0]
   const hasActivePackage = Boolean(activePackage)
 
   let createdEmployee: Awaited<ReturnType<typeof prisma.empleado.create>>
   try {
     createdEmployee = await prisma.$transaction(async (tx) => {
       const activeEmployees = await tx.empleado.count({
-        where: { empresa_id: input.empresaId, activo: true },
+        where: { empresa_id: input.companyId, activo: true },
       })
 
-      if (activeEmployees >= empresaContext.asientos_contratados) {
+      if (activeEmployees >= companyContext.asientos_contratados) {
         throw Object.assign(new Error("cupos"), { code: "cupos" })
       }
 
-      const empleado = await tx.empleado.create({
+      const employee = await tx.empleado.create({
         data: {
-          empresa_id: input.empresaId,
+          empresa_id: input.companyId,
           nombre: input.nombre,
           apellido: input.apellido,
           apellido_materno: input.apellidoMaterno || null,
@@ -183,17 +183,17 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
           password_hash: passwordHash,
           nombre: `${input.nombre} ${input.apellido}`.trim(),
           rol: "EMPLEADO",
-          empresa_id: input.empresaId,
+          empresa_id: input.companyId,
           activo: true,
         },
       })
 
       await tx.empresa.update({
-        where: { id: input.empresaId },
+        where: { id: input.companyId },
         data: { asientos_usados: activeEmployees + 1 },
       })
 
-      return empleado
+      return employee
     })
   } catch (err) {
     if (err instanceof Error && (err as NodeJS.ErrnoException & { code?: string }).code === "cupos") {
@@ -202,11 +202,11 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     throw err
   }
 
-  const afterSeatSnapshot = await getCompanySeatSnapshot(input.empresaId)
+  const afterSeatSnapshot = await getCompanySeatSnapshot(input.companyId)
   if (afterSeatSnapshot) {
     await createSeatHistoryEntry({
       actor: input.actor,
-      empresaId: input.empresaId,
+      empresaId: input.companyId,
       motivo: "empleado_creado",
       detalle: `Alta de empleado ${input.nombre} ${input.apellido}.`,
       before: beforeSeatSnapshot,
@@ -219,7 +219,7 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     accion: "EMPLEADO_CREADO",
     entidadTipo: "EMPLEADO",
     entidadId: createdEmployee.id,
-    empresaId: input.empresaId,
+    empresaId: input.companyId,
     resumen: `${input.actor.nombre} dio de alta al empleado ${input.nombre} ${input.apellido}.`,
     metadata: {
       email,
@@ -236,8 +236,8 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
     try {
       const bridgeEmployee = await bridgeUpsertEmployee({
         employeeId: createdEmployee.id,
-        companyId: empresaContext.id,
-        companyName: empresaContext.nombre,
+        companyId: companyContext.id,
+        companyName: companyContext.nombre,
         email,
         firstName: input.nombre,
         lastName: input.apellido,
@@ -255,7 +255,7 @@ async function createEmployeeForEmpresa(input: EmployeeProvisioningInput) {
         await tx.usuario.updateMany({
           where: {
             email,
-            empresa_id: input.empresaId,
+            empresa_id: input.companyId,
           },
           data: { wp_user_id: bridgeEmployee.wp_user_id },
         })
@@ -423,7 +423,7 @@ function normalizeCsvEmployees(
 }
 
 async function syncCsvEmployeesToWordPress(input: {
-  empresaContext: EmpresaProvisioningContext
+  companyContext: CompanyProvisioningContext
   employees: CreatedCsvEmployee[]
 }) {
   if (!isWordPressBridgeConfigured() || input.employees.length === 0) {
@@ -440,8 +440,8 @@ async function syncCsvEmployeesToWordPress(input: {
       try {
         const bridgeEmployee = await bridgeUpsertEmployee({
           employeeId: employee.id,
-          companyId: input.empresaContext.id,
-          companyName: input.empresaContext.nombre,
+          companyId: input.companyContext.id,
+          companyName: input.companyContext.nombre,
           email: employee.email,
           firstName: employee.nombre,
           lastName: employee.apellido,
@@ -479,7 +479,7 @@ async function syncCsvEmployeesToWordPress(input: {
         prisma.usuario.updateMany({
           where: {
             email: result.email,
-            empresa_id: input.empresaContext.id,
+            empresa_id: input.companyContext.id,
           },
           data: { wp_user_id: result.wpUserId },
         }),
@@ -497,7 +497,7 @@ export async function createEmployeeAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
 
-  const empresaId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as number
   const nombre = getString(formData, "nombre")
   const apellido = getString(formData, "apellido")
   const apellidoMaterno = getString(formData, "apellido_materno")
@@ -513,8 +513,8 @@ export async function createEmployeeAction(formData: FormData) {
     redirect("/company/employees?error=datos")
   }
 
-  const result = await createEmployeeForEmpresa({
-    empresaId,
+  const result = await createEmployeeForCompany({
+    companyId,
     nombre,
     apellido,
     apellidoMaterno: apellidoMaterno || null,
@@ -532,7 +532,7 @@ export async function createEmployeeAction(formData: FormData) {
   revalidatePath("/company/assignments")
   revalidatePath("/employee/courses")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   if (!result.ok) {
@@ -563,7 +563,7 @@ export async function createEmployeeAction(formData: FormData) {
 export async function importEmployeesCsvAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
-  const empresaId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as number
   const fallbackPassword = getString(formData, "password_csv")
   const file = formData.get("archivo_csv")
 
@@ -598,17 +598,17 @@ export async function importEmployeesCsvAction(formData: FormData) {
     redirect("/company/employees?error=csv_empty")
   }
 
-  const empresaContext = await loadEmpresaProvisioningContext(empresaId)
-  if (!empresaContext) {
+  const companyContext = await loadCompanyProvisioningContext(companyId)
+  if (!companyContext) {
     redirect("/company/employees?error=empresa")
   }
 
   const candidateEmails = normalizedCsv.employees.map((employee) => employee.email)
   const [beforeSeatSnapshot, activeEmployees, existingEmployees, existingUsers] = await Promise.all([
-    getCompanySeatSnapshot(empresaId),
+    getCompanySeatSnapshot(companyId),
     prisma.empleado.count({
       where: {
-        empresa_id: empresaId,
+        empresa_id: companyId,
         activo: true,
       },
     }),
@@ -639,7 +639,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
     return !existingEmails.has(employee.email)
   })
   let skipped = normalizedCsv.skipped + (normalizedCsv.employees.length - availableEmployees.length)
-  const availableSeats = Math.max(empresaContext.asientos_contratados - activeEmployees, 0)
+  const availableSeats = Math.max(companyContext.asientos_contratados - activeEmployees, 0)
 
   if (availableSeats <= 0) {
     redirect("/company/employees?error=cupos")
@@ -658,7 +658,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
     ? await prisma.$transaction(async (tx) => {
         await tx.empleado.createMany({
           data: employeesToCreate.map((employee) => ({
-            empresa_id: empresaId,
+            empresa_id: companyId,
             nombre: employee.nombre,
             apellido: employee.apellido,
             apellido_materno: employee.apellidoMaterno,
@@ -677,19 +677,19 @@ export async function importEmployeesCsvAction(formData: FormData) {
             password_hash: passwordHashes[index],
             nombre: `${employee.nombre} ${employee.apellido}`.trim(),
             rol: "EMPLEADO",
-            empresa_id: empresaId,
+            empresa_id: companyId,
             activo: true,
           })),
         })
 
         await tx.empresa.update({
-          where: { id: empresaId },
+          where: { id: companyId },
           data: { asientos_usados: activeEmployees + employeesToCreate.length },
         })
 
         const persistedEmployees = await tx.empleado.findMany({
           where: {
-            empresa_id: empresaId,
+            empresa_id: companyId,
             email: { in: employeesToCreate.map((employee) => employee.email) },
           },
           select: {
@@ -719,18 +719,18 @@ export async function importEmployeesCsvAction(formData: FormData) {
     : []
 
   const bridgeResult = await syncCsvEmployeesToWordPress({
-    empresaContext,
+    companyContext,
     employees: createdEmployees,
   })
   const created = createdEmployees.length
   const synced = bridgeResult.synced
   const bridgeWarnings = bridgeResult.bridgeWarnings
 
-  const afterSeatSnapshot = await getCompanySeatSnapshot(empresaId)
+  const afterSeatSnapshot = await getCompanySeatSnapshot(companyId)
   if (afterSeatSnapshot && created > 0) {
     await createSeatHistoryEntry({
       actor,
-      empresaId,
+      empresaId: companyId,
       motivo: "empleados_importados_csv",
       detalle: `Importacion CSV de ${created} empleado(s).`,
       before: beforeSeatSnapshot,
@@ -742,8 +742,8 @@ export async function importEmployeesCsvAction(formData: FormData) {
     actor,
     accion: "EMPLEADOS_IMPORTADOS_CSV",
     entidadTipo: "EMPRESA",
-    entidadId: empresaId,
-    empresaId,
+    entidadId: companyId,
+    empresaId: companyId,
     resumen: `${actor.nombre} ejecuto importacion masiva CSV de empleados.`,
     metadata: {
       creados: created,
@@ -758,31 +758,30 @@ export async function importEmployeesCsvAction(formData: FormData) {
   revalidatePath("/company/progress")
   revalidatePath("/company/certificates")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(
     `/company/employees?success=csv_imported&created=${created}&synced=${synced}&warnings=${bridgeWarnings}&skipped=${skipped}`
   )
 }
-
 export async function toggleEmployeeStatusAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
 
-  const empresaId = session.user.empresa_id as number
-  const empleadoId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
+  const companyId = session.user.empresa_id as number
+  const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"))
 
-  if (!empleadoId) {
+  if (!employeeId) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
-  const [empleado, beforeSeatSnapshot] = await Promise.all([
+  const [employee, beforeSeatSnapshot] = await Promise.all([
     prisma.empleado.findFirst({
       where: {
-        id: empleadoId,
-        empresa_id: empresaId,
+        id: employeeId,
+        empresa_id: companyId,
       },
       select: {
         id: true,
@@ -792,47 +791,47 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
         apellido: true,
       },
     }),
-    getCompanySeatSnapshot(empresaId),
+    getCompanySeatSnapshot(companyId),
   ])
 
-  if (!empleado || !beforeSeatSnapshot) {
+  if (!employee || !beforeSeatSnapshot) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
   await prisma.$transaction(async (tx) => {
     await tx.empleado.update({
-      where: { id: empleado.id },
-      data: { activo: !empleado.activo },
+      where: { id: employee.id },
+      data: { activo: !employee.activo },
     })
 
     await tx.usuario.updateMany({
       where: {
-        email: empleado.email,
-        empresa_id: empresaId,
+        email: employee.email,
+        empresa_id: companyId,
       },
-      data: { activo: !empleado.activo },
+      data: { activo: !employee.activo },
     })
-    
+
     const activeEmployees = await tx.empleado.count({
       where: {
-        empresa_id: empresaId,
+        empresa_id: companyId,
         activo: true,
       },
     })
 
     await tx.empresa.update({
-      where: { id: empresaId },
+      where: { id: companyId },
       data: { asientos_usados: activeEmployees },
     })
   })
 
-  const afterSeatSnapshot = await getCompanySeatSnapshot(empresaId)
+  const afterSeatSnapshot = await getCompanySeatSnapshot(companyId)
   if (afterSeatSnapshot) {
     await createSeatHistoryEntry({
       actor,
-      empresaId,
-      motivo: empleado.activo ? "empleado_suspendido" : "empleado_reactivado",
-      detalle: `${empleado.nombre} ${empleado.apellido} (${empleado.email})`,
+      empresaId: companyId,
+      motivo: employee.activo ? "empleado_suspendido" : "empleado_reactivado",
+      detalle: `${employee.nombre} ${employee.apellido} (${employee.email})`,
       before: beforeSeatSnapshot,
       after: afterSeatSnapshot,
     })
@@ -840,39 +839,39 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
 
   await createAuditEvent({
     actor,
-    accion: empleado.activo ? "EMPLEADO_SUSPENDIDO" : "EMPLEADO_REACTIVADO",
+    accion: employee.activo ? "EMPLEADO_SUSPENDIDO" : "EMPLEADO_REACTIVADO",
     entidadTipo: "EMPLEADO",
-    entidadId: empleado.id,
-    empresaId,
-    resumen: `${actor.nombre} ${empleado.activo ? "suspendio" : "reactivo"} al empleado ${empleado.nombre} ${empleado.apellido}.`,
+    entidadId: employee.id,
+    empresaId: companyId,
+    resumen: `${actor.nombre} ${employee.activo ? "suspendio" : "reactivo"} al empleado ${employee.nombre} ${employee.apellido}.`,
     metadata: {
-      email: empleado.email,
+      email: employee.email,
     },
   })
 
   revalidatePath("/company/employees")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect(withStatus(returnTo, "success", empleado.activo ? "empleado_suspendido" : "empleado_activado"))
+  redirect(withStatus(returnTo, "success", employee.activo ? "empleado_suspendido" : "empleado_activado"))
 }
 
 export async function deleteEmployeeAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
 
-  const empresaId = session.user.empresa_id as number
-  const empleadoId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
+  const companyId = session.user.empresa_id as number
+  const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"))
 
-  if (!empleadoId) {
+  if (!employeeId) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
   try {
     await deleteEmployeeRecord({
-      empleadoId,
-      empresaId,
+      empleadoId: employeeId,
+      empresaId: companyId,
       actor,
       source: "RH",
     })
@@ -890,7 +889,7 @@ export async function deleteEmployeeAction(formData: FormData) {
   revalidatePath("/company/progress")
   revalidatePath("/superadmin/access")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect(withStatus(returnTo, "success", "empleado_eliminado"))
 }
@@ -898,9 +897,9 @@ export async function deleteEmployeeAction(formData: FormData) {
 export async function triggerCompanyLearningSyncAction() {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
-  const empresaId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as number
 
-  const queued = scheduleCompanyEmployeeLearningBatch(empresaId, {
+  const queued = scheduleCompanyEmployeeLearningBatch(companyId, {
     limit: 100,
     staleOnly: false,
   })
@@ -909,8 +908,8 @@ export async function triggerCompanyLearningSyncAction() {
     actor,
     accion: queued ? "SYNC_EMPRESA_EN_COLA" : "SYNC_EMPRESA_YA_EN_COLA",
     entidadTipo: "EMPRESA",
-    entidadId: empresaId,
-    empresaId,
+    entidadId: companyId,
+    empresaId: companyId,
     resumen: `${actor.nombre} solicito sincronizacion de aprendizaje para su empresa.`,
   })
 
@@ -920,7 +919,7 @@ export async function triggerCompanyLearningSyncAction() {
   revalidatePath("/employee/courses")
   revalidatePath("/employee/certificates")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(`/company/employees?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)

@@ -1,5 +1,5 @@
 import { PageSkeleton } from "@/components/shared/PageSkeleton"
 
-export default function EmpleadosLoading() {
+export default function CompanyEmployeesLoading() {
   return <PageSkeleton />
 }
