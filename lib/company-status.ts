@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma"
 
-export type EmpresaAccessStatus =
+export type CompanyAccessStatus =
   | { blocked: false; reason: null }
   | { blocked: true; reason: "suspendida" | "vencida" }
 
-export async function getEmpresaAccessStatus(empresaId: number): Promise<EmpresaAccessStatus> {
+export async function getCompanyAccessStatus(empresaId: number): Promise<CompanyAccessStatus> {
   const empresa = await prisma.empresa.findUnique({
     where: { id: empresaId },
     select: {

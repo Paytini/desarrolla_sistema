@@ -16,7 +16,7 @@ import { formatDate } from "@/lib/format"
 
 type Empresa = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["empresas"][number]
 
-export function EmpresaRow({ empresa }: { empresa: Empresa }) {
+export function CompanyRow({ empresa }: { empresa: Empresa }) {
   const paquete = empresa.paquetes[0]?.paquete?.nombre ?? "—"
   const activos = empresa.empleados.filter((e) => e.activo).length
 

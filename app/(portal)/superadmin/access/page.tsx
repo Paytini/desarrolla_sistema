@@ -6,7 +6,7 @@ import { getSuperadminAccesosSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
-import { AccesosTabs, type EmployeeAccessRow, type RhAccessRow } from "@/components/superadmin/AccesosTabs"
+import { AccessTabs, type EmployeeAccessRow, type RhAccessRow } from "@/components/superadmin/AccessTabs"
 import { PageHeader } from "@/components/shared/PageHeader"
 
 const successMessages: Record<string, string> = {
@@ -81,7 +81,7 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
         </DismissibleAlert>
       )}
 
-      <AccesosTabs rhUsers={rhRows} employees={employeeRows} />
+      <AccessTabs rhUsers={rhRows} employees={employeeRows} />
     </Stack>
   )
 }

@@ -11,7 +11,7 @@ import { QuickActions } from "@/components/superadmin/QuickActions"
 import { SectionCard } from "@/components/shared/SectionCard"
 import KpiCard from "@/components/shared/KpiCard"
 import { OcupacionCard } from "@/components/superadmin/OcupacionCard"
-import { RenovacionesTable } from "@/components/superadmin/RenovacionesTable"
+import { RenewalsTable } from "@/components/superadmin/RenewalsTable"
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -259,7 +259,7 @@ export default async function SuperadminDashboardPage() {
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 300px" } }}>
         <OcupacionCard ocupacionPct={ocupacionPct} empresas={empresas} />
-        <RenovacionesTable renewals={renewals} />
+        <RenewalsTable renewals={renewals} />
       </Box>
     </Stack>
   )

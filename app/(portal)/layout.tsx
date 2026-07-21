@@ -2,12 +2,12 @@ import { Suspense } from "react"
 import { Urbanist, Epilogue } from "next/font/google"
 import { PortalThemeProvider } from "@/components/providers/PortalThemeProvider"
 import { PageSkeleton } from "@/components/shared/PageSkeleton"
-import EmpleadoSearchBar from "@/components/search/EmpleadoSearchBar"
+import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
 import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
 import { MobileNav } from "@/components/layout/MobileNav"
 import { NotificationBell } from "@/components/layout/NotificationBell"
 import { PortalGreeting } from "@/components/layout/PortalGreeting"
-import RhSearchBar from "@/components/search/RhSearchBar"
+import HrSearchBar from "@/components/search/HrSearchBar"
 import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import Sidebar from "@/components/layout/Sidebar"
 import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu"
@@ -62,8 +62,8 @@ export default async function PortalLayout({
           <div className="flex-1" />
 
           <div className="flex shrink-0 items-center gap-2">
-            {rol === "RH" && <RhSearchBar />}
-            {rol === "EMPLEADO" && <EmpleadoSearchBar />}
+            {rol === "RH" && <HrSearchBar />}
+            {rol === "EMPLEADO" && <EmployeeSearchBar />}
             <NotificationBell />
             <FullscreenToggle />
             <TopbarUserMenu nombre={nombre} rol={rol} />

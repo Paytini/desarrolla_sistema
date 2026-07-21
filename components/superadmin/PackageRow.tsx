@@ -31,7 +31,7 @@ export type Dc3MetadataByCourseId = Awaited<ReturnType<typeof getSuperadminPaque
 
 const TD_SX = { borderBottom: "1px solid", borderColor: "divider" }
 
-export function PaqueteRow({
+export function PackageRow({
   paquete,
   dc3Complete,
   dc3Total,

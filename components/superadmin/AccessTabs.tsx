@@ -172,12 +172,12 @@ function EmptyState({ icon: Icon, label }: { icon: LucideIcon; label: string }) 
   )
 }
 
-type AccesosTabsProps = {
+type AccessTabsProps = {
   rhUsers: RhAccessRow[]
   employees: EmployeeAccessRow[]
 }
 
-export function AccesosTabs({ rhUsers, employees }: AccesosTabsProps) {
+export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
   const [tab, setTab]         = useState<"rh" | "empleados">("rh")
   const [rhSearch, setRhSearch]   = useState("")
   const [empSearch, setEmpSearch] = useState("")

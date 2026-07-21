@@ -48,7 +48,7 @@ type FormValues = {
   notas: string
 }
 
-export function CreateEmpresaWizard({ paquetes }: { paquetes: Paquete[] }) {
+export function CreateCompanyWizard({ paquetes }: { paquetes: Paquete[] }) {
   const [step, setStep]              = useState(0)
   const [state, formAction, pending] = useActionState(createCompanyAction, null)
   const formRef                      = useRef<HTMLFormElement>(null)

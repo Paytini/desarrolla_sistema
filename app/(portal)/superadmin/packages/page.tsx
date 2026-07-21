@@ -1,4 +1,4 @@
-import { PaqueteRow } from "@/components/superadmin/PaqueteRow"
+import { PackageRow } from "@/components/superadmin/PackageRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { SearchInput } from "@/components/shared/SearchInput"
@@ -256,7 +256,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               </TableHead>
               <TableBody>
                 {paquetesPagina.map(({ paquete, dc3Complete, dc3Total, dc3AllOk, empresasNombres }) => (
-                  <PaqueteRow
+                  <PackageRow
                     key={paquete.id}
                     paquete={paquete}
                     dc3Complete={dc3Complete}

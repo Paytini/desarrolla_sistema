@@ -46,7 +46,7 @@ function DayChip({ days }: { days: number }) {
   )
 }
 
-export function RenovacionesTable({ renewals }: { renewals: Renewal[] }) {
+export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
   const sorted = [...renewals]
     .sort((a, b) => sortDir === "asc" ? a.days - b.days : b.days - a.days)

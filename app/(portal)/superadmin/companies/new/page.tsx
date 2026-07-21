@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react"
 import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 
-import { CreateEmpresaWizard } from "@/components/superadmin/CreateEmpresaWizard"
+import { CreateCompanyWizard } from "@/components/superadmin/CreateCompanyWizard"
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 
@@ -43,7 +43,7 @@ export default async function NuevaEmpresaPage() {
         </Typography>
       </Box>
 
-      <CreateEmpresaWizard paquetes={paquetes} />
+      <CreateCompanyWizard paquetes={paquetes} />
     </Box>
   )
 }

@@ -1,6 +1,6 @@
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
-import { EmpresaRow } from "@/components/superadmin/EmpresaRow"
+import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { AlertCircle, Building2, CheckCircle2, Plus, X } from "lucide-react"
@@ -197,7 +197,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             </TableHead>
             <TableBody>
               {empresasPagina.map((empresa) => (
-                <EmpresaRow key={empresa.id} empresa={empresa} />
+                <CompanyRow key={empresa.id} empresa={empresa} />
               ))}
             </TableBody>
           </Table>
