@@ -21,14 +21,14 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
+export default async function CompanyProgressPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
   const params = await searchParams
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
 
-  const empresa = await prisma.empresa.findUnique({
+  const company = await prisma.empresa.findUnique({
     where: { id: session.user.empresa_id },
     include: {
       empleados: {
@@ -52,27 +52,27 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
     },
   })
 
-  if (!empresa) redirect("/login")
+  if (!company) redirect("/login")
 
-  const packageCourses = empresa.paquetes[0]?.paquete?.cursos ?? []
+  const packageCourses = company.paquetes[0]?.paquete?.cursos ?? []
   const thumbnailMap = new Map<number, string>(
     packageCourses
       .filter((c) => c.portada_url)
       .map((c) => [c.wp_curso_id, c.portada_url as string])
   )
 
-  const empleados = empresa.empleados
-  const filteredEmpleados = searchQuery
-    ? empleados.filter((e) =>
+  const employees = company.empleados
+  const filteredEmployees = searchQuery
+    ? employees.filter((e) =>
         `${e.nombre} ${e.apellido}`.toLowerCase().includes(searchQuery) ||
         e.email.toLowerCase().includes(searchQuery)
       )
-    : empleados
-  const allCourses = empleados.flatMap((e) => e.cursos)
+    : employees
+  const allCourses = employees.flatMap((e) => e.cursos)
   const averageProgress = allCourses.length
     ? Math.round(allCourses.reduce((sum, c) => sum + c.progreso_pct, 0) / allCourses.length)
     : 0
-  const employeesWithDelay = empleados.filter((e) => {
+  const employeesWithDelay = employees.filter((e) => {
     if (e.cursos.length === 0) return false
     const avg = e.cursos.reduce((s, c) => s + c.progreso_pct, 0) / e.cursos.length
     return avg < 25 || e.cursos.some((c) => c.acceso_estado === "ERROR")
@@ -143,7 +143,7 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
             <h2 className="text-base font-semibold text-slate-950">
               Avance por empleado
               <span className="ml-2 text-sm font-normal text-slate-400">
-                {searchQuery ? `${filteredEmpleados.length} de ${empleados.length}` : empleados.length}
+                {searchQuery ? `${filteredEmployees.length} de ${employees.length}` : employees.length}
               </span>
             </h2>
             <form className="flex gap-2">
@@ -170,14 +170,14 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
             </form>
           </div>
 
-          {filteredEmpleados.length === 0 ? (
+          {filteredEmployees.length === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
               {searchQuery ? `Sin resultados para "${searchQuery}".` : "No hay empleados activos con progreso para mostrar."}
             </div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
-              {filteredEmpleados.map((empleado) => {
-                const courses = empleado.cursos
+              {filteredEmployees.map((employee) => {
+                const courses = employee.cursos
                 const avg = courses.length
                   ? Math.round(courses.reduce((s, c) => s + c.progreso_pct, 0) / courses.length)
                   : 0
@@ -217,11 +217,11 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
                         ? "bg-amber-500"
                         : "bg-slate-300"
 
-                const initials = getInitials(`${empleado.nombre} ${empleado.apellido}`)
+                const initials = getInitials(`${employee.nombre} ${employee.apellido}`)
 
                 return (
                   <div
-                    key={empleado.id}
+                    key={employee.id}
                     className="rounded-lg bg-gray-50 p-4"
                   >
                     <div className="mb-3 flex items-center gap-2.5">
@@ -236,7 +236,7 @@ export default async function EmpresaProgresoPage({ searchParams }: PageProps) {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-slate-950">
-                          {empleado.nombre} {empleado.apellido}
+                          {employee.nombre} {employee.apellido}
                         </p>
                         <StatusBadge variant={statusVariant}>
                           {statusLabel}

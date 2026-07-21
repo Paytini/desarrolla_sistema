@@ -1,5 +1,5 @@
 import { PageSkeleton } from "@/components/shared/PageSkeleton"
 
-export default function ProgresoLoading() {
+export default function CompanyProgressLoading() {
   return <PageSkeleton />
 }
