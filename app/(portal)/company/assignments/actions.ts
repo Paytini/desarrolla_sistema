@@ -42,19 +42,19 @@ function parseBridgeDate(value?: string | null) {
 export async function assignEmployeeCoursesAction(formData: FormData) {
   const session = await requireRhSession()
 
-  const empresaId = session.user.empresa_id as number
-  const empleadoId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
+  const companyId = session.user.empresa_id as number
+  const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
   const selectedCourseIds = parseCourseIds(formData.getAll("course_ids"))
 
-  if (!empleadoId) {
+  if (!employeeId) {
     redirect("/company/assignments?error=datos")
   }
 
-  const [empleado, empresa] = await Promise.all([
+  const [employee, company] = await Promise.all([
     prisma.empleado.findFirst({
       where: {
-        id: empleadoId,
-        empresa_id: empresaId,
+        id: employeeId,
+        empresa_id: companyId,
         activo: true,
       },
       select: {
@@ -66,7 +66,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       },
     }),
     prisma.empresa.findUnique({
-      where: { id: empresaId },
+      where: { id: companyId },
       include: {
         paquetes: {
           where: { activo: true },
@@ -84,11 +84,11 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     }),
   ])
 
-  if (!empleado || !empresa) {
+  if (!employee || !company) {
     redirect("/company/assignments?error=empleado")
   }
 
-  const activePackage = empresa.paquetes[0]
+  const activePackage = company.paquetes[0]
   if (!activePackage) {
     redirect("/company/assignments?error=paquete")
   }
@@ -112,7 +112,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     redirect("/company/assignments?error=cursos")
   }
 
-  await replaceEmployeePackageCourses(empleado.id, validSelectedCourses)
+  await replaceEmployeePackageCourses(employee.id, validSelectedCourses)
 
   const courseNames = validSelectedCourses.map((course) => course.nombre_curso)
   const courseAssignmentMessage =
@@ -124,13 +124,13 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     revalidatePath("/company/assignments")
     revalidatePath("/company/progress")
     revalidatePath("/employee/courses")
-    revalidateTag(empresaCacheRootTag(empresaId), "max")
+    revalidateTag(empresaCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/company/assignments?success=limpio_local")
   }
 
-  if (!empleado.wp_user_id || !isWordPressBridgeConfigured()) {
-    await notifyUsuarioByEmail(empleado.email, {
+  if (!employee.wp_user_id || !isWordPressBridgeConfigured()) {
+    await notifyUsuarioByEmail(employee.email, {
       tipo: "CURSO_ASIGNADO",
       titulo: "Nuevo curso asignado",
       mensaje: courseAssignmentMessage,
@@ -138,7 +138,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     revalidatePath("/company/assignments")
     revalidatePath("/company/progress")
     revalidatePath("/employee/courses")
-    revalidateTag(empresaCacheRootTag(empresaId), "max")
+    revalidateTag(empresaCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/company/assignments?success=asignado_local")
   }
@@ -146,11 +146,11 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   try {
     const syncedAt = new Date()
     await bridgeEnrollCourses(
-      empleado.wp_user_id,
+      employee.wp_user_id,
       validSelectedCourses.map((course) => course.wp_curso_id)
     )
 
-    const studentCourses = await bridgeGetStudentCourses(empleado.wp_user_id)
+    const studentCourses = await bridgeGetStudentCourses(employee.wp_user_id)
     const selectedIdsSet = new Set(validSelectedCourses.map((course) => course.wp_curso_id))
 
     const upsertOperations = studentCourses.courses
@@ -162,7 +162,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
         return prisma.empleadoCurso.upsert({
           where: {
             empleado_id_wp_curso_id: {
-              empleado_id: empleado.id,
+              empleado_id: employee.id,
               wp_curso_id: course.wp_course_id,
             },
           },
@@ -175,7 +175,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
             ultima_sincronizacion: syncedAt,
           },
           create: {
-            empleado_id: empleado.id,
+            empleado_id: employee.id,
             wp_curso_id: course.wp_course_id,
             nombre_curso: course.title,
             progreso_pct: course.progress_pct,
@@ -191,17 +191,17 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       await prisma.$transaction(upsertOperations)
     }
   } catch {
-    await notifyUsuarioByEmail(empleado.email, {
+    await notifyUsuarioByEmail(employee.email, {
       tipo: "CURSO_ASIGNADO",
       titulo: "Nuevo curso asignado",
       mensaje: courseAssignmentMessage,
     })
 
-    const syncFailMensaje = `Falló la sincronización con WordPress al asignar cursos a ${empleado.nombre} ${empleado.apellido} (${empresa.nombre}).`
-    await notifyEmpresaRH(empresaId, {
+    const syncFailMensaje = `Falló la sincronización con WordPress al asignar cursos a ${employee.nombre} ${employee.apellido} (${company.nombre}).`
+    await notifyEmpresaRH(companyId, {
       tipo: "SYNC_FALLIDO",
       titulo: "Sincronización fallida",
-      mensaje: `Falló la sincronización con WordPress al asignar cursos a ${empleado.nombre} ${empleado.apellido}.`,
+      mensaje: `Falló la sincronización con WordPress al asignar cursos a ${employee.nombre} ${employee.apellido}.`,
     })
     await notifySuperadmins({
       tipo: "SYNC_FALLIDO",
@@ -211,12 +211,12 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
 
     revalidatePath("/company/assignments")
     revalidatePath("/employee/courses")
-    revalidateTag(empresaCacheRootTag(empresaId), "max")
+    revalidateTag(empresaCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/company/assignments?success=asignado_local&error=bridge_sync")
   }
 
-  await notifyUsuarioByEmail(empleado.email, {
+  await notifyUsuarioByEmail(employee.email, {
     tipo: "CURSO_ASIGNADO",
     titulo: "Nuevo curso asignado",
     mensaje: courseAssignmentMessage,
@@ -225,7 +225,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   revalidatePath("/company/assignments")
   revalidatePath("/company/progress")
   revalidatePath("/employee/courses")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/company/assignments?success=asignado_sync")
 }

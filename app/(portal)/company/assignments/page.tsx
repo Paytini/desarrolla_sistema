@@ -50,7 +50,7 @@ function getInitials(name: string) {
     .join("")
 }
 
-export default async function EmpresaAsignacionesPage({ searchParams }: PageProps) {
+export default async function CompanyAssignmentsPage({ searchParams }: PageProps) {
   const session = await auth()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
@@ -58,20 +58,20 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
 
-  const empresa = await getRhAsignacionesSnapshot(session.user.empresa_id)
-  if (!empresa) redirect("/login")
+  const company = await getRhAsignacionesSnapshot(session.user.empresa_id)
+  if (!company) redirect("/login")
 
-  const activePackage = empresa.paquetes[0]?.paquete
+  const activePackage = company.paquetes[0]?.paquete
   const packageCourses = (activePackage?.cursos ?? []) as PortalPackageCourseRecord[]
-  const allEmpleados = empresa.empleados as AssignmentEmployee[]
+  const allEmployees = company.empleados as AssignmentEmployee[]
 
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
-  const empleados = searchQuery
-    ? allEmpleados.filter((e) =>
+  const employees = searchQuery
+    ? allEmployees.filter((e) =>
         `${e.nombre} ${e.apellido}`.toLowerCase().includes(searchQuery) ||
         e.email.toLowerCase().includes(searchQuery)
       )
-    : allEmpleados
+    : allEmployees
 
   return (
     <div className="space-y-6">
@@ -91,7 +91,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
       <div className="grid gap-4 sm:grid-cols-3">
         <KpiCard label="Paquete activo" value={activePackage?.nombre ?? "Sin paquete"} sub="Catálogo disponible" icon={Package} borderColor="amber" />
         <KpiCard label="Cursos disponibles" value={String(packageCourses.length)} sub="Para asignar a empleados" icon={BookOpen} borderColor="orange" />
-        <KpiCard label="Empleados activos" value={String(allEmpleados.length)} sub="Elegibles para asignación" icon={Users} borderColor="charcoal" />
+        <KpiCard label="Empleados activos" value={String(allEmployees.length)} sub="Elegibles para asignación" icon={Users} borderColor="charcoal" />
       </div>
 
       {!activePackage ? (
@@ -108,7 +108,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
               Asignaciones por empleado
               {searchQuery && (
                 <span className="ml-2 text-sm font-normal text-slate-400">
-                  {empleados.length} resultado{empleados.length !== 1 ? "s" : ""}
+                  {employees.length} resultado{employees.length !== 1 ? "s" : ""}
                 </span>
               )}
             </h2>
@@ -136,24 +136,24 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
             </form>
           </div>
 
-          {empleados.length === 0 ? (
+          {employees.length === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
               {searchQuery ? `Sin resultados para "${searchQuery}".` : "No hay empleados activos para asignar cursos."}
             </div>
           ) : null}
 
-          {empleados.map((empleado) => {
-            const assignedSet = new Set(empleado.cursos.map((c) => c.wp_curso_id))
-            const assignedCount = empleado.cursos.length
-            const initials = getInitials(`${empleado.nombre} ${empleado.apellido}`)
+          {employees.map((employee) => {
+            const assignedSet = new Set(employee.cursos.map((c) => c.wp_curso_id))
+            const assignedCount = employee.cursos.length
+            const initials = getInitials(`${employee.nombre} ${employee.apellido}`)
 
             return (
               <article
-                key={empleado.id}
+                key={employee.id}
                 className="overflow-hidden rounded-lg bg-white"
               >
                 <form action={assignEmployeeCoursesAction}>
-                  <input type="hidden" name="empleado_id" value={empleado.id} />
+                  <input type="hidden" name="empleado_id" value={employee.id} />
 
                   <div className="flex items-center justify-between gap-4 border-b border-[#f5f5f5] px-5 py-3.5">
                     <div className="flex items-center gap-3">
@@ -162,12 +162,12 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-900">
-                          {empleado.nombre} {empleado.apellido}
+                          {employee.nombre} {employee.apellido}
                         </p>
                         <p className="truncate text-xs text-slate-400">
-                          {empleado.email}
-                          {empleado.departamento ? ` · ${empleado.departamento}` : ""}
-                          {empleado.puesto ? ` · ${empleado.puesto}` : ""}
+                          {employee.email}
+                          {employee.departamento ? ` · ${employee.departamento}` : ""}
+                          {employee.puesto ? ` · ${employee.puesto}` : ""}
                         </p>
                       </div>
                     </div>
@@ -187,7 +187,7 @@ export default async function EmpresaAsignacionesPage({ searchParams }: PageProp
                   <div className="grid gap-2 p-4 sm:grid-cols-2 xl:grid-cols-3">
                     {packageCourses.map((course) => (
                       <label
-                        key={`${empleado.id}-${course.wp_curso_id}`}
+                        key={`${employee.id}-${course.wp_curso_id}`}
                         className="group flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-[#3579F5]/30 hover:bg-[#F3F8FE] has-[:checked]:border-[#3579F5]/40 has-[:checked]:bg-[#F3F8FE]"
                       >
                         <input
