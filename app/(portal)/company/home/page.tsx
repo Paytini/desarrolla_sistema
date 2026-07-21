@@ -33,13 +33,13 @@ function QuickLink({
   )
 }
 
-export default async function EmpresaInicio() {
+export default async function CompanyHome() {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
   await checkAndNotifyExpiringPackages().catch(() => {})
 
-  const empresa = await prisma.empresa.findUnique({
+  const company = await prisma.empresa.findUnique({
     where: { id: session.user.empresa_id },
     include: {
       paquetes: {
@@ -55,15 +55,15 @@ export default async function EmpresaInicio() {
     },
   })
 
-  if (!empresa) redirect("/login")
+  if (!company) redirect("/login")
 
-  const paqueteActivo = empresa.paquetes[0]?.paquete
-  const empleadosActivos = empresa.empleados.length
-  const totalConstancias = empresa.empleados.reduce(
-    (sum, emp) => sum + emp.constancias.length,
+  const activePackage = company.paquetes[0]?.paquete
+  const activeEmployees = company.empleados.length
+  const totalCertificates = company.empleados.reduce(
+    (sum, employee) => sum + employee.constancias.length,
     0
   )
-  const allProgress = empresa.empleados.flatMap((emp) => emp.cursos.map((c) => c.progreso_pct))
+  const allProgress = company.empleados.flatMap((employee) => employee.cursos.map((course) => course.progreso_pct))
   const averageProgress = allProgress.length
     ? Math.round(allProgress.reduce((sum, p) => sum + p, 0) / allProgress.length)
     : 0
@@ -71,7 +71,7 @@ export default async function EmpresaInicio() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={empresa.nombre}
+        title={company.nombre}
         description="Panel de operación académica"
         breadcrumbs={[{ label: "Empresa" }]}
       />
@@ -79,8 +79,8 @@ export default async function EmpresaInicio() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Paquete activo"
-          value={paqueteActivo?.nombre ?? "Sin paquete"}
-          sub={`${paqueteActivo?.cursos.length ?? 0} cursos`}
+          value={activePackage?.nombre ?? "Sin paquete"}
+          sub={`${activePackage?.cursos.length ?? 0} cursos`}
           icon={Package}
           borderColor="amber"
         />
@@ -93,14 +93,14 @@ export default async function EmpresaInicio() {
         />
         <KpiCard
           label="Empleados activos"
-          value={String(empleadosActivos)}
+          value={String(activeEmployees)}
           sub="Accesos vigentes"
           icon={Users}
           borderColor="charcoal"
         />
         <KpiCard
           label="Constancias emitidas"
-          value={String(totalConstancias)}
+          value={String(totalCertificates)}
           sub="Total acumulado"
           icon={Award}
           borderColor="emerald"
