@@ -83,7 +83,7 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function SuperAdminPaquetesPage({ searchParams }: PageProps) {
+export default async function SuperAdminPackagesPage({ searchParams }: PageProps) {
   const params  = await searchParams
   const success = readSearchParam(params, "success")
   const error   = readSearchParam(params, "error")
@@ -91,13 +91,13 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
   const q             = readSearchParam(params, "q")?.toLowerCase() ?? ""
   const dc3Filter     = readSearchParam(params, "dc3") ?? "all"
-  const asignadoFilter= readSearchParam(params, "asignado") ?? "all"
+  const assignedFilter= readSearchParam(params, "asignado") ?? "all"
   const sort          = readSearchParam(params, "sort") ?? "recientes"
   const page          = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { paquetes, empresas, dc3MetadataByCourseId } = await getSuperadminPaquetesSnapshot()
+  const { paquetes: packages, empresas: companies, dc3MetadataByCourseId } = await getSuperadminPaquetesSnapshot()
 
-  const paquetesConStats = paquetes.map((paquete) => {
+  const packagesWithStats = packages.map((paquete) => {
     const dc3Complete = paquete.cursos.filter((c) => {
       const meta = dc3MetadataByCourseId[String(c.wp_curso_id)] as Dc3MetadataView | undefined
       return getDc3MissingFields(meta).length === 0
@@ -108,37 +108,37 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
     return { paquete, dc3Complete, dc3Total, dc3AllOk, empresasNombres }
   })
 
-  const paquetesFiltrados = paquetesConStats.filter(({ paquete, dc3AllOk, dc3Total, empresasNombres }) => {
+  const filteredPackages = packagesWithStats.filter(({ paquete, dc3AllOk, dc3Total, empresasNombres }) => {
     const matchQ = q ? paquete.nombre.toLowerCase().includes(q) : true
     const matchDc3 =
       dc3Filter === "completo"   ? dc3AllOk :
       dc3Filter === "incompleto" ? (dc3Total > 0 && !dc3AllOk) :
       dc3Filter === "sin_cursos" ? dc3Total === 0 :
       true
-    const matchAsignado =
-      asignadoFilter === "asignado"    ? empresasNombres.length > 0 :
-      asignadoFilter === "sin_asignar" ? empresasNombres.length === 0 :
+    const matchAssigned =
+      assignedFilter === "asignado"    ? empresasNombres.length > 0 :
+      assignedFilter === "sin_asignar" ? empresasNombres.length === 0 :
       true
-    return matchQ && matchDc3 && matchAsignado
+    return matchQ && matchDc3 && matchAssigned
   })
 
-  const paquetesOrdenados = [...paquetesFiltrados].sort((a, b) => {
+  const sortedPackages = [...filteredPackages].sort((a, b) => {
     if (sort === "nombre")   return a.paquete.nombre.localeCompare(b.paquete.nombre)
     if (sort === "empresas") return b.empresasNombres.length - a.empresasNombres.length
     return new Date(b.paquete.created_at).getTime() - new Date(a.paquete.created_at).getTime()
   })
 
-  const totalPages       = Math.max(1, Math.ceil(paquetesOrdenados.length / PAGE_SIZE))
-  const currentPage      = Math.min(page, totalPages)
-  const paquetesPagina   = paquetesOrdenados.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const totalPages     = Math.max(1, Math.ceil(sortedPackages.length / PAGE_SIZE))
+  const currentPage    = Math.min(page, totalPages)
+  const pagedPackages  = sortedPackages.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
-  const hasFilters = q !== "" || dc3Filter !== "all" || asignadoFilter !== "all"
+  const hasFilters = q !== "" || dc3Filter !== "all" || assignedFilter !== "all"
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
     if (q) qs.set("q", q)
     if (dc3Filter !== "all") qs.set("dc3", dc3Filter)
-    if (asignadoFilter !== "all") qs.set("asignado", asignadoFilter)
+    if (assignedFilter !== "all") qs.set("asignado", assignedFilter)
     if (sort !== "recientes") qs.set("sort", sort)
     if (p > 1) qs.set("page", String(p))
     const str = qs.toString()
@@ -174,7 +174,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
         </Alert>
       )}
 
-      {paquetes.length > 0 && (
+      {packages.length > 0 && (
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1.5 }}>
           <Box component="form" method="GET" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
             <SearchInput name="q" defaultValue={q} placeholder="Buscar paquete…" width={200} />
@@ -184,7 +184,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
               <option value="incompleto">DC-3 incompleto</option>
               <option value="sin_cursos">Sin cursos</option>
             </Box>
-            <Box component="select" name="asignado" defaultValue={asignadoFilter} sx={FILTER_SELECT_SX}>
+            <Box component="select" name="asignado" defaultValue={assignedFilter} sx={FILTER_SELECT_SX}>
               <option value="all">Asignación: todas</option>
               <option value="asignado">Asignado a empresa</option>
               <option value="sin_asignar">Sin asignar</option>
@@ -227,15 +227,15 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
 
       <PanelBox
         title="Catálogo de paquetes"
-        description={`${paquetesOrdenados.length} paquete${paquetesOrdenados.length !== 1 ? "s" : ""}${hasFilters ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
+        description={`${sortedPackages.length} paquete${sortedPackages.length !== 1 ? "s" : ""}${hasFilters ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
         noPadding
       >
-        {paquetes.length === 0 ? (
+        {packages.length === 0 ? (
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5, py: 8, textAlign: "center" }}>
             <Package size={28} style={{ color: "#cbd5e1" }} />
             <Typography sx={{ fontSize: 13, color: "text.secondary" }}>Aún no hay paquetes registrados.</Typography>
           </Box>
-        ) : paquetesOrdenados.length === 0 ? (
+        ) : sortedPackages.length === 0 ? (
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5, py: 8, textAlign: "center" }}>
             <Package size={28} style={{ color: "#cbd5e1" }} />
             <Typography sx={{ fontSize: 13, color: "text.secondary" }}>Sin resultados para ese filtro.</Typography>
@@ -255,7 +255,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paquetesPagina.map(({ paquete, dc3Complete, dc3Total, dc3AllOk, empresasNombres }) => (
+                {pagedPackages.map(({ paquete, dc3Complete, dc3Total, dc3AllOk, empresasNombres }) => (
                   <PackageRow
                     key={paquete.id}
                     paquete={paquete}
@@ -282,7 +282,7 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                 }}
               >
                 <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                  {paquetesOrdenados.length} resultado{paquetesOrdenados.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
+                  {sortedPackages.length} resultado{sortedPackages.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
                   {currentPage > 1 ? (
@@ -354,14 +354,14 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
             </TableRow>
           </TableHead>
           <TableBody>
-            {empresas.map((empresa) => {
-              const activePackage = empresa.paquetes[0]?.paquete
-              const syncable      = empresa.empleados.filter((e) => e.wp_user_id).length
+            {companies.map((company) => {
+              const activePackage = company.paquetes[0]?.paquete
+              const syncable      = company.empleados.filter((e) => e.wp_user_id).length
 
               return (
-                <TableRow key={empresa.id} sx={{ "&:hover": { bgcolor: "action.hover" } }}>
+                <TableRow key={company.id} sx={{ "&:hover": { bgcolor: "action.hover" } }}>
                   <TableCell sx={{ ...TD_SX, fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                    {empresa.nombre}
+                    {company.nombre}
                   </TableCell>
                   <TableCell sx={TD_SX}>
                     {activePackage ? (
@@ -381,17 +381,17 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                       action={assignPackageToCompanyAction}
                       sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
                     >
-                      <input type="hidden" name="empresa_id" value={empresa.id} />
+                      <input type="hidden" name="empresa_id" value={company.id} />
                       <Box
                         component="select"
                         name="paquete_id"
                         required
                         aria-label="Paquete"
-                        defaultValue={empresa.paquetes[0]?.paquete_id ?? ""}
+                        defaultValue={company.paquetes[0]?.paquete_id ?? ""}
                         sx={SELECT_SX}
                       >
                         <option value="" disabled>Selecciona un paquete</option>
-                        {paquetes.map((p) => (
+                        {packages.map((p) => (
                           <option key={p.id} value={p.id}>{p.nombre}</option>
                         ))}
                       </Box>
@@ -415,12 +415,12 @@ export default async function SuperAdminPaquetesPage({ searchParams }: PageProps
                   </TableCell>
                   <TableCell sx={{ ...TD_SX, display: { xs: "none", sm: "table-cell" } }}>
                     <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                      {empresa.empleados.length} empleados · {syncable} con WP ID
+                      {company.empleados.length} empleados · {syncable} con WP ID
                     </Typography>
                   </TableCell>
                   <TableCell sx={{ ...TD_SX, textAlign: "right" }}>
                     <form action={syncPackageToCompanyEmployeesAction}>
-                      <input type="hidden" name="empresa_id" value={empresa.id} />
+                      <input type="hidden" name="empresa_id" value={company.id} />
                       <Button
                         variant="outlined"
                         size="small"

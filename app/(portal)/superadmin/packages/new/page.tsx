@@ -38,7 +38,7 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function NuevoPaquetePage({ searchParams }: PageProps) {
+export default async function NewPackagePage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 

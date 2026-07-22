@@ -147,7 +147,7 @@ export async function createPackageAction(formData: FormData) {
     }
   }
 
-  const paquete = await prisma.paquete.create({
+  const pkg = await prisma.paquete.create({
     data: {
       nombre,
       descripcion: descripcion || null,
@@ -170,7 +170,7 @@ export async function createPackageAction(formData: FormData) {
     actor,
     accion: "PAQUETE_CREADO",
     entidadTipo: "PAQUETE",
-    entidadId: paquete.id,
+    entidadId: pkg.id,
     resumen: `${actor.nombre} creo el paquete ${nombre}.`,
     metadata: {
       modo_entrega: modoEntrega || "DIRECT_ENROLLMENT",
@@ -192,14 +192,14 @@ export async function createPackageAction(formData: FormData) {
 export async function deletePackageAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
-  const paqueteId = getInteger(getString(formData, "paquete_id"))
+  const packageId = getInteger(getString(formData, "paquete_id"))
 
-  if (!paqueteId) {
+  if (!packageId) {
     redirect("/superadmin/packages?error=paquete")
   }
 
-  const paquete = await prisma.paquete.findUnique({
-    where: { id: paqueteId },
+  const pkg = await prisma.paquete.findUnique({
+    where: { id: packageId },
     select: {
       id: true,
       nombre: true,
@@ -216,12 +216,12 @@ export async function deletePackageAction(formData: FormData) {
     },
   })
 
-  if (!paquete || !paquete.activo) {
+  if (!pkg || !pkg.activo) {
     redirect("/superadmin/packages?error=paquete")
   }
 
-  if (paquete.empresas.length > 0) {
-    const companyNames = paquete.empresas
+  if (pkg.empresas.length > 0) {
+    const companyNames = pkg.empresas
       .map((assignment) => assignment.empresa.nombre)
       .join(", ")
     const detail = encodeURIComponent(
@@ -231,7 +231,7 @@ export async function deletePackageAction(formData: FormData) {
   }
 
   await prisma.paquete.update({
-    where: { id: paquete.id },
+    where: { id: pkg.id },
     data: { activo: false },
   })
 
@@ -239,8 +239,8 @@ export async function deletePackageAction(formData: FormData) {
     actor,
     accion: "PAQUETE_ELIMINADO",
     entidadTipo: "PAQUETE",
-    entidadId: paquete.id,
-    resumen: `${actor.nombre} elimino el paquete ${paquete.nombre}.`,
+    entidadId: pkg.id,
+    resumen: `${actor.nombre} elimino el paquete ${pkg.nombre}.`,
     metadata: {
       baja_logica: true,
     },
@@ -257,18 +257,18 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const empresaId = getInteger(getString(formData, "empresa_id"))
-  const paqueteId = getInteger(getString(formData, "paquete_id"))
-  const fechaVencimientoRaw = getString(formData, "fecha_vencimiento")
+  const companyId = getInteger(getString(formData, "empresa_id"))
+  const packageId = getInteger(getString(formData, "paquete_id"))
+  const expirationDateRaw = getString(formData, "fecha_vencimiento")
 
-  if (!empresaId || !paqueteId) {
+  if (!companyId || !packageId) {
     redirect("/superadmin/packages?error=asignacion")
   }
 
   await prisma.$transaction([
     prisma.empresaPaquete.updateMany({
       where: {
-        empresa_id: empresaId,
+        empresa_id: companyId,
         activo: true,
       },
       data: {
@@ -277,25 +277,25 @@ export async function assignPackageToCompanyAction(formData: FormData) {
     }),
     prisma.empresaPaquete.create({
       data: {
-        empresa_id: empresaId,
-        paquete_id: paqueteId,
+        empresa_id: companyId,
+        paquete_id: packageId,
         activo: true,
         fecha_vencimiento: (() => {
-          if (!fechaVencimientoRaw) return null
-          const d = new Date(fechaVencimientoRaw)
+          if (!expirationDateRaw) return null
+          const d = new Date(expirationDateRaw)
           return isNaN(d.getTime()) ? null : d
         })(),
       },
     }),
   ])
 
-  const [empresa, paquete] = await Promise.all([
+  const [company, pkg] = await Promise.all([
     prisma.empresa.findUnique({
-      where: { id: empresaId },
+      where: { id: companyId },
       select: { nombre: true },
     }),
     prisma.paquete.findUnique({
-      where: { id: paqueteId },
+      where: { id: packageId },
       select: { nombre: true },
     }),
   ])
@@ -304,13 +304,13 @@ export async function assignPackageToCompanyAction(formData: FormData) {
     actor,
     accion: "PAQUETE_ASIGNADO",
     entidadTipo: "EMPRESA_PAQUETE",
-    entidadId: paqueteId,
-    empresaId,
-    resumen: `${actor.nombre} asigno ${paquete?.nombre ?? "un paquete"} a ${empresa?.nombre ?? "una empresa"}.`,
+    entidadId: packageId,
+    empresaId: companyId,
+    resumen: `${actor.nombre} asigno ${pkg?.nombre ?? "un paquete"} a ${company?.nombre ?? "una empresa"}.`,
     metadata: {
-      empresa_id: empresaId,
-      paquete_id: paqueteId,
-      fecha_vencimiento: fechaVencimientoRaw || null,
+      empresa_id: companyId,
+      paquete_id: packageId,
+      fecha_vencimiento: expirationDateRaw || null,
     },
   })
 
@@ -320,7 +320,7 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   revalidatePath("/company/home")
   revalidatePath("/company/employees")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
   redirect("/superadmin/packages?success=paquete_asignado")
 }
 
@@ -328,20 +328,20 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const empresaId = getInteger(getString(formData, "empresa_id"))
-  if (!empresaId) {
+  const companyId = getInteger(getString(formData, "empresa_id"))
+  if (!companyId) {
     redirect("/superadmin/packages?error=sync")
   }
 
   try {
-    await syncCompanyPackageEnrollments(empresaId)
+    await syncCompanyPackageEnrollments(companyId)
   } catch (error) {
     await createAuditEvent({
       actor,
       accion: "SYNC_PAQUETE_EMPRESA_ERROR",
       entidadTipo: "EMPRESA",
-      entidadId: empresaId,
-      empresaId,
+      entidadId: companyId,
+      empresaId: companyId,
       resumen: `${actor.nombre} intento sincronizar paquete y hubo error.`,
       metadata: {
         message: getSyncErrorMessage(error),
@@ -355,8 +355,8 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
     actor,
     accion: "SYNC_PAQUETE_EMPRESA_OK",
     entidadTipo: "EMPRESA",
-    entidadId: empresaId,
-    empresaId,
+    entidadId: companyId,
+    empresaId: companyId,
     resumen: `${actor.nombre} sincronizo paquete activo con empleados de la empresa.`,
   })
 
@@ -366,6 +366,6 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   revalidatePath("/company/progress")
   revalidatePath("/employee/courses")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
   redirect("/superadmin/packages?success=sync_ok")
 }
