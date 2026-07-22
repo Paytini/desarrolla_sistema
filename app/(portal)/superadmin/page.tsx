@@ -118,7 +118,7 @@ export default async function SuperadminDashboardPage() {
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
 
-  const [{ empresas }, { empresas: empresasConCursos }, recentEvents] = await Promise.all([
+  const [{ empresas: companies }, { empresas: companiesWithCourses }, recentEvents] = await Promise.all([
     getSuperadminEmpresasSnapshot(),
     getSuperadminReportesSnapshot(),
     prisma.auditoriaEvento.findMany({
@@ -128,37 +128,37 @@ export default async function SuperadminDashboardPage() {
     }),
   ])
 
-  const empresasActivas       = empresas.filter((e) => e.activo).length
-  const empresasPct           = empresas.length ? Math.round((empresasActivas / empresas.length) * 100) : 0
-  const totalEmpleadosActivos = empresas.reduce((s, e) => s + e.empleados.filter((emp) => emp.activo).length, 0)
-  const totalContratados      = empresas.reduce((s, e) => s + e.asientos_contratados, 0)
-  const totalUsados           = empresas.reduce((s, e) => s + e.asientos_usados, 0)
-  const ocupacionPct          = totalContratados ? Math.round((totalUsados / totalContratados) * 100) : 0
-  const empleadosPct          = totalContratados ? Math.round((totalEmpleadosActivos / totalContratados) * 100) : 0
+  const activeCompanies       = companies.filter((e) => e.activo).length
+  const activeCompaniesPct    = companies.length ? Math.round((activeCompanies / companies.length) * 100) : 0
+  const totalActiveEmployees  = companies.reduce((s, e) => s + e.empleados.filter((emp) => emp.activo).length, 0)
+  const totalContractedSeats  = companies.reduce((s, e) => s + e.asientos_contratados, 0)
+  const totalUsedSeats        = companies.reduce((s, e) => s + e.asientos_usados, 0)
+  const occupancyPct          = totalContractedSeats ? Math.round((totalUsedSeats / totalContractedSeats) * 100) : 0
+  const employeesPct          = totalContractedSeats ? Math.round((totalActiveEmployees / totalContractedSeats) * 100) : 0
 
-  const renewals = empresas
+  const renewals = companies
     .filter((e) => { const exp = e.paquetes[0]?.fecha_vencimiento; return exp && Math.floor((new Date(exp).getTime() - now) / DAY_MS) <= 30 })
     .map((e) => ({ empresa: e, days: Math.floor((new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) / DAY_MS) }))
     .sort((a, b) => a.days - b.days)
 
-  const allCursos   = empresasConCursos.flatMap((e) => e.empleados.flatMap((emp) => emp.cursos))
-  const completados = allCursos.filter((c) => c.completado).length
-  const enProgreso  = allCursos.filter((c) => !c.completado && c.progreso_pct > 0).length
-  const sinIniciar  = allCursos.filter((c) => c.progreso_pct === 0).length
-  const totalCursos = allCursos.length
+  const allCourses   = companiesWithCourses.flatMap((e) => e.empleados.flatMap((emp) => emp.cursos))
+  const completed    = allCourses.filter((c) => c.completado).length
+  const inProgress   = allCourses.filter((c) => !c.completado && c.progreso_pct > 0).length
+  const notStarted   = allCourses.filter((c) => c.progreso_pct === 0).length
+  const totalCourses = allCourses.length
 
-  const rankingEmpresas = empresasConCursos
+  const companyRanking = companiesWithCourses
     .map((e) => {
-      const cursos = e.empleados.flatMap((emp) => emp.cursos)
-      const avg    = cursos.length ? Math.round(cursos.reduce((s, c) => s + c.progreso_pct, 0) / cursos.length) : 0
+      const courses = e.empleados.flatMap((emp) => emp.cursos)
+      const avg     = courses.length ? Math.round(courses.reduce((s, c) => s + c.progreso_pct, 0) / courses.length) : 0
       return { nombre: e.nombre, avg }
     })
-    .filter((e) => e.avg > 0 || empresasConCursos.find((ec) => ec.nombre === e.nombre)?.empleados.length)
+    .filter((e) => e.avg > 0 || companiesWithCourses.find((ec) => ec.nombre === e.nombre)?.empleados.length)
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 6)
 
-  const globalAvg = rankingEmpresas.length
-    ? Math.round(rankingEmpresas.reduce((s, e) => s + e.avg, 0) / rankingEmpresas.length)
+  const globalAvg = companyRanking.length
+    ? Math.round(companyRanking.reduce((s, e) => s + e.avg, 0) / companyRanking.length)
     : 0
 
   const ACTIVITY_DAYS = 14
@@ -168,7 +168,7 @@ export default async function SuperadminDashboardPage() {
     new Date(now - (ACTIVITY_DAYS - 1 - i) * DAY_MS).toISOString().slice(0, 10)
   )
 
-  const empresaActivitySeries: ActivitySeries[] = empresasConCursos.map((e, i) => {
+  const companyActivitySeries: ActivitySeries[] = companiesWithCourses.map((e, i) => {
     const dayCounts = new Map<string, number>()
     e.empleados.forEach((emp) => {
       emp.cursos.forEach((c) => {
@@ -185,7 +185,7 @@ export default async function SuperadminDashboardPage() {
 
   const globalActivitySeries: ActivityPoint[] = activityDayKeys.map((day, i) => ({
     day,
-    value: empresaActivitySeries.reduce((s, series) => s + series.data[i].value, 0),
+    value: companyActivitySeries.reduce((s, series) => s + series.data[i].value, 0),
   }))
 
   return (
@@ -195,13 +195,13 @@ export default async function SuperadminDashboardPage() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
         <Box className="kpi-animate" sx={{ display: "flex" }}>
-          <KpiCard label="Empresas activas"   value={empresasActivas}       sub={`de ${empresas.length} registradas`}                                 borderColor="emerald" ring={empresasPct} />
+          <KpiCard label="Empresas activas"   value={activeCompanies}       sub={`de ${companies.length} registradas`}                                 borderColor="emerald" ring={activeCompaniesPct} />
         </Box>
         <Box className="kpi-animate" sx={{ display: "flex" }}>
-          <KpiCard label="Empleados en LMS"   value={totalEmpleadosActivos} sub={`de ${totalContratados} cupos contratados`}                          borderColor="violet"  ring={empleadosPct} />
+          <KpiCard label="Empleados en LMS"   value={totalActiveEmployees} sub={`de ${totalContractedSeats} cupos contratados`}                          borderColor="violet"  ring={employeesPct} />
         </Box>
         <Box className="kpi-animate" sx={{ display: "flex" }}>
-          <KpiCard label="Ocupación de cupos" value={`${ocupacionPct}%`}    sub={`${totalUsados} usados · ${totalContratados - totalUsados} libres`} borderColor="amber"   ring={ocupacionPct}    alert={ocupacionPct >= 90} />
+          <KpiCard label="Ocupación de cupos" value={`${occupancyPct}%`}    sub={`${totalUsedSeats} usados · ${totalContractedSeats - totalUsedSeats} libres`} borderColor="amber"   ring={occupancyPct}    alert={occupancyPct >= 90} />
         </Box>
         <Box className="kpi-animate" sx={{ display: "flex" }}>
           <CompanyProgressKpi globalAvg={globalAvg} />
@@ -214,16 +214,16 @@ export default async function SuperadminDashboardPage() {
           <Stack direction="row" spacing={4} sx={{ alignItems: "center", height: "100%" }}>
             <Box sx={{ flexShrink: 0 }}>
               <DonutChart size={200} sw={22} segments={[
-                { value: completados, color: "#34D399", label: "Completados" },
-                { value: enProgreso,  color: "#8B5CF6", label: "En progreso" },
-                { value: sinIniciar,  color: "#F1F5F9", label: "Sin iniciar" },
+                { value: completed,  color: "#34D399", label: "Completados" },
+                { value: inProgress, color: "#8B5CF6", label: "En progreso" },
+                { value: notStarted, color: "#F1F5F9", label: "Sin iniciar" },
               ]} />
             </Box>
             <Stack spacing={3} sx={{ flex: 1, minWidth: 0 }}>
               {[
-                { label: "Completados", value: completados, color: "#34D399" },
-                { label: "En progreso", value: enProgreso,  color: "#8B5CF6" },
-                { label: "Sin iniciar", value: sinIniciar,  color: "#CBD5E1" },
+                { label: "Completados", value: completed,   color: "#34D399" },
+                { label: "En progreso", value: inProgress,  color: "#8B5CF6" },
+                { label: "Sin iniciar", value: notStarted,  color: "#CBD5E1" },
               ].map((s) => (
                 <Box key={s.label}>
                   <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 0.75 }}>
@@ -234,14 +234,14 @@ export default async function SuperadminDashboardPage() {
                     <Typography sx={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: "tabular-nums", color: "text.primary", fontFamily: 'var(--font-outfit, "Outfit", system-ui, sans-serif)' }}>
                       {s.value}
                     </Typography>
-                    {totalCursos > 0 && (
+                    {totalCourses > 0 && (
                       <Typography sx={{ width: 36, textAlign: "right", fontSize: 12, fontWeight: 500, color: "text.secondary" }}>
-                        {Math.round((s.value / totalCursos) * 100)}%
+                        {Math.round((s.value / totalCourses) * 100)}%
                       </Typography>
                     )}
                   </Stack>
                   <Box sx={{ height: 5, borderRadius: 999, bgcolor: "#F1F5F9", overflow: "hidden" }}>
-                    <Box sx={{ height: "100%", width: totalCursos > 0 ? `${Math.round((s.value / totalCursos) * 100)}%` : "0%", bgcolor: s.color, borderRadius: 999 }} />
+                    <Box sx={{ height: "100%", width: totalCourses > 0 ? `${Math.round((s.value / totalCourses) * 100)}%` : "0%", bgcolor: s.color, borderRadius: 999 }} />
                   </Box>
                 </Box>
               ))}
@@ -249,7 +249,7 @@ export default async function SuperadminDashboardPage() {
           </Stack>
         </SectionCard>
 
-        <LearningActivityChart global={globalActivitySeries} porEmpresa={empresaActivitySeries} />
+        <LearningActivityChart global={globalActivitySeries} porEmpresa={companyActivitySeries} />
       </Box>
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 280px" } }}>
@@ -258,7 +258,7 @@ export default async function SuperadminDashboardPage() {
       </Box>
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 300px" } }}>
-        <OcupacionCard ocupacionPct={ocupacionPct} empresas={empresas} />
+        <OcupacionCard ocupacionPct={occupancyPct} empresas={companies} />
         <RenewalsTable renewals={renewals} />
       </Box>
     </Stack>
