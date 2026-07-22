@@ -55,7 +55,7 @@ export const navRH: NavItem[] = [
   { label: "Constancias",   href: "/company/certificates",  icon: Award,                        color: "orange" },
 ]
 
-export const navEmpleado: NavItem[] = [
+export const navEmployee: NavItem[] = [
   { label: "Mis cursos",      href: "/employee/courses",      icon: BookOpen, color: "emerald" },
   { label: "Mis constancias", href: "/employee/certificates", icon: Award,    color: "orange" },
 ]
