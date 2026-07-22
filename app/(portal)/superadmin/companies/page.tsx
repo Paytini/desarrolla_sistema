@@ -45,7 +45,7 @@ type PageProps = {
 
 const PAGE_SIZE = 20
 
-export default async function EmpresasPage({ searchParams }: PageProps) {
+export default async function CompaniesPage({ searchParams }: PageProps) {
   const params       = await searchParams
   const success      = readSearchParam(params, "success")
   const error        = readSearchParam(params, "error")
@@ -53,9 +53,9 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
   const statusFilter = readSearchParam(params, "status") ?? "all"
   const page         = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { empresas } = await getSuperadminEmpresasSnapshot()
+  const { empresas: companies } = await getSuperadminEmpresasSnapshot()
 
-  const empresasFiltradas = empresas.filter((e) => {
+  const filteredCompanies = companies.filter((e) => {
     const matchQ =
       q
         ? e.nombre.toLowerCase().includes(q) ||
@@ -69,9 +69,9 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
     return matchQ && matchStatus
   })
 
-  const totalPages     = Math.max(1, Math.ceil(empresasFiltradas.length / PAGE_SIZE))
+  const totalPages     = Math.max(1, Math.ceil(filteredCompanies.length / PAGE_SIZE))
   const currentPage    = Math.min(page, totalPages)
-  const empresasPagina = empresasFiltradas.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const pagedCompanies = filteredCompanies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
@@ -172,10 +172,10 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
 
       <PanelBox
         title="Empresas registradas"
-        description={`${empresasFiltradas.length} resultado${empresasFiltradas.length !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
+        description={`${filteredCompanies.length} resultado${filteredCompanies.length !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
         noPadding
       >
-        {empresasFiltradas.length === 0 ? (
+        {filteredCompanies.length === 0 ? (
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5, py: 8, textAlign: "center" }}>
             <Building2 size={28} style={{ color: "#cbd5e1" }} />
             <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
@@ -196,8 +196,8 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
               </TableRow>
             </TableHead>
             <TableBody>
-              {empresasPagina.map((empresa) => (
-                <CompanyRow key={empresa.id} empresa={empresa} />
+              {pagedCompanies.map((company) => (
+                <CompanyRow key={company.id} empresa={company} />
               ))}
             </TableBody>
           </Table>
@@ -216,7 +216,7 @@ export default async function EmpresasPage({ searchParams }: PageProps) {
             }}
           >
             <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-              {empresasFiltradas.length} resultado{empresasFiltradas.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
+              {filteredCompanies.length} resultado{filteredCompanies.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
               {currentPage > 1 ? (

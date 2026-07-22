@@ -8,11 +8,11 @@ import { CreateCompanyWizard } from "@/components/superadmin/CreateCompanyWizard
 import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 
-export default async function NuevaEmpresaPage() {
+export default async function NewCompanyPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
-  const { paquetes } = await getSuperadminEmpresasSnapshot()
+  const { paquetes: packages } = await getSuperadminEmpresasSnapshot()
 
   return (
     <Box sx={{ maxWidth: 840, mx: "auto" }}>
@@ -43,7 +43,7 @@ export default async function NuevaEmpresaPage() {
         </Typography>
       </Box>
 
-      <CreateCompanyWizard paquetes={paquetes} />
+      <CreateCompanyWizard paquetes={packages} />
     </Box>
   )
 }
