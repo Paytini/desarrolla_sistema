@@ -33,49 +33,49 @@ export async function saveDc3MetadataAction(
     return { ok: false, error: "No autorizado" }
   }
 
-  const wpCursoId = Number(formData.get("wp_curso_id"))
-  if (!Number.isInteger(wpCursoId) || wpCursoId <= 0) {
+  const wpCourseId = Number(formData.get("wp_curso_id"))
+  if (!Number.isInteger(wpCourseId) || wpCourseId <= 0) {
     return { ok: false, error: "ID de curso inválido" }
   }
 
-  const nombreCurso = (formData.get("nombre_curso") as string)?.trim() || null
-  const duracionRaw = formData.get("duracion_horas") as string
-  const duracionHoras = duracionRaw ? parseFloat(duracionRaw) : null
-  const areaNombre = (formData.get("area_tematica_nombre") as string)?.trim() || null
-  const areaClave = (formData.get("area_tematica_clave") as string)?.trim() || null
-  const agenteNombre = (formData.get("agente_capacitador_nombre") as string)?.trim() || null
-  const agenteRegistro = (formData.get("agente_capacitador_registro") as string)?.trim() || null
-  const instructorNombre = (formData.get("instructor_nombre") as string)?.trim() || null
-  const firmaUrl = (formData.get("firma_url") as string)?.trim() || null
+  const courseName = (formData.get("nombre_curso") as string)?.trim() || null
+  const durationRaw = formData.get("duracion_horas") as string
+  const durationHours = durationRaw ? parseFloat(durationRaw) : null
+  const thematicAreaName = (formData.get("area_tematica_nombre") as string)?.trim() || null
+  const thematicAreaCode = (formData.get("area_tematica_clave") as string)?.trim() || null
+  const trainingAgentName = (formData.get("agente_capacitador_nombre") as string)?.trim() || null
+  const trainingAgentRegistry = (formData.get("agente_capacitador_registro") as string)?.trim() || null
+  const instructorName = (formData.get("instructor_nombre") as string)?.trim() || null
+  const signatureUrl = (formData.get("firma_url") as string)?.trim() || null
 
-  if (!firmaUrl) {
+  if (!signatureUrl) {
     return { ok: false, error: "La firma del instructor es obligatoria" }
   }
 
   await prisma.cursoDc3Metadata.upsert({
-    where: { wp_curso_id: wpCursoId },
+    where: { wp_curso_id: wpCourseId },
     create: {
-      wp_curso_id: wpCursoId,
-      nombre_curso: nombreCurso,
-      duracion_horas: duracionHoras,
-      area_tematica_nombre: areaNombre,
-      area_tematica_clave: areaClave,
-      agente_capacitador_nombre: agenteNombre,
-      agente_capacitador_registro: agenteRegistro,
-      instructor_nombre: instructorNombre,
-      instructor_firma_url: firmaUrl,
+      wp_curso_id: wpCourseId,
+      nombre_curso: courseName,
+      duracion_horas: durationHours,
+      area_tematica_nombre: thematicAreaName,
+      area_tematica_clave: thematicAreaCode,
+      agente_capacitador_nombre: trainingAgentName,
+      agente_capacitador_registro: trainingAgentRegistry,
+      instructor_nombre: instructorName,
+      instructor_firma_url: signatureUrl,
       fuente: "MANUAL",
       ultima_sincronizacion: new Date(),
     },
     update: {
-      nombre_curso: nombreCurso,
-      duracion_horas: duracionHoras,
-      area_tematica_nombre: areaNombre,
-      area_tematica_clave: areaClave,
-      agente_capacitador_nombre: agenteNombre,
-      agente_capacitador_registro: agenteRegistro,
-      instructor_nombre: instructorNombre,
-      instructor_firma_url: firmaUrl,
+      nombre_curso: courseName,
+      duracion_horas: durationHours,
+      area_tematica_nombre: thematicAreaName,
+      area_tematica_clave: thematicAreaCode,
+      agente_capacitador_nombre: trainingAgentName,
+      agente_capacitador_registro: trainingAgentRegistry,
+      instructor_nombre: instructorName,
+      instructor_firma_url: signatureUrl,
       fuente: "MANUAL",
       ultima_sincronizacion: new Date(),
     },
@@ -95,12 +95,12 @@ export async function syncDc3MetadataAction(
     return { ok: false, error: "No autorizado" }
   }
 
-  const wpCursoId = Number(formData.get("wp_curso_id"))
-  if (!Number.isInteger(wpCursoId) || wpCursoId <= 0) {
+  const wpCourseId = Number(formData.get("wp_curso_id"))
+  if (!Number.isInteger(wpCourseId) || wpCourseId <= 0) {
     return { ok: false, error: "ID de curso inválido" }
   }
 
-  const nombreCurso = (formData.get("nombre_curso") as string)?.trim() || ""
+  const courseName = (formData.get("nombre_curso") as string)?.trim() || ""
 
   if (!isWordPressBridgeConfigured()) {
     return {
@@ -111,16 +111,16 @@ export async function syncDc3MetadataAction(
 
   try {
     const [details, existingMetadata] = await Promise.all([
-      bridgeGetCourseDetails(wpCursoId),
+      bridgeGetCourseDetails(wpCourseId),
       prisma.cursoDc3Metadata.findUnique({
-        where: { wp_curso_id: wpCursoId },
+        where: { wp_curso_id: wpCourseId },
       }),
     ])
 
     await prisma.cursoDc3Metadata.upsert({
-      where: { wp_curso_id: wpCursoId },
+      where: { wp_curso_id: wpCourseId },
       update: {
-        nombre_curso: decodeHtmlEntities(details.title || nombreCurso || existingMetadata?.nombre_curso || "") || null,
+        nombre_curso: decodeHtmlEntities(details.title || courseName || existingMetadata?.nombre_curso || "") || null,
         duracion_horas: preferBridgeValue(
           details.duration_hours,
           existingMetadata?.duracion_horas
@@ -153,8 +153,8 @@ export async function syncDc3MetadataAction(
         ultima_sincronizacion: new Date(),
       },
       create: {
-        wp_curso_id: wpCursoId,
-        nombre_curso: decodeHtmlEntities(details.title || nombreCurso || "") || null,
+        wp_curso_id: wpCourseId,
+        nombre_curso: decodeHtmlEntities(details.title || courseName || "") || null,
         duracion_horas: details.duration_hours ?? null,
         area_tematica_nombre: details.thematic_area_name || null,
         area_tematica_clave: details.thematic_area_code || null,
