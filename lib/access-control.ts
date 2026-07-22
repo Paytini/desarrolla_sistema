@@ -140,7 +140,7 @@ export async function togglePortalUserStatus(
   userId: number,
   callerRole: "SUPERADMIN" | "RH" | "SYSTEM" = "SYSTEM"
 ) {
-  const usuario = await prisma.usuario.findUnique({
+  const user = await prisma.usuario.findUnique({
     where: { id: userId },
     select: {
       id: true,
@@ -149,20 +149,20 @@ export async function togglePortalUserStatus(
     },
   })
 
-  if (!usuario) {
+  if (!user) {
     throw new Error("Usuario no encontrado")
   }
 
-  if (usuario.rol === "SUPERADMIN" && callerRole !== "SUPERADMIN") {
+  if (user.rol === "SUPERADMIN" && callerRole !== "SUPERADMIN") {
     throw new Error("No autorizado para modificar una cuenta de SUPERADMIN")
   }
 
   await prisma.usuario.update({
     where: { id: userId },
-    data: { activo: !usuario.activo },
+    data: { activo: !user.activo },
   })
 
-  return usuario
+  return user
 }
 
 export async function revokeUserPortalSessions(userId: number) {
