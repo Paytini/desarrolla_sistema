@@ -42,7 +42,7 @@ export default async function EmployeeCourses() {
   }
 
   const learningData = await getEmployeeLearningData(session.user.email ?? "")
-  const employee     = learningData?.empleado
+  const employee     = learningData?.employee
   if (!employee) redirect("/login")
 
   let courseUrlById   = new Map<number, string>()

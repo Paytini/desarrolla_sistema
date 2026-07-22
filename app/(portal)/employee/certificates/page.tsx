@@ -20,7 +20,7 @@ export default async function EmployeeCertificatesPage() {
   }
 
   const learningData = await getEmployeeLearningData(session.user.email ?? "")
-  const employee     = learningData?.empleado
+  const employee     = learningData?.employee
   if (!employee) redirect("/login")
 
   const certificates        = (employee.constancias ?? []) as PortalCertificateRecord[]

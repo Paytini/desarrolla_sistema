@@ -101,7 +101,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await syncEmployeeLearningFromBridgeSnapshot({
-      empleadoId: payload.employee_id ?? null,
+      employeeId: payload.employee_id ?? null,
       wpUserId: payload.student_wp_user_id,
       snapshot: {
         courses: payload.courses ?? [],

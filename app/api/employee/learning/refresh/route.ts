@@ -47,11 +47,11 @@ export async function POST(request: Request) {
   revalidatePath("/employee/courses")
   revalidatePath("/employee/certificates")
 
-  if (result.empresaId) {
+  if (result.companyId) {
     revalidatePath("/company/home")
     revalidatePath("/company/progress")
     revalidatePath("/company/certificates")
-    revalidateTag(companyCacheRootTag(result.empresaId), "max")
+    revalidateTag(companyCacheRootTag(result.companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   }
 

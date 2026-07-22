@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { requireRhSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { replaceEmployeePackageCourses } from "@/lib/course-sync"
-import { notifyEmpresaRH, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
+import { notifyCompanyRH, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
 import {
@@ -198,7 +198,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     })
 
     const syncFailMensaje = `Falló la sincronización con WordPress al asignar cursos a ${employee.nombre} ${employee.apellido} (${company.nombre}).`
-    await notifyEmpresaRH(companyId, {
+    await notifyCompanyRH(companyId, {
       tipo: "SYNC_FALLIDO",
       titulo: "Sincronización fallida",
       mensaje: `Falló la sincronización con WordPress al asignar cursos a ${employee.nombre} ${employee.apellido}.`,
