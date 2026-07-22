@@ -61,21 +61,21 @@ export async function triggerGlobalLearningSyncAction() {
 export async function retryCompanySyncAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
-  const empresaId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
+  const companyId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
 
-  if (!empresaId) {
+  if (!companyId) {
     redirect("/superadmin/reports?error=sync_retry")
   }
 
   let packageSyncError: string | null = null
 
   try {
-    await syncCompanyPackageEnrollments(empresaId)
+    await syncCompanyPackageEnrollments(companyId)
   } catch (error) {
     packageSyncError = getSyncErrorMessage(error)
   }
 
-  const queued = scheduleCompanyEmployeeLearningBatch(empresaId, {
+  const queued = scheduleCompanyEmployeeLearningBatch(companyId, {
     limit: 100,
     staleOnly: false,
   })
@@ -84,9 +84,9 @@ export async function retryCompanySyncAction(formData: FormData) {
     actor,
     accion: packageSyncError ? "SYNC_EMPRESA_REINTENTO_PARCIAL" : "SYNC_EMPRESA_REINTENTO_OK",
     entidadTipo: "EMPRESA",
-    entidadId: empresaId,
-    empresaId,
-    resumen: `${actor.nombre} ejecuto reintento de sincronizacion para la empresa ${empresaId}.`,
+    entidadId: companyId,
+    empresaId: companyId,
+    resumen: `${actor.nombre} ejecuto reintento de sincronizacion para la empresa ${companyId}.`,
     metadata: {
       package_sync_error: packageSyncError,
       learning_sync_queued: queued,
@@ -100,7 +100,7 @@ export async function retryCompanySyncAction(formData: FormData) {
   revalidatePath("/employee/courses")
   revalidatePath("/employee/certificates")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  revalidateTag(empresaCacheRootTag(empresaId), "max")
+  revalidateTag(empresaCacheRootTag(companyId), "max")
 
   if (packageSyncError) {
     const detail = encodeURIComponent(packageSyncError)

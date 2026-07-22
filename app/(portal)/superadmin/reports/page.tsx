@@ -75,7 +75,7 @@ const TD_SX = {
   fontSize: 13,
 }
 
-export default async function SuperAdminReportesPage({ searchParams }: PageProps) {
+export default async function SuperAdminReportsPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
@@ -84,40 +84,40 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
   const error   = readSearchParam(params, "error")
   const detail  = readDecodedSearchParam(params, "detail")
 
-  const { empresas } = await getSuperadminReportesSnapshot()
+  const { empresas: companies } = await getSuperadminReportesSnapshot()
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
 
-  const companyStats = empresas.map((empresa) => {
-    const empleadosActivos         = empresa.empleados.filter((e) => e.activo)
-    const empleadosSuspendidos     = empresa.empleados.length - empleadosActivos.length
-    const employeesWithoutWpUser   = empleadosActivos.filter((e) => !e.wp_user_id).length
-    const totalCourses             = empleadosActivos.reduce((s, e) => s + e.cursos.length, 0)
-    const totalProgress            = empleadosActivos.reduce((s, e) => s + e.cursos.reduce((cs, c) => cs + c.progreso_pct, 0), 0)
+  const companyStats = companies.map((company) => {
+    const activeEmployees          = company.empleados.filter((e) => e.activo)
+    const suspendedEmployees       = company.empleados.length - activeEmployees.length
+    const employeesWithoutWpUser   = activeEmployees.filter((e) => !e.wp_user_id).length
+    const totalCourses             = activeEmployees.reduce((s, e) => s + e.cursos.length, 0)
+    const totalProgress            = activeEmployees.reduce((s, e) => s + e.cursos.reduce((cs, c) => cs + c.progreso_pct, 0), 0)
     const averageProgress          = totalCourses ? Math.round(totalProgress / totalCourses) : 0
-    const completedCourses         = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => c.completado).length, 0)
-    const notStartedCourses        = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => !c.completado && c.progreso_pct === 0).length, 0)
-    const errorCourses             = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => c.acceso_estado === "ERROR").length, 0)
-    const pendingCourses           = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => c.acceso_estado === "PENDING" || c.acceso_estado === "REQUIRES_REVIEW").length, 0)
-    const staleCourses             = empleadosActivos.reduce((s, e) => s + e.cursos.filter((c) => now - new Date(c.ultima_sincronizacion).getTime() > STALE_SYNC_MS).length, 0)
-    const employeesWithoutCourses  = empleadosActivos.filter((e) => e.cursos.length === 0).length
+    const completedCourses         = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => c.completado).length, 0)
+    const notStartedCourses        = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => !c.completado && c.progreso_pct === 0).length, 0)
+    const errorCourses             = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => c.acceso_estado === "ERROR").length, 0)
+    const pendingCourses           = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => c.acceso_estado === "PENDING" || c.acceso_estado === "REQUIRES_REVIEW").length, 0)
+    const staleCourses             = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => now - new Date(c.ultima_sincronizacion).getTime() > STALE_SYNC_MS).length, 0)
+    const employeesWithoutCourses  = activeEmployees.filter((e) => e.cursos.length === 0).length
 
     let syncStatus: SyncStatus = "OK"
-    if (!empresa.activo) syncStatus = "SUSPENDIDA"
+    if (!company.activo) syncStatus = "SUSPENDIDA"
     else if (errorCourses > 0) syncStatus = "ERROR"
     else if (
       employeesWithoutWpUser > 0 || pendingCourses > 0 || staleCourses > 0 ||
-      (empleadosActivos.length > 0 && totalCourses === 0)
+      (activeEmployees.length > 0 && totalCourses === 0)
     ) syncStatus = "PARCIAL"
 
-    const activePackage  = empresa.paquetes[0]
+    const activePackage  = company.paquetes[0]
     const expirationDate = activePackage?.fecha_vencimiento
     const remainingDays  = expirationDate ? calculateRemainingDays(new Date(expirationDate)) : null
 
     return {
-      empresa,
-      empleadosActivos: empleadosActivos.length,
-      empleadosSuspendidos,
+      company,
+      activeEmployees: activeEmployees.length,
+      suspendedEmployees,
       employeesWithoutWpUser,
       totalCourses,
       averageProgress,
@@ -133,13 +133,13 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
     }
   })
 
-  const empresasActivas     = companyStats.filter((i) => i.empresa.activo)
-  const totalEmpleadosActivos = empresasActivas.reduce((s, i) => s + i.empleadosActivos, 0)
-  const totalCursosActivos  = empresasActivas.reduce((s, i) => s + i.totalCourses, 0)
-  const weightedProgress    = empresasActivas.reduce((s, i) => s + i.averageProgress * i.totalCourses, 0)
-  const averageProgress     = totalCursosActivos > 0 ? Math.round(weightedProgress / totalCursosActivos) : 0
-  const companiesWithErrors = empresasActivas.filter((i) => i.syncStatus === "ERROR").length
-  const renewalsIn30Days    = empresasActivas.filter(
+  const activeCompanyStats   = companyStats.filter((i) => i.company.activo)
+  const totalActiveEmployees = activeCompanyStats.reduce((s, i) => s + i.activeEmployees, 0)
+  const totalActiveCourses  = activeCompanyStats.reduce((s, i) => s + i.totalCourses, 0)
+  const weightedProgress    = activeCompanyStats.reduce((s, i) => s + i.averageProgress * i.totalCourses, 0)
+  const averageProgress     = totalActiveCourses > 0 ? Math.round(weightedProgress / totalActiveCourses) : 0
+  const companiesWithErrors = activeCompanyStats.filter((i) => i.syncStatus === "ERROR").length
+  const renewalsIn30Days    = activeCompanyStats.filter(
     (i) => i.remainingDays !== null && i.remainingDays >= 0 && i.remainingDays <= 30
   ).length
 
@@ -186,7 +186,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
         <KpiCard label="Avance promedio global"  value={`${averageProgress}%`}  sub="Promedio ponderado de cursos"   borderColor="primary" />
         <KpiCard label="Renovaciones en 30 d"    value={renewalsIn30Days}        sub="Empresas activas por vencer"    borderColor="amber" alert={renewalsIn30Days > 0} />
         <KpiCard label="Empresas con error"       value={companiesWithErrors}     sub="Requieren atención de sync"     borderColor="charcoal" alert={companiesWithErrors > 0} />
-        <KpiCard label="Empleados activos"        value={totalEmpleadosActivos}   sub="Base laboral activa total"      borderColor="emerald" />
+        <KpiCard label="Empleados activos"        value={totalActiveEmployees}   sub="Base laboral activa total"      borderColor="emerald" />
       </Box>
 
       <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: { xs: "1fr", xl: "1fr 1fr" } }}>
@@ -253,9 +253,9 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
                   {renewalAlerts.map((item) => {
                     const days = item.remainingDays as number
                     return (
-                      <TableRow key={item.empresa.id} sx={{ height: 44 }}>
+                      <TableRow key={item.company.id} sx={{ height: 44 }}>
                         <TableCell sx={{ ...TD_SX, fontWeight: 500, color: "#0f172a" }}>
-                          {item.empresa.nombre}
+                          {item.company.nombre}
                         </TableCell>
                         <TableCell sx={{ ...TD_SX, color: "#64748b" }}>
                           {item.activePackage?.paquete.nombre ?? "—"}
@@ -339,9 +339,9 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
                 {companyStats.map((item) => {
                   const style = SYNC_CHIP_STYLES[item.syncStatus]
                   return (
-                    <TableRow key={item.empresa.id} sx={{ height: 44 }}>
+                    <TableRow key={item.company.id} sx={{ height: 44 }}>
                       <TableCell sx={{ ...TD_SX, fontWeight: 500, color: "#0f172a" }}>
-                        {item.empresa.nombre}
+                        {item.company.nombre}
                       </TableCell>
                       <TableCell sx={TD_SX}>
                         <Chip
@@ -376,7 +376,7 @@ export default async function SuperAdminReportesPage({ searchParams }: PageProps
                       </TableCell>
                       <TableCell sx={{ ...TD_SX, textAlign: "right" }}>
                         <form action={retryCompanySyncAction}>
-                          <input type="hidden" name="empresa_id" value={item.empresa.id} />
+                          <input type="hidden" name="empresa_id" value={item.company.id} />
                           <Button
                             variant="outlined"
                             size="small"
