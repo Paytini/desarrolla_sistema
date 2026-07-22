@@ -26,7 +26,7 @@ import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
 import type { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities, formatDate } from "@/lib/format"
 
-export type Paquete = Awaited<ReturnType<typeof getSuperadminPaquetesSnapshot>>["paquetes"][number]
+export type Package = Awaited<ReturnType<typeof getSuperadminPaquetesSnapshot>>["paquetes"][number]
 export type Dc3MetadataByCourseId = Awaited<ReturnType<typeof getSuperadminPaquetesSnapshot>>["dc3MetadataByCourseId"]
 
 const TD_SX = { borderBottom: "1px solid", borderColor: "divider" }
@@ -39,7 +39,7 @@ export function PackageRow({
   empresasNombres,
   dc3MetadataByCourseId,
 }: {
-  paquete: Paquete
+  paquete: Package
   dc3Complete: number
   dc3Total: number
   dc3AllOk: boolean
@@ -132,7 +132,7 @@ export function PackageRow({
         <TableCell sx={{ ...TD_SX, textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
           <DeletePackageButton
             action={deletePackageAction}
-            paqueteId={paquete.id}
+            packageId={paquete.id}
             packageName={paquete.nombre}
             assignedCompaniesCount={paquete.empresas.length}
           />
@@ -171,14 +171,14 @@ export function PackageRow({
                 </Typography>
               ) : (
                 <Box sx={{ borderRadius: "10px", border: "1px solid", borderColor: "divider", bgcolor: "background.paper", overflow: "hidden" }}>
-                  {paquete.cursos.map((curso, index) => {
-                    const dc3Metadata  = dc3MetadataByCourseId[String(curso.wp_curso_id)] as Dc3MetadataView | undefined
+                  {paquete.cursos.map((course, index) => {
+                    const dc3Metadata  = dc3MetadataByCourseId[String(course.wp_curso_id)] as Dc3MetadataView | undefined
                     const missingCount = getDc3MissingFields(dc3Metadata).length
                     const isDc3Ready   = missingCount === 0
 
                     return (
                       <Box
-                        key={curso.id}
+                        key={course.id}
                         sx={{
                           display: "flex",
                           alignItems: "center",
@@ -196,13 +196,13 @@ export function PackageRow({
                           }}
                         />
                         <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
-                          {decodeHtmlEntities(curso.nombre_curso ?? "")}
+                          {decodeHtmlEntities(course.nombre_curso ?? "")}
                         </Typography>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
                           <Typography sx={{ fontSize: 10, fontWeight: 600, color: isDc3Ready ? "text.secondary" : "#b45309" }}>
                             {isDc3Ready ? "DC-3 ✓" : `${missingCount} pendiente${missingCount !== 1 ? "s" : ""}`}
                           </Typography>
-                          <Link href={`/superadmin/dc3?open=${curso.wp_curso_id}`} style={{ display: "flex", color: "#cbd5e1", lineHeight: 0 }}>
+                          <Link href={`/superadmin/dc3?open=${course.wp_curso_id}`} style={{ display: "flex", color: "#cbd5e1", lineHeight: 0 }}>
                             <ExternalLink size={12} />
                           </Link>
                         </Box>
