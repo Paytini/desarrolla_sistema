@@ -11,21 +11,21 @@ import { CNO_AREAS, CNO_CATALOG } from "@/lib/cno-catalog"
 type CnoEntry = (typeof CNO_CATALOG)[number]
 
 type Props = {
-  defaultClave?: string | null
-  defaultNombre?: string | null
+  defaultCode?: string | null
+  defaultName?: string | null
 }
 
-export default function CnoSelect({ defaultClave, defaultNombre }: Props) {
-  const initialEntry = defaultClave
-    ? CNO_CATALOG.find((e) => e.clave === defaultClave) ?? null
+export default function CnoSelect({ defaultCode, defaultName }: Props) {
+  const initialEntry = defaultCode
+    ? CNO_CATALOG.find((e) => e.clave === defaultCode) ?? null
     : null
 
   const [selected, setSelected] = useState<CnoEntry | null>(initialEntry)
 
   const options = CNO_CATALOG.filter((e) => !e.esArea)
 
-  function getAreaLabel(clave: string): string {
-    const area = CNO_AREAS.find((a) => clave.startsWith(a.clave + "."))
+  function getAreaLabel(code: string): string {
+    const area = CNO_AREAS.find((a) => code.startsWith(a.clave + "."))
     return area ? `${area.clave} — ${area.denominacion}` : ""
   }
 
@@ -104,7 +104,7 @@ export default function CnoSelect({ defaultClave, defaultNombre }: Props) {
       />
 
       <input type="hidden" name="ocupacion_especifica_clave" value={selected?.clave ?? ""} />
-      <input type="hidden" name="ocupacion_especifica" value={selected?.denominacion ?? defaultNombre ?? ""} />
+      <input type="hidden" name="ocupacion_especifica" value={selected?.denominacion ?? defaultName ?? ""} />
     </Box>
   )
 }

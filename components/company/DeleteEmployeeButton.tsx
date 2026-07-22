@@ -11,14 +11,14 @@ import Typography from "@mui/material/Typography"
 
 type DeleteEmployeeButtonProps = {
   action: (formData: FormData) => void | Promise<void>
-  empleadoId: number
+  employeeId: number
   employeeName: string
   returnTo?: string
 }
 
 export default function DeleteEmployeeButton({
   action,
-  empleadoId,
+  employeeId,
   employeeName,
   returnTo,
 }: DeleteEmployeeButtonProps) {
@@ -72,7 +72,7 @@ export default function DeleteEmployeeButton({
             Cancelar
           </Button>
           <form action={action}>
-            <input type="hidden" name="empleado_id" value={empleadoId} />
+            <input type="hidden" name="empleado_id" value={employeeId} />
             {returnTo && <input type="hidden" name="return_to" value={returnTo} />}
             <Button
               type="submit"

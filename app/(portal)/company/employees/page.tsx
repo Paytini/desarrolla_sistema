@@ -591,7 +591,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                   </form>
                   <DeleteEmployeeButton
                     action={deleteEmployeeAction}
-                    empleadoId={employee.id}
+                    employeeId={employee.id}
                     employeeName={`${employee.nombre} ${employee.apellido}`.trim()}
                     returnTo={currentListPath}
                   />
