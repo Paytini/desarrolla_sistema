@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { Box, Paper, Stack, Typography } from "@mui/material"
-import { getSuperadminEmpresasSnapshot, getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
+import { getSuperadminCompaniesSnapshot, getSuperadminReportsSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 import { checkAndNotifyExpiringPackages } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
@@ -119,8 +119,8 @@ export default async function SuperadminDashboardPage() {
   const now = Date.now()
 
   const [{ empresas: companies }, { empresas: companiesWithCourses }, recentEvents] = await Promise.all([
-    getSuperadminEmpresasSnapshot(),
-    getSuperadminReportesSnapshot(),
+    getSuperadminCompaniesSnapshot(),
+    getSuperadminReportsSnapshot(),
     prisma.auditoriaEvento.findMany({
       orderBy: { created_at: "desc" },
       take: 12,

@@ -11,10 +11,10 @@ import Typography from "@mui/material/Typography"
 
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
 import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButton"
-import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
+import type { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 
-type Company = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["empresas"][number]
+type Company = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["empresas"][number]
 
 export function CompanyRow({ empresa }: { empresa: Company }) {
   const packageName = empresa.paquetes[0]?.paquete?.nombre ?? "—"

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { Stack } from "@mui/material"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
-import { getSuperadminAccesosSnapshot } from "@/lib/dashboard-cache"
+import { getSuperadminAccessSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -31,7 +31,7 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
 
-  const { rhUsers, employeeUsers, employees } = await getSuperadminAccesosSnapshot()
+  const { rhUsers, employeeUsers, employees } = await getSuperadminAccessSnapshot()
 
   const employeeUserByEmail = new Map(employeeUsers.map((u) => [u.email.toLowerCase(), u]))
 

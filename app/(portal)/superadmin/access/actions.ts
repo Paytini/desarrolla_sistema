@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import {
   deleteEmployeeRecord,
   togglePortalUserStatus,
@@ -73,7 +73,7 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   if (deletedEmployee) {
-    revalidateTag(empresaCacheRootTag(deletedEmployee.empresa_id), "max")
+    revalidateTag(companyCacheRootTag(deletedEmployee.empresa_id), "max")
   }
   redirect("/superadmin/access?success=empleado_eliminado")
 }

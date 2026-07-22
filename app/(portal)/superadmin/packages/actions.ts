@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
@@ -320,7 +320,7 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   revalidatePath("/company/home")
   revalidatePath("/company/employees")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   redirect("/superadmin/packages?success=paquete_asignado")
 }
 
@@ -366,6 +366,6 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   revalidatePath("/company/progress")
   revalidatePath("/employee/courses")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   redirect("/superadmin/packages?success=sync_ok")
 }

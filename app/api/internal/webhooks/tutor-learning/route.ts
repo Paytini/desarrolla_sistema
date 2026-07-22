@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
 
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import {
   syncEmployeeLearningFromBridgeSnapshot,
   type EmployeeLearningBridgeSnapshot,
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       revalidatePath("/company/home")
       revalidatePath("/company/progress")
       revalidatePath("/company/certificates")
-      revalidateTag(empresaCacheRootTag(payload.company_id), "max")
+      revalidateTag(companyCacheRootTag(payload.company_id), "max")
       revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     }
 

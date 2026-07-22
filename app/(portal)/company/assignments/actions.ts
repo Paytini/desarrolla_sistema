@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { requireRhSession } from "@/lib/auth-guards"
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { replaceEmployeePackageCourses } from "@/lib/course-sync"
 import { notifyEmpresaRH, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
@@ -124,7 +124,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     revalidatePath("/company/assignments")
     revalidatePath("/company/progress")
     revalidatePath("/employee/courses")
-    revalidateTag(empresaCacheRootTag(companyId), "max")
+    revalidateTag(companyCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/company/assignments?success=limpio_local")
   }
@@ -138,7 +138,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     revalidatePath("/company/assignments")
     revalidatePath("/company/progress")
     revalidatePath("/employee/courses")
-    revalidateTag(empresaCacheRootTag(companyId), "max")
+    revalidateTag(companyCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/company/assignments?success=asignado_local")
   }
@@ -211,7 +211,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
 
     revalidatePath("/company/assignments")
     revalidatePath("/employee/courses")
-    revalidateTag(empresaCacheRootTag(companyId), "max")
+    revalidateTag(companyCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     redirect("/company/assignments?success=asignado_local&error=bridge_sync")
   }
@@ -225,7 +225,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   revalidatePath("/company/assignments")
   revalidatePath("/company/progress")
   revalidatePath("/employee/courses")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/company/assignments?success=asignado_sync")
 }

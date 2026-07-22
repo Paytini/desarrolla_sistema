@@ -12,7 +12,7 @@ import {
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
 } from "@/lib/company-employees"
-import { getRhEmpleadosSnapshot } from "@/lib/dashboard-cache"
+import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, getInitials } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -394,7 +394,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
 
-  const company = await getRhEmpleadosSnapshot(session.user.empresa_id)
+  const company = await getHrEmployeesSnapshot(session.user.empresa_id)
   if (!company) redirect("/login")
 
   const activeEmployees = company.empleados.filter((e) => e.activo).length

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import StatusNotice from "@/components/shared/StatusNotice"
 import { BookOpen, Check, Package, Users } from "lucide-react"
 import { SearchInput } from "@/components/shared/SearchInput"
-import { getRhAsignacionesSnapshot } from "@/lib/dashboard-cache"
+import { getHrAssignmentsSnapshot } from "@/lib/dashboard-cache"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { readSearchParam } from "@/lib/search-params"
 import { redirect } from "next/navigation"
@@ -58,7 +58,7 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
 
-  const company = await getRhAsignacionesSnapshot(session.user.empresa_id)
+  const company = await getHrAssignmentsSnapshot(session.user.empresa_id)
   if (!company) redirect("/login")
 
   const activePackage = company.paquetes[0]?.paquete

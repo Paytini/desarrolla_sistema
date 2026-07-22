@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import { SubmitButton } from "@/components/superadmin/SubmitButton"
 import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react"
 import KpiCard from "@/components/shared/KpiCard"
-import { getSuperadminReportesSnapshot } from "@/lib/dashboard-cache"
+import { getSuperadminReportsSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -84,7 +84,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
   const error   = readSearchParam(params, "error")
   const detail  = readDecodedSearchParam(params, "detail")
 
-  const { empresas: companies } = await getSuperadminReportesSnapshot()
+  const { empresas: companies } = await getSuperadminReportsSnapshot()
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
 

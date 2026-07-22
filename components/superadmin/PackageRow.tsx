@@ -23,11 +23,11 @@ import {
 import DeletePackageButton from "@/components/superadmin/DeletePackageButton"
 import { deletePackageAction } from "@/app/(portal)/superadmin/packages/actions"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
-import type { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
+import type { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities, formatDate } from "@/lib/format"
 
-export type Package = Awaited<ReturnType<typeof getSuperadminPaquetesSnapshot>>["paquetes"][number]
-export type Dc3MetadataByCourseId = Awaited<ReturnType<typeof getSuperadminPaquetesSnapshot>>["dc3MetadataByCourseId"]
+export type Package = Awaited<ReturnType<typeof getSuperadminPackagesSnapshot>>["paquetes"][number]
+export type Dc3MetadataByCourseId = Awaited<ReturnType<typeof getSuperadminPackagesSnapshot>>["dc3MetadataByCourseId"]
 
 const TD_SX = { borderBottom: "1px solid", borderColor: "divider" }
 

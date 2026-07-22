@@ -13,9 +13,9 @@ import Typography from "@mui/material/Typography"
 
 import { createCompanyAction } from "@/app/(portal)/superadmin/companies/actions"
 import { PasswordToggleInput } from "@/components/superadmin/PasswordToggleInput"
-import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
+import type { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
 
-type Package = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["paquetes"][number]
+type Package = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["paquetes"][number]
 
 const STEPS = ["Info empresa", "Admin RH", "Plan"]
 

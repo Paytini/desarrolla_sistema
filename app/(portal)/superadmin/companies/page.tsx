@@ -1,4 +1,4 @@
-import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
+import { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
@@ -53,7 +53,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
   const statusFilter = readSearchParam(params, "status") ?? "all"
   const page         = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { empresas: companies } = await getSuperadminEmpresasSnapshot()
+  const { empresas: companies } = await getSuperadminCompaniesSnapshot()
 
   const filteredCompanies = companies.filter((e) => {
     const matchQ =

@@ -2,7 +2,7 @@ import { PackageRow } from "@/components/superadmin/PackageRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { SearchInput } from "@/components/shared/SearchInput"
-import { getSuperadminPaquetesSnapshot } from "@/lib/dashboard-cache"
+import { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { AlertCircle, CheckCircle2, Package, Plus, RotateCw, X } from "lucide-react"
@@ -95,7 +95,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
   const sort          = readSearchParam(params, "sort") ?? "recientes"
   const page          = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { paquetes: packages, empresas: companies, dc3MetadataByCourseId } = await getSuperadminPaquetesSnapshot()
+  const { paquetes: packages, empresas: companies, dc3MetadataByCourseId } = await getSuperadminPackagesSnapshot()
 
   const packagesWithStats = packages.map((paquete) => {
     const dc3Complete = paquete.cursos.filter((c) => {

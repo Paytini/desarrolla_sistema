@@ -5,14 +5,14 @@ import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 
 import { CreateCompanyWizard } from "@/components/superadmin/CreateCompanyWizard"
-import { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
+import { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 
 export default async function NewCompanyPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
-  const { paquetes: packages } = await getSuperadminEmpresasSnapshot()
+  const { paquetes: packages } = await getSuperadminCompaniesSnapshot()
 
   return (
     <Box sx={{ maxWidth: 840, mx: "auto" }}>

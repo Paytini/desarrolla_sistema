@@ -12,7 +12,7 @@ import {
   type AuditActor,
 } from "@/lib/auditing"
 import { requireRhSession } from "@/lib/auth-guards"
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { parseCsvText } from "@/lib/csv"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
@@ -532,7 +532,7 @@ export async function createEmployeeAction(formData: FormData) {
   revalidatePath("/company/assignments")
   revalidatePath("/employee/courses")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   if (!result.ok) {
@@ -758,7 +758,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
   revalidatePath("/company/progress")
   revalidatePath("/company/certificates")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(
@@ -851,7 +851,7 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
 
   revalidatePath("/company/employees")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect(withStatus(returnTo, "success", employee.activo ? "empleado_suspendido" : "empleado_activado"))
 }
@@ -889,7 +889,7 @@ export async function deleteEmployeeAction(formData: FormData) {
   revalidatePath("/company/progress")
   revalidatePath("/superadmin/access")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect(withStatus(returnTo, "success", "empleado_eliminado"))
 }
@@ -919,7 +919,7 @@ export async function triggerCompanyLearningSyncAction() {
   revalidatePath("/employee/courses")
   revalidatePath("/employee/certificates")
   revalidatePath("/superadmin/reports")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(`/company/employees?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)

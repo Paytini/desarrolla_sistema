@@ -1,21 +1,21 @@
 import { unstable_cache } from "next/cache"
 import {
-  SUPERADMIN_ACCESOS_TAG,
+  SUPERADMIN_ACCESS_TAG,
   SUPERADMIN_DC3_TAG,
-  SUPERADMIN_EMPRESAS_TAG,
+  SUPERADMIN_COMPANIES_TAG,
   SUPERADMIN_GLOBAL_TAG,
-  SUPERADMIN_PAQUETES_TAG,
-  SUPERADMIN_REPORTES_TAG,
-  empresaAsignacionesTag,
-  empresaCacheRootTag,
-  empresaEmpleadosTag,
+  SUPERADMIN_PACKAGES_TAG,
+  SUPERADMIN_REPORTS_TAG,
+  companyAssignmentsTag,
+  companyCacheRootTag,
+  companyEmployeesTag,
 } from "@/lib/cache-tags"
 import { prisma } from "@/lib/prisma"
 import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
 
-const getSuperadminReportesSnapshotCached = unstable_cache(
+const getSuperadminReportsSnapshotCached = unstable_cache(
   async () => {
-    const empresas = await prisma.empresa.findMany({
+    const companies = await prisma.empresa.findMany({
       orderBy: { nombre: "asc" },
       include: {
         paquetes: {
@@ -53,22 +53,22 @@ const getSuperadminReportesSnapshotCached = unstable_cache(
       },
     })
 
-    return { empresas }
+    return { empresas: companies }
   },
   ["dashboard-snapshot", "superadmin", "reportes"],
   {
     revalidate: 60,
-    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_REPORTES_TAG],
+    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_REPORTS_TAG],
   }
 )
 
-export async function getSuperadminReportesSnapshot() {
-  return getSuperadminReportesSnapshotCached()
+export async function getSuperadminReportsSnapshot() {
+  return getSuperadminReportsSnapshotCached()
 }
 
-const getSuperadminEmpresasSnapshotCached = unstable_cache(
+const getSuperadminCompaniesSnapshotCached = unstable_cache(
   async () => {
-    const [empresas, paquetes] = await Promise.all([
+    const [companies, packages] = await Promise.all([
       prisma.empresa.findMany({
         orderBy: { created_at: "desc" },
         include: {
@@ -98,22 +98,22 @@ const getSuperadminEmpresasSnapshotCached = unstable_cache(
       }),
     ])
 
-    return { empresas, paquetes }
+    return { empresas: companies, paquetes: packages }
   },
   ["dashboard-snapshot", "superadmin", "empresas"],
   {
     revalidate: 90,
-    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_EMPRESAS_TAG],
+    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_COMPANIES_TAG],
   }
 )
 
-export async function getSuperadminEmpresasSnapshot() {
-  return getSuperadminEmpresasSnapshotCached()
+export async function getSuperadminCompaniesSnapshot() {
+  return getSuperadminCompaniesSnapshotCached()
 }
 
-const getSuperadminPaquetesSnapshotCached = unstable_cache(
+const getSuperadminPackagesSnapshotCached = unstable_cache(
   async () => {
-    const [paquetes, empresas] = await Promise.all([
+    const [packages, companies] = await Promise.all([
       prisma.paquete.findMany({
         where: { activo: true },
         orderBy: { created_at: "desc" },
@@ -155,7 +155,7 @@ const getSuperadminPaquetesSnapshotCached = unstable_cache(
 
     const courseIds = [
       ...new Set(
-        paquetes.flatMap((paquete) => paquete.cursos.map((curso) => curso.wp_curso_id))
+        packages.flatMap((pkg) => pkg.cursos.map((course) => course.wp_curso_id))
       ),
     ]
     const dc3Metadata = courseIds.length > 0
@@ -167,17 +167,17 @@ const getSuperadminPaquetesSnapshotCached = unstable_cache(
       dc3Metadata.map((metadata) => [String(metadata.wp_curso_id), metadata])
     )
 
-    return { paquetes, empresas, dc3MetadataByCourseId }
+    return { paquetes: packages, empresas: companies, dc3MetadataByCourseId }
   },
   ["dashboard-snapshot", "superadmin", "paquetes"],
   {
     revalidate: 90,
-    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_PAQUETES_TAG],
+    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_PACKAGES_TAG],
   }
 )
 
-export async function getSuperadminPaquetesSnapshot() {
-  return getSuperadminPaquetesSnapshotCached()
+export async function getSuperadminPackagesSnapshot() {
+  return getSuperadminPackagesSnapshotCached()
 }
 
 const getSuperadminDc3SnapshotCached = unstable_cache(
@@ -208,7 +208,7 @@ export async function getSuperadminDc3Snapshot() {
   return getSuperadminDc3SnapshotCached()
 }
 
-const getSuperadminAccesosSnapshotCached = unstable_cache(
+const getSuperadminAccessSnapshotCached = unstable_cache(
   async () => {
     const [rhUsers, employeeUsers, employees] = await Promise.all([
       prisma.usuario.findMany({
@@ -267,19 +267,19 @@ const getSuperadminAccesosSnapshotCached = unstable_cache(
   ["dashboard-snapshot", "superadmin", "accesos"],
   {
     revalidate: 45,
-    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_ACCESOS_TAG],
+    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_ACCESS_TAG],
   }
 )
 
-export async function getSuperadminAccesosSnapshot() {
-  return getSuperadminAccesosSnapshotCached()
+export async function getSuperadminAccessSnapshot() {
+  return getSuperadminAccessSnapshotCached()
 }
 
-export async function getRhEmpleadosSnapshot(empresaId: number) {
+export async function getHrEmployeesSnapshot(companyId: number) {
   const snapshot = unstable_cache(
     async () =>
       prisma.empresa.findUnique({
-        where: { id: empresaId },
+        where: { id: companyId },
         include: {
           empleados: {
             include: {
@@ -303,21 +303,21 @@ export async function getRhEmpleadosSnapshot(empresaId: number) {
           },
         },
       }),
-    ["dashboard-snapshot", "empresa", "empleados", String(empresaId)],
+    ["dashboard-snapshot", "empresa", "empleados", String(companyId)],
     {
       revalidate: 45,
-      tags: [empresaCacheRootTag(empresaId), empresaEmpleadosTag(empresaId)],
+      tags: [companyCacheRootTag(companyId), companyEmployeesTag(companyId)],
     }
   )
 
   return snapshot()
 }
 
-export async function getRhAsignacionesSnapshot(empresaId: number) {
+export async function getHrAssignmentsSnapshot(companyId: number) {
   const snapshot = unstable_cache(
     async () =>
       prisma.empresa.findUnique({
-        where: { id: empresaId },
+        where: { id: companyId },
         include: {
           paquetes: {
             where: { activo: true },
@@ -346,10 +346,10 @@ export async function getRhAsignacionesSnapshot(empresaId: number) {
           },
         },
       }),
-    ["dashboard-snapshot", "empresa", "asignaciones", String(empresaId)],
+    ["dashboard-snapshot", "empresa", "asignaciones", String(companyId)],
     {
       revalidate: 45,
-      tags: [empresaCacheRootTag(empresaId), empresaAsignacionesTag(empresaId)],
+      tags: [companyCacheRootTag(companyId), companyAssignmentsTag(companyId)],
     }
   )
 

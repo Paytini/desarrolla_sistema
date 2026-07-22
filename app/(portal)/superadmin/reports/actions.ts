@@ -4,7 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
 import {
   scheduleCompanyEmployeeLearningBatch,
@@ -100,7 +100,7 @@ export async function retryCompanySyncAction(formData: FormData) {
   revalidatePath("/employee/courses")
   revalidatePath("/employee/certificates")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
 
   if (packageSyncError) {
     const detail = encodeURIComponent(packageSyncError)

@@ -10,7 +10,7 @@ import {
   getCompanySeatSnapshot,
 } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { notifySuperadmins } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 
@@ -155,7 +155,7 @@ export async function createCompanyAction(
   revalidatePath("/superadmin/companies")
   revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  revalidateTag(empresaCacheRootTag(createdResult.companyId), "max")
+  revalidateTag(companyCacheRootTag(createdResult.companyId), "max")
   redirect("/superadmin/companies?success=empresa_creada")
 }
 
@@ -203,7 +203,7 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   revalidatePath("/superadmin/companies")
   revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  revalidateTag(empresaCacheRootTag(companyId), "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
   redirect(`/superadmin/companies?success=${company.activo ? "empresa_suspendida" : "empresa_activada"}`)
 }
 

@@ -2,7 +2,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { syncEmployeeLearningByEmail } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
 
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     revalidatePath("/company/home")
     revalidatePath("/company/progress")
     revalidatePath("/company/certificates")
-    revalidateTag(empresaCacheRootTag(result.empresaId), "max")
+    revalidateTag(companyCacheRootTag(result.empresaId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   }
 
