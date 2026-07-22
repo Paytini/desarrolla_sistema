@@ -26,7 +26,7 @@ export default function EmployeeLearningRefresh({
     requestInFlight.current = true
 
     try {
-      const response = await fetch("/api/empleado/learning/refresh", {
+      const response = await fetch("/api/employee/learning/refresh", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
