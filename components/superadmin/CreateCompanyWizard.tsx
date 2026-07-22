@@ -15,7 +15,7 @@ import { createCompanyAction } from "@/app/(portal)/superadmin/companies/actions
 import { PasswordToggleInput } from "@/components/superadmin/PasswordToggleInput"
 import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 
-type Paquete = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["paquetes"][number]
+type Package = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["paquetes"][number]
 
 const STEPS = ["Info empresa", "Admin RH", "Plan"]
 
@@ -48,7 +48,7 @@ type FormValues = {
   notas: string
 }
 
-export function CreateCompanyWizard({ paquetes }: { paquetes: Paquete[] }) {
+export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
   const [step, setStep]              = useState(0)
   const [state, formAction, pending] = useActionState(createCompanyAction, null)
   const formRef                      = useRef<HTMLFormElement>(null)
