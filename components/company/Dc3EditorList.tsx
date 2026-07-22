@@ -27,9 +27,9 @@ type CourseMetadata = {
 }
 
 export type CourseEntry = {
-  wp_curso_id: number
-  nombre_curso: string
-  paquetes: string[]
+  wpCourseId: number
+  courseName: string
+  packages: string[]
   metadata: CourseMetadata | null
 }
 
@@ -126,8 +126,8 @@ function CourseEditorCard({
   const [isPending, startTransition]    = useTransition()
   const [saved, setSaved]               = useState(false)
   const [saveError, setSaveError]       = useState<string | null>(null)
-  const [firmaUrl, setFirmaUrl]         = useState(course.metadata?.instructor_firma_url ?? "")
-  const [uploadingFirma, setUploadingFirma] = useState(false)
+  const [signatureUrl, setSignatureUrl] = useState(course.metadata?.instructor_firma_url ?? "")
+  const [uploadingSignature, setUploadingSignature] = useState(false)
   const [uploadError, setUploadError]   = useState<string | null>(null)
   const fileInputRef                    = useRef<HTMLInputElement>(null)
   const cardRef                         = useRef<HTMLDivElement>(null)
@@ -148,23 +148,23 @@ function CourseEditorCard({
   const cfg          = STATUS_CONFIG[status]
   const m            = course.metadata
 
-  async function handleFirmaChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleSignatureChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setUploadingFirma(true)
+    setUploadingSignature(true)
     setUploadError(null)
     try {
       const fd = new FormData()
       fd.append("file", file)
-      fd.append("nombre", `instructor-${course.wp_curso_id}`)
+      fd.append("nombre", `instructor-${course.wpCourseId}`)
       const res  = await fetch("/api/upload/instructor-signature", { method: "POST", body: fd })
       const data = await res.json()
       if (!res.ok) { setUploadError(data.error ?? "Error subiendo la firma"); return }
-      setFirmaUrl(data.url as string)
+      setSignatureUrl(data.url as string)
     } catch {
       setUploadError("Error de conexión al subir la firma")
     } finally {
-      setUploadingFirma(false)
+      setUploadingSignature(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
@@ -172,7 +172,7 @@ function CourseEditorCard({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSaveError(null)
-    if (!firmaUrl) { setSaveError("La firma del instructor es obligatoria"); return }
+    if (!signatureUrl) { setSaveError("La firma del instructor es obligatoria"); return }
     const formData = new FormData(e.currentTarget)
     startTransition(async () => {
       const result = await action(formData)
@@ -188,8 +188,8 @@ function CourseEditorCard({
   function handleSync() {
     setSyncError(null)
     const formData = new FormData()
-    formData.append("wp_curso_id", String(course.wp_curso_id))
-    formData.append("nombre_curso", course.nombre_curso)
+    formData.append("wp_curso_id", String(course.wpCourseId))
+    formData.append("nombre_curso", course.courseName)
     startSyncTransition(async () => {
       const result = await syncAction(formData)
       if (result.ok) {
@@ -202,8 +202,8 @@ function CourseEditorCard({
     })
   }
 
-  const isBlobUrl = firmaUrl.includes("blob.vercel-storage.com")
-  const proxyUrl  = isBlobUrl ? `/api/upload/signature-proxy?url=${encodeURIComponent(firmaUrl)}` : firmaUrl
+  const isBlobUrl = signatureUrl.includes("blob.vercel-storage.com")
+  const proxyUrl  = isBlobUrl ? `/api/upload/signature-proxy?url=${encodeURIComponent(signatureUrl)}` : signatureUrl
 
   return (
     <Paper
@@ -251,13 +251,13 @@ function CourseEditorCard({
               whiteSpace: "nowrap",
             }}
           >
-            {course.nombre_curso}
+            {course.courseName}
           </Typography>
           <Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
             <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
-              ID {course.wp_curso_id}
+              ID {course.wpCourseId}
             </Typography>
-            {course.paquetes.map((p) => (
+            {course.packages.map((p) => (
               <Chip
                 key={p}
                 label={p}
@@ -415,8 +415,8 @@ function CourseEditorCard({
             onSubmit={handleSubmit}
             sx={{ display: "grid", gap: 2 }}
           >
-            <input type="hidden" name="wp_curso_id" value={course.wp_curso_id} />
-            <input type="hidden" name="firma_url"   value={firmaUrl} />
+            <input type="hidden" name="wp_curso_id" value={course.wpCourseId} />
+            <input type="hidden" name="firma_url"   value={signatureUrl} />
 
             <SectionLabel>Datos del curso</SectionLabel>
 
@@ -424,7 +424,7 @@ function CourseEditorCard({
               <TextField
                 name="nombre_curso"
                 defaultValue={m?.nombre_curso ?? ""}
-                placeholder={course.nombre_curso}
+                placeholder={course.courseName}
                 size="small"
                 fullWidth
               />
@@ -515,10 +515,10 @@ function CourseEditorCard({
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   style={{ display: "none" }}
-                  onChange={handleFirmaChange}
+                  onChange={handleSignatureChange}
                 />
 
-                {firmaUrl ? (
+                {signatureUrl ? (
                   <Box
                     sx={{
                       borderRadius: "12px",
@@ -577,7 +577,7 @@ function CourseEditorCard({
                         <Button
                           variant="outlined"
                           size="small"
-                          disabled={uploadingFirma}
+                          disabled={uploadingSignature}
                           onClick={() => fileInputRef.current?.click()}
                           sx={{
                             height: 26,
@@ -589,11 +589,11 @@ function CourseEditorCard({
                             "&:hover": { borderColor: "#94a3b8", bgcolor: "transparent" },
                           }}
                         >
-                          {uploadingFirma ? "Subiendo…" : "Cambiar"}
+                          {uploadingSignature ? "Subiendo…" : "Cambiar"}
                         </Button>
                         <IconButton
                           size="small"
-                          onClick={() => setFirmaUrl("")}
+                          onClick={() => setSignatureUrl("")}
                           sx={{
                             width: 26,
                             height: 26,
@@ -614,13 +614,13 @@ function CourseEditorCard({
                   </Box>
                 ) : (
                   <Box
-                    onClick={() => !uploadingFirma && fileInputRef.current?.click()}
+                    onClick={() => !uploadingSignature && fileInputRef.current?.click()}
                     sx={{
                       borderRadius: "12px",
                       border: "2px dashed",
-                      borderColor: uploadingFirma ? "#8B5CF6" : "#CBD5E1",
-                      bgcolor: uploadingFirma ? "rgba(139,92,246,0.03)" : "#fafafa",
-                      cursor: uploadingFirma ? "default" : "pointer",
+                      borderColor: uploadingSignature ? "#8B5CF6" : "#CBD5E1",
+                      bgcolor: uploadingSignature ? "rgba(139,92,246,0.03)" : "#fafafa",
+                      cursor: uploadingSignature ? "default" : "pointer",
                       display: "flex",
                       flexDirection: "column",
                       alignItems: "center",
@@ -628,7 +628,7 @@ function CourseEditorCard({
                       gap: 1,
                       py: 3.5,
                       transition: "all 0.18s ease",
-                      "&:hover": uploadingFirma
+                      "&:hover": uploadingSignature
                         ? {}
                         : {
                             borderColor: "#8B5CF6",
@@ -637,7 +637,7 @@ function CourseEditorCard({
                           },
                     }}
                   >
-                    {uploadingFirma ? (
+                    {uploadingSignature ? (
                       <>
                         <Box
                           sx={{
@@ -840,11 +840,11 @@ export default function Dc3EditorList({
         ) : (
           filtered.map((course) => (
             <CourseEditorCard
-              key={course.wp_curso_id}
+              key={course.wpCourseId}
               course={course}
               action={action}
               syncAction={syncAction}
-              defaultOpen={course.wp_curso_id === openCourseId}
+              defaultOpen={course.wpCourseId === openCourseId}
             />
           ))
         )}

@@ -38,9 +38,9 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
   const metadataMap = new Map(metadata.map((m) => [m.wp_curso_id, m]))
 
   const courses: CourseEntry[] = publishedCourses.map((course) => ({
-    wp_curso_id: course.wp_course_id,
-    nombre_curso: decodeHtmlEntities(course.title),
-    paquetes: packagesByCourseId.get(course.wp_course_id) ?? [],
+    wpCourseId: course.wp_course_id,
+    courseName: decodeHtmlEntities(course.title),
+    packages: packagesByCourseId.get(course.wp_course_id) ?? [],
     metadata: metadataMap.get(course.wp_course_id) ?? null,
   }))
 
