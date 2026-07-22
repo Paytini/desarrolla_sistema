@@ -197,7 +197,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
             </TableHead>
             <TableBody>
               {pagedCompanies.map((company) => (
-                <CompanyRow key={company.id} empresa={company} />
+                <CompanyRow key={company.id} company={company} />
               ))}
             </TableBody>
           </Table>

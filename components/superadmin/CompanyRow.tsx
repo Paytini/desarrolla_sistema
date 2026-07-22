@@ -16,9 +16,9 @@ import { formatDate } from "@/lib/format"
 
 type Company = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["empresas"][number]
 
-export function CompanyRow({ empresa }: { empresa: Company }) {
-  const packageName = empresa.paquetes[0]?.paquete?.nombre ?? "—"
-  const activeEmployeesCount = empresa.empleados.filter((e) => e.activo).length
+export function CompanyRow({ company }: { company: Company }) {
+  const packageName = company.paquetes[0]?.paquete?.nombre ?? "—"
+  const activeEmployeesCount = company.empleados.filter((e) => e.activo).length
 
   return (
     <TableRow
@@ -40,7 +40,7 @@ export function CompanyRow({ empresa }: { empresa: Company }) {
                 whiteSpace: "nowrap",
               }}
             >
-              {empresa.nombre}
+              {company.nombre}
             </Typography>
             <Typography
               sx={{
@@ -51,7 +51,7 @@ export function CompanyRow({ empresa }: { empresa: Company }) {
                 whiteSpace: "nowrap",
               }}
             >
-              {empresa.email_rh}
+              {company.email_rh}
             </Typography>
           </Box>
         </Box>
@@ -59,7 +59,7 @@ export function CompanyRow({ empresa }: { empresa: Company }) {
 
       <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", sm: "table-cell" } }}>
         <Typography sx={{ fontFamily: "monospace", fontSize: 12, color: "text.secondary" }}>
-          {empresa.rfc ?? "—"}
+          {company.rfc ?? "—"}
         </Typography>
       </TableCell>
 
@@ -79,11 +79,11 @@ export function CompanyRow({ empresa }: { empresa: Company }) {
 
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <SeatDonut used={activeEmployeesCount} total={empresa.asientos_contratados} size={48} />
+          <SeatDonut used={activeEmployeesCount} total={company.asientos_contratados} size={48} />
           <Typography sx={{ fontSize: 12, fontWeight: 500, color: "text.primary" }}>
             {activeEmployeesCount}
             <Box component="span" sx={{ color: "text.secondary" }}>
-              /{empresa.asientos_contratados}
+              /{company.asientos_contratados}
             </Box>
           </Typography>
         </Box>
@@ -91,22 +91,22 @@ export function CompanyRow({ empresa }: { empresa: Company }) {
 
       <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", lg: "table-cell" } }}>
         <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-          {formatDate(empresa.created_at)}
+          {formatDate(company.created_at)}
         </Typography>
       </TableCell>
 
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Chip
-          label={empresa.activo ? "Activa" : "Suspendida"}
+          label={company.activo ? "Activa" : "Suspendida"}
           size="small"
           sx={{
             height: 22,
             fontSize: "11px",
             fontWeight: 600,
             border: "1px solid",
-            borderColor: empresa.activo ? "rgba(40,199,111,0.3)" : "rgba(234,84,85,0.3)",
-            bgcolor: empresa.activo ? "rgba(40,199,111,0.12)" : "rgba(234,84,85,0.12)",
-            color: empresa.activo ? "#28C76F" : "#EA5455",
+            borderColor: company.activo ? "rgba(40,199,111,0.3)" : "rgba(234,84,85,0.3)",
+            bgcolor: company.activo ? "rgba(40,199,111,0.12)" : "rgba(234,84,85,0.12)",
+            color: company.activo ? "#28C76F" : "#EA5455",
             borderRadius: "11px",
             "& .MuiChip-label": { px: 1.25 },
           }}
@@ -117,7 +117,7 @@ export function CompanyRow({ empresa }: { empresa: Company }) {
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.75 }}>
           <Button
             component={Link}
-            href={`/superadmin/companies/${empresa.id}`}
+            href={`/superadmin/companies/${company.id}`}
             size="small"
             variant="outlined"
             startIcon={<ExternalLink size={11} strokeWidth={2} />}
@@ -133,9 +133,9 @@ export function CompanyRow({ empresa }: { empresa: Company }) {
             Ver
           </Button>
           <SuspendCompanyButton
-            companyId={empresa.id}
-            active={empresa.activo}
-            name={empresa.nombre}
+            companyId={company.id}
+            active={company.activo}
+            name={company.nombre}
           />
         </Box>
       </TableCell>
