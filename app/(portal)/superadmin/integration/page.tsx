@@ -16,7 +16,7 @@ function buildPortalWebhookUrl() {
 
 function bool(value: boolean) { return value ? "Sí" : "No" }
 
-export default async function SuperAdminIntegracionPage() {
+export default async function SuperAdminIntegrationPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
