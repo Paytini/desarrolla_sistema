@@ -46,7 +46,7 @@ export async function GET(
   const download = request.nextUrl.searchParams.get("download") === "1"
 
   try {
-    const pdfBytes = await generateDc3Pdf({ constanciaId })
+    const pdfBytes = await generateDc3Pdf({ certificateId: constanciaId })
     const disposition = download ? "attachment" : "inline"
     return new NextResponse(pdfBytes as unknown as BodyInit, {
       headers: {

@@ -56,7 +56,7 @@ export async function GET() {
 
   for (const { id, folio } of constancias) {
     try {
-      const pdfBytes = await generateDc3Pdf({ constanciaId: id })
+      const pdfBytes = await generateDc3Pdf({ certificateId: id })
       zip.file(`${folio}.pdf`, pdfBytes)
     } catch (err) {
       if (err instanceof Dc3MissingFieldsError) {
