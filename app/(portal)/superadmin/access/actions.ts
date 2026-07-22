@@ -24,23 +24,23 @@ export async function toggleRhUserStatusAction(formData: FormData) {
   }
 
   try {
-    const usuario = await togglePortalUserStatus(userId, "SUPERADMIN")
+    const user = await togglePortalUserStatus(userId, "SUPERADMIN")
 
     await createAuditEvent({
       actor,
-      accion: usuario.activo ? "RH_SUSPENDIDO" : "RH_REACTIVADO",
+      accion: user.activo ? "RH_SUSPENDIDO" : "RH_REACTIVADO",
       entidadTipo: "USUARIO",
-      entidadId: usuario.id,
-      resumen: `${actor.nombre} ${usuario.activo ? "suspendio" : "reactivo"} un usuario RH.`,
+      entidadId: user.id,
+      resumen: `${actor.nombre} ${user.activo ? "suspendio" : "reactivo"} un usuario RH.`,
       metadata: {
-        rol: usuario.rol,
+        rol: user.rol,
       },
     })
 
     revalidatePath("/superadmin/access")
     revalidatePath("/superadmin/reports")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect(`/superadmin/access?success=${usuario.activo ? "rh_suspendido" : "rh_activado"}`)
+    redirect(`/superadmin/access?success=${user.activo ? "rh_suspendido" : "rh_activado"}`)
   } catch {
     redirect("/superadmin/access?error=usuario")
   }
@@ -50,15 +50,15 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const empleadoId = getInt(formData, "empleado_id")
-  if (!empleadoId) {
+  const employeeId = getInt(formData, "empleado_id")
+  if (!employeeId) {
     redirect("/superadmin/access?error=empleado")
   }
 
   let deletedEmployee: Awaited<ReturnType<typeof deleteEmployeeRecord>> | null = null
   try {
     deletedEmployee = await deleteEmployeeRecord({
-      empleadoId,
+      empleadoId: employeeId,
       actor,
       source: "SUPERADMIN",
     })

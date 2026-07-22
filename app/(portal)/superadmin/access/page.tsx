@@ -23,7 +23,7 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function SuperAdminAccesosPage({ searchParams }: PageProps) {
+export default async function SuperAdminAccessPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
@@ -47,17 +47,17 @@ export default async function SuperAdminAccesosPage({ searchParams }: PageProps)
     cuposContratados: user.empresa?.asientos_contratados ?? null,
   }))
 
-  const employeeRows: EmployeeAccessRow[] = employees.map((emp) => {
-    const portalUser = employeeUserByEmail.get(emp.email.toLowerCase())
+  const employeeRows: EmployeeAccessRow[] = employees.map((employee) => {
+    const portalUser = employeeUserByEmail.get(employee.email.toLowerCase())
     return {
-      id: emp.id,
-      nombre: emp.nombre,
-      apellido: emp.apellido,
-      email: emp.email,
-      activo: emp.activo,
-      empresaNombre: emp.empresa.nombre,
-      wpUserId: emp.wp_user_id,
-      altaFecha: formatDate(emp.created_at),
+      id: employee.id,
+      nombre: employee.nombre,
+      apellido: employee.apellido,
+      email: employee.email,
+      activo: employee.activo,
+      empresaNombre: employee.empresa.nombre,
+      wpUserId: employee.wp_user_id,
+      altaFecha: formatDate(employee.created_at),
       portalActivo: portalUser?.activo ?? null,
       portalUltimoAcceso: formatDateTime(portalUser?.ultimo_acceso),
     }
