@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import { Box, FormControlLabel, Paper, Stack, Switch, Typography } from "@mui/material"
 
 export type ActivityPoint = { day: string; value: number }
-export type ActivitySeries = { nombre: string; color: string; data: ActivityPoint[] }
+export type ActivitySeries = { name: string; color: string; data: ActivityPoint[] }
 
 const W = 460, H = 130, PAD_X = 6, PAD_Y = 10
 
@@ -21,16 +21,16 @@ function buildPath(data: ActivityPoint[], max: number) {
 
 export function LearningActivityChart({
   global,
-  porEmpresa,
+  byCompany,
 }: {
   global: ActivityPoint[]
-  porEmpresa: ActivitySeries[]
+  byCompany: ActivitySeries[]
 }) {
   const [showByCompany, setShowByCompany] = useState(false)
 
   const series = useMemo<ActivitySeries[]>(
-    () => (showByCompany ? porEmpresa : [{ nombre: "Global", color: "#3579F5", data: global }]),
-    [showByCompany, porEmpresa, global]
+    () => (showByCompany ? byCompany : [{ name: "Global", color: "#3579F5", data: global }]),
+    [showByCompany, byCompany, global]
   )
 
   const max = Math.max(...series.flatMap((s) => s.data.map((d) => d.value)), 1)
@@ -78,7 +78,7 @@ export function LearningActivityChart({
         <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden style={{ display: "block", width: "100%", height: H, marginTop: 28 }}>
           {series.map((s) => (
             <path
-              key={s.nombre}
+              key={s.name}
               d={buildPath(s.data, max)}
               fill="none"
               stroke={s.color}
@@ -93,11 +93,11 @@ export function LearningActivityChart({
 
         {showByCompany && (
           <Stack direction="row" spacing={2} sx={{ mt: 1.5, flexWrap: "wrap", rowGap: 0.75 }}>
-            {porEmpresa.map((s) => (
-              <Stack key={s.nombre} direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
+            {byCompany.map((s) => (
+              <Stack key={s.name} direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
                 <Box sx={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, bgcolor: s.color }} />
                 <Typography sx={{ fontSize: "0.6875rem", color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))" }}>
-                  {s.nombre}
+                  {s.name}
                 </Typography>
               </Stack>
             ))}

@@ -1,9 +1,9 @@
 import { Box, LinearProgress, Stack, Typography } from "@mui/material"
 import { SectionCard } from "@/components/shared/SectionCard"
 
-interface OcupacionCardProps {
-  ocupacionPct: number
-  empresas: Array<{ id: number; nombre: string; asientos_usados: number; asientos_contratados: number }>
+interface OccupancyCardProps {
+  occupancyPct: number
+  companies: Array<{ id: number; nombre: string; asientos_usados: number; asientos_contratados: number }>
 }
 
 function HorizontalBar({ name, used, total }: { name: string; used: number; total: number }) {
@@ -52,7 +52,7 @@ function HorizontalBar({ name, used, total }: { name: string; used: number; tota
   )
 }
 
-export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
+export function OccupancyCard({ occupancyPct, companies }: OccupancyCardProps) {
   return (
     <SectionCard
       title="Ocupación de cupos"
@@ -61,9 +61,9 @@ export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
         <Box sx={{ textAlign: "right" }}>
           <Typography
             variant="h3"
-            sx={{ fontSize: 36, fontWeight: 700, lineHeight: 1, color: ocupacionPct >= 90 ? "#F472B6" : ocupacionPct >= 70 ? "#FBBF24" : "#1E293B" }}
+            sx={{ fontSize: 36, fontWeight: 700, lineHeight: 1, color: occupancyPct >= 90 ? "#F472B6" : occupancyPct >= 70 ? "#FBBF24" : "#1E293B" }}
           >
-            {ocupacionPct}%
+            {occupancyPct}%
           </Typography>
           <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
             ocupación global
@@ -71,13 +71,13 @@ export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
         </Box>
       }
     >
-      {empresas.length === 0 ? (
+      {companies.length === 0 ? (
         <Typography sx={{ textAlign: "center", fontSize: 13, color: "text.secondary" }}>
           Sin empresas registradas.
         </Typography>
       ) : (
         <Stack spacing={2}>
-          {empresas.slice(0, 6).map((e) => (
+          {companies.slice(0, 6).map((e) => (
             <HorizontalBar key={e.id} name={e.nombre} used={e.asientos_usados} total={e.asientos_contratados} />
           ))}
         </Stack>

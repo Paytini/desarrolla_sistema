@@ -10,7 +10,7 @@ import { LearningActivityChart, type ActivityPoint, type ActivitySeries } from "
 import { QuickActions } from "@/components/superadmin/QuickActions"
 import { SectionCard } from "@/components/shared/SectionCard"
 import KpiCard from "@/components/shared/KpiCard"
-import { OcupacionCard } from "@/components/superadmin/OcupacionCard"
+import { OccupancyCard } from "@/components/superadmin/OccupancyCard"
 import { RenewalsTable } from "@/components/superadmin/RenewalsTable"
 
 const DAY_MS = 1000 * 60 * 60 * 24
@@ -138,7 +138,7 @@ export default async function SuperadminDashboardPage() {
 
   const renewals = companies
     .filter((e) => { const exp = e.paquetes[0]?.fecha_vencimiento; return exp && Math.floor((new Date(exp).getTime() - now) / DAY_MS) <= 30 })
-    .map((e) => ({ empresa: e, days: Math.floor((new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) / DAY_MS) }))
+    .map((e) => ({ company: e, days: Math.floor((new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) / DAY_MS) }))
     .sort((a, b) => a.days - b.days)
 
   const allCourses   = companiesWithCourses.flatMap((e) => e.empleados.flatMap((emp) => emp.cursos))
@@ -177,7 +177,7 @@ export default async function SuperadminDashboardPage() {
       })
     })
     return {
-      nombre: e.nombre,
+      name: e.nombre,
       color: COMPANY_LINE_COLORS[i % COMPANY_LINE_COLORS.length],
       data: activityDayKeys.map((day) => ({ day, value: dayCounts.get(day) ?? 0 })),
     }
@@ -191,7 +191,7 @@ export default async function SuperadminDashboardPage() {
   return (
     <Stack spacing={3}>
 
-      <DashboardGreeting nombre={session.user.nombre as string} />
+      <DashboardGreeting name={session.user.nombre as string} />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
         <Box className="kpi-animate" sx={{ display: "flex" }}>
@@ -249,7 +249,7 @@ export default async function SuperadminDashboardPage() {
           </Stack>
         </SectionCard>
 
-        <LearningActivityChart global={globalActivitySeries} porEmpresa={companyActivitySeries} />
+        <LearningActivityChart global={globalActivitySeries} byCompany={companyActivitySeries} />
       </Box>
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 280px" } }}>
@@ -258,7 +258,7 @@ export default async function SuperadminDashboardPage() {
       </Box>
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 300px" } }}>
-        <OcupacionCard ocupacionPct={occupancyPct} empresas={companies} />
+        <OccupancyCard occupancyPct={occupancyPct} companies={companies} />
         <RenewalsTable renewals={renewals} />
       </Box>
     </Stack>

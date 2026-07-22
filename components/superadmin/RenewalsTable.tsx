@@ -7,7 +7,7 @@ import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
 import { SectionCard } from "@/components/shared/SectionCard"
 
 type Renewal = {
-  empresa: {
+  company: {
     id: number
     nombre: string
     paquetes: Array<{
@@ -109,9 +109,9 @@ export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
             </Box>
           </Stack>
           <Stack divider={<Divider sx={{ borderColor: "#f8fafc" }} />}>
-            {sorted.map(({ empresa, days }) => (
+            {sorted.map(({ company, days }) => (
               <Stack
-                key={empresa.id}
+                key={company.id}
                 direction="row"
                 sx={{ alignItems: "center", justifyContent: "space-between", px: 2.5, py: 1.5, "&:hover": { bgcolor: "action.hover" } }}
               >
@@ -119,12 +119,12 @@ export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
                   <Typography
                     sx={{ fontSize: 13, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                   >
-                    {empresa.nombre}
+                    {company.nombre}
                   </Typography>
                   <Typography
                     sx={{ fontSize: 11, color: "text.disabled", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                   >
-                    {empresa.paquetes[0]?.paquete.nombre ?? "Sin paquete"}
+                    {company.paquetes[0]?.paquete.nombre ?? "Sin paquete"}
                   </Typography>
                 </Box>
                 <DayChip days={days} />
