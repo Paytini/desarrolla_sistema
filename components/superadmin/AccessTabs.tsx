@@ -111,15 +111,15 @@ function RowIdentity({ name, email, avatarLabel }: { name: string; email: string
   )
 }
 
-function CuposRing({ usados, contratados }: { usados: number | null; contratados: number | null }) {
-  if (!contratados || contratados <= 0) {
+function SeatsRing({ used, total }: { used: number | null; total: number | null }) {
+  if (!total || total <= 0) {
     return (
       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
         —
       </Typography>
     )
   }
-  const pct = Math.min(100, Math.round(((usados ?? 0) / contratados) * 100))
+  const pct = Math.min(100, Math.round(((used ?? 0) / total) * 100))
   return (
     <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
       <Box sx={{ position: "relative", width: 32, height: 32 }}>
@@ -139,7 +139,7 @@ function CuposRing({ usados, contratados }: { usados: number | null; contratados
         />
       </Box>
       <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
-        {usados}/{contratados}
+        {used}/{total}
       </Typography>
     </Stack>
   )
@@ -178,9 +178,9 @@ type AccessTabsProps = {
 }
 
 export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
-  const [tab, setTab]         = useState<"rh" | "empleados">("rh")
+  const [tab, setTab]         = useState<"rh" | "employees">("rh")
   const [rhSearch, setRhSearch]   = useState("")
-  const [empSearch, setEmpSearch] = useState("")
+  const [employeeSearch, setEmployeeSearch] = useState("")
 
   const filteredRh = rhSearch.trim()
     ? rhUsers.filter((u) => {
@@ -193,9 +193,9 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
       })
     : rhUsers
 
-  const filteredEmp = empSearch.trim()
+  const filteredEmployees = employeeSearch.trim()
     ? employees.filter((e) => {
-        const q = empSearch.toLowerCase()
+        const q = employeeSearch.toLowerCase()
         return (
           e.nombre.toLowerCase().includes(q) ||
           e.apellido.toLowerCase().includes(q) ||
@@ -207,9 +207,9 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
 
   return (
     <Paper elevation={0} sx={{ borderRadius: '8px', backgroundColor: '#FFFFFF' }}>
-      <Tabs value={tab} onChange={(_, value: "rh" | "empleados") => setTab(value)} sx={{ px: 2.5, pt: 1, borderBottom: '1px solid #E5E7EB' }}>
+      <Tabs value={tab} onChange={(_, value: "rh" | "employees") => setTab(value)} sx={{ px: 2.5, pt: 1, borderBottom: '1px solid #E5E7EB' }}>
         <Tab value="rh" label={`Usuarios RH (${rhUsers.length})`} />
-        <Tab value="empleados" label={`Empleados (${employees.length})`} />
+        <Tab value="employees" label={`Empleados (${employees.length})`} />
       </Tabs>
 
       {tab === "rh" && (
@@ -261,7 +261,7 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
                       </Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <CuposRing usados={user.cuposUsados} contratados={user.cuposContratados} />
+                      <SeatsRing used={user.cuposUsados} total={user.cuposContratados} />
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
@@ -293,7 +293,7 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
         </Stack>
       )}
 
-      {tab === "empleados" && (
+      {tab === "employees" && (
         <Stack spacing={2} sx={{ p: 2.5 }}>
           <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
             <SectionHeader
@@ -301,16 +301,16 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
               description="Elimina accesos cuando sea necesario liberar una cuenta."
             />
             <SearchInput
-              value={empSearch}
-              onChange={setEmpSearch}
+              value={employeeSearch}
+              onChange={setEmployeeSearch}
               placeholder="Buscar por nombre, email o empresa…"
               width={280}
             />
           </Box>
           {employees.length === 0 ? (
             <EmptyState icon={UserX} label="Aún no hay empleados registrados." />
-          ) : filteredEmp.length === 0 ? (
-            <EmptyState icon={UserX} label={`Sin resultados para "${empSearch}".`} />
+          ) : filteredEmployees.length === 0 ? (
+            <EmptyState icon={UserX} label={`Sin resultados para "${employeeSearch}".`} />
           ) : (
             <Table>
               <TableHead>
@@ -326,43 +326,43 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredEmp.map((emp) => (
-                  <TableRow key={emp.id} hover>
+                {filteredEmployees.map((employee) => (
+                  <TableRow key={employee.id} hover>
                     <TableCell sx={cellSx}>
                       <RowIdentity
-                        name={`${emp.nombre} ${emp.apellido}`}
-                        email={emp.email}
-                        avatarLabel={`${emp.nombre} ${emp.apellido}`}
+                        name={`${employee.nombre} ${employee.apellido}`}
+                        email={employee.email}
+                        avatarLabel={`${employee.nombre} ${employee.apellido}`}
                       />
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 13 }}>{emp.empresaNombre}</Typography>
+                      <Typography sx={{ fontSize: 13 }}>{employee.empresaNombre}</Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <StatusBadge active={emp.activo} activeLabel="Activo" inactiveLabel="Suspendido" />
+                      <StatusBadge active={employee.activo} activeLabel="Activo" inactiveLabel="Suspendido" />
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      {emp.portalActivo === null ? (
+                      {employee.portalActivo === null ? (
                         <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
                           Sin cuenta
                         </Typography>
                       ) : (
-                        <StatusBadge active={emp.portalActivo} activeLabel="Activo" inactiveLabel="Suspendido" />
+                        <StatusBadge active={employee.portalActivo} activeLabel="Activo" inactiveLabel="Suspendido" />
                       )}
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary", fontFamily: "monospace" }}>
-                        {emp.wpUserId ?? "—"}
+                        {employee.wpUserId ?? "—"}
                       </Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {emp.portalUltimoAcceso}
+                        {employee.portalUltimoAcceso}
                       </Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {emp.altaFecha}
+                        {employee.altaFecha}
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ ...cellSx, textAlign: "right" }}>
@@ -371,11 +371,11 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
                         tone="outline-destructive"
                         icon={<Trash2 size={13} />}
                         label="Eliminar"
-                        title={`¿Eliminar a ${emp.nombre} ${emp.apellido}?`}
+                        title={`¿Eliminar a ${employee.nombre} ${employee.apellido}?`}
                         description="Esta acción eliminará al empleado del portal y también intentará remover su usuario en WordPress/Tutor LMS."
                         confirmLabel="Sí, eliminar"
                         action={deleteEmployeeAsSuperAdminAction}
-                        hiddenFields={{ empleado_id: emp.id }}
+                        hiddenFields={{ empleado_id: employee.id }}
                       />
                     </TableCell>
                   </TableRow>
