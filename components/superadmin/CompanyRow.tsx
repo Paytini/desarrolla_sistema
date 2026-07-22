@@ -14,11 +14,11 @@ import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButt
 import type { getSuperadminEmpresasSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 
-type Empresa = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["empresas"][number]
+type Company = Awaited<ReturnType<typeof getSuperadminEmpresasSnapshot>>["empresas"][number]
 
-export function CompanyRow({ empresa }: { empresa: Empresa }) {
-  const paquete = empresa.paquetes[0]?.paquete?.nombre ?? "—"
-  const activos = empresa.empleados.filter((e) => e.activo).length
+export function CompanyRow({ empresa }: { empresa: Company }) {
+  const packageName = empresa.paquetes[0]?.paquete?.nombre ?? "—"
+  const activeEmployeesCount = empresa.empleados.filter((e) => e.activo).length
 
   return (
     <TableRow
@@ -65,7 +65,7 @@ export function CompanyRow({ empresa }: { empresa: Empresa }) {
 
       <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", md: "table-cell" } }}>
         <Chip
-          label={paquete}
+          label={packageName}
           size="small"
           sx={{
             height: 20,
@@ -79,9 +79,9 @@ export function CompanyRow({ empresa }: { empresa: Empresa }) {
 
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <SeatDonut used={activos} total={empresa.asientos_contratados} size={48} />
+          <SeatDonut used={activeEmployeesCount} total={empresa.asientos_contratados} size={48} />
           <Typography sx={{ fontSize: 12, fontWeight: 500, color: "text.primary" }}>
-            {activos}
+            {activeEmployeesCount}
             <Box component="span" sx={{ color: "text.secondary" }}>
               /{empresa.asientos_contratados}
             </Box>
@@ -133,9 +133,9 @@ export function CompanyRow({ empresa }: { empresa: Empresa }) {
             Ver
           </Button>
           <SuspendCompanyButton
-            empresaId={empresa.id}
-            activo={empresa.activo}
-            nombre={empresa.nombre}
+            companyId={empresa.id}
+            active={empresa.activo}
+            name={empresa.nombre}
           />
         </Box>
       </TableCell>
