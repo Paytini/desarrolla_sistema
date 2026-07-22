@@ -6,7 +6,7 @@ import { getSuperadminAccessSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
-import { AccessTabs, type EmployeeAccessRow, type RhAccessRow } from "@/components/superadmin/AccessTabs"
+import { AccessTabs, type EmployeeAccessRow, type HrAccessRow } from "@/components/superadmin/AccessTabs"
 import { PageHeader } from "@/components/shared/PageHeader"
 
 const successMessages: Record<string, string> = {
@@ -35,31 +35,31 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
 
   const employeeUserByEmail = new Map(employeeUsers.map((u) => [u.email.toLowerCase(), u]))
 
-  const rhRows: RhAccessRow[] = rhUsers.map((user) => ({
+  const rhRows: HrAccessRow[] = rhUsers.map((user) => ({
     id: user.id,
-    nombre: user.nombre,
+    name: user.nombre,
     email: user.email,
-    activo: user.activo,
-    empresaNombre: user.empresa?.nombre ?? "—",
-    ultimoAcceso: formatDateTime(user.ultimo_acceso),
-    altaFecha: formatDate(user.created_at),
-    cuposUsados: user.empresa?.asientos_usados ?? null,
-    cuposContratados: user.empresa?.asientos_contratados ?? null,
+    active: user.activo,
+    companyName: user.empresa?.nombre ?? "—",
+    lastAccess: formatDateTime(user.ultimo_acceso),
+    createdAt: formatDate(user.created_at),
+    usedSeats: user.empresa?.asientos_usados ?? null,
+    contractedSeats: user.empresa?.asientos_contratados ?? null,
   }))
 
   const employeeRows: EmployeeAccessRow[] = employees.map((employee) => {
     const portalUser = employeeUserByEmail.get(employee.email.toLowerCase())
     return {
       id: employee.id,
-      nombre: employee.nombre,
-      apellido: employee.apellido,
+      name: employee.nombre,
+      lastName: employee.apellido,
       email: employee.email,
-      activo: employee.activo,
-      empresaNombre: employee.empresa.nombre,
+      active: employee.activo,
+      companyName: employee.empresa.nombre,
       wpUserId: employee.wp_user_id,
-      altaFecha: formatDate(employee.created_at),
-      portalActivo: portalUser?.activo ?? null,
-      portalUltimoAcceso: formatDateTime(portalUser?.ultimo_acceso),
+      createdAt: formatDate(employee.created_at),
+      portalActive: portalUser?.activo ?? null,
+      portalLastAccess: formatDateTime(portalUser?.ultimo_acceso),
     }
   })
 

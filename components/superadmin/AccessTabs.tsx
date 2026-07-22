@@ -24,29 +24,29 @@ import { SearchInput } from "@/components/shared/SearchInput"
 import { getInitials } from "@/components/layout/nav-config"
 import { deleteEmployeeAsSuperAdminAction, toggleRhUserStatusAction } from "@/app/(portal)/superadmin/access/actions"
 
-export type RhAccessRow = {
+export type HrAccessRow = {
   id: number
-  nombre: string
+  name: string
   email: string
-  activo: boolean
-  empresaNombre: string
-  ultimoAcceso: string
-  altaFecha: string
-  cuposUsados: number | null
-  cuposContratados: number | null
+  active: boolean
+  companyName: string
+  lastAccess: string
+  createdAt: string
+  usedSeats: number | null
+  contractedSeats: number | null
 }
 
 export type EmployeeAccessRow = {
   id: number
-  nombre: string
-  apellido: string
+  name: string
+  lastName: string
   email: string
-  activo: boolean
-  empresaNombre: string
+  active: boolean
+  companyName: string
   wpUserId: number | null
-  altaFecha: string
-  portalActivo: boolean | null
-  portalUltimoAcceso: string
+  createdAt: string
+  portalActive: boolean | null
+  portalLastAccess: string
 }
 
 const headerCellSx = {
@@ -173,7 +173,7 @@ function EmptyState({ icon: Icon, label }: { icon: LucideIcon; label: string }) 
 }
 
 type AccessTabsProps = {
-  rhUsers: RhAccessRow[]
+  rhUsers: HrAccessRow[]
   employees: EmployeeAccessRow[]
 }
 
@@ -186,9 +186,9 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
     ? rhUsers.filter((u) => {
         const q = rhSearch.toLowerCase()
         return (
-          u.nombre.toLowerCase().includes(q) ||
+          u.name.toLowerCase().includes(q) ||
           u.email.toLowerCase().includes(q) ||
-          u.empresaNombre.toLowerCase().includes(q)
+          u.companyName.toLowerCase().includes(q)
         )
       })
     : rhUsers
@@ -197,10 +197,10 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
     ? employees.filter((e) => {
         const q = employeeSearch.toLowerCase()
         return (
-          e.nombre.toLowerCase().includes(q) ||
-          e.apellido.toLowerCase().includes(q) ||
+          e.name.toLowerCase().includes(q) ||
+          e.lastName.toLowerCase().includes(q) ||
           e.email.toLowerCase().includes(q) ||
-          e.empresaNombre.toLowerCase().includes(q)
+          e.companyName.toLowerCase().includes(q)
         )
       })
     : employees
@@ -247,40 +247,40 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
                 {filteredRh.map((user) => (
                   <TableRow key={user.id} hover>
                     <TableCell sx={cellSx}>
-                      <RowIdentity name={user.nombre} email={user.email} avatarLabel={user.nombre} />
+                      <RowIdentity name={user.name} email={user.email} avatarLabel={user.name} />
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 13 }}>{user.empresaNombre}</Typography>
+                      <Typography sx={{ fontSize: 13 }}>{user.companyName}</Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <StatusBadge active={user.activo} activeLabel="Activo" inactiveLabel="Suspendido" />
+                      <StatusBadge active={user.active} activeLabel="Activo" inactiveLabel="Suspendido" />
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {user.ultimoAcceso}
+                        {user.lastAccess}
                       </Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <SeatsRing used={user.cuposUsados} total={user.cuposContratados} />
+                      <SeatsRing used={user.usedSeats} total={user.contractedSeats} />
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {user.altaFecha}
+                        {user.createdAt}
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ ...cellSx, textAlign: "right" }}>
                       <ConfirmIconButton
                         showLabel
-                        tone={user.activo ? "outline" : "brand"}
-                        icon={user.activo ? <Pause size={13} /> : <Play size={13} />}
-                        label={user.activo ? "Suspender" : "Reactivar"}
-                        title={user.activo ? `¿Suspender a ${user.nombre}?` : `¿Reactivar a ${user.nombre}?`}
+                        tone={user.active ? "outline" : "brand"}
+                        icon={user.active ? <Pause size={13} /> : <Play size={13} />}
+                        label={user.active ? "Suspender" : "Reactivar"}
+                        title={user.active ? `¿Suspender a ${user.name}?` : `¿Reactivar a ${user.name}?`}
                         description={
-                          user.activo
+                          user.active
                             ? "El usuario perderá acceso al portal de inmediato."
                             : "El usuario recuperará acceso al portal de inmediato."
                         }
-                        confirmLabel={user.activo ? "Sí, suspender" : "Sí, reactivar"}
+                        confirmLabel={user.active ? "Sí, suspender" : "Sí, reactivar"}
                         action={toggleRhUserStatusAction}
                         hiddenFields={{ user_id: user.id }}
                       />
@@ -330,24 +330,24 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
                   <TableRow key={employee.id} hover>
                     <TableCell sx={cellSx}>
                       <RowIdentity
-                        name={`${employee.nombre} ${employee.apellido}`}
+                        name={`${employee.name} ${employee.lastName}`}
                         email={employee.email}
-                        avatarLabel={`${employee.nombre} ${employee.apellido}`}
+                        avatarLabel={`${employee.name} ${employee.lastName}`}
                       />
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 13 }}>{employee.empresaNombre}</Typography>
+                      <Typography sx={{ fontSize: 13 }}>{employee.companyName}</Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <StatusBadge active={employee.activo} activeLabel="Activo" inactiveLabel="Suspendido" />
+                      <StatusBadge active={employee.active} activeLabel="Activo" inactiveLabel="Suspendido" />
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      {employee.portalActivo === null ? (
+                      {employee.portalActive === null ? (
                         <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
                           Sin cuenta
                         </Typography>
                       ) : (
-                        <StatusBadge active={employee.portalActivo} activeLabel="Activo" inactiveLabel="Suspendido" />
+                        <StatusBadge active={employee.portalActive} activeLabel="Activo" inactiveLabel="Suspendido" />
                       )}
                     </TableCell>
                     <TableCell sx={cellSx}>
@@ -357,12 +357,12 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {employee.portalUltimoAcceso}
+                        {employee.portalLastAccess}
                       </Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {employee.altaFecha}
+                        {employee.createdAt}
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ ...cellSx, textAlign: "right" }}>
@@ -371,7 +371,7 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
                         tone="outline-destructive"
                         icon={<Trash2 size={13} />}
                         label="Eliminar"
-                        title={`¿Eliminar a ${employee.nombre} ${employee.apellido}?`}
+                        title={`¿Eliminar a ${employee.name} ${employee.lastName}?`}
                         description="Esta acción eliminará al empleado del portal y también intentará remover su usuario en WordPress/Tutor LMS."
                         confirmLabel="Sí, eliminar"
                         action={deleteEmployeeAsSuperAdminAction}
