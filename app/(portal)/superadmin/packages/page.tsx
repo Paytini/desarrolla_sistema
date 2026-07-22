@@ -97,35 +97,35 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
 
   const { paquetes: packages, empresas: companies, dc3MetadataByCourseId } = await getSuperadminPackagesSnapshot()
 
-  const packagesWithStats = packages.map((paquete) => {
-    const dc3Complete = paquete.cursos.filter((c) => {
+  const packagesWithStats = packages.map((pkg) => {
+    const dc3Complete = pkg.cursos.filter((c) => {
       const meta = dc3MetadataByCourseId[String(c.wp_curso_id)] as Dc3MetadataView | undefined
       return getDc3MissingFields(meta).length === 0
     }).length
-    const dc3Total         = paquete.cursos.length
-    const dc3AllOk          = dc3Total > 0 && dc3Complete === dc3Total
-    const empresasNombres   = paquete.empresas.map((e) => e.empresa.nombre)
-    return { paquete, dc3Complete, dc3Total, dc3AllOk, empresasNombres }
+    const dc3Total    = pkg.cursos.length
+    const dc3AllOk     = dc3Total > 0 && dc3Complete === dc3Total
+    const companyNames = pkg.empresas.map((e) => e.empresa.nombre)
+    return { pkg, dc3Complete, dc3Total, dc3AllOk, companyNames }
   })
 
-  const filteredPackages = packagesWithStats.filter(({ paquete, dc3AllOk, dc3Total, empresasNombres }) => {
-    const matchQ = q ? paquete.nombre.toLowerCase().includes(q) : true
+  const filteredPackages = packagesWithStats.filter(({ pkg, dc3AllOk, dc3Total, companyNames }) => {
+    const matchQ = q ? pkg.nombre.toLowerCase().includes(q) : true
     const matchDc3 =
       dc3Filter === "completo"   ? dc3AllOk :
       dc3Filter === "incompleto" ? (dc3Total > 0 && !dc3AllOk) :
       dc3Filter === "sin_cursos" ? dc3Total === 0 :
       true
     const matchAssigned =
-      assignedFilter === "asignado"    ? empresasNombres.length > 0 :
-      assignedFilter === "sin_asignar" ? empresasNombres.length === 0 :
+      assignedFilter === "asignado"    ? companyNames.length > 0 :
+      assignedFilter === "sin_asignar" ? companyNames.length === 0 :
       true
     return matchQ && matchDc3 && matchAssigned
   })
 
   const sortedPackages = [...filteredPackages].sort((a, b) => {
-    if (sort === "nombre")   return a.paquete.nombre.localeCompare(b.paquete.nombre)
-    if (sort === "empresas") return b.empresasNombres.length - a.empresasNombres.length
-    return new Date(b.paquete.created_at).getTime() - new Date(a.paquete.created_at).getTime()
+    if (sort === "nombre")   return a.pkg.nombre.localeCompare(b.pkg.nombre)
+    if (sort === "empresas") return b.companyNames.length - a.companyNames.length
+    return new Date(b.pkg.created_at).getTime() - new Date(a.pkg.created_at).getTime()
   })
 
   const totalPages     = Math.max(1, Math.ceil(sortedPackages.length / PAGE_SIZE))
@@ -255,14 +255,14 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                 </TableRow>
               </TableHead>
               <TableBody>
-                {pagedPackages.map(({ paquete, dc3Complete, dc3Total, dc3AllOk, empresasNombres }) => (
+                {pagedPackages.map(({ pkg, dc3Complete, dc3Total, dc3AllOk, companyNames }) => (
                   <PackageRow
-                    key={paquete.id}
-                    paquete={paquete}
+                    key={pkg.id}
+                    pkg={pkg}
                     dc3Complete={dc3Complete}
                     dc3Total={dc3Total}
                     dc3AllOk={dc3AllOk}
-                    empresasNombres={empresasNombres}
+                    companyNames={companyNames}
                     dc3MetadataByCourseId={dc3MetadataByCourseId}
                   />
                 ))}

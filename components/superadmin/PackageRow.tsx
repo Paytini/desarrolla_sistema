@@ -32,18 +32,18 @@ export type Dc3MetadataByCourseId = Awaited<ReturnType<typeof getSuperadminPacka
 const TD_SX = { borderBottom: "1px solid", borderColor: "divider" }
 
 export function PackageRow({
-  paquete,
+  pkg,
   dc3Complete,
   dc3Total,
   dc3AllOk,
-  empresasNombres,
+  companyNames,
   dc3MetadataByCourseId,
 }: {
-  paquete: Package
+  pkg: Package
   dc3Complete: number
   dc3Total: number
   dc3AllOk: boolean
-  empresasNombres: string[]
+  companyNames: string[]
   dc3MetadataByCourseId: Dc3MetadataByCourseId
 }) {
   const [open, setOpen] = useState(false)
@@ -61,9 +61,9 @@ export function PackageRow({
         </TableCell>
         <TableCell sx={TD_SX}>
           <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary" }}>
-            {paquete.nombre}
+            {pkg.nombre}
           </Typography>
-          {paquete.descripcion && (
+          {pkg.descripcion && (
             <Typography
               sx={{
                 mt: 0.25,
@@ -75,7 +75,7 @@ export function PackageRow({
                 maxWidth: 360,
               }}
             >
-              {paquete.descripcion}
+              {pkg.descripcion}
             </Typography>
           )}
         </TableCell>
@@ -95,12 +95,12 @@ export function PackageRow({
         <TableCell sx={{ ...TD_SX, display: { xs: "none", md: "table-cell" } }}>
           <Chip
             icon={<Building2 size={11} />}
-            label={empresasNombres.length > 0 ? empresasNombres.join(", ") : "Sin asignar"}
+            label={companyNames.length > 0 ? companyNames.join(", ") : "Sin asignar"}
             size="small"
             sx={{
               height: 22, fontSize: 11, maxWidth: 220,
-              bgcolor: empresasNombres.length > 0 ? (theme) => alpha(theme.palette.primary.main, 0.08) : "action.hover",
-              color: empresasNombres.length > 0 ? "primary.main" : "text.disabled",
+              bgcolor: companyNames.length > 0 ? (theme) => alpha(theme.palette.primary.main, 0.08) : "action.hover",
+              color: companyNames.length > 0 ? "primary.main" : "text.disabled",
               "& .MuiChip-icon": { color: "inherit", ml: 0.75 },
               "& .MuiChip-label": { px: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
             }}
@@ -126,15 +126,15 @@ export function PackageRow({
         </TableCell>
         <TableCell sx={{ ...TD_SX, display: { xs: "none", lg: "table-cell" } }}>
           <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-            {formatDate(paquete.created_at)}
+            {formatDate(pkg.created_at)}
           </Typography>
         </TableCell>
         <TableCell sx={{ ...TD_SX, textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
           <DeletePackageButton
             action={deletePackageAction}
-            packageId={paquete.id}
-            packageName={paquete.nombre}
-            assignedCompaniesCount={paquete.empresas.length}
+            packageId={pkg.id}
+            packageName={pkg.nombre}
+            assignedCompaniesCount={pkg.empresas.length}
           />
         </TableCell>
       </TableRow>
@@ -143,7 +143,7 @@ export function PackageRow({
         <TableCell sx={{ p: 0, borderBottom: open ? "1px solid" : "none", borderColor: "divider" }} colSpan={7}>
           <Collapse in={open} timeout={160} unmountOnExit>
             <Box sx={{ bgcolor: "action.hover", px: 2, py: 1.5 }}>
-              {paquete.notas_operativas && (
+              {pkg.notas_operativas && (
                 <Box
                   sx={{
                     mb: 1.5,
@@ -157,7 +157,7 @@ export function PackageRow({
                     lineHeight: 1.5,
                   }}
                 >
-                  {paquete.notas_operativas}
+                  {pkg.notas_operativas}
                 </Box>
               )}
 
@@ -165,13 +165,13 @@ export function PackageRow({
                 Cursos y estado DC-3
               </Typography>
 
-              {paquete.cursos.length === 0 ? (
+              {pkg.cursos.length === 0 ? (
                 <Typography sx={{ fontSize: 12, color: "text.secondary", py: 1 }}>
                   Este paquete no tiene cursos asignados.
                 </Typography>
               ) : (
                 <Box sx={{ borderRadius: "10px", border: "1px solid", borderColor: "divider", bgcolor: "background.paper", overflow: "hidden" }}>
-                  {paquete.cursos.map((course, index) => {
+                  {pkg.cursos.map((course, index) => {
                     const dc3Metadata  = dc3MetadataByCourseId[String(course.wp_curso_id)] as Dc3MetadataView | undefined
                     const missingCount = getDc3MissingFields(dc3Metadata).length
                     const isDc3Ready   = missingCount === 0
@@ -185,7 +185,7 @@ export function PackageRow({
                           gap: 1.5,
                           px: 1.75,
                           py: 1,
-                          borderBottom: index < paquete.cursos.length - 1 ? "1px solid" : "none",
+                          borderBottom: index < pkg.cursos.length - 1 ? "1px solid" : "none",
                           borderColor: "divider",
                         }}
                       >
@@ -213,8 +213,8 @@ export function PackageRow({
               )}
 
               <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 1.25 }}>
-                {paquete.modo_entrega === "PRIVATE_BUNDLE_REFERENCE" ? "Bundle privado" : "Matrícula directa"}
-                {paquete.wp_bundle_id ? ` · WP #${paquete.wp_bundle_id}` : ""}
+                {pkg.modo_entrega === "PRIVATE_BUNDLE_REFERENCE" ? "Bundle privado" : "Matrícula directa"}
+                {pkg.wp_bundle_id ? ` · WP #${pkg.wp_bundle_id}` : ""}
               </Typography>
             </Box>
           </Collapse>
