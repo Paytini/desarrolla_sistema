@@ -11,10 +11,10 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type EmpresaResult  = { id: number; nombre: string; activo: boolean }
-type EmpleadoResult = { id: number; nombre: string; apellido: string; email: string; empresa: { nombre: string } }
-type PaqueteResult  = { id: number; nombre: string; activo: boolean }
-type SearchResults  = { empresas: EmpresaResult[]; empleados: EmpleadoResult[]; paquetes: PaqueteResult[] }
+type CompanyResult  = { id: number; nombre: string; activo: boolean }
+type EmployeeResult = { id: number; nombre: string; apellido: string; email: string; empresa: { nombre: string } }
+type PackageResult  = { id: number; nombre: string; activo: boolean }
+type SearchResults  = { empresas: CompanyResult[]; empleados: EmployeeResult[]; paquetes: PackageResult[] }
 
 export default function SuperadminSearchBar() {
   return (

@@ -10,9 +10,9 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type EmpleadoResult = { id: number; nombre: string; apellido: string; email: string; departamento: string | null }
-type CursoResult    = { wp_curso_id: number; nombre_curso: string }
-type SearchResults  = { empleados: EmpleadoResult[]; cursos: CursoResult[] }
+type EmployeeResult = { id: number; nombre: string; apellido: string; email: string; departamento: string | null }
+type CourseResult   = { wp_curso_id: number; nombre_curso: string }
+type SearchResults  = { empleados: EmployeeResult[]; cursos: CourseResult[] }
 
 export default function HrSearchBar() {
   return (

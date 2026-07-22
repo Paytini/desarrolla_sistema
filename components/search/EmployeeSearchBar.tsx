@@ -11,9 +11,9 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type CursoResult      = { id: number; nombre_curso: string; progreso_pct: number; completado: boolean }
-type ConstanciaResult = { id: number; nombre_curso: string; folio: string }
-type SearchResults    = { cursos: CursoResult[]; constancias: ConstanciaResult[] }
+type CourseResult      = { id: number; nombre_curso: string; progreso_pct: number; completado: boolean }
+type CertificateResult = { id: number; nombre_curso: string; folio: string }
+type SearchResults     = { cursos: CourseResult[]; constancias: CertificateResult[] }
 
 export default function EmployeeSearchBar() {
   return (
@@ -61,7 +61,7 @@ export default function EmployeeSearchBar() {
                         {c.nombre_curso}
                       </Typography>
                     </Box>
-                    <ProgressChip curso={c} />
+                    <ProgressChip course={c} />
                   </ResultRow>
                 ))}
               </Box>
@@ -181,8 +181,8 @@ function ResultRow({
   )
 }
 
-function ProgressChip({ curso }: { curso: CursoResult }) {
-  if (curso.completado) {
+function ProgressChip({ course }: { course: CourseResult }) {
+  if (course.completado) {
     return (
       <Chip
         label="Completado"
@@ -200,10 +200,10 @@ function ProgressChip({ curso }: { curso: CursoResult }) {
       />
     )
   }
-  if (curso.progreso_pct > 0) {
+  if (course.progreso_pct > 0) {
     return (
       <Chip
-        label={`${curso.progreso_pct}%`}
+        label={`${course.progreso_pct}%`}
         size="small"
         sx={{
           height: 20,
