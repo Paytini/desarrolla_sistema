@@ -6,8 +6,8 @@ interface OcupacionCardProps {
   empresas: Array<{ id: number; nombre: string; asientos_usados: number; asientos_contratados: number }>
 }
 
-function HorizontalBar({ nombre, usados, contratados }: { nombre: string; usados: number; contratados: number }) {
-  const pct = contratados ? Math.round((usados / contratados) * 100) : 0
+function HorizontalBar({ name, used, total }: { name: string; used: number; total: number }) {
+  const pct = total ? Math.round((used / total) * 100) : 0
   const barColor =
     pct >= 90 ? "#F472B6" :
     pct >= 70 ? "#FBBF24" :
@@ -27,11 +27,11 @@ function HorizontalBar({ nombre, usados, contratados }: { nombre: string; usados
             whiteSpace: "nowrap",
           }}
         >
-          {nombre}
+          {name}
         </Typography>
         <Stack direction="row" sx={{ alignItems: "center", gap: 1, flexShrink: 0 }}>
           <Typography sx={{ fontSize: 11, fontVariantNumeric: "tabular-nums", color: "text.disabled" }}>
-            {usados}/{contratados}
+            {used}/{total}
           </Typography>
           <Typography sx={{ minWidth: 32, textAlign: "right", fontSize: 11, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: barColor }}>
             {pct}%
@@ -78,7 +78,7 @@ export function OcupacionCard({ ocupacionPct, empresas }: OcupacionCardProps) {
       ) : (
         <Stack spacing={2}>
           {empresas.slice(0, 6).map((e) => (
-            <HorizontalBar key={e.id} nombre={e.nombre} usados={e.asientos_usados} contratados={e.asientos_contratados} />
+            <HorizontalBar key={e.id} name={e.nombre} used={e.asientos_usados} total={e.asientos_contratados} />
           ))}
         </Stack>
       )}
