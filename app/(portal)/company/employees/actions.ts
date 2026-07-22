@@ -206,7 +206,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
   if (afterSeatSnapshot) {
     await createSeatHistoryEntry({
       actor: input.actor,
-      empresaId: input.companyId,
+      companyId: input.companyId,
       motivo: "empleado_creado",
       detalle: `Alta de empleado ${input.nombre} ${input.apellido}.`,
       before: beforeSeatSnapshot,
@@ -217,9 +217,9 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
   await createAuditEvent({
     actor: input.actor,
     accion: "EMPLEADO_CREADO",
-    entidadTipo: "EMPLEADO",
-    entidadId: createdEmployee.id,
-    empresaId: input.companyId,
+    entityType: "EMPLEADO",
+    entityId: createdEmployee.id,
+    companyId: input.companyId,
     resumen: `${input.actor.nombre} dio de alta al empleado ${input.nombre} ${input.apellido}.`,
     metadata: {
       email,
@@ -730,7 +730,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
   if (afterSeatSnapshot && created > 0) {
     await createSeatHistoryEntry({
       actor,
-      empresaId: companyId,
+      companyId,
       motivo: "empleados_importados_csv",
       detalle: `Importacion CSV de ${created} empleado(s).`,
       before: beforeSeatSnapshot,
@@ -741,9 +741,9 @@ export async function importEmployeesCsvAction(formData: FormData) {
   await createAuditEvent({
     actor,
     accion: "EMPLEADOS_IMPORTADOS_CSV",
-    entidadTipo: "EMPRESA",
-    entidadId: companyId,
-    empresaId: companyId,
+    entityType: "EMPRESA",
+    entityId: companyId,
+    companyId,
     resumen: `${actor.nombre} ejecuto importacion masiva CSV de empleados.`,
     metadata: {
       creados: created,
@@ -829,7 +829,7 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   if (afterSeatSnapshot) {
     await createSeatHistoryEntry({
       actor,
-      empresaId: companyId,
+      companyId,
       motivo: employee.activo ? "empleado_suspendido" : "empleado_reactivado",
       detalle: `${employee.nombre} ${employee.apellido} (${employee.email})`,
       before: beforeSeatSnapshot,
@@ -840,9 +840,9 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   await createAuditEvent({
     actor,
     accion: employee.activo ? "EMPLEADO_SUSPENDIDO" : "EMPLEADO_REACTIVADO",
-    entidadTipo: "EMPLEADO",
-    entidadId: employee.id,
-    empresaId: companyId,
+    entityType: "EMPLEADO",
+    entityId: employee.id,
+    companyId,
     resumen: `${actor.nombre} ${employee.activo ? "suspendio" : "reactivo"} al empleado ${employee.nombre} ${employee.apellido}.`,
     metadata: {
       email: employee.email,
@@ -907,9 +907,9 @@ export async function triggerCompanyLearningSyncAction() {
   await createAuditEvent({
     actor,
     accion: queued ? "SYNC_EMPRESA_EN_COLA" : "SYNC_EMPRESA_YA_EN_COLA",
-    entidadTipo: "EMPRESA",
-    entidadId: companyId,
-    empresaId: companyId,
+    entityType: "EMPRESA",
+    entityId: companyId,
+    companyId,
     resumen: `${actor.nombre} solicito sincronizacion de aprendizaje para su empresa.`,
   })
 

@@ -106,7 +106,7 @@ export async function createCompanyAction(
   if (seatSnapshot) {
     await createSeatHistoryEntry({
       actor,
-      empresaId: createdResult.companyId,
+      companyId: createdResult.companyId,
       motivo:   "empresa_creada",
       detalle:  "Se inicializaron los cupos al crear la empresa en SuperAdmin.",
       before: { asientos_contratados: 0, asientos_usados: 0, empleados_suspendidos: 0 },
@@ -116,11 +116,11 @@ export async function createCompanyAction(
 
   await createAuditEvent({
     actor,
-    accion:      "EMPRESA_CREADA",
-    entidadTipo: "EMPRESA",
-    entidadId:   createdResult.companyId,
-    empresaId:   createdResult.companyId,
-    resumen:     `Se creo la empresa ${nombre} y su acceso RH inicial.`,
+    accion:    "EMPRESA_CREADA",
+    entityType: "EMPRESA",
+    entityId:  createdResult.companyId,
+    companyId: createdResult.companyId,
+    resumen:   `Se creo la empresa ${nombre} y su acceso RH inicial.`,
     metadata: {
       email_rh:              emailRh,
       asientos_contratados:  contractedSeats,
@@ -131,11 +131,11 @@ export async function createCompanyAction(
   if (createdResult.assignedPackageId) {
     await createAuditEvent({
       actor,
-      accion:      "PAQUETE_ASIGNADO",
-      entidadTipo: "EMPRESA_PAQUETE",
-      entidadId:   createdResult.assignedPackageId,
-      empresaId:   createdResult.companyId,
-      resumen:     `Se asigno paquete inicial a la empresa ${nombre}.`,
+      accion:    "PAQUETE_ASIGNADO",
+      entityType: "EMPRESA_PAQUETE",
+      entityId:  createdResult.assignedPackageId,
+      companyId: createdResult.companyId,
+      resumen:   `Se asigno paquete inicial a la empresa ${nombre}.`,
       metadata: {
         paquete_id:        createdResult.assignedPackageId,
         fecha_vencimiento: expirationDate?.toISOString() ?? null,
@@ -149,7 +149,7 @@ export async function createCompanyAction(
     mensaje:    `${actor.nombre} creó la empresa ${nombre}.`,
     entidadTipo: "EMPRESA",
     entidadId:  createdResult.companyId,
-    excludeUsuarioId: actor.usuarioId,
+    excludeUsuarioId: actor.userId,
   })
 
   revalidatePath("/superadmin/companies")
@@ -185,9 +185,9 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   await createAuditEvent({
     actor,
     accion: company.activo ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
-    entidadTipo: "EMPRESA",
-    entidadId: companyId,
-    empresaId: companyId,
+    entityType: "EMPRESA",
+    entityId: companyId,
+    companyId,
     resumen: `${actor.nombre} ${company.activo ? "suspendio" : "reactivo"} la empresa ${company.nombre}.`,
   })
 
@@ -197,7 +197,7 @@ export async function toggleCompanyStatusAction(formData: FormData) {
     mensaje:    `${actor.nombre} ${company.activo ? "suspendió" : "reactivó"} la empresa ${company.nombre}.`,
     entidadTipo: "EMPRESA",
     entidadId:  companyId,
-    excludeUsuarioId: actor.usuarioId,
+    excludeUsuarioId: actor.userId,
   })
 
   revalidatePath("/superadmin/companies")

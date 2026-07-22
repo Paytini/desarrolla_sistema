@@ -169,8 +169,8 @@ export async function createPackageAction(formData: FormData) {
   await createAuditEvent({
     actor,
     accion: "PAQUETE_CREADO",
-    entidadTipo: "PAQUETE",
-    entidadId: pkg.id,
+    entityType: "PAQUETE",
+    entityId: pkg.id,
     resumen: `${actor.nombre} creo el paquete ${nombre}.`,
     metadata: {
       modo_entrega: modoEntrega || "DIRECT_ENROLLMENT",
@@ -238,8 +238,8 @@ export async function deletePackageAction(formData: FormData) {
   await createAuditEvent({
     actor,
     accion: "PAQUETE_ELIMINADO",
-    entidadTipo: "PAQUETE",
-    entidadId: pkg.id,
+    entityType: "PAQUETE",
+    entityId: pkg.id,
     resumen: `${actor.nombre} elimino el paquete ${pkg.nombre}.`,
     metadata: {
       baja_logica: true,
@@ -303,9 +303,9 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   await createAuditEvent({
     actor,
     accion: "PAQUETE_ASIGNADO",
-    entidadTipo: "EMPRESA_PAQUETE",
-    entidadId: packageId,
-    empresaId: companyId,
+    entityType: "EMPRESA_PAQUETE",
+    entityId: packageId,
+    companyId,
     resumen: `${actor.nombre} asigno ${pkg?.nombre ?? "un paquete"} a ${company?.nombre ?? "una empresa"}.`,
     metadata: {
       empresa_id: companyId,
@@ -339,9 +339,9 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
     await createAuditEvent({
       actor,
       accion: "SYNC_PAQUETE_EMPRESA_ERROR",
-      entidadTipo: "EMPRESA",
-      entidadId: companyId,
-      empresaId: companyId,
+      entityType: "EMPRESA",
+      entityId: companyId,
+      companyId,
       resumen: `${actor.nombre} intento sincronizar paquete y hubo error.`,
       metadata: {
         message: getSyncErrorMessage(error),
@@ -354,9 +354,9 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   await createAuditEvent({
     actor,
     accion: "SYNC_PAQUETE_EMPRESA_OK",
-    entidadTipo: "EMPRESA",
-    entidadId: companyId,
-    empresaId: companyId,
+    entityType: "EMPRESA",
+    entityId: companyId,
+    companyId,
     resumen: `${actor.nombre} sincronizo paquete activo con empleados de la empresa.`,
   })
 

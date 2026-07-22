@@ -29,8 +29,8 @@ export async function toggleRhUserStatusAction(formData: FormData) {
     await createAuditEvent({
       actor,
       accion: user.activo ? "RH_SUSPENDIDO" : "RH_REACTIVADO",
-      entidadTipo: "USUARIO",
-      entidadId: user.id,
+      entityType: "USUARIO",
+      entityId: user.id,
       resumen: `${actor.nombre} ${user.activo ? "suspendio" : "reactivo"} un usuario RH.`,
       metadata: {
         rol: user.rol,

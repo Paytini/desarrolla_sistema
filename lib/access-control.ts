@@ -40,7 +40,7 @@ export async function deleteEmployeeRecord({
   }
 
   const actingUser: AuditActor = actor ?? {
-    usuarioId: null,
+    userId: null,
     nombre: "Sistema",
     email: null,
     rol: source,
@@ -112,7 +112,7 @@ export async function deleteEmployeeRecord({
   if (beforeSeatSnapshot && afterSeatSnapshot) {
     await createSeatHistoryEntry({
       actor: actingUser,
-      empresaId: employee.empresa_id,
+      companyId: employee.empresa_id,
       motivo: "empleado_eliminado",
       detalle: `${employee.nombre} ${employee.apellido} (${employee.email})`,
       before: beforeSeatSnapshot,
@@ -123,9 +123,9 @@ export async function deleteEmployeeRecord({
   await createAuditEvent({
     actor: actingUser,
     accion: "EMPLEADO_ELIMINADO",
-    entidadTipo: "EMPLEADO",
-    entidadId: employee.id,
-    empresaId: employee.empresa_id,
+    entityType: "EMPLEADO",
+    entityId: employee.id,
+    companyId: employee.empresa_id,
     resumen: `${actingUser.nombre} elimino al empleado ${employee.nombre} ${employee.apellido} de ${company?.nombre ?? "la empresa"}.`,
     metadata: {
       email: employee.email,

@@ -46,7 +46,7 @@ export async function triggerGlobalLearningSyncAction() {
   await createAuditEvent({
     actor,
     accion: queued ? "SYNC_GLOBAL_EN_COLA" : "SYNC_GLOBAL_YA_EN_COLA",
-    entidadTipo: "SISTEMA",
+    entityType: "SISTEMA",
     resumen: `${actor.nombre} solicito sincronizacion global de aprendizaje.`,
   })
 
@@ -83,9 +83,9 @@ export async function retryCompanySyncAction(formData: FormData) {
   await createAuditEvent({
     actor,
     accion: packageSyncError ? "SYNC_EMPRESA_REINTENTO_PARCIAL" : "SYNC_EMPRESA_REINTENTO_OK",
-    entidadTipo: "EMPRESA",
-    entidadId: companyId,
-    empresaId: companyId,
+    entityType: "EMPRESA",
+    entityId: companyId,
+    companyId,
     resumen: `${actor.nombre} ejecuto reintento de sincronizacion para la empresa ${companyId}.`,
     metadata: {
       package_sync_error: packageSyncError,

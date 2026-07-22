@@ -6,7 +6,7 @@ type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue | unde
 type InputJsonValue = string | number | boolean | JsonValue[] | { [key: string]: JsonValue | undefined }
 
 export type AuditActor = {
-  usuarioId: number | null
+  userId: number | null
   nombre: string
   email: string | null
   rol: string
@@ -19,7 +19,7 @@ export type CompanySeatSnapshot = {
 }
 
 const SYSTEM_ACTOR: AuditActor = {
-  usuarioId: null,
+  userId: null,
   nombre: "Sistema",
   email: null,
   rol: "SYSTEM",
@@ -38,7 +38,7 @@ export function getAuditActorFromSession(session: Session | null | undefined): A
   }
 
   return {
-    usuarioId: parseSessionUserId(session.user.id),
+    userId: parseSessionUserId(session.user.id),
     nombre: session.user.nombre || session.user.email || "Usuario",
     email: session.user.email ?? null,
     rol: session.user.rol || "UNKNOWN",
@@ -76,23 +76,23 @@ export async function getCompanySeatSnapshot(companyId: number) {
 export async function createAuditEvent(input: {
   actor: AuditActor
   accion: string
-  entidadTipo: string
-  entidadId?: number | null
-  empresaId?: number | null
+  entityType: string
+  entityId?: number | null
+  companyId?: number | null
   resumen: string
   metadata?: InputJsonValue
 }) {
   try {
     await prisma.auditoriaEvento.create({
       data: {
-        actor_usuario_id: input.actor.usuarioId,
+        actor_usuario_id: input.actor.userId,
         actor_nombre: input.actor.nombre,
         actor_email: input.actor.email,
         actor_rol: input.actor.rol,
         accion: input.accion,
-        entidad_tipo: input.entidadTipo,
-        entidad_id: input.entidadId ?? null,
-        empresa_id: input.empresaId ?? null,
+        entidad_tipo: input.entityType,
+        entidad_id: input.entityId ?? null,
+        empresa_id: input.companyId ?? null,
         resumen: input.resumen,
         metadata: input.metadata,
       },
@@ -100,7 +100,7 @@ export async function createAuditEvent(input: {
   } catch (error) {
     console.error("Audit event logging failed", {
       action: input.accion,
-      entity: input.entidadTipo,
+      entity: input.entityType,
       error: error instanceof Error ? error.message : String(error),
     })
   }
@@ -108,7 +108,7 @@ export async function createAuditEvent(input: {
 
 export async function createSeatHistoryEntry(input: {
   actor: AuditActor
-  empresaId: number
+  companyId: number
   motivo: string
   detalle?: string | null
   before: CompanySeatSnapshot
@@ -117,8 +117,8 @@ export async function createSeatHistoryEntry(input: {
   try {
     await prisma.historialCupo.create({
       data: {
-        empresa_id: input.empresaId,
-        actor_usuario_id: input.actor.usuarioId,
+        empresa_id: input.companyId,
+        actor_usuario_id: input.actor.userId,
         actor_nombre: input.actor.nombre,
         actor_email: input.actor.email,
         actor_rol: input.actor.rol,
@@ -133,7 +133,7 @@ export async function createSeatHistoryEntry(input: {
     })
   } catch (error) {
     console.error("Seat history logging failed", {
-      companyId: input.empresaId,
+      companyId: input.companyId,
       reason: input.motivo,
       error: error instanceof Error ? error.message : String(error),
     })
