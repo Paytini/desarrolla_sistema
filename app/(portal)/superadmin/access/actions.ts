@@ -58,7 +58,7 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   let deletedEmployee: Awaited<ReturnType<typeof deleteEmployeeRecord>> | null = null
   try {
     deletedEmployee = await deleteEmployeeRecord({
-      empleadoId: employeeId,
+      employeeId,
       actor,
       source: "SUPERADMIN",
     })

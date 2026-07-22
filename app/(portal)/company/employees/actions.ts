@@ -870,8 +870,8 @@ export async function deleteEmployeeAction(formData: FormData) {
 
   try {
     await deleteEmployeeRecord({
-      empleadoId: employeeId,
-      empresaId: companyId,
+      employeeId,
+      companyId,
       actor,
       source: "RH",
     })

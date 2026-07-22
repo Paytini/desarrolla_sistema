@@ -45,10 +45,10 @@ export function getAuditActorFromSession(session: Session | null | undefined): A
   }
 }
 
-export async function getCompanySeatSnapshot(empresaId: number) {
-  const [empresa, empleadosSuspendidos] = await Promise.all([
+export async function getCompanySeatSnapshot(companyId: number) {
+  const [company, suspendedEmployees] = await Promise.all([
     prisma.empresa.findUnique({
-      where: { id: empresaId },
+      where: { id: companyId },
       select: {
         asientos_contratados: true,
         asientos_usados: true,
@@ -56,20 +56,20 @@ export async function getCompanySeatSnapshot(empresaId: number) {
     }),
     prisma.empleado.count({
       where: {
-        empresa_id: empresaId,
+        empresa_id: companyId,
         activo: false,
       },
     }),
   ])
 
-  if (!empresa) {
+  if (!company) {
     return null
   }
 
   return {
-    asientos_contratados: empresa.asientos_contratados,
-    asientos_usados: empresa.asientos_usados,
-    empleados_suspendidos: empleadosSuspendidos,
+    asientos_contratados: company.asientos_contratados,
+    asientos_usados: company.asientos_usados,
+    empleados_suspendidos: suspendedEmployees,
   } satisfies CompanySeatSnapshot
 }
 
