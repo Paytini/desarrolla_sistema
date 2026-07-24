@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? ""
   if (q.length < 2) {
-    return NextResponse.json({ empresas: [], empleados: [], paquetes: [] })
+    return NextResponse.json({ companies: [], employees: [], packages: [] })
   }
 
   const [companies, employees, packages] = await Promise.all([
@@ -43,15 +43,15 @@ export async function GET(req: NextRequest) {
     }),
   ])
 
-  const empresas = companies.map((c) => ({ id: c.id, nombre: c.name, activo: c.active }))
-  const empleados = employees.map((e) => ({
+  const companiesResult = companies.map((c) => ({ id: c.id, name: c.name, active: c.active }))
+  const employeesResult = employees.map((e) => ({
     id: e.id,
-    nombre: e.first_name,
-    apellido: e.last_name,
+    first_name: e.first_name,
+    last_name: e.last_name,
     email: e.email,
-    empresa: { nombre: e.company.name },
+    company: { name: e.company.name },
   }))
-  const paquetes = packages.map((p) => ({ id: p.id, nombre: p.name, activo: p.active }))
+  const packagesResult = packages.map((p) => ({ id: p.id, name: p.name, active: p.active }))
 
-  return NextResponse.json({ empresas, empleados, paquetes })
+  return NextResponse.json({ companies: companiesResult, employees: employeesResult, packages: packagesResult })
 }

@@ -10,9 +10,9 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type EmployeeResult = { id: number; nombre: string; apellido: string; email: string; departamento: string | null }
-type CourseResult   = { wp_curso_id: number; nombre_curso: string }
-type SearchResults  = { empleados: EmployeeResult[]; cursos: CourseResult[] }
+type EmployeeResult = { id: number; first_name: string; last_name: string; email: string; department: string | null }
+type CourseResult   = { wp_course_id: number; course_name: string }
+type SearchResults  = { employees: EmployeeResult[]; courses: CourseResult[] }
 
 export default function HrSearchBar() {
   return (
@@ -21,7 +21,7 @@ export default function HrSearchBar() {
       placeholder="Buscar empleados o cursos..."
       triggerLabel="Buscar en el portal"
       renderGroups={(results, query, onClose) => {
-        const hasResults = results.empleados.length > 0 || results.cursos.length > 0
+        const hasResults = results.employees.length > 0 || results.courses.length > 0
 
         if (!hasResults) {
           return (
@@ -38,10 +38,10 @@ export default function HrSearchBar() {
 
         return (
           <Box sx={{ py: 1 }}>
-            {results.empleados.length > 0 && (
+            {results.employees.length > 0 && (
               <Box component="section">
-                <GroupHeader icon={Users} label="Empleados" count={results.empleados.length} />
-                {results.empleados.map((e) => (
+                <GroupHeader icon={Users} label="Empleados" count={results.employees.length} />
+                {results.employees.map((e) => (
                   <ResultRow key={e.id} href="/company/employees" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
@@ -57,14 +57,14 @@ export default function HrSearchBar() {
                           flexShrink: 0,
                         }}
                       >
-                        {e.nombre[0].toUpperCase()}
+                        {e.first_name[0].toUpperCase()}
                       </Avatar>
                       <Box sx={{ minWidth: 0 }}>
                         <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                          {e.nombre} {e.apellido}
+                          {e.first_name} {e.last_name}
                         </Typography>
                         <Typography sx={{ fontSize: 11, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {e.email}{e.departamento ? ` · ${e.departamento}` : ""}
+                          {e.email}{e.department ? ` · ${e.department}` : ""}
                         </Typography>
                       </Box>
                     </Box>
@@ -73,11 +73,11 @@ export default function HrSearchBar() {
               </Box>
             )}
 
-            {results.cursos.length > 0 && (
+            {results.courses.length > 0 && (
               <Box component="section">
-                <GroupHeader icon={BookOpen} label="Cursos del paquete" count={results.cursos.length} />
-                {results.cursos.map((c) => (
-                  <ResultRow key={c.wp_curso_id} href="/company/progress" onClose={onClose}>
+                <GroupHeader icon={BookOpen} label="Cursos del paquete" count={results.courses.length} />
+                {results.courses.map((c) => (
+                  <ResultRow key={c.wp_course_id} href="/company/progress" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"
@@ -92,7 +92,7 @@ export default function HrSearchBar() {
                         <BookOpen size={11} strokeWidth={2} style={{ color: "#3579F5" }} />
                       </Avatar>
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                        {c.nombre_curso}
+                        {c.course_name}
                       </Typography>
                     </Box>
                     <Typography
@@ -103,7 +103,7 @@ export default function HrSearchBar() {
                         flexShrink: 0,
                       }}
                     >
-                      ID {c.wp_curso_id}
+                      ID {c.wp_course_id}
                     </Typography>
                   </ResultRow>
                 ))}

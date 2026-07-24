@@ -10,15 +10,15 @@ export async function GET(req: NextRequest) {
 
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? ""
   if (q.length < 2) {
-    return NextResponse.json({ empleados: [], cursos: [] })
+    return NextResponse.json({ employees: [], courses: [] })
   }
 
-  const empresaId = session.user.empresa_id
+  const companyId = session.user.empresa_id
 
-  const [empleadosResult, cursosResult] = await Promise.all([
+  const [employeesResult, coursesResult] = await Promise.all([
     prisma.employee.findMany({
       where: {
-        company_id: empresaId,
+        company_id: companyId,
         active: true,
         OR: [
           { first_name: { contains: q, mode: "insensitive" } },
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       where: {
         course_name: { contains: q, mode: "insensitive" },
         package: {
-          companies: { some: { company_id: empresaId, active: true } },
+          companies: { some: { company_id: companyId, active: true } },
         },
       },
       select: { wp_course_id: true, course_name: true },
@@ -42,17 +42,17 @@ export async function GET(req: NextRequest) {
     }),
   ])
 
-  const empleados = empleadosResult.map((e) => ({
+  const employees = employeesResult.map((e) => ({
     id: e.id,
-    nombre: e.first_name,
-    apellido: e.last_name,
+    first_name: e.first_name,
+    last_name: e.last_name,
     email: e.email,
-    departamento: e.department,
+    department: e.department,
   }))
-  const cursos = cursosResult.map((c) => ({
-    wp_curso_id: c.wp_course_id,
-    nombre_curso: c.course_name,
+  const courses = coursesResult.map((c) => ({
+    wp_course_id: c.wp_course_id,
+    course_name: c.course_name,
   }))
 
-  return NextResponse.json({ empleados, cursos })
+  return NextResponse.json({ employees, courses })
 }

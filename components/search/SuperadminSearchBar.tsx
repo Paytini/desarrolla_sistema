@@ -11,10 +11,10 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type CompanyResult  = { id: number; nombre: string; activo: boolean }
-type EmployeeResult = { id: number; nombre: string; apellido: string; email: string; empresa: { nombre: string } }
-type PackageResult  = { id: number; nombre: string; activo: boolean }
-type SearchResults  = { empresas: CompanyResult[]; empleados: EmployeeResult[]; paquetes: PackageResult[] }
+type CompanyResult  = { id: number; name: string; active: boolean }
+type EmployeeResult = { id: number; first_name: string; last_name: string; email: string; company: { name: string } }
+type PackageResult  = { id: number; name: string; active: boolean }
+type SearchResults  = { companies: CompanyResult[]; employees: EmployeeResult[]; packages: PackageResult[] }
 
 export default function SuperadminSearchBar() {
   return (
@@ -25,9 +25,9 @@ export default function SuperadminSearchBar() {
       triggerWidth="100%"
       renderGroups={(results, query, onClose) => {
         const hasResults =
-          results.empresas.length > 0 ||
-          results.empleados.length > 0 ||
-          results.paquetes.length > 0
+          results.companies.length > 0 ||
+          results.employees.length > 0 ||
+          results.packages.length > 0
 
         if (!hasResults) {
           return (
@@ -44,44 +44,44 @@ export default function SuperadminSearchBar() {
 
         return (
           <Box sx={{ py: 1 }}>
-            {results.empresas.length > 0 && (
+            {results.companies.length > 0 && (
               <Box component="section">
-                <GroupHeader icon={Building2} label="Empresas" count={results.empresas.length} />
-                {results.empresas.map((e) => (
+                <GroupHeader icon={Building2} label="Empresas" count={results.companies.length} />
+                {results.companies.map((c) => (
                   <ResultRow
-                    key={e.id}
-                    href={`/superadmin/companies/${e.id}`}
+                    key={c.id}
+                    href={`/superadmin/companies/${c.id}`}
                     onClose={onClose}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                      <LetterAvatar letter={e.nombre[0]} variant="blue" />
+                      <LetterAvatar letter={c.name[0]} variant="blue" />
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                        {e.nombre}
+                        {c.name}
                       </Typography>
                     </Box>
-                    <StatusChip active={e.activo} activeLabel="Activa" inactiveLabel="Suspendida" />
+                    <StatusChip active={c.active} activeLabel="Activa" inactiveLabel="Suspendida" />
                   </ResultRow>
                 ))}
               </Box>
             )}
 
-            {results.empleados.length > 0 && (
+            {results.employees.length > 0 && (
               <Box component="section">
-                <GroupHeader icon={Users} label="Empleados" count={results.empleados.length} />
-                {results.empleados.map((e) => (
+                <GroupHeader icon={Users} label="Empleados" count={results.employees.length} />
+                {results.employees.map((e) => (
                   <ResultRow
                     key={e.id}
                     href="/superadmin/access"
                     onClose={onClose}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                      <LetterAvatar letter={e.nombre[0]} variant="slate" />
+                      <LetterAvatar letter={e.first_name[0]} variant="slate" />
                       <Box sx={{ minWidth: 0 }}>
                         <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                          {e.nombre} {e.apellido}
+                          {e.first_name} {e.last_name}
                         </Typography>
                         <Typography sx={{ fontSize: 11, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {e.email} · {e.empresa.nombre}
+                          {e.email} · {e.company.name}
                         </Typography>
                       </Box>
                     </Box>
@@ -90,22 +90,22 @@ export default function SuperadminSearchBar() {
               </Box>
             )}
 
-            {results.paquetes.length > 0 && (
+            {results.packages.length > 0 && (
               <Box component="section">
-                <GroupHeader icon={Package} label="Paquetes" count={results.paquetes.length} />
-                {results.paquetes.map((p) => (
+                <GroupHeader icon={Package} label="Paquetes" count={results.packages.length} />
+                {results.packages.map((p) => (
                   <ResultRow
                     key={p.id}
                     href="/superadmin/packages"
                     onClose={onClose}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                      <LetterAvatar letter={p.nombre[0]} variant="slate" />
+                      <LetterAvatar letter={p.name[0]} variant="slate" />
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                        {p.nombre}
+                        {p.name}
                       </Typography>
                     </Box>
-                    <StatusChip active={p.activo} activeLabel="Activo" inactiveLabel="Inactivo" />
+                    <StatusChip active={p.active} activeLabel="Activo" inactiveLabel="Inactivo" />
                   </ResultRow>
                 ))}
               </Box>

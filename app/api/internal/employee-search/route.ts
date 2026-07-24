@@ -10,22 +10,22 @@ export async function GET(req: NextRequest) {
 
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? ""
   if (q.length < 2) {
-    return NextResponse.json({ cursos: [], constancias: [] })
+    return NextResponse.json({ courses: [], certificates: [] })
   }
 
-  const empleado = await prisma.employee.findUnique({
+  const employee = await prisma.employee.findUnique({
     where: { email: session.user.email ?? "" },
     select: { id: true },
   })
 
-  if (!empleado) {
-    return NextResponse.json({ cursos: [], constancias: [] })
+  if (!employee) {
+    return NextResponse.json({ courses: [], certificates: [] })
   }
 
-  const [cursosResult, constanciasResult] = await Promise.all([
+  const [coursesResult, certificatesResult] = await Promise.all([
     prisma.employeeCourse.findMany({
       where: {
-        employee_id: empleado.id,
+        employee_id: employee.id,
         course_name: { contains: q, mode: "insensitive" },
       },
       select: { id: true, course_name: true, progress_pct: true, completed: true },
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     }),
     prisma.certificate.findMany({
       where: {
-        employee_id: empleado.id,
+        employee_id: employee.id,
         course_name: { contains: q, mode: "insensitive" },
       },
       select: { id: true, course_name: true, reference_number: true },
@@ -41,17 +41,17 @@ export async function GET(req: NextRequest) {
     }),
   ])
 
-  const cursos = cursosResult.map((c) => ({
+  const courses = coursesResult.map((c) => ({
     id: c.id,
-    nombre_curso: c.course_name,
-    progreso_pct: c.progress_pct,
-    completado: c.completed,
+    course_name: c.course_name,
+    progress_pct: c.progress_pct,
+    completed: c.completed,
   }))
-  const constancias = constanciasResult.map((c) => ({
+  const certificates = certificatesResult.map((c) => ({
     id: c.id,
-    nombre_curso: c.course_name,
-    folio: c.reference_number,
+    course_name: c.course_name,
+    reference_number: c.reference_number,
   }))
 
-  return NextResponse.json({ cursos, constancias })
+  return NextResponse.json({ courses, certificates })
 }

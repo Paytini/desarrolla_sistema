@@ -11,9 +11,9 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type CourseResult      = { id: number; nombre_curso: string; progreso_pct: number; completado: boolean }
-type CertificateResult = { id: number; nombre_curso: string; folio: string }
-type SearchResults     = { cursos: CourseResult[]; constancias: CertificateResult[] }
+type CourseResult      = { id: number; course_name: string; progress_pct: number; completed: boolean }
+type CertificateResult = { id: number; course_name: string; reference_number: string }
+type SearchResults     = { courses: CourseResult[]; certificates: CertificateResult[] }
 
 export default function EmployeeSearchBar() {
   return (
@@ -22,7 +22,7 @@ export default function EmployeeSearchBar() {
       placeholder="Buscar cursos o constancias..."
       triggerLabel="Buscar mis cursos"
       renderGroups={(results, query, onClose) => {
-        const hasResults = results.cursos.length > 0 || results.constancias.length > 0
+        const hasResults = results.courses.length > 0 || results.certificates.length > 0
 
         if (!hasResults) {
           return (
@@ -39,10 +39,10 @@ export default function EmployeeSearchBar() {
 
         return (
           <Box sx={{ py: 1 }}>
-            {results.cursos.length > 0 && (
+            {results.courses.length > 0 && (
               <Box component="section">
-                <GroupHeader icon={BookOpen} label="Mis cursos" count={results.cursos.length} />
-                {results.cursos.map((c) => (
+                <GroupHeader icon={BookOpen} label="Mis cursos" count={results.courses.length} />
+                {results.courses.map((c) => (
                   <ResultRow key={c.id} href="/employee/courses" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
@@ -58,7 +58,7 @@ export default function EmployeeSearchBar() {
                         <BookOpen size={11} strokeWidth={2} style={{ color: "#3579F5" }} />
                       </Avatar>
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                        {c.nombre_curso}
+                        {c.course_name}
                       </Typography>
                     </Box>
                     <ProgressChip course={c} />
@@ -67,10 +67,10 @@ export default function EmployeeSearchBar() {
               </Box>
             )}
 
-            {results.constancias.length > 0 && (
+            {results.certificates.length > 0 && (
               <Box component="section">
-                <GroupHeader icon={Award} label="Constancias" count={results.constancias.length} />
-                {results.constancias.map((c) => (
+                <GroupHeader icon={Award} label="Constancias" count={results.certificates.length} />
+                {results.certificates.map((c) => (
                   <ResultRow key={c.id} href="/employee/certificates" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
@@ -86,7 +86,7 @@ export default function EmployeeSearchBar() {
                         <Award size={11} strokeWidth={2} style={{ color: "#15803d" }} />
                       </Avatar>
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                        {c.nombre_curso}
+                        {c.course_name}
                       </Typography>
                     </Box>
                     <Typography
@@ -97,7 +97,7 @@ export default function EmployeeSearchBar() {
                         flexShrink: 0,
                       }}
                     >
-                      {c.folio}
+                      {c.reference_number}
                     </Typography>
                   </ResultRow>
                 ))}
@@ -182,7 +182,7 @@ function ResultRow({
 }
 
 function ProgressChip({ course }: { course: CourseResult }) {
-  if (course.completado) {
+  if (course.completed) {
     return (
       <Chip
         label="Completado"
@@ -200,10 +200,10 @@ function ProgressChip({ course }: { course: CourseResult }) {
       />
     )
   }
-  if (course.progreso_pct > 0) {
+  if (course.progress_pct > 0) {
     return (
       <Chip
-        label={`${course.progreso_pct}%`}
+        label={`${course.progress_pct}%`}
         size="small"
         sx={{
           height: 20,
