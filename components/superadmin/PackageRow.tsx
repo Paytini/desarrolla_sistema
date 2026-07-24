@@ -61,9 +61,9 @@ export function PackageRow({
         </TableCell>
         <TableCell sx={TD_SX}>
           <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary" }}>
-            {pkg.nombre}
+            {pkg.name}
           </Typography>
-          {pkg.descripcion && (
+          {pkg.description && (
             <Typography
               sx={{
                 mt: 0.25,
@@ -75,7 +75,7 @@ export function PackageRow({
                 maxWidth: 360,
               }}
             >
-              {pkg.descripcion}
+              {pkg.description}
             </Typography>
           )}
         </TableCell>
@@ -133,8 +133,8 @@ export function PackageRow({
           <DeletePackageButton
             action={deletePackageAction}
             packageId={pkg.id}
-            packageName={pkg.nombre}
-            assignedCompaniesCount={pkg.empresas.length}
+            packageName={pkg.name}
+            assignedCompaniesCount={pkg.companies.length}
           />
         </TableCell>
       </TableRow>
@@ -143,7 +143,7 @@ export function PackageRow({
         <TableCell sx={{ p: 0, borderBottom: open ? "1px solid" : "none", borderColor: "divider" }} colSpan={7}>
           <Collapse in={open} timeout={160} unmountOnExit>
             <Box sx={{ bgcolor: "action.hover", px: 2, py: 1.5 }}>
-              {pkg.notas_operativas && (
+              {pkg.operational_notes && (
                 <Box
                   sx={{
                     mb: 1.5,
@@ -157,7 +157,7 @@ export function PackageRow({
                     lineHeight: 1.5,
                   }}
                 >
-                  {pkg.notas_operativas}
+                  {pkg.operational_notes}
                 </Box>
               )}
 
@@ -165,14 +165,14 @@ export function PackageRow({
                 Cursos y estado DC-3
               </Typography>
 
-              {pkg.cursos.length === 0 ? (
+              {pkg.courses.length === 0 ? (
                 <Typography sx={{ fontSize: 12, color: "text.secondary", py: 1 }}>
                   Este paquete no tiene cursos asignados.
                 </Typography>
               ) : (
                 <Box sx={{ borderRadius: "10px", border: "1px solid", borderColor: "divider", bgcolor: "background.paper", overflow: "hidden" }}>
-                  {pkg.cursos.map((course, index) => {
-                    const dc3Metadata  = dc3MetadataByCourseId[String(course.wp_curso_id)] as Dc3MetadataView | undefined
+                  {pkg.courses.map((course, index) => {
+                    const dc3Metadata  = dc3MetadataByCourseId[String(course.wp_course_id)] as Dc3MetadataView | undefined
                     const missingCount = getDc3MissingFields(dc3Metadata).length
                     const isDc3Ready   = missingCount === 0
 
@@ -185,7 +185,7 @@ export function PackageRow({
                           gap: 1.5,
                           px: 1.75,
                           py: 1,
-                          borderBottom: index < pkg.cursos.length - 1 ? "1px solid" : "none",
+                          borderBottom: index < pkg.courses.length - 1 ? "1px solid" : "none",
                           borderColor: "divider",
                         }}
                       >
@@ -196,13 +196,13 @@ export function PackageRow({
                           }}
                         />
                         <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
-                          {decodeHtmlEntities(course.nombre_curso ?? "")}
+                          {decodeHtmlEntities(course.course_name ?? "")}
                         </Typography>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
                           <Typography sx={{ fontSize: 10, fontWeight: 600, color: isDc3Ready ? "text.secondary" : "#b45309" }}>
                             {isDc3Ready ? "DC-3 ✓" : `${missingCount} pendiente${missingCount !== 1 ? "s" : ""}`}
                           </Typography>
-                          <Link href={`/superadmin/dc3?open=${course.wp_curso_id}`} style={{ display: "flex", color: "#cbd5e1", lineHeight: 0 }}>
+                          <Link href={`/superadmin/dc3?open=${course.wp_course_id}`} style={{ display: "flex", color: "#cbd5e1", lineHeight: 0 }}>
                             <ExternalLink size={12} />
                           </Link>
                         </Box>
@@ -213,7 +213,7 @@ export function PackageRow({
               )}
 
               <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 1.25 }}>
-                {pkg.modo_entrega === "PRIVATE_BUNDLE_REFERENCE" ? "Bundle privado" : "Matrícula directa"}
+                {pkg.delivery_mode === "PRIVATE_BUNDLE_REFERENCE" ? "Bundle privado" : "Matrícula directa"}
                 {pkg.wp_bundle_id ? ` · WP #${pkg.wp_bundle_id}` : ""}
               </Typography>
             </Box>

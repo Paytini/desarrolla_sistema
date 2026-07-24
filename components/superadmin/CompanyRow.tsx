@@ -17,8 +17,8 @@ import { formatDate } from "@/lib/format"
 type Company = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["empresas"][number]
 
 export function CompanyRow({ company }: { company: Company }) {
-  const packageName = company.paquetes[0]?.paquete?.nombre ?? "—"
-  const activeEmployeesCount = company.empleados.filter((e) => e.activo).length
+  const packageName = company.packages[0]?.package?.name ?? "—"
+  const activeEmployeesCount = company.employees.filter((e) => e.active).length
 
   return (
     <TableRow
@@ -40,7 +40,7 @@ export function CompanyRow({ company }: { company: Company }) {
                 whiteSpace: "nowrap",
               }}
             >
-              {company.nombre}
+              {company.name}
             </Typography>
             <Typography
               sx={{
@@ -51,7 +51,7 @@ export function CompanyRow({ company }: { company: Company }) {
                 whiteSpace: "nowrap",
               }}
             >
-              {company.email_rh}
+              {company.hr_email}
             </Typography>
           </Box>
         </Box>
@@ -79,11 +79,11 @@ export function CompanyRow({ company }: { company: Company }) {
 
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <SeatDonut used={activeEmployeesCount} total={company.asientos_contratados} size={48} />
+          <SeatDonut used={activeEmployeesCount} total={company.contracted_seats} size={48} />
           <Typography sx={{ fontSize: 12, fontWeight: 500, color: "text.primary" }}>
             {activeEmployeesCount}
             <Box component="span" sx={{ color: "text.secondary" }}>
-              /{company.asientos_contratados}
+              /{company.contracted_seats}
             </Box>
           </Typography>
         </Box>
@@ -97,16 +97,16 @@ export function CompanyRow({ company }: { company: Company }) {
 
       <TableCell sx={{ py: 1.5, px: 2 }}>
         <Chip
-          label={company.activo ? "Activa" : "Suspendida"}
+          label={company.active ? "Activa" : "Suspendida"}
           size="small"
           sx={{
             height: 22,
             fontSize: "11px",
             fontWeight: 600,
             border: "1px solid",
-            borderColor: company.activo ? "rgba(40,199,111,0.3)" : "rgba(234,84,85,0.3)",
-            bgcolor: company.activo ? "rgba(40,199,111,0.12)" : "rgba(234,84,85,0.12)",
-            color: company.activo ? "#28C76F" : "#EA5455",
+            borderColor: company.active ? "rgba(40,199,111,0.3)" : "rgba(234,84,85,0.3)",
+            bgcolor: company.active ? "rgba(40,199,111,0.12)" : "rgba(234,84,85,0.12)",
+            color: company.active ? "#28C76F" : "#EA5455",
             borderRadius: "11px",
             "& .MuiChip-label": { px: 1.25 },
           }}
@@ -134,8 +134,8 @@ export function CompanyRow({ company }: { company: Company }) {
           </Button>
           <SuspendCompanyButton
             companyId={company.id}
-            active={company.activo}
-            name={company.nombre}
+            active={company.active}
+            name={company.name}
           />
         </Box>
       </TableCell>

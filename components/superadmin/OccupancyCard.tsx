@@ -3,7 +3,7 @@ import { SectionCard } from "@/components/shared/SectionCard"
 
 interface OccupancyCardProps {
   occupancyPct: number
-  companies: Array<{ id: number; nombre: string; asientos_usados: number; asientos_contratados: number }>
+  companies: Array<{ id: number; name: string; used_seats: number; contracted_seats: number }>
 }
 
 function HorizontalBar({ name, used, total }: { name: string; used: number; total: number }) {
@@ -78,7 +78,7 @@ export function OccupancyCard({ occupancyPct, companies }: OccupancyCardProps) {
       ) : (
         <Stack spacing={2}>
           {companies.slice(0, 6).map((e) => (
-            <HorizontalBar key={e.id} name={e.nombre} used={e.asientos_usados} total={e.asientos_contratados} />
+            <HorizontalBar key={e.id} name={e.name} used={e.used_seats} total={e.contracted_seats} />
           ))}
         </Stack>
       )}

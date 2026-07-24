@@ -12,10 +12,10 @@ import { alpha } from "@mui/material/styles"
 
 type NotificationItem = {
   id: number
-  tipo: string
-  titulo: string
-  mensaje: string
-  leida: boolean
+  type: string
+  title: string
+  message: string
+  read: boolean
   created_at: string
 }
 
@@ -145,7 +145,7 @@ export function NotificationBell() {
                 </Box>
               ) : (
                 items.map((n) => {
-                  const Icon = TYPE_ICON[n.tipo] ?? Bell
+                  const Icon = TYPE_ICON[n.type] ?? Bell
                   return (
                     <Box
                       key={n.id}
@@ -156,7 +156,7 @@ export function NotificationBell() {
                         py: 1.5,
                         borderBottom: "1px solid",
                         borderColor: "divider",
-                        bgcolor: n.leida ? "transparent" : (theme) => alpha(theme.palette.primary.main, 0.04),
+                        bgcolor: n.read ? "transparent" : (theme) => alpha(theme.palette.primary.main, 0.04),
                       }}
                     >
                       <Box
@@ -176,10 +176,10 @@ export function NotificationBell() {
                       </Box>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
                         <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary" }}>
-                          {n.titulo}
+                          {n.title}
                         </Typography>
                         <Typography sx={{ fontSize: "0.75rem", color: "text.secondary", lineHeight: 1.4, mt: "1px" }}>
-                          {n.mensaje}
+                          {n.message}
                         </Typography>
                         <Typography sx={{ fontSize: "0.6875rem", color: "text.disabled", mt: 0.5 }}>
                           {timeAgo(n.created_at)}

@@ -14,16 +14,16 @@ import { formatDate } from "@/lib/format"
 
 type CourseMetadata = {
   id: number
-  nombre_curso: string | null
-  duracion_horas: number | null
-  area_tematica_nombre: string | null
-  area_tematica_clave: string | null
-  agente_capacitador_nombre: string | null
-  agente_capacitador_registro: string | null
-  instructor_nombre: string | null
-  instructor_firma_url: string | null
-  fuente: string
-  ultima_sincronizacion: Date | null
+  course_name: string | null
+  duration_hours: number | null
+  subject_area_name: string | null
+  subject_area_code: string | null
+  training_agent_name: string | null
+  training_agent_registration: string | null
+  instructor_name: string | null
+  instructor_signature_url: string | null
+  source: string
+  last_synced_at: Date | null
 }
 
 export type CourseEntry = {
@@ -41,24 +41,24 @@ type Status = "complete" | "incomplete" | "empty"
 function getStatus(m: CourseMetadata | null): Status {
   if (!m) return "empty"
   const ok =
-    !!m.nombre_curso &&
-    m.duracion_horas != null &&
-    !!m.area_tematica_nombre &&
-    !!m.agente_capacitador_nombre &&
-    !!m.instructor_nombre &&
-    !!m.instructor_firma_url
+    !!m.course_name &&
+    m.duration_hours != null &&
+    !!m.subject_area_name &&
+    !!m.training_agent_name &&
+    !!m.instructor_name &&
+    !!m.instructor_signature_url
   return ok ? "complete" : "incomplete"
 }
 
 function getCompleteness(m: CourseMetadata | null): number {
   if (!m) return 0
   return [
-    !!m.nombre_curso,
-    m.duracion_horas != null,
-    !!m.area_tematica_nombre,
-    !!m.agente_capacitador_nombre,
-    !!m.instructor_nombre,
-    !!m.instructor_firma_url,
+    !!m.course_name,
+    m.duration_hours != null,
+    !!m.subject_area_name,
+    !!m.training_agent_name,
+    !!m.instructor_name,
+    !!m.instructor_signature_url,
   ].filter(Boolean).length
 }
 
@@ -126,7 +126,7 @@ function CourseEditorCard({
   const [isPending, startTransition]    = useTransition()
   const [saved, setSaved]               = useState(false)
   const [saveError, setSaveError]       = useState<string | null>(null)
-  const [signatureUrl, setSignatureUrl] = useState(course.metadata?.instructor_firma_url ?? "")
+  const [signatureUrl, setSignatureUrl] = useState(course.metadata?.instructor_signature_url ?? "")
   const [uploadingSignature, setUploadingSignature] = useState(false)
   const [uploadError, setUploadError]   = useState<string | null>(null)
   const fileInputRef                    = useRef<HTMLInputElement>(null)
@@ -354,11 +354,11 @@ function CourseEditorCard({
           >
             <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
               Fuente:{" "}
-              <Box component="strong" sx={{ color: "text.primary" }}>{m?.fuente ?? "Sin capturar"}</Box>
+              <Box component="strong" sx={{ color: "text.primary" }}>{m?.source ?? "Sin capturar"}</Box>
               {" · "}
               Última sincronización:{" "}
               <Box component="strong" sx={{ color: "text.primary" }}>
-                {m?.ultima_sincronizacion ? formatDate(m.ultima_sincronizacion) : "Nunca"}
+                {m?.last_synced_at ? formatDate(m.last_synced_at) : "Nunca"}
               </Box>
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -423,7 +423,7 @@ function CourseEditorCard({
             <Field label="Nombre del curso" required>
               <TextField
                 name="nombre_curso"
-                defaultValue={m?.nombre_curso ?? ""}
+                defaultValue={m?.course_name ?? ""}
                 placeholder={course.courseName}
                 size="small"
                 fullWidth
@@ -441,7 +441,7 @@ function CourseEditorCard({
                 <TextField
                   name="duracion_horas"
                   type="number"
-                  defaultValue={m?.duracion_horas ?? ""}
+                  defaultValue={m?.duration_hours ?? ""}
                   placeholder="8"
                   size="small"
                   fullWidth
@@ -451,7 +451,7 @@ function CourseEditorCard({
               <Field label="Área temática" required>
                 <TextField
                   name="area_tematica_nombre"
-                  defaultValue={m?.area_tematica_nombre ?? ""}
+                  defaultValue={m?.subject_area_name ?? ""}
                   placeholder="Seguridad e Higiene en el Trabajo"
                   size="small"
                   fullWidth
@@ -460,7 +460,7 @@ function CourseEditorCard({
               <Field label="Clave área">
                 <TextField
                   name="area_tematica_clave"
-                  defaultValue={m?.area_tematica_clave ?? ""}
+                  defaultValue={m?.subject_area_code ?? ""}
                   placeholder="SH-01"
                   size="small"
                   fullWidth
@@ -480,7 +480,7 @@ function CourseEditorCard({
               <Field label="Agente capacitador" required>
                 <TextField
                   name="agente_capacitador_nombre"
-                  defaultValue={m?.agente_capacitador_nombre ?? ""}
+                  defaultValue={m?.training_agent_name ?? ""}
                   placeholder="Desarrolla360 SA de CV"
                   size="small"
                   fullWidth
@@ -489,7 +489,7 @@ function CourseEditorCard({
               <Field label="Registro STPS">
                 <TextField
                   name="agente_capacitador_registro"
-                  defaultValue={m?.agente_capacitador_registro ?? ""}
+                  defaultValue={m?.training_agent_registration ?? ""}
                   placeholder="CAP-000-00000"
                   size="small"
                   fullWidth
@@ -502,7 +502,7 @@ function CourseEditorCard({
             <Field label="Nombre del instructor" required>
               <TextField
                 name="instructor_nombre"
-                defaultValue={m?.instructor_nombre ?? ""}
+                defaultValue={m?.instructor_name ?? ""}
                 placeholder="Lic. Juan García"
                 size="small"
                 fullWidth

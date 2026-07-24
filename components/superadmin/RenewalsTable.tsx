@@ -9,10 +9,10 @@ import { SectionCard } from "@/components/shared/SectionCard"
 type Renewal = {
   company: {
     id: number
-    nombre: string
-    paquetes: Array<{
-      paquete: { nombre: string }
-      fecha_vencimiento: Date | null
+    name: string
+    packages: Array<{
+      package: { name: string }
+      expiration_date: Date | null
     }>
   }
   days: number
@@ -119,12 +119,12 @@ export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
                   <Typography
                     sx={{ fontSize: 13, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                   >
-                    {company.nombre}
+                    {company.name}
                   </Typography>
                   <Typography
                     sx={{ fontSize: 11, color: "text.disabled", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
                   >
-                    {company.paquetes[0]?.paquete.nombre ?? "Sin paquete"}
+                    {company.packages[0]?.package.name ?? "Sin paquete"}
                   </Typography>
                 </Box>
                 <DayChip days={days} />

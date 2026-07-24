@@ -265,7 +265,7 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
                   >
                     <MenuItem value="">Sin asignar</MenuItem>
                     {paquetes.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>{p.nombre}</MenuItem>
+                      <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
                     ))}
                   </TextField>
                 </Box>
