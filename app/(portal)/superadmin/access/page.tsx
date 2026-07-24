@@ -37,29 +37,29 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
 
   const rhRows: HrAccessRow[] = rhUsers.map((user) => ({
     id: user.id,
-    name: user.nombre,
+    name: user.name,
     email: user.email,
-    active: user.activo,
-    companyName: user.empresa?.nombre ?? "—",
-    lastAccess: formatDateTime(user.ultimo_acceso),
+    active: user.active,
+    companyName: user.company?.name ?? "—",
+    lastAccess: formatDateTime(user.last_access),
     createdAt: formatDate(user.created_at),
-    usedSeats: user.empresa?.asientos_usados ?? null,
-    contractedSeats: user.empresa?.asientos_contratados ?? null,
+    usedSeats: user.company?.used_seats ?? null,
+    contractedSeats: user.company?.contracted_seats ?? null,
   }))
 
   const employeeRows: EmployeeAccessRow[] = employees.map((employee) => {
     const portalUser = employeeUserByEmail.get(employee.email.toLowerCase())
     return {
       id: employee.id,
-      name: employee.nombre,
-      lastName: employee.apellido,
+      name: employee.first_name,
+      lastName: employee.last_name,
       email: employee.email,
-      active: employee.activo,
-      companyName: employee.empresa.nombre,
+      active: employee.active,
+      companyName: employee.company.name,
       wpUserId: employee.wp_user_id,
       createdAt: formatDate(employee.created_at),
-      portalActive: portalUser?.activo ?? null,
-      portalLastAccess: formatDateTime(portalUser?.ultimo_acceso),
+      portalActive: portalUser?.active ?? null,
+      portalLastAccess: formatDateTime(portalUser?.last_access),
     }
   })
 

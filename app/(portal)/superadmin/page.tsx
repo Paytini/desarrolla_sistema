@@ -121,39 +121,39 @@ export default async function SuperadminDashboardPage() {
   const [{ empresas: companies }, { empresas: companiesWithCourses }, recentEvents] = await Promise.all([
     getSuperadminCompaniesSnapshot(),
     getSuperadminReportsSnapshot(),
-    prisma.auditoriaEvento.findMany({
+    prisma.auditEvent.findMany({
       orderBy: { created_at: "desc" },
       take: 12,
-      select: { id: true, actor_nombre: true, actor_rol: true, accion: true, entidad_tipo: true, resumen: true, created_at: true },
+      select: { id: true, actor_name: true, actor_role: true, action: true, entity_type: true, summary: true, created_at: true },
     }),
   ])
 
-  const activeCompanies       = companies.filter((e) => e.activo).length
+  const activeCompanies       = companies.filter((e) => e.active).length
   const activeCompaniesPct    = companies.length ? Math.round((activeCompanies / companies.length) * 100) : 0
-  const totalActiveEmployees  = companies.reduce((s, e) => s + e.empleados.filter((emp) => emp.activo).length, 0)
-  const totalContractedSeats  = companies.reduce((s, e) => s + e.asientos_contratados, 0)
-  const totalUsedSeats        = companies.reduce((s, e) => s + e.asientos_usados, 0)
+  const totalActiveEmployees  = companies.reduce((s, e) => s + e.employees.filter((emp) => emp.active).length, 0)
+  const totalContractedSeats  = companies.reduce((s, e) => s + e.contracted_seats, 0)
+  const totalUsedSeats        = companies.reduce((s, e) => s + e.used_seats, 0)
   const occupancyPct          = totalContractedSeats ? Math.round((totalUsedSeats / totalContractedSeats) * 100) : 0
   const employeesPct          = totalContractedSeats ? Math.round((totalActiveEmployees / totalContractedSeats) * 100) : 0
 
   const renewals = companies
-    .filter((e) => { const exp = e.paquetes[0]?.fecha_vencimiento; return exp && Math.floor((new Date(exp).getTime() - now) / DAY_MS) <= 30 })
-    .map((e) => ({ company: e, days: Math.floor((new Date(e.paquetes[0]!.fecha_vencimiento as Date).getTime() - now) / DAY_MS) }))
+    .filter((e) => { const exp = e.packages[0]?.expiration_date; return exp && Math.floor((new Date(exp).getTime() - now) / DAY_MS) <= 30 })
+    .map((e) => ({ company: e, days: Math.floor((new Date(e.packages[0]!.expiration_date as Date).getTime() - now) / DAY_MS) }))
     .sort((a, b) => a.days - b.days)
 
-  const allCourses   = companiesWithCourses.flatMap((e) => e.empleados.flatMap((emp) => emp.cursos))
-  const completed    = allCourses.filter((c) => c.completado).length
-  const inProgress   = allCourses.filter((c) => !c.completado && c.progreso_pct > 0).length
-  const notStarted   = allCourses.filter((c) => c.progreso_pct === 0).length
+  const allCourses   = companiesWithCourses.flatMap((e) => e.employees.flatMap((emp) => emp.courses))
+  const completed    = allCourses.filter((c) => c.completed).length
+  const inProgress   = allCourses.filter((c) => !c.completed && c.progress_pct > 0).length
+  const notStarted   = allCourses.filter((c) => c.progress_pct === 0).length
   const totalCourses = allCourses.length
 
   const companyRanking = companiesWithCourses
     .map((e) => {
-      const courses = e.empleados.flatMap((emp) => emp.cursos)
-      const avg     = courses.length ? Math.round(courses.reduce((s, c) => s + c.progreso_pct, 0) / courses.length) : 0
-      return { nombre: e.nombre, avg }
+      const courses = e.employees.flatMap((emp) => emp.courses)
+      const avg     = courses.length ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length) : 0
+      return { name: e.name, avg }
     })
-    .filter((e) => e.avg > 0 || companiesWithCourses.find((ec) => ec.nombre === e.nombre)?.empleados.length)
+    .filter((e) => e.avg > 0 || companiesWithCourses.find((ec) => ec.name === e.name)?.employees.length)
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 6)
 
@@ -170,14 +170,14 @@ export default async function SuperadminDashboardPage() {
 
   const companyActivitySeries: ActivitySeries[] = companiesWithCourses.map((e, i) => {
     const dayCounts = new Map<string, number>()
-    e.empleados.forEach((emp) => {
-      emp.cursos.forEach((c) => {
-        const key = new Date(c.ultima_sincronizacion).toISOString().slice(0, 10)
+    e.employees.forEach((emp) => {
+      emp.courses.forEach((c) => {
+        const key = new Date(c.last_synced_at).toISOString().slice(0, 10)
         if (activityDayKeys.includes(key)) dayCounts.set(key, (dayCounts.get(key) ?? 0) + 1)
       })
     })
     return {
-      name: e.nombre,
+      name: e.name,
       color: COMPANY_LINE_COLORS[i % COMPANY_LINE_COLORS.length],
       data: activityDayKeys.map((day) => ({ day, value: dayCounts.get(day) ?? 0 })),
     }

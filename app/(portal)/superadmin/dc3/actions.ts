@@ -52,32 +52,32 @@ export async function saveDc3MetadataAction(
     return { ok: false, error: "La firma del instructor es obligatoria" }
   }
 
-  await prisma.cursoDc3Metadata.upsert({
-    where: { wp_curso_id: wpCourseId },
+  await prisma.courseDc3Metadata.upsert({
+    where: { wp_course_id: wpCourseId },
     create: {
-      wp_curso_id: wpCourseId,
-      nombre_curso: courseName,
-      duracion_horas: durationHours,
-      area_tematica_nombre: thematicAreaName,
-      area_tematica_clave: thematicAreaCode,
-      agente_capacitador_nombre: trainingAgentName,
-      agente_capacitador_registro: trainingAgentRegistry,
-      instructor_nombre: instructorName,
-      instructor_firma_url: signatureUrl,
-      fuente: "MANUAL",
-      ultima_sincronizacion: new Date(),
+      wp_course_id: wpCourseId,
+      course_name: courseName,
+      duration_hours: durationHours,
+      subject_area_name: thematicAreaName,
+      subject_area_code: thematicAreaCode,
+      training_agent_name: trainingAgentName,
+      training_agent_registration: trainingAgentRegistry,
+      instructor_name: instructorName,
+      instructor_signature_url: signatureUrl,
+      source: "MANUAL",
+      last_synced_at: new Date(),
     },
     update: {
-      nombre_curso: courseName,
-      duracion_horas: durationHours,
-      area_tematica_nombre: thematicAreaName,
-      area_tematica_clave: thematicAreaCode,
-      agente_capacitador_nombre: trainingAgentName,
-      agente_capacitador_registro: trainingAgentRegistry,
-      instructor_nombre: instructorName,
-      instructor_firma_url: signatureUrl,
-      fuente: "MANUAL",
-      ultima_sincronizacion: new Date(),
+      course_name: courseName,
+      duration_hours: durationHours,
+      subject_area_name: thematicAreaName,
+      subject_area_code: thematicAreaCode,
+      training_agent_name: trainingAgentName,
+      training_agent_registration: trainingAgentRegistry,
+      instructor_name: instructorName,
+      instructor_signature_url: signatureUrl,
+      source: "MANUAL",
+      last_synced_at: new Date(),
     },
   })
 
@@ -112,58 +112,58 @@ export async function syncDc3MetadataAction(
   try {
     const [details, existingMetadata] = await Promise.all([
       bridgeGetCourseDetails(wpCourseId),
-      prisma.cursoDc3Metadata.findUnique({
-        where: { wp_curso_id: wpCourseId },
+      prisma.courseDc3Metadata.findUnique({
+        where: { wp_course_id: wpCourseId },
       }),
     ])
 
-    await prisma.cursoDc3Metadata.upsert({
-      where: { wp_curso_id: wpCourseId },
+    await prisma.courseDc3Metadata.upsert({
+      where: { wp_course_id: wpCourseId },
       update: {
-        nombre_curso: decodeHtmlEntities(details.title || courseName || existingMetadata?.nombre_curso || "") || null,
-        duracion_horas: preferBridgeValue(
+        course_name: decodeHtmlEntities(details.title || courseName || existingMetadata?.course_name || "") || null,
+        duration_hours: preferBridgeValue(
           details.duration_hours,
-          existingMetadata?.duracion_horas
+          existingMetadata?.duration_hours
         ) as number | null,
-        area_tematica_nombre: preferBridgeValue(
+        subject_area_name: preferBridgeValue(
           details.thematic_area_name,
-          existingMetadata?.area_tematica_nombre
+          existingMetadata?.subject_area_name
         ) as string | null,
-        area_tematica_clave: preferBridgeValue(
+        subject_area_code: preferBridgeValue(
           details.thematic_area_code,
-          existingMetadata?.area_tematica_clave
+          existingMetadata?.subject_area_code
         ) as string | null,
-        agente_capacitador_nombre: preferBridgeValue(
+        training_agent_name: preferBridgeValue(
           details.training_agent_name,
-          existingMetadata?.agente_capacitador_nombre
+          existingMetadata?.training_agent_name
         ) as string | null,
-        agente_capacitador_registro: preferBridgeValue(
+        training_agent_registration: preferBridgeValue(
           details.training_agent_registry,
-          existingMetadata?.agente_capacitador_registro
+          existingMetadata?.training_agent_registration
         ) as string | null,
-        instructor_nombre: preferBridgeValue(
+        instructor_name: preferBridgeValue(
           details.instructor_name,
-          existingMetadata?.instructor_nombre
+          existingMetadata?.instructor_name
         ) as string | null,
-        instructor_firma_url: preferBridgeValue(
+        instructor_signature_url: preferBridgeValue(
           details.instructor_signature_url,
-          existingMetadata?.instructor_firma_url
+          existingMetadata?.instructor_signature_url
         ) as string | null,
-        fuente: "WORDPRESS_BRIDGE",
-        ultima_sincronizacion: new Date(),
+        source: "WORDPRESS_BRIDGE",
+        last_synced_at: new Date(),
       },
       create: {
-        wp_curso_id: wpCourseId,
-        nombre_curso: decodeHtmlEntities(details.title || courseName || "") || null,
-        duracion_horas: details.duration_hours ?? null,
-        area_tematica_nombre: details.thematic_area_name || null,
-        area_tematica_clave: details.thematic_area_code || null,
-        agente_capacitador_nombre: details.training_agent_name || null,
-        agente_capacitador_registro: details.training_agent_registry || null,
-        instructor_nombre: details.instructor_name || null,
-        instructor_firma_url: details.instructor_signature_url || null,
-        fuente: "WORDPRESS_BRIDGE",
-        ultima_sincronizacion: new Date(),
+        wp_course_id: wpCourseId,
+        course_name: decodeHtmlEntities(details.title || courseName || "") || null,
+        duration_hours: details.duration_hours ?? null,
+        subject_area_name: details.thematic_area_name || null,
+        subject_area_code: details.thematic_area_code || null,
+        training_agent_name: details.training_agent_name || null,
+        training_agent_registration: details.training_agent_registry || null,
+        instructor_name: details.instructor_name || null,
+        instructor_signature_url: details.instructor_signature_url || null,
+        source: "WORDPRESS_BRIDGE",
+        last_synced_at: new Date(),
       },
     })
   } catch (error) {

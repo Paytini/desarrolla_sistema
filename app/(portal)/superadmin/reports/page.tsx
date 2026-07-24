@@ -89,29 +89,29 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
   const now = Date.now()
 
   const companyStats = companies.map((company) => {
-    const activeEmployees          = company.empleados.filter((e) => e.activo)
-    const suspendedEmployees       = company.empleados.length - activeEmployees.length
+    const activeEmployees          = company.employees.filter((e) => e.active)
+    const suspendedEmployees       = company.employees.length - activeEmployees.length
     const employeesWithoutWpUser   = activeEmployees.filter((e) => !e.wp_user_id).length
-    const totalCourses             = activeEmployees.reduce((s, e) => s + e.cursos.length, 0)
-    const totalProgress            = activeEmployees.reduce((s, e) => s + e.cursos.reduce((cs, c) => cs + c.progreso_pct, 0), 0)
+    const totalCourses             = activeEmployees.reduce((s, e) => s + e.courses.length, 0)
+    const totalProgress            = activeEmployees.reduce((s, e) => s + e.courses.reduce((cs, c) => cs + c.progress_pct, 0), 0)
     const averageProgress          = totalCourses ? Math.round(totalProgress / totalCourses) : 0
-    const completedCourses         = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => c.completado).length, 0)
-    const notStartedCourses        = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => !c.completado && c.progreso_pct === 0).length, 0)
-    const errorCourses             = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => c.acceso_estado === "ERROR").length, 0)
-    const pendingCourses           = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => c.acceso_estado === "PENDING" || c.acceso_estado === "REQUIRES_REVIEW").length, 0)
-    const staleCourses             = activeEmployees.reduce((s, e) => s + e.cursos.filter((c) => now - new Date(c.ultima_sincronizacion).getTime() > STALE_SYNC_MS).length, 0)
-    const employeesWithoutCourses  = activeEmployees.filter((e) => e.cursos.length === 0).length
+    const completedCourses         = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => c.completed).length, 0)
+    const notStartedCourses        = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => !c.completed && c.progress_pct === 0).length, 0)
+    const errorCourses             = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => c.access_status === "ERROR").length, 0)
+    const pendingCourses           = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => c.access_status === "PENDING" || c.access_status === "REQUIRES_REVIEW").length, 0)
+    const staleCourses             = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => now - new Date(c.last_synced_at).getTime() > STALE_SYNC_MS).length, 0)
+    const employeesWithoutCourses  = activeEmployees.filter((e) => e.courses.length === 0).length
 
     let syncStatus: SyncStatus = "OK"
-    if (!company.activo) syncStatus = "SUSPENDIDA"
+    if (!company.active) syncStatus = "SUSPENDIDA"
     else if (errorCourses > 0) syncStatus = "ERROR"
     else if (
       employeesWithoutWpUser > 0 || pendingCourses > 0 || staleCourses > 0 ||
       (activeEmployees.length > 0 && totalCourses === 0)
     ) syncStatus = "PARCIAL"
 
-    const activePackage  = company.paquetes[0]
-    const expirationDate = activePackage?.fecha_vencimiento
+    const activePackage  = company.packages[0]
+    const expirationDate = activePackage?.expiration_date
     const remainingDays  = expirationDate ? calculateRemainingDays(new Date(expirationDate)) : null
 
     return {
@@ -133,7 +133,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
     }
   })
 
-  const activeCompanyStats   = companyStats.filter((i) => i.company.activo)
+  const activeCompanyStats   = companyStats.filter((i) => i.company.active)
   const totalActiveEmployees = activeCompanyStats.reduce((s, i) => s + i.activeEmployees, 0)
   const totalActiveCourses  = activeCompanyStats.reduce((s, i) => s + i.totalCourses, 0)
   const weightedProgress    = activeCompanyStats.reduce((s, i) => s + i.averageProgress * i.totalCourses, 0)
@@ -255,13 +255,13 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                     return (
                       <TableRow key={item.company.id} sx={{ height: 44 }}>
                         <TableCell sx={{ ...TD_SX, fontWeight: 500, color: "#0f172a" }}>
-                          {item.company.nombre}
+                          {item.company.name}
                         </TableCell>
                         <TableCell sx={{ ...TD_SX, color: "#64748b" }}>
-                          {item.activePackage?.paquete.nombre ?? "—"}
+                          {item.activePackage?.package.name ?? "—"}
                         </TableCell>
                         <TableCell sx={{ ...TD_SX, color: "#64748b" }}>
-                          {formatDate(item.activePackage?.fecha_vencimiento)}
+                          {formatDate(item.activePackage?.expiration_date)}
                         </TableCell>
                         <TableCell sx={TD_SX}>
                           <Box
@@ -341,7 +341,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                   return (
                     <TableRow key={item.company.id} sx={{ height: 44 }}>
                       <TableCell sx={{ ...TD_SX, fontWeight: 500, color: "#0f172a" }}>
-                        {item.company.nombre}
+                        {item.company.name}
                       </TableCell>
                       <TableCell sx={TD_SX}>
                         <Chip

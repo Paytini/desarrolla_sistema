@@ -44,13 +44,13 @@ export async function createCompanyAction(
     return { error: "datos" }
   }
 
-  const existingCompany = await prisma.empresa.findUnique({
-    where: { email_rh: emailRh },
+  const existingCompany = await prisma.company.findUnique({
+    where: { hr_email: emailRh },
     select: { id: true },
   })
   if (existingCompany) return { error: "email_rh" }
 
-  const existingUser = await prisma.usuario.findUnique({
+  const existingUser = await prisma.user.findUnique({
     where: { email: emailRh },
     select: { id: true },
   })
@@ -65,35 +65,35 @@ export async function createCompanyAction(
   })()
 
   const createdResult = await prisma.$transaction(async (tx) => {
-    const company = await tx.empresa.create({
+    const company = await tx.company.create({
       data: {
-        nombre,
-        email_rh:              emailRh,
-        telefono:              telefono || null,
-        rfc:                   rfc || null,
-        asientos_contratados:  contractedSeats,
-        notas:                 notas || null,
+        name:              nombre,
+        hr_email:          emailRh,
+        phone:             telefono || null,
+        rfc:               rfc || null,
+        contracted_seats:  contractedSeats,
+        notes:             notas || null,
       },
     })
 
-    await tx.usuario.create({
+    await tx.user.create({
       data: {
         email:         emailRh,
         password_hash: passwordHash,
-        nombre:        nombreRh,
-        rol:           "RH",
-        empresa_id:    company.id,
+        name:          nombreRh,
+        role:          "RH",
+        company_id:    company.id,
       },
     })
 
     let assignedPackageId: number | null = null
     if (Number.isInteger(packageId)) {
-      await tx.empresaPaquete.create({
+      await tx.companyPackage.create({
         data: {
-          empresa_id:        company.id,
-          paquete_id:        packageId,
-          fecha_vencimiento: expirationDate,
-          activo:            true,
+          company_id:       company.id,
+          package_id:       packageId,
+          expiration_date:  expirationDate,
+          active:           true,
         },
       })
       assignedPackageId = packageId
@@ -168,33 +168,33 @@ export async function toggleCompanyStatusAction(formData: FormData) {
     redirect("/superadmin/companies?error=empresa")
   }
 
-  const company = await prisma.empresa.findUnique({
+  const company = await prisma.company.findUnique({
     where: { id: companyId },
-    select: { activo: true, nombre: true },
+    select: { active: true, name: true },
   })
 
   if (!company) {
     redirect("/superadmin/companies?error=empresa")
   }
 
-  await prisma.empresa.update({
+  await prisma.company.update({
     where: { id: companyId },
-    data: { activo: !company.activo },
+    data: { active: !company.active },
   })
 
   await createAuditEvent({
     actor,
-    accion: company.activo ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
+    accion: company.active ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
     entityType: "EMPRESA",
     entityId: companyId,
     companyId,
-    resumen: `${actor.nombre} ${company.activo ? "suspendio" : "reactivo"} la empresa ${company.nombre}.`,
+    resumen: `${actor.nombre} ${company.active ? "suspendio" : "reactivo"} la empresa ${company.name}.`,
   })
 
   await notifySuperadmins({
-    tipo:       company.activo ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
-    titulo:     company.activo ? "Empresa suspendida" : "Empresa reactivada",
-    mensaje:    `${actor.nombre} ${company.activo ? "suspendió" : "reactivó"} la empresa ${company.nombre}.`,
+    tipo:       company.active ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
+    titulo:     company.active ? "Empresa suspendida" : "Empresa reactivada",
+    mensaje:    `${actor.nombre} ${company.active ? "suspendió" : "reactivó"} la empresa ${company.name}.`,
     entidadTipo: "EMPRESA",
     entidadId:  companyId,
     excludeUsuarioId: actor.userId,
@@ -204,6 +204,6 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  redirect(`/superadmin/companies?success=${company.activo ? "empresa_suspendida" : "empresa_activada"}`)
+  redirect(`/superadmin/companies?success=${company.active ? "empresa_suspendida" : "empresa_activada"}`)
 }
 

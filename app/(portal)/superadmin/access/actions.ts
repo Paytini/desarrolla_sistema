@@ -28,19 +28,19 @@ export async function toggleRhUserStatusAction(formData: FormData) {
 
     await createAuditEvent({
       actor,
-      accion: user.activo ? "RH_SUSPENDIDO" : "RH_REACTIVADO",
+      accion: user.active ? "RH_SUSPENDIDO" : "RH_REACTIVADO",
       entityType: "USUARIO",
       entityId: user.id,
-      resumen: `${actor.nombre} ${user.activo ? "suspendio" : "reactivo"} un usuario RH.`,
+      resumen: `${actor.nombre} ${user.active ? "suspendio" : "reactivo"} un usuario RH.`,
       metadata: {
-        rol: user.rol,
+        rol: user.role,
       },
     })
 
     revalidatePath("/superadmin/access")
     revalidatePath("/superadmin/reports")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect(`/superadmin/access?success=${user.activo ? "rh_suspendido" : "rh_activado"}`)
+    redirect(`/superadmin/access?success=${user.active ? "rh_suspendido" : "rh_activado"}`)
   } catch {
     redirect("/superadmin/access?error=usuario")
   }
@@ -73,7 +73,7 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   if (deletedEmployee) {
-    revalidateTag(companyCacheRootTag(deletedEmployee.empresa_id), "max")
+    revalidateTag(companyCacheRootTag(deletedEmployee.company_id), "max")
   }
   redirect("/superadmin/access?success=empleado_eliminado")
 }

@@ -147,20 +147,20 @@ export async function createPackageAction(formData: FormData) {
     }
   }
 
-  const pkg = await prisma.paquete.create({
+  const pkg = await prisma.package.create({
     data: {
-      nombre,
-      descripcion: descripcion || null,
-      modo_entrega: modoEntrega || "DIRECT_ENROLLMENT",
+      name: nombre,
+      description: descripcion || null,
+      delivery_mode: modoEntrega || "DIRECT_ENROLLMENT",
       wp_bundle_id: resolvedBundleId,
-      nombre_bundle: resolvedBundleName,
-      notas_operativas: notasOperativas || null,
-      activo: true,
-      cursos: {
+      bundle_name: resolvedBundleName,
+      operational_notes: notasOperativas || null,
+      active: true,
+      courses: {
         create: parsedCourses.map((course) => ({
-          wp_curso_id: course.wpCourseId,
-          nombre_curso: course.nombreCurso,
-          portada_url: course.portadaUrl,
+          wp_course_id: course.wpCourseId,
+          course_name: course.nombreCurso,
+          cover_url: course.portadaUrl,
         })),
       },
     },
@@ -198,31 +198,31 @@ export async function deletePackageAction(formData: FormData) {
     redirect("/superadmin/packages?error=paquete")
   }
 
-  const pkg = await prisma.paquete.findUnique({
+  const pkg = await prisma.package.findUnique({
     where: { id: packageId },
     select: {
       id: true,
-      nombre: true,
-      activo: true,
-      empresas: {
-        where: { activo: true },
+      name: true,
+      active: true,
+      companies: {
+        where: { active: true },
         select: {
-          empresa_id: true,
-          empresa: {
-            select: { nombre: true },
+          company_id: true,
+          company: {
+            select: { name: true },
           },
         },
       },
     },
   })
 
-  if (!pkg || !pkg.activo) {
+  if (!pkg || !pkg.active) {
     redirect("/superadmin/packages?error=paquete")
   }
 
-  if (pkg.empresas.length > 0) {
-    const companyNames = pkg.empresas
-      .map((assignment) => assignment.empresa.nombre)
+  if (pkg.companies.length > 0) {
+    const companyNames = pkg.companies
+      .map((assignment) => assignment.company.name)
       .join(", ")
     const detail = encodeURIComponent(
       `Primero cambia o desactiva el paquete activo en: ${companyNames}.`
@@ -230,9 +230,9 @@ export async function deletePackageAction(formData: FormData) {
     redirect(`/superadmin/packages?error=paquete_asignado&detail=${detail}`)
   }
 
-  await prisma.paquete.update({
+  await prisma.package.update({
     where: { id: pkg.id },
-    data: { activo: false },
+    data: { active: false },
   })
 
   await createAuditEvent({
@@ -240,7 +240,7 @@ export async function deletePackageAction(formData: FormData) {
     accion: "PAQUETE_ELIMINADO",
     entityType: "PAQUETE",
     entityId: pkg.id,
-    resumen: `${actor.nombre} elimino el paquete ${pkg.nombre}.`,
+    resumen: `${actor.nombre} elimino el paquete ${pkg.name}.`,
     metadata: {
       baja_logica: true,
     },
@@ -266,21 +266,21 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   }
 
   await prisma.$transaction([
-    prisma.empresaPaquete.updateMany({
+    prisma.companyPackage.updateMany({
       where: {
-        empresa_id: companyId,
-        activo: true,
+        company_id: companyId,
+        active: true,
       },
       data: {
-        activo: false,
+        active: false,
       },
     }),
-    prisma.empresaPaquete.create({
+    prisma.companyPackage.create({
       data: {
-        empresa_id: companyId,
-        paquete_id: packageId,
-        activo: true,
-        fecha_vencimiento: (() => {
+        company_id: companyId,
+        package_id: packageId,
+        active: true,
+        expiration_date: (() => {
           if (!expirationDateRaw) return null
           const d = new Date(expirationDateRaw)
           return isNaN(d.getTime()) ? null : d
@@ -290,13 +290,13 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   ])
 
   const [company, pkg] = await Promise.all([
-    prisma.empresa.findUnique({
+    prisma.company.findUnique({
       where: { id: companyId },
-      select: { nombre: true },
+      select: { name: true },
     }),
-    prisma.paquete.findUnique({
+    prisma.package.findUnique({
       where: { id: packageId },
-      select: { nombre: true },
+      select: { name: true },
     }),
   ])
 
@@ -306,7 +306,7 @@ export async function assignPackageToCompanyAction(formData: FormData) {
     entityType: "EMPRESA_PAQUETE",
     entityId: packageId,
     companyId,
-    resumen: `${actor.nombre} asigno ${pkg?.nombre ?? "un paquete"} a ${company?.nombre ?? "una empresa"}.`,
+    resumen: `${actor.nombre} asigno ${pkg?.name ?? "un paquete"} a ${company?.name ?? "una empresa"}.`,
     metadata: {
       empresa_id: companyId,
       paquete_id: packageId,

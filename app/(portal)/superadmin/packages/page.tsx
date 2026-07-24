@@ -98,18 +98,18 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
   const { paquetes: packages, empresas: companies, dc3MetadataByCourseId } = await getSuperadminPackagesSnapshot()
 
   const packagesWithStats = packages.map((pkg) => {
-    const dc3Complete = pkg.cursos.filter((c) => {
-      const meta = dc3MetadataByCourseId[String(c.wp_curso_id)] as Dc3MetadataView | undefined
+    const dc3Complete = pkg.courses.filter((c) => {
+      const meta = dc3MetadataByCourseId[String(c.wp_course_id)] as Dc3MetadataView | undefined
       return getDc3MissingFields(meta).length === 0
     }).length
-    const dc3Total    = pkg.cursos.length
+    const dc3Total    = pkg.courses.length
     const dc3AllOk     = dc3Total > 0 && dc3Complete === dc3Total
-    const companyNames = pkg.empresas.map((e) => e.empresa.nombre)
+    const companyNames = pkg.companies.map((e) => e.company.name)
     return { pkg, dc3Complete, dc3Total, dc3AllOk, companyNames }
   })
 
   const filteredPackages = packagesWithStats.filter(({ pkg, dc3AllOk, dc3Total, companyNames }) => {
-    const matchQ = q ? pkg.nombre.toLowerCase().includes(q) : true
+    const matchQ = q ? pkg.name.toLowerCase().includes(q) : true
     const matchDc3 =
       dc3Filter === "completo"   ? dc3AllOk :
       dc3Filter === "incompleto" ? (dc3Total > 0 && !dc3AllOk) :
@@ -123,7 +123,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
   })
 
   const sortedPackages = [...filteredPackages].sort((a, b) => {
-    if (sort === "nombre")   return a.pkg.nombre.localeCompare(b.pkg.nombre)
+    if (sort === "nombre")   return a.pkg.name.localeCompare(b.pkg.name)
     if (sort === "empresas") return b.companyNames.length - a.companyNames.length
     return new Date(b.pkg.created_at).getTime() - new Date(a.pkg.created_at).getTime()
   })
@@ -355,18 +355,18 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
           </TableHead>
           <TableBody>
             {companies.map((company) => {
-              const activePackage = company.paquetes[0]?.paquete
-              const syncable      = company.empleados.filter((e) => e.wp_user_id).length
+              const activePackage = company.packages[0]?.package
+              const syncable      = company.employees.filter((e) => e.wp_user_id).length
 
               return (
                 <TableRow key={company.id} sx={{ "&:hover": { bgcolor: "action.hover" } }}>
                   <TableCell sx={{ ...TD_SX, fontSize: 13, fontWeight: 500, color: "text.primary" }}>
-                    {company.nombre}
+                    {company.name}
                   </TableCell>
                   <TableCell sx={TD_SX}>
                     {activePackage ? (
                       <Chip
-                        label={activePackage.nombre}
+                        label={activePackage.name}
                         size="small"
                         variant="outlined"
                         sx={{ height: 20, fontSize: 11, "& .MuiChip-label": { px: 1 } }}
@@ -387,12 +387,12 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                         name="paquete_id"
                         required
                         aria-label="Paquete"
-                        defaultValue={company.paquetes[0]?.paquete_id ?? ""}
+                        defaultValue={company.packages[0]?.package_id ?? ""}
                         sx={SELECT_SX}
                       >
                         <option value="" disabled>Selecciona un paquete</option>
                         {packages.map((p) => (
-                          <option key={p.id} value={p.id}>{p.nombre}</option>
+                          <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </Box>
                       <Box
@@ -415,7 +415,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                   </TableCell>
                   <TableCell sx={{ ...TD_SX, display: { xs: "none", sm: "table-cell" } }}>
                     <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                      {company.empleados.length} empleados · {syncable} con WP ID
+                      {company.employees.length} empleados · {syncable} con WP ID
                     </Typography>
                   </TableCell>
                   <TableCell sx={{ ...TD_SX, textAlign: "right" }}>

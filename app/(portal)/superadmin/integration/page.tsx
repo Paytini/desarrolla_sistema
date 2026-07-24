@@ -25,7 +25,7 @@ export default async function SuperAdminIntegrationPage() {
   const bridgeReachable = bridgeHealth ? bridgeHealth.ok : false
   const bridgeError   = bridgeHealth && "error_message" in bridgeHealth ? bridgeHealth.error_message : null
 
-  const infoRows = [
+  const infoRows: { label: string; items: { key: string; value: string; mono?: boolean }[] }[] = [
     {
       label: "Plugin",
       items: [

@@ -58,13 +58,13 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
   const filteredCompanies = companies.filter((e) => {
     const matchQ =
       q
-        ? e.nombre.toLowerCase().includes(q) ||
+        ? e.name.toLowerCase().includes(q) ||
           (e.rfc?.toLowerCase().includes(q) ?? false) ||
-          e.email_rh.toLowerCase().includes(q)
+          e.hr_email.toLowerCase().includes(q)
         : true
     const matchStatus =
-      statusFilter === "activa"     ? e.activo  :
-      statusFilter === "suspendida" ? !e.activo :
+      statusFilter === "activa"     ? e.active  :
+      statusFilter === "suspendida" ? !e.active :
       true
     return matchQ && matchStatus
   })

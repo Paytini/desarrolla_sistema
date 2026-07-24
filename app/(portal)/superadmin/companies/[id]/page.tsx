@@ -47,8 +47,8 @@ function DonutChart({ pct, size = 160 }: { pct: number; size?: number }) {
   )
 }
 
-function getInitials(nombre: string, apellido: string) {
-  return `${nombre[0] ?? ""}${apellido[0] ?? ""}`.toUpperCase()
+function getInitials(firstName: string, lastName: string) {
+  return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase()
 }
 
 function progressColor(pct: number) {
@@ -77,71 +77,71 @@ export default async function CompanyDetailPage({ params }: PageProps) {
   const companyId = Number(id)
   if (!Number.isInteger(companyId) || companyId <= 0) notFound()
 
-  const company = await prisma.empresa.findUnique({
+  const company = await prisma.company.findUnique({
     where: { id: companyId },
     include: {
-      empleados: {
+      employees: {
         include: {
-          cursos:      { orderBy: { nombre_curso: "asc" } },
-          constancias: true,
+          courses:      { orderBy: { course_name: "asc" } },
+          certificates: true,
         },
-        orderBy: { nombre: "asc" },
+        orderBy: { first_name: "asc" },
       },
-      paquetes: {
+      packages: {
         include: {
-          paquete: {
-            include: { cursos: { select: { wp_curso_id: true, nombre_curso: true } } },
+          package: {
+            include: { courses: { select: { wp_course_id: true, course_name: true } } },
           },
         },
         orderBy: { created_at: "desc" },
       },
-      usuarios: {
-        where: { rol: "RH" },
-        select: { nombre: true, email: true },
+      users: {
+        where: { role: "RH" },
+        select: { name: true, email: true },
         take: 1,
       },
     },
   })
   if (!company) notFound()
 
-  const activeEmployees = company.empleados.filter((e) => e.activo)
-  const allCourses      = company.empleados.flatMap((e) => e.cursos)
-  const allCertificates  = company.empleados.flatMap((e) => e.constancias)
+  const activeEmployees = company.employees.filter((e) => e.active)
+  const allCourses      = company.employees.flatMap((e) => e.courses)
+  const allCertificates  = company.employees.flatMap((e) => e.certificates)
   const avgProgress     = allCourses.length
-    ? Math.round(allCourses.reduce((s, c) => s + c.progreso_pct, 0) / allCourses.length)
+    ? Math.round(allCourses.reduce((s, c) => s + c.progress_pct, 0) / allCourses.length)
     : 0
 
-  const activePackage = company.paquetes.find((p) => p.activo) ?? company.paquetes[0] ?? null
-  const packageCourses = activePackage?.paquete?.cursos ?? []
+  const activePackage = company.packages.find((p) => p.active) ?? company.packages[0] ?? null
+  const packageCourses = activePackage?.package?.courses ?? []
 
   const employeeStats = activeEmployees
     .map((e) => {
-      const avg       = e.cursos.length
-        ? Math.round(e.cursos.reduce((s, c) => s + c.progreso_pct, 0) / e.cursos.length)
+      const avg       = e.courses.length
+        ? Math.round(e.courses.reduce((s, c) => s + c.progress_pct, 0) / e.courses.length)
         : 0
-      const completed = e.cursos.filter((c) => c.completado).length
-      const hasError  = e.cursos.some((c) => c.acceso_estado === "ERROR")
-      const lastSync  = [...e.cursos].sort(
-        (a, b) => new Date(b.ultima_sincronizacion).getTime() - new Date(a.ultima_sincronizacion).getTime()
-      )[0]?.ultima_sincronizacion
-      return { ...e, avg, completed, total: e.cursos.length, certificatesCount: e.constancias.length, hasError, lastSync }
+      const completed = e.courses.filter((c) => c.completed).length
+      const hasError  = e.courses.some((c) => c.access_status === "ERROR")
+      const lastSync  = [...e.courses].sort(
+        (a, b) => new Date(b.last_synced_at).getTime() - new Date(a.last_synced_at).getTime()
+      )[0]?.last_synced_at
+      return { ...e, avg, completed, total: e.courses.length, certificatesCount: e.certificates.length, hasError, lastSync }
     })
     .sort((a, b) => b.avg - a.avg)
 
   const courseStats = packageCourses.map((pc) => {
-    const assigned   = allCourses.filter((c) => c.wp_curso_id === pc.wp_curso_id)
-    const completed  = assigned.filter((c) => c.completado).length
-    const inProgress = assigned.filter((c) => !c.completado && c.progreso_pct > 0).length
-    const notStarted = assigned.filter((c) => c.progreso_pct === 0).length
+    const assigned   = allCourses.filter((c) => c.wp_course_id === pc.wp_course_id)
+    const completed  = assigned.filter((c) => c.completed).length
+    const inProgress = assigned.filter((c) => !c.completed && c.progress_pct > 0).length
+    const notStarted = assigned.filter((c) => c.progress_pct === 0).length
     const avgPct     = assigned.length
-      ? Math.round(assigned.reduce((s, c) => s + c.progreso_pct, 0) / assigned.length)
+      ? Math.round(assigned.reduce((s, c) => s + c.progress_pct, 0) / assigned.length)
       : 0
     return { ...pc, assigned: assigned.length, completed, inProgress, notStarted, avgPct }
   })
 
-  const hrContact      = company.usuarios[0]
-  const seatPct = company.asientos_contratados
-    ? Math.round((company.asientos_usados / company.asientos_contratados) * 100)
+  const hrContact      = company.users[0]
+  const seatPct = company.contracted_seats
+    ? Math.round((company.used_seats / company.contracted_seats) * 100)
     : 0
 
   return (
@@ -167,10 +167,10 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <Typography sx={{ fontSize: 24, fontWeight: 600, color: "#0f172a" }}>
-                {company.nombre}
+                {company.name}
               </Typography>
               <Chip
-                label={company.activo ? "Activa" : "Suspendida"}
+                label={company.active ? "Activa" : "Suspendida"}
                 size="small"
                 icon={
                   <Box
@@ -179,7 +179,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                       width: 6,
                       height: 6,
                       borderRadius: "50%",
-                      bgcolor: company.activo ? "#22c55e" : "#cbd5e1",
+                      bgcolor: company.active ? "#22c55e" : "#cbd5e1",
                       ml: "6px !important",
                     }}
                   />
@@ -189,9 +189,9 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                   fontSize: "11px",
                   fontWeight: 600,
                   border: "1px solid",
-                  borderColor: company.activo ? "#bbf7d0" : "#e2e8f0",
-                  bgcolor: company.activo ? "#f0fdf4" : "#f8fafc",
-                  color: company.activo ? "#16a34a" : "#64748b",
+                  borderColor: company.active ? "#bbf7d0" : "#e2e8f0",
+                  bgcolor: company.active ? "#f0fdf4" : "#f8fafc",
+                  color: company.active ? "#16a34a" : "#64748b",
                   "& .MuiChip-label": { px: 1 },
                 }}
               />
@@ -203,11 +203,11 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                 </Box>
               )}
               <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <Mail size={11} />{company.email_rh}
+                <Mail size={11} />{company.hr_email}
               </Box>
-              {company.telefono && (
+              {company.phone && (
                 <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Phone size={11} />{company.telefono}
+                  <Phone size={11} />{company.phone}
                 </Box>
               )}
               <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -215,7 +215,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
               </Box>
               {hrContact && (
                 <Box component="span" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <User size={11} />{hrContact.nombre}
+                  <User size={11} />{hrContact.name}
                 </Box>
               )}
             </Box>
@@ -234,7 +234,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                 <Typography sx={{ fontSize: 22, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "#0f172a" }}>
                   {activeEmployees.length}
                   <Box component="span" sx={{ ml: 0.5, fontSize: 13, fontWeight: 400, color: "#94a3b8" }}>
-                    / {company.asientos_contratados}
+                    / {company.contracted_seats}
                   </Box>
                 </Typography>
                 <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>empleados activos</Typography>
@@ -271,10 +271,10 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                         ...(e.hasError ? { bgcolor: "#fef2f2", color: "#dc2626" } : { bgcolor: "#eff4fb", color: "#1a4f8a" }),
                       }}
                     >
-                      {getInitials(e.nombre, e.apellido)}
+                      {getInitials(e.first_name, e.last_name)}
                     </Box>
                     <Typography sx={{ width: 112, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 12, color: "#334155" }}>
-                      {e.nombre} {e.apellido}
+                      {e.first_name} {e.last_name}
                     </Typography>
                     <Box sx={{ flex: 1 }}>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -300,18 +300,18 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           <PanelBox title="Cupos">
             <Box sx={{ p: 2 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <SeatDonut used={company.asientos_usados} total={company.asientos_contratados} />
+                <SeatDonut used={company.used_seats} total={company.contracted_seats} />
                 <Box sx={{ display: "grid", gap: 0.5, fontSize: 12, color: "#64748b" }}>
                   <Typography sx={{ fontSize: 12, color: "#64748b" }}>
-                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>{company.asientos_usados}</Box> en uso
+                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>{company.used_seats}</Box> en uso
                   </Typography>
                   <Typography sx={{ fontSize: 12, color: "#64748b" }}>
                     <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>
-                      {Math.max(company.asientos_contratados - company.asientos_usados, 0)}
+                      {Math.max(company.contracted_seats - company.used_seats, 0)}
                     </Box>{" "}disponibles
                   </Typography>
                   <Typography sx={{ fontSize: 12, color: "#64748b" }}>
-                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>{company.asientos_contratados}</Box> contratados
+                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>{company.contracted_seats}</Box> contratados
                   </Typography>
                 </Box>
               </Box>
@@ -333,13 +333,13 @@ export default async function CompanyDetailPage({ params }: PageProps) {
               {activePackage ? (
                 <>
                   <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
-                    {activePackage.paquete?.nombre ?? "—"}
+                    {activePackage.package?.name ?? "—"}
                   </Typography>
                   <Box sx={{ mt: 1, display: "grid", gap: 0.5, fontSize: 12, color: "#94a3b8" }}>
-                    <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>Inicio: {formatDate(activePackage.fecha_inicio)}</Typography>
+                    <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>Inicio: {formatDate(activePackage.start_date)}</Typography>
                     <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
                       Vence:{" "}
-                      {activePackage.fecha_vencimiento ? formatDate(activePackage.fecha_vencimiento) : "Sin vencimiento"}
+                      {activePackage.expiration_date ? formatDate(activePackage.expiration_date) : "Sin vencimiento"}
                     </Typography>
                     <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>{packageCourses.length} cursos incluidos</Typography>
                   </Box>
@@ -375,10 +375,10 @@ export default async function CompanyDetailPage({ params }: PageProps) {
               const cPct = c.assigned ? (c.completed / c.assigned) * 100 : 0
               const iPct = c.assigned ? (c.inProgress / c.assigned) * 100 : 0
               return (
-                <Box key={c.wp_curso_id}>
+                <Box key={c.wp_course_id}>
                   <Box sx={{ mb: 0.75, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
                     <Typography sx={{ fontSize: 13, fontWeight: 500, color: "#334155", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {c.nombre_curso}
+                      {c.course_name}
                     </Typography>
                     <Box sx={{ display: "flex", flexShrink: 0, alignItems: "center", gap: 1.5, fontSize: 11, color: "#94a3b8" }}>
                       <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a4f8a" }}>{c.completed} compl.</Typography>
@@ -411,8 +411,8 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         title="Detalle de empleados"
         count={activeEmployees.length}
         description={
-          company.empleados.length - activeEmployees.length > 0
-            ? `${company.empleados.length - activeEmployees.length} suspendidos`
+          company.employees.length - activeEmployees.length > 0
+            ? `${company.employees.length - activeEmployees.length} suspendidos`
             : undefined
         }
         noPadding
@@ -459,11 +459,11 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                           ...(e.hasError ? { bgcolor: "#fef2f2", color: "#dc2626" } : { bgcolor: "#eff4fb", color: "#1a4f8a" }),
                         }}
                       >
-                        {getInitials(e.nombre, e.apellido)}
+                        {getInitials(e.first_name, e.last_name)}
                       </Box>
                       <Box>
                         <Typography sx={{ fontSize: 13, fontWeight: 500, color: "#0f172a" }}>
-                          {e.nombre} {e.apellido}
+                          {e.first_name} {e.last_name}
                         </Typography>
                         <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{e.email}</Typography>
                       </Box>
@@ -510,10 +510,10 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         )}
       </PanelBox>
 
-      {company.notas && (
+      {company.notes && (
         <PanelBox title="Notas internas">
           <Box sx={{ p: 2.5 }}>
-            <Typography sx={{ fontSize: 13, color: "#475569" }}>{company.notas}</Typography>
+            <Typography sx={{ fontSize: 13, color: "#475569" }}>{company.notes}</Typography>
           </Box>
         </PanelBox>
       )}
