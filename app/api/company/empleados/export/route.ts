@@ -18,14 +18,14 @@ export async function GET(request: Request) {
   const query = normalizeEmployeeSearchQuery(searchParams.get("q"))
   const status = normalizeEmployeeFilterStatus(searchParams.get("status"))
 
-  const empresa = await prisma.empresa.findUnique({
+  const empresa = await prisma.company.findUnique({
     where: { id: session.user.empresa_id },
     include: {
-      empleados: {
+      employees: {
         include: {
-          cursos: {
+          courses: {
             select: {
-              acceso_estado: true,
+              access_status: true,
             },
           },
         },
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     return new Response("Empresa no encontrada", { status: 404 })
   }
 
-  const filteredEmployees = empresa.empleados.filter((empleado) =>
+  const filteredEmployees = empresa.employees.filter((empleado) =>
     matchesEmployeeFilters(empleado, {
       query,
       status,
@@ -63,25 +63,25 @@ export async function GET(request: Request) {
       "fecha_alta",
     ],
     ...filteredEmployees.map((empleado) => [
-      empleado.nombre,
-      empleado.apellido,
+      empleado.first_name,
+      empleado.last_name,
       empleado.email,
       empleado.curp ?? "",
-      empleado.departamento ?? "",
-      empleado.puesto ?? "",
-      empleado.ocupacion_especifica_clave ?? "",
-      empleado.ocupacion_especifica ?? "",
-      empleado.activo ? "Activo" : "Suspendido",
+      empleado.department ?? "",
+      empleado.position ?? "",
+      empleado.occupation_code ?? "",
+      empleado.occupation_name ?? "",
+      empleado.active ? "Activo" : "Suspendido",
       empleado.wp_user_id ?? "",
-      empleado.cursos.filter((curso) => curso.acceso_estado === "ACTIVE").length,
-      empleado.cursos.filter((curso) => curso.acceso_estado === "PENDING").length,
-      empleado.cursos.filter((curso) => curso.acceso_estado === "ERROR").length,
+      empleado.courses.filter((curso) => curso.access_status === "ACTIVE").length,
+      empleado.courses.filter((curso) => curso.access_status === "PENDING").length,
+      empleado.courses.filter((curso) => curso.access_status === "ERROR").length,
       formatDateTime(empleado.created_at),
     ]),
   ]
 
   const csv = `\uFEFF${toCsvText(rows)}`
-  const filename = `empleados-${empresa.nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "empresa"}.csv`
+  const filename = `empleados-${empresa.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "empresa"}.csv`
 
   return new Response(csv, {
     headers: {

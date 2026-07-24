@@ -13,35 +13,45 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ empresas: [], empleados: [], paquetes: [] })
   }
 
-  const [empresas, empleados, paquetes] = await Promise.all([
-    prisma.empresa.findMany({
-      where: { nombre: { contains: q, mode: "insensitive" } },
-      select: { id: true, nombre: true, activo: true },
+  const [companies, employees, packages] = await Promise.all([
+    prisma.company.findMany({
+      where: { name: { contains: q, mode: "insensitive" } },
+      select: { id: true, name: true, active: true },
       take: 5,
     }),
-    prisma.empleado.findMany({
+    prisma.employee.findMany({
       where: {
         OR: [
-          { nombre: { contains: q, mode: "insensitive" } },
-          { apellido: { contains: q, mode: "insensitive" } },
+          { first_name: { contains: q, mode: "insensitive" } },
+          { last_name: { contains: q, mode: "insensitive" } },
           { email: { contains: q, mode: "insensitive" } },
         ],
       },
       select: {
         id: true,
-        nombre: true,
-        apellido: true,
+        first_name: true,
+        last_name: true,
         email: true,
-        empresa: { select: { nombre: true } },
+        company: { select: { name: true } },
       },
       take: 5,
     }),
-    prisma.paquete.findMany({
-      where: { nombre: { contains: q, mode: "insensitive" } },
-      select: { id: true, nombre: true, activo: true },
+    prisma.package.findMany({
+      where: { name: { contains: q, mode: "insensitive" } },
+      select: { id: true, name: true, active: true },
       take: 3,
     }),
   ])
+
+  const empresas = companies.map((c) => ({ id: c.id, nombre: c.name, activo: c.active }))
+  const empleados = employees.map((e) => ({
+    id: e.id,
+    nombre: e.first_name,
+    apellido: e.last_name,
+    email: e.email,
+    empresa: { nombre: e.company.name },
+  }))
+  const paquetes = packages.map((p) => ({ id: p.id, nombre: p.name, activo: p.active }))
 
   return NextResponse.json({ empresas, empleados, paquetes })
 }

@@ -20,9 +20,9 @@ export async function GET(
     return NextResponse.json({ error: "ID de constancia invalido" }, { status: 400 })
   }
 
-  const constancia = await prisma.constancia.findUnique({
+  const constancia = await prisma.certificate.findUnique({
     where: { id: constanciaId },
-    include: { empleado: true },
+    include: { employee: true },
   })
 
   if (!constancia) {
@@ -34,9 +34,9 @@ export async function GET(
   const sessionEmail = session.user.email ?? null
 
   const isOwner =
-    rol === "EMPLEADO" && sessionEmail != null && constancia.empleado.email === sessionEmail
+    rol === "EMPLEADO" && sessionEmail != null && constancia.employee.email === sessionEmail
   const isCompanyHr =
-    rol === "RH" && sessionEmpresaId != null && constancia.empleado.empresa_id === sessionEmpresaId
+    rol === "RH" && sessionEmpresaId != null && constancia.employee.company_id === sessionEmpresaId
   const isSuperAdmin = rol === "SUPERADMIN"
 
   if (!isOwner && !isCompanyHr && !isSuperAdmin) {
@@ -51,7 +51,7 @@ export async function GET(
     return new NextResponse(pdfBytes as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `${disposition}; filename="DC3-${constancia.folio}.pdf"`,
+        "Content-Disposition": `${disposition}; filename="DC3-${constancia.reference_number}.pdf"`,
         "Cache-Control": "no-store",
       },
     })

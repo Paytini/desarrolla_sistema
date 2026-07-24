@@ -24,12 +24,12 @@ export async function POST(request: Request) {
   const forceRequested = body?.force ?? false
 
   if (forceRequested) {
-    const latestCurso = await prisma.empleadoCurso.findFirst({
-      where: { empleado: { email: session.user.email } },
-      orderBy: { ultima_sincronizacion: "desc" },
-      select: { ultima_sincronizacion: true },
+    const latestCurso = await prisma.employeeCourse.findFirst({
+      where: { employee: { email: session.user.email } },
+      orderBy: { last_synced_at: "desc" },
+      select: { last_synced_at: true },
     })
-    const lastSync = latestCurso?.ultima_sincronizacion?.getTime() ?? 0
+    const lastSync = latestCurso?.last_synced_at?.getTime() ?? 0
     if (Date.now() - lastSync < FORCE_SYNC_COOLDOWN_MS) {
       return NextResponse.json({
         ok: true,

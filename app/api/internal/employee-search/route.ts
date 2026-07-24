@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ cursos: [], constancias: [] })
   }
 
-  const empleado = await prisma.empleado.findUnique({
+  const empleado = await prisma.employee.findUnique({
     where: { email: session.user.email ?? "" },
     select: { id: true },
   })
@@ -22,24 +22,36 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ cursos: [], constancias: [] })
   }
 
-  const [cursos, constancias] = await Promise.all([
-    prisma.empleadoCurso.findMany({
+  const [cursosResult, constanciasResult] = await Promise.all([
+    prisma.employeeCourse.findMany({
       where: {
-        empleado_id: empleado.id,
-        nombre_curso: { contains: q, mode: "insensitive" },
+        employee_id: empleado.id,
+        course_name: { contains: q, mode: "insensitive" },
       },
-      select: { id: true, nombre_curso: true, progreso_pct: true, completado: true },
+      select: { id: true, course_name: true, progress_pct: true, completed: true },
       take: 5,
     }),
-    prisma.constancia.findMany({
+    prisma.certificate.findMany({
       where: {
-        empleado_id: empleado.id,
-        nombre_curso: { contains: q, mode: "insensitive" },
+        employee_id: empleado.id,
+        course_name: { contains: q, mode: "insensitive" },
       },
-      select: { id: true, nombre_curso: true, folio: true },
+      select: { id: true, course_name: true, reference_number: true },
       take: 3,
     }),
   ])
+
+  const cursos = cursosResult.map((c) => ({
+    id: c.id,
+    nombre_curso: c.course_name,
+    progreso_pct: c.progress_pct,
+    completado: c.completed,
+  }))
+  const constancias = constanciasResult.map((c) => ({
+    id: c.id,
+    nombre_curso: c.course_name,
+    folio: c.reference_number,
+  }))
 
   return NextResponse.json({ cursos, constancias })
 }

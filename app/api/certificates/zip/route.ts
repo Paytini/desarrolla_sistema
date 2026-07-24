@@ -25,27 +25,28 @@ export async function GET() {
     if (!email) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
-    const empleado = await prisma.empleado.findUnique({
+    const empleado = await prisma.employee.findUnique({
       where: { email },
       select: {
-        constancias: {
-          select: { id: true, folio: true },
-          orderBy: { fecha_emision: "desc" },
+        certificates: {
+          select: { id: true, reference_number: true },
+          orderBy: { issued_at: "desc" },
         },
       },
     })
-    constancias = empleado?.constancias ?? []
+    constancias = empleado?.certificates.map((c) => ({ id: c.id, folio: c.reference_number })) ?? []
   } else if (rol === "RH") {
     if (!empresa_id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
-    constancias = await prisma.constancia.findMany({
+    const found = await prisma.certificate.findMany({
       where: {
-        empleado: { empresa_id, activo: true },
+        employee: { company_id: empresa_id, active: true },
       },
-      select: { id: true, folio: true },
-      orderBy: { fecha_emision: "desc" },
+      select: { id: true, reference_number: true },
+      orderBy: { issued_at: "desc" },
     })
+    constancias = found.map((c) => ({ id: c.id, folio: c.reference_number }))
   }
 
   if (constancias.length === 0) {

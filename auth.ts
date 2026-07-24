@@ -61,16 +61,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!captchaValid) return null
 
         try {
-          const usuario = await prisma.usuario.findUnique({
+          const usuario = await prisma.user.findUnique({
             where: { email: credentials.email as string },
             include: {
-              empresa: {
-                select: { nombre: true },
+              company: {
+                select: { name: true },
               },
             },
           })
 
-          if (!usuario || !usuario.activo) return null
+          if (!usuario || !usuario.active) return null
 
           const valida = await bcrypt.compare(
             credentials.password as string,
@@ -78,25 +78,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           )
           if (!valida) return null
 
-          if (usuario.rol !== "SUPERADMIN" && usuario.empresa_id) {
-            const status = await getCompanyAccessStatus(usuario.empresa_id)
+          if (usuario.role !== "SUPERADMIN" && usuario.company_id) {
+            const status = await getCompanyAccessStatus(usuario.company_id)
             if (status.blocked) {
               throw new EmpresaBloqueadaError(status.reason)
             }
           }
 
-          await prisma.usuario.update({
+          await prisma.user.update({
             where: { id: usuario.id },
-            data:  { ultimo_acceso: new Date() },
+            data:  { last_access: new Date() },
           })
 
           return {
             id: String(usuario.id),
             email: usuario.email,
-            nombre: usuario.nombre,
-            rol: usuario.rol,
-            empresa_id: usuario.empresa_id,
-            empresa: usuario.empresa?.nombre ?? null,
+            nombre: usuario.name,
+            rol: usuario.role,
+            empresa_id: usuario.company_id,
+            empresa: usuario.company?.name ?? null,
           }
         } catch (error) {
           if (error instanceof EmpresaBloqueadaError) throw error
