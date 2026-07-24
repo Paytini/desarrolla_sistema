@@ -28,7 +28,7 @@ El proyecto separa dos frentes:
 - `NextAuth v5` con credenciales
 - `Prisma`
 - `PostgreSQL`
-- `Tailwind CSS v4`
+- `MUI`
 
 ## Estructura recomendada
 
