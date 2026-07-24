@@ -53,48 +53,48 @@ export type Dc3GenerateInput = {
 }
 
 export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promise<Uint8Array> {
-  const certificate = await prisma.constancia.findUnique({
+  const certificate = await prisma.certificate.findUnique({
     where: { id: certificateId },
     include: {
-      empleado: { include: { empresa: true } },
+      employee: { include: { company: true } },
     },
   })
 
   if (!certificate) {
     throw new Error(`Constancia ${certificateId} no encontrada`)
   }
-  const employee = certificate.empleado
-  const company = employee.empresa
+  const employee = certificate.employee
+  const company = employee.company
   if (!company) {
     throw new Error("La constancia esta vinculada a un empleado sin empresa")
   }
 
   const [metadata, employeeCourse] = await Promise.all([
-    prisma.cursoDc3Metadata.findUnique({ where: { wp_curso_id: certificate.wp_curso_id } }),
-    prisma.empleadoCurso.findUnique({
+    prisma.courseDc3Metadata.findUnique({ where: { wp_course_id: certificate.wp_course_id } }),
+    prisma.employeeCourse.findUnique({
       where: {
-        empleado_id_wp_curso_id: {
-          empleado_id: certificate.empleado_id,
-          wp_curso_id: certificate.wp_curso_id,
+        employee_id_wp_course_id: {
+          employee_id: certificate.employee_id,
+          wp_course_id: certificate.wp_course_id,
         },
       },
     }),
   ])
 
   const missing: string[] = []
-  if (!employee.nombre || !employee.apellido) missing.push("Nombre completo del trabajador")
+  if (!employee.first_name || !employee.last_name) missing.push("Nombre completo del trabajador")
   if (!employee.curp) missing.push("CURP del trabajador")
-  if (!employee.ocupacion_especifica) missing.push("Ocupacion especifica")
-  if (!employee.ocupacion_especifica_clave) missing.push("Clave de ocupacion especifica")
-  if (!company.nombre) missing.push("Razon social de la empresa")
+  if (!employee.occupation_name) missing.push("Ocupacion especifica")
+  if (!employee.occupation_code) missing.push("Clave de ocupacion especifica")
+  if (!company.name) missing.push("Razon social de la empresa")
   if (!company.rfc) missing.push("RFC de la empresa")
 
   if (missing.length > 0) {
     throw new Dc3MissingFieldsError(missing)
   }
 
-  const endDate = employeeCourse?.fecha_completado ?? certificate.fecha_emision
-  const startDate = employeeCourse?.fecha_inicio_curso ?? certificate.fecha_emision
+  const endDate = employeeCourse?.completed_at ?? certificate.issued_at
+  const startDate = employeeCourse?.course_start_date ?? certificate.issued_at
 
   const templatePath = path.join(process.cwd(), "public", "templates", "dc3.pdf")
   const templateBytes = await fs.readFile(templatePath)
@@ -110,7 +110,7 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
     page.drawText(clean, { x, y, size, font: helvetica, color: TEXT_COLOR })
   }
 
-  const fullName = [employee.apellido, employee.apellido_materno, employee.nombre]
+  const fullName = [employee.last_name, employee.second_last_name, employee.first_name]
     .filter(Boolean)
     .join(" ")
     .trim()
@@ -122,27 +122,27 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
   }
 
   draw(
-    `${employee.ocupacion_especifica_clave} ${employee.ocupacion_especifica}`,
+    `${employee.occupation_code} ${employee.occupation_name}`,
     POS.occupation.x,
     POS.occupation.y,
     POS.occupation.size,
   )
 
-  if (employee.puesto) {
-    draw(employee.puesto, POS.position.x, POS.position.y, POS.position.size)
+  if (employee.position) {
+    draw(employee.position, POS.position.x, POS.position.y, POS.position.size)
   }
 
-  draw(company.nombre, POS.companyLegalName.x, POS.companyLegalName.y, POS.companyLegalName.size)
+  draw(company.name, POS.companyLegalName.x, POS.companyLegalName.y, POS.companyLegalName.size)
 
   const rfc = company.rfc!.toUpperCase().slice(0, 13)
   for (let i = 0; i < rfc.length; i++) {
     draw(rfc[i], POS.rfcStartX + i * POS.rfcStep, POS.rfcY, 10)
   }
 
-  draw(truncate(metadata?.nombre_curso || certificate.nombre_curso, 90), POS.course.x, POS.course.y, POS.course.size)
+  draw(truncate(metadata?.course_name || certificate.course_name, 90), POS.course.x, POS.course.y, POS.course.size)
 
-  if (metadata?.duracion_horas != null) {
-    draw(formatHours(metadata.duracion_horas), POS.duration.x, POS.duration.y, POS.duration.size)
+  if (metadata?.duration_hours != null) {
+    draw(formatHours(metadata.duration_hours), POS.duration.x, POS.duration.y, POS.duration.size)
   }
 
   const start = splitDate(startDate)
@@ -160,30 +160,30 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
   drawDigits(end.m, endMonthX)
   drawDigits(end.d, endDayX)
 
-  if (metadata?.area_tematica_nombre) {
-    const subjectArea = metadata.area_tematica_clave
-      ? `${metadata.area_tematica_clave} ${metadata.area_tematica_nombre}`
-      : metadata.area_tematica_nombre
+  if (metadata?.subject_area_name) {
+    const subjectArea = metadata.subject_area_code
+      ? `${metadata.subject_area_code} ${metadata.subject_area_name}`
+      : metadata.subject_area_name
     draw(subjectArea, POS.subjectArea.x, POS.subjectArea.y, POS.subjectArea.size)
   }
 
-  if (metadata?.agente_capacitador_nombre) {
-    const trainingAgent = metadata.agente_capacitador_registro
-      ? `${metadata.agente_capacitador_nombre} - ${metadata.agente_capacitador_registro}`
-      : metadata.agente_capacitador_nombre
+  if (metadata?.training_agent_name) {
+    const trainingAgent = metadata.training_agent_registration
+      ? `${metadata.training_agent_name} - ${metadata.training_agent_registration}`
+      : metadata.training_agent_name
     draw(trainingAgent, POS.trainingAgent.x, POS.trainingAgent.y, POS.trainingAgent.size)
   }
 
-  if (metadata?.instructor_firma_url) {
-    await drawInstructorSignature(pdf, page, metadata.instructor_firma_url)
+  if (metadata?.instructor_signature_url) {
+    await drawInstructorSignature(pdf, page, metadata.instructor_signature_url)
   }
-  if (metadata?.instructor_nombre) {
-    draw(metadata.instructor_nombre, POS.instructorName.x, POS.instructorName.y, POS.instructorName.size)
+  if (metadata?.instructor_name) {
+    draw(metadata.instructor_name, POS.instructorName.x, POS.instructorName.y, POS.instructorName.size)
   }
 
-  draw(`FOLIO: ${certificate.folio}`, POS.folio.x, POS.folio.y, POS.folio.size)
+  draw(`FOLIO: ${certificate.reference_number}`, POS.folio.x, POS.folio.y, POS.folio.size)
   draw(
-    `EMISION: ${certificate.fecha_emision.toISOString().slice(0, 10)}`,
+    `EMISION: ${certificate.issued_at.toISOString().slice(0, 10)}`,
     POS.issuedDate.x,
     POS.issuedDate.y,
     POS.issuedDate.size,

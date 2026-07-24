@@ -5,22 +5,22 @@ export type CompanyAccessStatus =
   | { blocked: true; reason: "suspendida" | "vencida" }
 
 export async function getCompanyAccessStatus(companyId: number): Promise<CompanyAccessStatus> {
-  const company = await prisma.empresa.findUnique({
+  const company = await prisma.company.findUnique({
     where: { id: companyId },
     select: {
-      activo: true,
-      paquetes: {
-        where: { activo: true },
-        select: { fecha_vencimiento: true },
+      active: true,
+      packages: {
+        where: { active: true },
+        select: { expiration_date: true },
         take: 1,
       },
     },
   })
 
   if (!company) return { blocked: false, reason: null }
-  if (!company.activo) return { blocked: true, reason: "suspendida" }
+  if (!company.active) return { blocked: true, reason: "suspendida" }
 
-  const expirationDate = company.paquetes[0]?.fecha_vencimiento ?? null
+  const expirationDate = company.packages[0]?.expiration_date ?? null
   if (expirationDate && expirationDate < new Date()) {
     return { blocked: true, reason: "vencida" }
   }

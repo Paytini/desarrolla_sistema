@@ -15,37 +15,37 @@ import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
 
 const getSuperadminReportsSnapshotCached = unstable_cache(
   async () => {
-    const companies = await prisma.empresa.findMany({
-      orderBy: { nombre: "asc" },
+    const companies = await prisma.company.findMany({
+      orderBy: { name: "asc" },
       include: {
-        paquetes: {
-          where: { activo: true },
+        packages: {
+          where: { active: true },
           orderBy: { created_at: "desc" },
           include: {
-            paquete: {
+            package: {
               select: {
                 id: true,
-                nombre: true,
-                modo_entrega: true,
+                name: true,
+                delivery_mode: true,
               },
             },
           },
           take: 1,
         },
-        empleados: {
+        employees: {
           select: {
             id: true,
-            activo: true,
+            active: true,
             wp_user_id: true,
-            nombre: true,
-            apellido: true,
-            cursos: {
+            first_name: true,
+            last_name: true,
+            courses: {
               select: {
-                nombre_curso: true,
-                progreso_pct: true,
-                completado: true,
-                acceso_estado: true,
-                ultima_sincronizacion: true,
+                course_name: true,
+                progress_pct: true,
+                completed: true,
+                access_status: true,
+                last_synced_at: true,
               },
             },
           },
@@ -69,32 +69,32 @@ export async function getSuperadminReportsSnapshot() {
 const getSuperadminCompaniesSnapshotCached = unstable_cache(
   async () => {
     const [companies, packages] = await Promise.all([
-      prisma.empresa.findMany({
+      prisma.company.findMany({
         orderBy: { created_at: "desc" },
         include: {
-          usuarios: {
-            where: { rol: "RH" },
-            select: { nombre: true, email: true, activo: true },
+          users: {
+            where: { role: "RH" },
+            select: { name: true, email: true, active: true },
             take: 1,
           },
-          empleados: {
-            select: { id: true, activo: true },
+          employees: {
+            select: { id: true, active: true },
           },
-          paquetes: {
-            where: { activo: true },
+          packages: {
+            where: { active: true },
             orderBy: { created_at: "desc" },
             include: {
-              paquete: {
-                select: { nombre: true },
+              package: {
+                select: { name: true },
               },
             },
             take: 1,
           },
         },
       }),
-      prisma.paquete.findMany({
-        where: { activo: true },
-        orderBy: { nombre: "asc" },
+      prisma.package.findMany({
+        where: { active: true },
+        orderBy: { name: "asc" },
       }),
     ])
 
@@ -114,39 +114,39 @@ export async function getSuperadminCompaniesSnapshot() {
 const getSuperadminPackagesSnapshotCached = unstable_cache(
   async () => {
     const [packages, companies] = await Promise.all([
-      prisma.paquete.findMany({
-        where: { activo: true },
+      prisma.package.findMany({
+        where: { active: true },
         orderBy: { created_at: "desc" },
         include: {
-          cursos: {
-            orderBy: { wp_curso_id: "asc" },
+          courses: {
+            orderBy: { wp_course_id: "asc" },
           },
-          empresas: {
-            where: { activo: true },
+          companies: {
+            where: { active: true },
             include: {
-              empresa: {
-                select: { nombre: true },
+              company: {
+                select: { name: true },
               },
             },
           },
         },
       }),
-      prisma.empresa.findMany({
-        where: { activo: true },
-        orderBy: { nombre: "asc" },
+      prisma.company.findMany({
+        where: { active: true },
+        orderBy: { name: "asc" },
         include: {
-          paquetes: {
-            where: { activo: true },
+          packages: {
+            where: { active: true },
             orderBy: { created_at: "desc" },
             include: {
-              paquete: {
-                select: { nombre: true },
+              package: {
+                select: { name: true },
               },
             },
             take: 1,
           },
-          empleados: {
-            where: { activo: true },
+          employees: {
+            where: { active: true },
             select: { id: true, wp_user_id: true },
           },
         },
@@ -155,16 +155,16 @@ const getSuperadminPackagesSnapshotCached = unstable_cache(
 
     const courseIds = [
       ...new Set(
-        packages.flatMap((pkg) => pkg.cursos.map((course) => course.wp_curso_id))
+        packages.flatMap((pkg) => pkg.courses.map((course) => course.wp_course_id))
       ),
     ]
     const dc3Metadata = courseIds.length > 0
-      ? await prisma.cursoDc3Metadata.findMany({
-          where: { wp_curso_id: { in: courseIds } },
+      ? await prisma.courseDc3Metadata.findMany({
+          where: { wp_course_id: { in: courseIds } },
         })
       : []
     const dc3MetadataByCourseId = Object.fromEntries(
-      dc3Metadata.map((metadata) => [String(metadata.wp_curso_id), metadata])
+      dc3Metadata.map((metadata) => [String(metadata.wp_course_id), metadata])
     )
 
     return { paquetes: packages, empresas: companies, dc3MetadataByCourseId }
@@ -184,11 +184,11 @@ const getSuperadminDc3SnapshotCached = unstable_cache(
   async () => {
     const [catalogResult, metadata, paqueteCursos] = await Promise.all([
       getWordPressCourseCatalog().catch(() => ({ courses: [], total: 0 })),
-      prisma.cursoDc3Metadata.findMany(),
-      prisma.paqueteCurso.findMany({
+      prisma.courseDc3Metadata.findMany(),
+      prisma.packageCourse.findMany({
         select: {
-          wp_curso_id: true,
-          paquete: { select: { nombre: true } },
+          wp_course_id: true,
+          package: { select: { name: true } },
         },
       }),
     ])
@@ -211,50 +211,50 @@ export async function getSuperadminDc3Snapshot() {
 const getSuperadminAccessSnapshotCached = unstable_cache(
   async () => {
     const [rhUsers, employeeUsers, employees] = await Promise.all([
-      prisma.usuario.findMany({
-        where: { rol: "RH" },
-        orderBy: [{ activo: "desc" }, { created_at: "desc" }],
+      prisma.user.findMany({
+        where: { role: "RH" },
+        orderBy: [{ active: "desc" }, { created_at: "desc" }],
         select: {
           id: true,
-          nombre: true,
+          name: true,
           email: true,
-          activo: true,
-          ultimo_acceso: true,
+          active: true,
+          last_access: true,
           created_at: true,
-          empresa: {
+          company: {
             select: {
               id: true,
-              nombre: true,
-              activo: true,
-              asientos_contratados: true,
-              asientos_usados: true,
+              name: true,
+              active: true,
+              contracted_seats: true,
+              used_seats: true,
             },
           },
         },
       }),
-      prisma.usuario.findMany({
-        where: { rol: "EMPLEADO" },
+      prisma.user.findMany({
+        where: { role: "EMPLEADO" },
         select: {
           id: true,
           email: true,
-          activo: true,
-          ultimo_acceso: true,
+          active: true,
+          last_access: true,
         },
       }),
-      prisma.empleado.findMany({
-        orderBy: [{ activo: "desc" }, { created_at: "desc" }],
+      prisma.employee.findMany({
+        orderBy: [{ active: "desc" }, { created_at: "desc" }],
         select: {
           id: true,
-          nombre: true,
-          apellido: true,
+          first_name: true,
+          last_name: true,
           email: true,
-          activo: true,
+          active: true,
           wp_user_id: true,
           created_at: true,
-          empresa: {
+          company: {
             select: {
-              nombre: true,
-              activo: true,
+              name: true,
+              active: true,
             },
           },
         },
@@ -278,25 +278,25 @@ export async function getSuperadminAccessSnapshot() {
 export async function getHrEmployeesSnapshot(companyId: number) {
   const snapshot = unstable_cache(
     async () =>
-      prisma.empresa.findUnique({
+      prisma.company.findUnique({
         where: { id: companyId },
         include: {
-          empleados: {
+          employees: {
             include: {
-              cursos: {
+              courses: {
                 select: {
-                  acceso_estado: true,
+                  access_status: true,
                 },
               },
             },
             orderBy: { created_at: "desc" },
           },
-          paquetes: {
-            where: { activo: true },
+          packages: {
+            where: { active: true },
             orderBy: { created_at: "desc" },
             include: {
-              paquete: {
-                select: { nombre: true },
+              package: {
+                select: { name: true },
               },
             },
             take: 1,
@@ -316,33 +316,33 @@ export async function getHrEmployeesSnapshot(companyId: number) {
 export async function getHrAssignmentsSnapshot(companyId: number) {
   const snapshot = unstable_cache(
     async () =>
-      prisma.empresa.findUnique({
+      prisma.company.findUnique({
         where: { id: companyId },
         include: {
-          paquetes: {
-            where: { activo: true },
+          packages: {
+            where: { active: true },
             orderBy: { created_at: "desc" },
             include: {
-              paquete: {
+              package: {
                 include: {
-                  cursos: {
-                    orderBy: { nombre_curso: "asc" },
+                  courses: {
+                    orderBy: { course_name: "asc" },
                   },
                 },
               },
             },
             take: 1,
           },
-          empleados: {
-            where: { activo: true },
+          employees: {
+            where: { active: true },
             include: {
-              cursos: {
+              courses: {
                 select: {
-                  wp_curso_id: true,
+                  wp_course_id: true,
                 },
               },
             },
-            orderBy: [{ departamento: "asc" }, { nombre: "asc" }],
+            orderBy: [{ department: "asc" }, { first_name: "asc" }],
           },
         },
       }),

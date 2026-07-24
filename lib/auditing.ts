@@ -47,17 +47,17 @@ export function getAuditActorFromSession(session: Session | null | undefined): A
 
 export async function getCompanySeatSnapshot(companyId: number) {
   const [company, suspendedEmployees] = await Promise.all([
-    prisma.empresa.findUnique({
+    prisma.company.findUnique({
       where: { id: companyId },
       select: {
-        asientos_contratados: true,
-        asientos_usados: true,
+        contracted_seats: true,
+        used_seats: true,
       },
     }),
-    prisma.empleado.count({
+    prisma.employee.count({
       where: {
-        empresa_id: companyId,
-        activo: false,
+        company_id: companyId,
+        active: false,
       },
     }),
   ])
@@ -67,8 +67,8 @@ export async function getCompanySeatSnapshot(companyId: number) {
   }
 
   return {
-    asientos_contratados: company.asientos_contratados,
-    asientos_usados: company.asientos_usados,
+    asientos_contratados: company.contracted_seats,
+    asientos_usados: company.used_seats,
     empleados_suspendidos: suspendedEmployees,
   } satisfies CompanySeatSnapshot
 }
@@ -83,17 +83,17 @@ export async function createAuditEvent(input: {
   metadata?: InputJsonValue
 }) {
   try {
-    await prisma.auditoriaEvento.create({
+    await prisma.auditEvent.create({
       data: {
-        actor_usuario_id: input.actor.userId,
-        actor_nombre: input.actor.nombre,
+        actor_user_id: input.actor.userId,
+        actor_name: input.actor.nombre,
         actor_email: input.actor.email,
-        actor_rol: input.actor.rol,
-        accion: input.accion,
-        entidad_tipo: input.entityType,
-        entidad_id: input.entityId ?? null,
-        empresa_id: input.companyId ?? null,
-        resumen: input.resumen,
+        actor_role: input.actor.rol,
+        action: input.accion,
+        entity_type: input.entityType,
+        entity_id: input.entityId ?? null,
+        company_id: input.companyId ?? null,
+        summary: input.resumen,
         metadata: input.metadata,
       },
     })
@@ -115,20 +115,20 @@ export async function createSeatHistoryEntry(input: {
   after: CompanySeatSnapshot
 }) {
   try {
-    await prisma.historialCupo.create({
+    await prisma.seatHistory.create({
       data: {
-        empresa_id: input.companyId,
-        actor_usuario_id: input.actor.userId,
-        actor_nombre: input.actor.nombre,
+        company_id: input.companyId,
+        actor_user_id: input.actor.userId,
+        actor_name: input.actor.nombre,
         actor_email: input.actor.email,
-        actor_rol: input.actor.rol,
-        motivo: input.motivo,
-        detalle: input.detalle ?? null,
-        asientos_contratados_antes: input.before.asientos_contratados,
-        asientos_contratados_despues: input.after.asientos_contratados,
-        asientos_usados_antes: input.before.asientos_usados,
-        asientos_usados_despues: input.after.asientos_usados,
-        empleados_suspendidos: input.after.empleados_suspendidos,
+        actor_role: input.actor.rol,
+        reason: input.motivo,
+        detail: input.detalle ?? null,
+        contracted_seats_before: input.before.asientos_contratados,
+        contracted_seats_after: input.after.asientos_contratados,
+        used_seats_before: input.before.asientos_usados,
+        used_seats_after: input.after.asientos_usados,
+        suspended_employees: input.after.empleados_suspendidos,
       },
     })
   } catch (error) {
