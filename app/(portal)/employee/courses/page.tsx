@@ -73,61 +73,61 @@ export default async function EmployeeCourses() {
 
   if (session.user.empresa_id) {
     try {
-      const pkg = await prisma.empresa.findUnique({
+      const pkg = await prisma.company.findUnique({
         where: { id: session.user.empresa_id },
         select: {
-          paquetes: {
-            where: { activo: true },
+          packages: {
+            where: { active: true },
             select: {
-              paquete: {
-                select: { cursos: { select: { wp_curso_id: true, portada_url: true } } },
+              package: {
+                select: { courses: { select: { wp_course_id: true, cover_url: true } } },
               },
             },
             take: 1,
           },
         },
       })
-      for (const c of pkg?.paquetes[0]?.paquete?.cursos ?? []) {
-        if (c.portada_url) thumbnailById.set(c.wp_curso_id, c.portada_url)
+      for (const c of pkg?.packages[0]?.package?.courses ?? []) {
+        if (c.cover_url) thumbnailById.set(c.wp_course_id, c.cover_url)
       }
     } catch {}
   }
 
-  const courses = employee.cursos as PortalCourseRecord[]
+  const courses = employee.courses as PortalCourseRecord[]
 
-  let dc3MetaMap  = new Map<number, { duracion_horas: number | null }>()
-  let pkgCourseMap = new Map<number, { descripcion: string | null; num_lecciones: number | null }>()
+  let dc3MetaMap  = new Map<number, { duration_hours: number | null }>()
+  let pkgCourseMap = new Map<number, { description: string | null; lesson_count: number | null }>()
 
   if (session.user.empresa_id && courses.length > 0) {
     try {
-      const wpIds = courses.map((c) => c.wp_curso_id)
+      const wpIds = courses.map((c) => c.wp_course_id)
       const [dc3MetaRecords, pkgCourses] = await Promise.all([
-        prisma.cursoDc3Metadata.findMany({
-          where: { wp_curso_id: { in: wpIds } },
-          select: { wp_curso_id: true, duracion_horas: true },
+        prisma.courseDc3Metadata.findMany({
+          where: { wp_course_id: { in: wpIds } },
+          select: { wp_course_id: true, duration_hours: true },
         }),
-        prisma.paqueteCurso.findMany({
-          where: { wp_curso_id: { in: wpIds } },
-          select: { wp_curso_id: true, descripcion: true, num_lecciones: true },
-          distinct: ["wp_curso_id"],
+        prisma.packageCourse.findMany({
+          where: { wp_course_id: { in: wpIds } },
+          select: { wp_course_id: true, description: true, lesson_count: true },
+          distinct: ["wp_course_id"],
         }),
       ])
-      dc3MetaMap  = new Map(dc3MetaRecords.map((m) => [m.wp_curso_id, { duracion_horas: m.duracion_horas }]))
-      pkgCourseMap = new Map(pkgCourses.map((c) => [c.wp_curso_id, { descripcion: c.descripcion, num_lecciones: c.num_lecciones }]))
+      dc3MetaMap  = new Map(dc3MetaRecords.map((m) => [m.wp_course_id, { duration_hours: m.duration_hours }]))
+      pkgCourseMap = new Map(pkgCourses.map((c) => [c.wp_course_id, { description: c.description, lesson_count: c.lesson_count }]))
     } catch {}
   }
 
-  const completedCourses  = courses.filter((c) => c.completado).length
-  const coursesInProgress = courses.filter((c) => !c.completado && c.progreso_pct > 0).length
-  const pendingCourses    = courses.filter((c) => c.progreso_pct === 0).length
+  const completedCourses  = courses.filter((c) => c.completed).length
+  const coursesInProgress = courses.filter((c) => !c.completed && c.progress_pct > 0).length
+  const pendingCourses    = courses.filter((c) => c.progress_pct === 0).length
   const averageProgress   = courses.length
-    ? Math.round(courses.reduce((s, c) => s + c.progreso_pct, 0) / courses.length)
+    ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length)
     : 0
 
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        title={`¡Hola, ${employee.nombre}!`}
+        title={`¡Hola, ${employee.first_name}!`}
         description="Tu ruta de capacitación activa"
         breadcrumbs={[{ label: "Mi espacio" }, { label: "Mis cursos" }]}
       />
@@ -199,15 +199,15 @@ export default async function EmployeeCourses() {
       ) : (
         <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", xl: "1fr 1fr 1fr" } }}>
           {courses.map((course) => {
-            const courseUrl = getCourseUrl(course.wp_curso_id, courseUrlById, fallbackUrlById)
+            const courseUrl = getCourseUrl(course.wp_course_id, courseUrlById, fallbackUrlById)
             const launchUrl = buildWordPressCourseLaunchUrl({ wpUserId: employee.wp_user_id, courseUrl })
-            const thumbnail  = thumbnailById.get(course.wp_curso_id)
-            const dc3Meta    = dc3MetaMap.get(course.wp_curso_id)
-            const pkgMeta    = pkgCourseMap.get(course.wp_curso_id)
-            const hasError   = course.acceso_estado === "ERROR"
-            const inProgress = !course.completado && course.progreso_pct > 0
-            const barColor   = course.progreso_pct > 0 ? "#3579F5" : "#94a3b8"
-            const duracionLabel = dc3Meta?.duracion_horas ? `${Math.round(dc3Meta.duracion_horas)}h` : null
+            const thumbnail  = thumbnailById.get(course.wp_course_id)
+            const dc3Meta    = dc3MetaMap.get(course.wp_course_id)
+            const pkgMeta    = pkgCourseMap.get(course.wp_course_id)
+            const hasError   = course.access_status === "ERROR"
+            const inProgress = !course.completed && course.progress_pct > 0
+            const barColor   = course.progress_pct > 0 ? "#3579F5" : "#94a3b8"
+            const duracionLabel = dc3Meta?.duration_hours ? `${Math.round(dc3Meta.duration_hours)}h` : null
             const hasDc3     = !!dc3Meta
 
             return (
@@ -249,7 +249,7 @@ export default async function EmployeeCourses() {
                 ) : (
                   <Box sx={{ position: "relative", display: "flex", height: 96, alignItems: "center", justifyContent: "center", bgcolor: "#EAF1FE" }}>
                     <Typography sx={{ fontSize: 30, fontWeight: 800, color: "#3579F5", opacity: 0.4 }}>
-                      {course.nombre_curso.charAt(0).toUpperCase()}
+                      {course.course_name.charAt(0).toUpperCase()}
                     </Typography>
                     {duracionLabel && (
                       <Box
@@ -285,14 +285,14 @@ export default async function EmployeeCourses() {
                         overflow: "hidden",
                       }}
                     >
-                      {course.nombre_curso}
+                      {course.course_name}
                     </Typography>
-                    <StatusBadge variant={course.completado ? "green" : inProgress ? "amber" : "slate"}>
-                      {course.completado ? "Completado" : inProgress ? "En progreso" : "Sin iniciar"}
+                    <StatusBadge variant={course.completed ? "green" : inProgress ? "amber" : "slate"}>
+                      {course.completed ? "Completado" : inProgress ? "En progreso" : "Sin iniciar"}
                     </StatusBadge>
                   </Box>
 
-                  {pkgMeta?.descripcion && (
+                  {pkgMeta?.description && (
                     <Typography
                       sx={{
                         mb: 1,
@@ -304,15 +304,15 @@ export default async function EmployeeCourses() {
                         overflow: "hidden",
                       }}
                     >
-                      {pkgMeta.descripcion}
+                      {pkgMeta.description}
                     </Typography>
                   )}
 
-                  {(pkgMeta?.num_lecciones || hasDc3) && (
+                  {(pkgMeta?.lesson_count || hasDc3) && (
                     <Box sx={{ mb: 1, display: "flex", gap: 1.5 }}>
-                      {pkgMeta?.num_lecciones && (
+                      {pkgMeta?.lesson_count && (
                         <Typography sx={{ fontSize: "11px", color: "#94a3b8" }}>
-                          📋 {pkgMeta.num_lecciones} lecciones
+                          📋 {pkgMeta.lesson_count} lecciones
                         </Typography>
                       )}
                       {hasDc3 && (
@@ -325,21 +325,21 @@ export default async function EmployeeCourses() {
 
                   <Box sx={{ mb: 0.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>Avance</Typography>
-                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a" }}>{course.progreso_pct}%</Typography>
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a" }}>{course.progress_pct}%</Typography>
                   </Box>
                   <Box sx={{ mb: 2, height: 6, overflow: "hidden", borderRadius: "999px", bgcolor: "#f0f0f0" }}>
-                    <Box sx={{ height: "100%", borderRadius: "999px", bgcolor: barColor, width: `${course.progreso_pct}%` }} />
+                    <Box sx={{ height: "100%", borderRadius: "999px", bgcolor: barColor, width: `${course.progress_pct}%` }} />
                   </Box>
 
-                  {hasError && course.acceso_error ? (
+                  {hasError && course.access_error ? (
                     <Box sx={{ mb: 1.5, borderRadius: 2, bgcolor: "#fff1f2", px: 1.5, py: 1 }}>
-                      <Typography sx={{ fontSize: 11, color: "#881337" }}>{course.acceso_error}</Typography>
+                      <Typography sx={{ fontSize: 11, color: "#881337" }}>{course.access_error}</Typography>
                     </Box>
                   ) : null}
 
-                  {course.completado && course.fecha_completado ? (
+                  {course.completed && course.completed_at ? (
                     <Typography sx={{ mb: 1.5, fontSize: "11px", color: "#94a3b8" }}>
-                      Completado: {formatDateTime(course.fecha_completado)}
+                      Completado: {formatDateTime(course.completed_at)}
                     </Typography>
                   ) : null}
 
@@ -358,12 +358,12 @@ export default async function EmployeeCourses() {
                           py: 1.25,
                           fontSize: 13,
                           fontWeight: 600,
-                          bgcolor: course.completado ? "#3579F5" : "#1a1a1a",
+                          bgcolor: course.completed ? "#3579F5" : "#1a1a1a",
                           color: "#fff",
-                          "&:hover": { bgcolor: course.completado ? "#2A61D6" : "#333" },
+                          "&:hover": { bgcolor: course.completed ? "#2A61D6" : "#333" },
                         }}
                       >
-                        {course.completado ? "Repasar" : course.progreso_pct > 0 ? "Continuar" : "Iniciar"}
+                        {course.completed ? "Repasar" : course.progress_pct > 0 ? "Continuar" : "Iniciar"}
                       </Button>
                     ) : (
                       <Typography sx={{ textAlign: "center", fontSize: 11, color: "#94a3b8" }}>

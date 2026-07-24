@@ -23,7 +23,7 @@ export default async function EmployeeCertificatesPage() {
   const employee     = learningData?.employee
   if (!employee) redirect("/login")
 
-  const certificates        = (employee.constancias ?? []) as PortalCertificateRecord[]
+  const certificates        = (employee.certificates ?? []) as PortalCertificateRecord[]
   const pendingCertificates = (learningData?.pendingCertificates ?? []) as PortalCourseRecord[]
 
   return (
@@ -131,7 +131,7 @@ export default async function EmployeeCertificatesPage() {
                       color: "#3579F5",
                     }}
                   >
-                    {certificate.nombre_curso.charAt(0).toUpperCase()}
+                    {certificate.course_name.charAt(0).toUpperCase()}
                   </Box>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
@@ -144,22 +144,22 @@ export default async function EmployeeCertificatesPage() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {certificate.nombre_curso}
+                      {certificate.course_name}
                     </Typography>
                     <Typography sx={{ fontSize: 11, color: "#64748b" }}>
                       Folio:{" "}
                       <Box component="span" sx={{ fontFamily: "monospace" }}>
-                        {certificate.folio}
+                        {certificate.reference_number}
                       </Box>
                       {" · "}
-                      {formatDateTime(certificate.fecha_emision)}
+                      {formatDateTime(certificate.issued_at)}
                     </Typography>
                   </Box>
                   <Box sx={{ display: "flex", flexShrink: 0, gap: 0.75 }}>
-                    {certificate.wp_cert_url ? (
+                    {certificate.certificate_url ? (
                       <Button
                         component="a"
-                        href={certificate.wp_cert_url}
+                        href={certificate.certificate_url}
                         target="_blank"
                         rel="noreferrer"
                         variant="outlined"
@@ -240,7 +240,7 @@ export default async function EmployeeCertificatesPage() {
                       color: "#b45309",
                     }}
                   >
-                    {course.nombre_curso.charAt(0).toUpperCase()}
+                    {course.course_name.charAt(0).toUpperCase()}
                   </Box>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
@@ -253,11 +253,11 @@ export default async function EmployeeCertificatesPage() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {course.nombre_curso}
+                      {course.course_name}
                     </Typography>
-                    {course.fecha_completado ? (
+                    {course.completed_at ? (
                       <Typography sx={{ fontSize: 11, color: "#b45309" }}>
-                        Completado: {formatDateTime(course.fecha_completado)}
+                        Completado: {formatDateTime(course.completed_at)}
                       </Typography>
                     ) : null}
                   </Box>
