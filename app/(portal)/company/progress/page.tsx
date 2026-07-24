@@ -28,22 +28,22 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
   const params = await searchParams
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
 
-  const company = await prisma.empresa.findUnique({
+  const company = await prisma.company.findUnique({
     where: { id: session.user.empresa_id },
     include: {
-      empleados: {
-        where: { activo: true },
+      employees: {
+        where: { active: true },
         include: {
-          cursos: { orderBy: [{ progreso_pct: "desc" }, { nombre_curso: "asc" }] },
+          courses: { orderBy: [{ progress_pct: "desc" }, { course_name: "asc" }] },
         },
-        orderBy: { nombre: "asc" },
+        orderBy: { first_name: "asc" },
       },
-      paquetes: {
-        where: { activo: true },
+      packages: {
+        where: { active: true },
         include: {
-          paquete: {
+          package: {
             include: {
-              cursos: { select: { wp_curso_id: true, portada_url: true } },
+              courses: { select: { wp_course_id: true, cover_url: true } },
             },
           },
         },
@@ -54,31 +54,31 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
 
   if (!company) redirect("/login")
 
-  const packageCourses = company.paquetes[0]?.paquete?.cursos ?? []
+  const packageCourses = company.packages[0]?.package?.courses ?? []
   const thumbnailMap = new Map<number, string>(
     packageCourses
-      .filter((c) => c.portada_url)
-      .map((c) => [c.wp_curso_id, c.portada_url as string])
+      .filter((c) => c.cover_url)
+      .map((c) => [c.wp_course_id, c.cover_url as string])
   )
 
-  const employees = company.empleados
+  const employees = company.employees
   const filteredEmployees = searchQuery
     ? employees.filter((e) =>
-        `${e.nombre} ${e.apellido}`.toLowerCase().includes(searchQuery) ||
+        `${e.first_name} ${e.last_name}`.toLowerCase().includes(searchQuery) ||
         e.email.toLowerCase().includes(searchQuery)
       )
     : employees
-  const allCourses = employees.flatMap((e) => e.cursos)
+  const allCourses = employees.flatMap((e) => e.courses)
   const averageProgress = allCourses.length
-    ? Math.round(allCourses.reduce((sum, c) => sum + c.progreso_pct, 0) / allCourses.length)
+    ? Math.round(allCourses.reduce((sum, c) => sum + c.progress_pct, 0) / allCourses.length)
     : 0
   const employeesWithDelay = employees.filter((e) => {
-    if (e.cursos.length === 0) return false
-    const avg = e.cursos.reduce((s, c) => s + c.progreso_pct, 0) / e.cursos.length
-    return avg < 25 || e.cursos.some((c) => c.acceso_estado === "ERROR")
+    if (e.courses.length === 0) return false
+    const avg = e.courses.reduce((s, c) => s + c.progress_pct, 0) / e.courses.length
+    return avg < 25 || e.courses.some((c) => c.access_status === "ERROR")
   }).length
-  const completedCourses = allCourses.filter((c) => c.completado).length
-  const startedCourses = allCourses.filter((c) => c.progreso_pct > 0).length
+  const completedCourses = allCourses.filter((c) => c.completed).length
+  const startedCourses = allCourses.filter((c) => c.progress_pct > 0).length
 
   const courseMap = new Map<
     number,
@@ -93,8 +93,8 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
   >()
 
   for (const course of allCourses) {
-    const current = courseMap.get(course.wp_curso_id) ?? {
-      nombre: course.nombre_curso,
+    const current = courseMap.get(course.wp_course_id) ?? {
+      nombre: course.course_name,
       assigned: 0,
       completed: 0,
       inProgress: 0,
@@ -102,11 +102,11 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
       totalProgress: 0,
     }
     current.assigned += 1
-    current.totalProgress += course.progreso_pct
-    if (course.completado) current.completed += 1
-    else if (course.progreso_pct > 0) current.inProgress += 1
+    current.totalProgress += course.progress_pct
+    if (course.completed) current.completed += 1
+    else if (course.progress_pct > 0) current.inProgress += 1
     else current.notStarted += 1
-    courseMap.set(course.wp_curso_id, current)
+    courseMap.set(course.wp_course_id, current)
   }
 
   const courseSummaries = [...courseMap.entries()]
@@ -177,18 +177,18 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
               {filteredEmployees.map((employee) => {
-                const courses = employee.cursos
+                const courses = employee.courses
                 const avg = courses.length
-                  ? Math.round(courses.reduce((s, c) => s + c.progreso_pct, 0) / courses.length)
+                  ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length)
                   : 0
-                const completed = courses.filter((c) => c.completado).length
-                const inProgress = courses.filter((c) => !c.completado && c.progreso_pct > 0).length
-                const errors = courses.filter((c) => c.acceso_estado === "ERROR").length
+                const completed = courses.filter((c) => c.completed).length
+                const inProgress = courses.filter((c) => !c.completed && c.progress_pct > 0).length
+                const errors = courses.filter((c) => c.access_status === "ERROR").length
                 const lastSync = [...courses].sort(
                   (a, b) =>
-                    new Date(b.ultima_sincronizacion).getTime() -
-                    new Date(a.ultima_sincronizacion).getTime()
-                )[0]?.ultima_sincronizacion
+                    new Date(b.last_synced_at).getTime() -
+                    new Date(a.last_synced_at).getTime()
+                )[0]?.last_synced_at
 
                 const statusVariant: "red" | "green" | "amber" | "slate" =
                   errors > 0
@@ -217,7 +217,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                         ? "bg-amber-500"
                         : "bg-slate-300"
 
-                const initials = getInitials(`${employee.nombre} ${employee.apellido}`)
+                const initials = getInitials(`${employee.first_name} ${employee.last_name}`)
 
                 return (
                   <div
@@ -236,7 +236,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-slate-950">
-                          {employee.nombre} {employee.apellido}
+                          {employee.first_name} {employee.last_name}
                         </p>
                         <StatusBadge variant={statusVariant}>
                           {statusLabel}

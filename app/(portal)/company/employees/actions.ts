@@ -49,14 +49,14 @@ function withStatus(path: string, key: "success" | "error", value: string) {
 
 type CompanyProvisioningContext = {
   id: number
-  nombre: string
-  asientos_contratados: number
-  paquetes: Array<{
-    paquete: {
-      modo_entrega: string
-      cursos: Array<{
-        wp_curso_id: number
-        nombre_curso: string
+  name: string
+  contracted_seats: number
+  packages: Array<{
+    package: {
+      delivery_mode: string
+      courses: Array<{
+        wp_course_id: number
+        course_name: string
       }>
     }
   }>
@@ -79,23 +79,23 @@ type EmployeeProvisioningInput = {
 }
 
 async function loadCompanyProvisioningContext(companyId: number) {
-  return prisma.empresa.findUnique({
+  return prisma.company.findUnique({
     where: { id: companyId },
     select: {
       id: true,
-      nombre: true,
-      asientos_contratados: true,
-      paquetes: {
-        where: { activo: true },
+      name: true,
+      contracted_seats: true,
+      packages: {
+        where: { active: true },
         orderBy: { created_at: "desc" },
         include: {
-          paquete: {
+          package: {
             select: {
-              modo_entrega: true,
-              cursos: {
+              delivery_mode: true,
+              courses: {
                 select: {
-                  wp_curso_id: true,
-                  nombre_curso: true,
+                  wp_course_id: true,
+                  course_name: true,
                 },
               },
             },
@@ -121,11 +121,11 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
   const email = input.email.toLowerCase()
 
   const [existingEmployee, existingUser] = await Promise.all([
-    prisma.empleado.findUnique({
+    prisma.employee.findUnique({
       where: { email },
       select: { id: true },
     }),
-    prisma.usuario.findUnique({
+    prisma.user.findUnique({
       where: { email },
       select: { id: true },
     }),
@@ -148,49 +148,49 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
   }
 
   const passwordHash = await bcrypt.hash(input.password, 12)
-  const activePackage = companyContext.paquetes[0]
+  const activePackage = companyContext.packages[0]
   const hasActivePackage = Boolean(activePackage)
 
-  let createdEmployee: Awaited<ReturnType<typeof prisma.empleado.create>>
+  let createdEmployee: Awaited<ReturnType<typeof prisma.employee.create>>
   try {
     createdEmployee = await prisma.$transaction(async (tx) => {
-      const activeEmployees = await tx.empleado.count({
-        where: { empresa_id: input.companyId, activo: true },
+      const activeEmployees = await tx.employee.count({
+        where: { company_id: input.companyId, active: true },
       })
 
-      if (activeEmployees >= companyContext.asientos_contratados) {
+      if (activeEmployees >= companyContext.contracted_seats) {
         throw Object.assign(new Error("cupos"), { code: "cupos" })
       }
 
-      const employee = await tx.empleado.create({
+      const employee = await tx.employee.create({
         data: {
-          empresa_id: input.companyId,
-          nombre: input.nombre,
-          apellido: input.apellido,
-          apellido_materno: input.apellidoMaterno || null,
+          company_id: input.companyId,
+          first_name: input.nombre,
+          last_name: input.apellido,
+          second_last_name: input.apellidoMaterno || null,
           email,
           curp: input.curp || null,
-          departamento: input.departamento || null,
-          puesto: input.puesto || null,
-          ocupacion_especifica_clave: input.ocupacionEspecificaClave || null,
-          ocupacion_especifica: input.ocupacionEspecifica || null,
+          department: input.departamento || null,
+          position: input.puesto || null,
+          occupation_code: input.ocupacionEspecificaClave || null,
+          occupation_name: input.ocupacionEspecifica || null,
         },
       })
 
-      await tx.usuario.create({
+      await tx.user.create({
         data: {
           email,
           password_hash: passwordHash,
-          nombre: `${input.nombre} ${input.apellido}`.trim(),
-          rol: "EMPLEADO",
-          empresa_id: input.companyId,
-          activo: true,
+          name: `${input.nombre} ${input.apellido}`.trim(),
+          role: "EMPLEADO",
+          company_id: input.companyId,
+          active: true,
         },
       })
 
-      await tx.empresa.update({
+      await tx.company.update({
         where: { id: input.companyId },
-        data: { asientos_usados: activeEmployees + 1 },
+        data: { used_seats: activeEmployees + 1 },
       })
 
       return employee
@@ -237,7 +237,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       const bridgeEmployee = await bridgeUpsertEmployee({
         employeeId: createdEmployee.id,
         companyId: companyContext.id,
-        companyName: companyContext.nombre,
+        companyName: companyContext.name,
         email,
         firstName: input.nombre,
         lastName: input.apellido,
@@ -247,15 +247,15 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       })
 
       await prisma.$transaction(async (tx) => {
-        await tx.empleado.update({
+        await tx.employee.update({
           where: { id: createdEmployee.id },
           data: { wp_user_id: bridgeEmployee.wp_user_id },
         })
 
-        await tx.usuario.updateMany({
+        await tx.user.updateMany({
           where: {
             email,
-            empresa_id: input.companyId,
+            company_id: input.companyId,
           },
           data: { wp_user_id: bridgeEmployee.wp_user_id },
         })
@@ -441,7 +441,7 @@ async function syncCsvEmployeesToWordPress(input: {
         const bridgeEmployee = await bridgeUpsertEmployee({
           employeeId: employee.id,
           companyId: input.companyContext.id,
-          companyName: input.companyContext.nombre,
+          companyName: input.companyContext.name,
           email: employee.email,
           firstName: employee.nombre,
           lastName: employee.apellido,
@@ -472,14 +472,14 @@ async function syncCsvEmployeesToWordPress(input: {
   if (syncedResults.length > 0) {
     await prisma.$transaction(
       syncedResults.flatMap((result) => [
-        prisma.empleado.update({
+        prisma.employee.update({
           where: { id: result.employeeId },
           data: { wp_user_id: result.wpUserId },
         }),
-        prisma.usuario.updateMany({
+        prisma.user.updateMany({
           where: {
             email: result.email,
-            empresa_id: input.companyContext.id,
+            company_id: input.companyContext.id,
           },
           data: { wp_user_id: result.wpUserId },
         }),
@@ -606,20 +606,20 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const candidateEmails = normalizedCsv.employees.map((employee) => employee.email)
   const [beforeSeatSnapshot, activeEmployees, existingEmployees, existingUsers] = await Promise.all([
     getCompanySeatSnapshot(companyId),
-    prisma.empleado.count({
+    prisma.employee.count({
       where: {
-        empresa_id: companyId,
-        activo: true,
+        company_id: companyId,
+        active: true,
       },
     }),
     candidateEmails.length > 0
-      ? prisma.empleado.findMany({
+      ? prisma.employee.findMany({
           where: { email: { in: candidateEmails } },
           select: { email: true },
         })
       : Promise.resolve([]),
     candidateEmails.length > 0
-      ? prisma.usuario.findMany({
+      ? prisma.user.findMany({
           where: { email: { in: candidateEmails } },
           select: { email: true },
         })
@@ -639,7 +639,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
     return !existingEmails.has(employee.email)
   })
   let skipped = normalizedCsv.skipped + (normalizedCsv.employees.length - availableEmployees.length)
-  const availableSeats = Math.max(companyContext.asientos_contratados - activeEmployees, 0)
+  const availableSeats = Math.max(companyContext.contracted_seats - activeEmployees, 0)
 
   if (availableSeats <= 0) {
     redirect("/company/employees?error=cupos")
@@ -656,40 +656,40 @@ export async function importEmployeesCsvAction(formData: FormData) {
 
   const createdEmployees = employeesToCreate.length > 0
     ? await prisma.$transaction(async (tx) => {
-        await tx.empleado.createMany({
+        await tx.employee.createMany({
           data: employeesToCreate.map((employee) => ({
-            empresa_id: companyId,
-            nombre: employee.nombre,
-            apellido: employee.apellido,
-            apellido_materno: employee.apellidoMaterno,
+            company_id: companyId,
+            first_name: employee.nombre,
+            last_name: employee.apellido,
+            second_last_name: employee.apellidoMaterno,
             email: employee.email,
             curp: employee.curp,
-            departamento: employee.departamento,
-            puesto: employee.puesto,
-            ocupacion_especifica_clave: employee.ocupacionEspecificaClave,
-            ocupacion_especifica: employee.ocupacionEspecifica,
+            department: employee.departamento,
+            position: employee.puesto,
+            occupation_code: employee.ocupacionEspecificaClave,
+            occupation_name: employee.ocupacionEspecifica,
           })),
         })
 
-        await tx.usuario.createMany({
+        await tx.user.createMany({
           data: employeesToCreate.map((employee, index) => ({
             email: employee.email,
             password_hash: passwordHashes[index],
-            nombre: `${employee.nombre} ${employee.apellido}`.trim(),
-            rol: "EMPLEADO",
-            empresa_id: companyId,
-            activo: true,
+            name: `${employee.nombre} ${employee.apellido}`.trim(),
+            role: "EMPLEADO",
+            company_id: companyId,
+            active: true,
           })),
         })
 
-        await tx.empresa.update({
+        await tx.company.update({
           where: { id: companyId },
-          data: { asientos_usados: activeEmployees + employeesToCreate.length },
+          data: { used_seats: activeEmployees + employeesToCreate.length },
         })
 
-        const persistedEmployees = await tx.empleado.findMany({
+        const persistedEmployees = await tx.employee.findMany({
           where: {
-            empresa_id: companyId,
+            company_id: companyId,
             email: { in: employeesToCreate.map((employee) => employee.email) },
           },
           select: {
@@ -778,17 +778,17 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   }
 
   const [employee, beforeSeatSnapshot] = await Promise.all([
-    prisma.empleado.findFirst({
+    prisma.employee.findFirst({
       where: {
         id: employeeId,
-        empresa_id: companyId,
+        company_id: companyId,
       },
       select: {
         id: true,
-        activo: true,
+        active: true,
         email: true,
-        nombre: true,
-        apellido: true,
+        first_name: true,
+        last_name: true,
       },
     }),
     getCompanySeatSnapshot(companyId),
@@ -799,29 +799,29 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.empleado.update({
+    await tx.employee.update({
       where: { id: employee.id },
-      data: { activo: !employee.activo },
+      data: { active: !employee.active },
     })
 
-    await tx.usuario.updateMany({
+    await tx.user.updateMany({
       where: {
         email: employee.email,
-        empresa_id: companyId,
+        company_id: companyId,
       },
-      data: { activo: !employee.activo },
+      data: { active: !employee.active },
     })
 
-    const activeEmployees = await tx.empleado.count({
+    const activeEmployees = await tx.employee.count({
       where: {
-        empresa_id: companyId,
-        activo: true,
+        company_id: companyId,
+        active: true,
       },
     })
 
-    await tx.empresa.update({
+    await tx.company.update({
       where: { id: companyId },
-      data: { asientos_usados: activeEmployees },
+      data: { used_seats: activeEmployees },
     })
   })
 
@@ -830,8 +830,8 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
     await createSeatHistoryEntry({
       actor,
       companyId,
-      motivo: employee.activo ? "empleado_suspendido" : "empleado_reactivado",
-      detalle: `${employee.nombre} ${employee.apellido} (${employee.email})`,
+      motivo: employee.active ? "empleado_suspendido" : "empleado_reactivado",
+      detalle: `${employee.first_name} ${employee.last_name} (${employee.email})`,
       before: beforeSeatSnapshot,
       after: afterSeatSnapshot,
     })
@@ -839,11 +839,11 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
 
   await createAuditEvent({
     actor,
-    accion: employee.activo ? "EMPLEADO_SUSPENDIDO" : "EMPLEADO_REACTIVADO",
+    accion: employee.active ? "EMPLEADO_SUSPENDIDO" : "EMPLEADO_REACTIVADO",
     entityType: "EMPLEADO",
     entityId: employee.id,
     companyId,
-    resumen: `${actor.nombre} ${employee.activo ? "suspendio" : "reactivo"} al empleado ${employee.nombre} ${employee.apellido}.`,
+    resumen: `${actor.nombre} ${employee.active ? "suspendio" : "reactivo"} al empleado ${employee.first_name} ${employee.last_name}.`,
     metadata: {
       email: employee.email,
     },
@@ -853,7 +853,7 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect(withStatus(returnTo, "success", employee.activo ? "empleado_suspendido" : "empleado_activado"))
+  redirect(withStatus(returnTo, "success", employee.active ? "empleado_suspendido" : "empleado_activado"))
 }
 
 export async function deleteEmployeeAction(formData: FormData) {

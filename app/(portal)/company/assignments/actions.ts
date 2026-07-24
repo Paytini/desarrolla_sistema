@@ -51,30 +51,30 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   }
 
   const [employee, company] = await Promise.all([
-    prisma.empleado.findFirst({
+    prisma.employee.findFirst({
       where: {
         id: employeeId,
-        empresa_id: companyId,
-        activo: true,
+        company_id: companyId,
+        active: true,
       },
       select: {
         id: true,
         wp_user_id: true,
-        nombre: true,
-        apellido: true,
+        first_name: true,
+        last_name: true,
         email: true,
       },
     }),
-    prisma.empresa.findUnique({
+    prisma.company.findUnique({
       where: { id: companyId },
       include: {
-        paquetes: {
-          where: { activo: true },
+        packages: {
+          where: { active: true },
           orderBy: { created_at: "desc" },
           include: {
-            paquete: {
+            package: {
               include: {
-                cursos: true,
+                courses: true,
               },
             },
           },
@@ -88,14 +88,14 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     redirect("/company/assignments?error=empleado")
   }
 
-  const activePackage = company.paquetes[0]
+  const activePackage = company.packages[0]
   if (!activePackage) {
     redirect("/company/assignments?error=paquete")
   }
 
-  const packageCourses = activePackage.paquete.cursos as PortalPackageCourseRecord[]
+  const packageCourses = activePackage.package.courses as PortalPackageCourseRecord[]
   const allowedCourseMap = new Map(
-    packageCourses.map((course: PortalPackageCourseRecord) => [course.wp_curso_id, course])
+    packageCourses.map((course: PortalPackageCourseRecord) => [course.wp_course_id, course])
   )
 
   const validSelectedCourses = selectedCourseIds
@@ -103,8 +103,8 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     .map((courseId) => {
       const course = allowedCourseMap.get(courseId)!
       return {
-        wp_curso_id: course.wp_curso_id,
-        nombre_curso: course.nombre_curso,
+        wp_course_id: course.wp_course_id,
+        course_name: course.course_name,
       }
     })
 
@@ -114,7 +114,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
 
   await replaceEmployeePackageCourses(employee.id, validSelectedCourses)
 
-  const courseNames = validSelectedCourses.map((course) => course.nombre_curso)
+  const courseNames = validSelectedCourses.map((course) => course.course_name)
   const courseAssignmentMessage =
     courseNames.length === 1
       ? `Se te asignó el curso "${courseNames[0]}".`
@@ -147,11 +147,11 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     const syncedAt = new Date()
     await bridgeEnrollCourses(
       employee.wp_user_id,
-      validSelectedCourses.map((course) => course.wp_curso_id)
+      validSelectedCourses.map((course) => course.wp_course_id)
     )
 
     const studentCourses = await bridgeGetStudentCourses(employee.wp_user_id)
-    const selectedIdsSet = new Set(validSelectedCourses.map((course) => course.wp_curso_id))
+    const selectedIdsSet = new Set(validSelectedCourses.map((course) => course.wp_course_id))
 
     const upsertOperations = studentCourses.courses
       .filter((course) => hasValidWpCourseId(course) && selectedIdsSet.has(course.wp_course_id))
@@ -159,30 +159,30 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
         const startedAt = parseBridgeDate(course.started_at)
         const completedAt = parseBridgeDate(course.completed_at)
 
-        return prisma.empleadoCurso.upsert({
+        return prisma.employeeCourse.upsert({
           where: {
-            empleado_id_wp_curso_id: {
-              empleado_id: employee.id,
-              wp_curso_id: course.wp_course_id,
+            employee_id_wp_course_id: {
+              employee_id: employee.id,
+              wp_course_id: course.wp_course_id,
             },
           },
           update: {
-            nombre_curso: course.title,
-            progreso_pct: course.progress_pct,
-            completado: course.completed,
-            fecha_inicio_curso: startedAt,
-            fecha_completado: completedAt,
-            ultima_sincronizacion: syncedAt,
+            course_name: course.title,
+            progress_pct: course.progress_pct,
+            completed: course.completed,
+            course_start_date: startedAt,
+            completed_at: completedAt,
+            last_synced_at: syncedAt,
           },
           create: {
-            empleado_id: employee.id,
-            wp_curso_id: course.wp_course_id,
-            nombre_curso: course.title,
-            progreso_pct: course.progress_pct,
-            completado: course.completed,
-            fecha_inicio_curso: startedAt,
-            fecha_completado: completedAt,
-            ultima_sincronizacion: syncedAt,
+            employee_id: employee.id,
+            wp_course_id: course.wp_course_id,
+            course_name: course.title,
+            progress_pct: course.progress_pct,
+            completed: course.completed,
+            course_start_date: startedAt,
+            completed_at: completedAt,
+            last_synced_at: syncedAt,
           },
         })
       })
@@ -197,11 +197,11 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       mensaje: courseAssignmentMessage,
     })
 
-    const syncFailMensaje = `Falló la sincronización con WordPress al asignar cursos a ${employee.nombre} ${employee.apellido} (${company.nombre}).`
+    const syncFailMensaje = `Falló la sincronización con WordPress al asignar cursos a ${employee.first_name} ${employee.last_name} (${company.name}).`
     await notifyCompanyRH(companyId, {
       tipo: "SYNC_FALLIDO",
       titulo: "Sincronización fallida",
-      mensaje: `Falló la sincronización con WordPress al asignar cursos a ${employee.nombre} ${employee.apellido}.`,
+      mensaje: `Falló la sincronización con WordPress al asignar cursos a ${employee.first_name} ${employee.last_name}.`,
     })
     await notifySuperadmins({
       tipo: "SYNC_FALLIDO",

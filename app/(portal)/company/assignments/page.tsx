@@ -34,12 +34,12 @@ type PageProps = {
 
 type AssignmentEmployee = {
   id: number
-  nombre: string
-  apellido: string
+  first_name: string
+  last_name: string
   email: string
-  departamento: string | null
-  puesto: string | null
-  cursos: Array<{ wp_curso_id: number }>
+  department: string | null
+  position: string | null
+  courses: Array<{ wp_course_id: number }>
 }
 
 function getInitials(name: string) {
@@ -61,14 +61,14 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
   const company = await getHrAssignmentsSnapshot(session.user.empresa_id)
   if (!company) redirect("/login")
 
-  const activePackage = company.paquetes[0]?.paquete
-  const packageCourses = (activePackage?.cursos ?? []) as PortalPackageCourseRecord[]
-  const allEmployees = company.empleados as AssignmentEmployee[]
+  const activePackage = company.packages[0]?.package
+  const packageCourses = (activePackage?.courses ?? []) as PortalPackageCourseRecord[]
+  const allEmployees = company.employees as AssignmentEmployee[]
 
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
   const employees = searchQuery
     ? allEmployees.filter((e) =>
-        `${e.nombre} ${e.apellido}`.toLowerCase().includes(searchQuery) ||
+        `${e.first_name} ${e.last_name}`.toLowerCase().includes(searchQuery) ||
         e.email.toLowerCase().includes(searchQuery)
       )
     : allEmployees
@@ -89,7 +89,7 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <KpiCard label="Paquete activo" value={activePackage?.nombre ?? "Sin paquete"} sub="Catálogo disponible" icon={Package} borderColor="amber" />
+        <KpiCard label="Paquete activo" value={activePackage?.name ?? "Sin paquete"} sub="Catálogo disponible" icon={Package} borderColor="amber" />
         <KpiCard label="Cursos disponibles" value={String(packageCourses.length)} sub="Para asignar a empleados" icon={BookOpen} borderColor="orange" />
         <KpiCard label="Empleados activos" value={String(allEmployees.length)} sub="Elegibles para asignación" icon={Users} borderColor="charcoal" />
       </div>
@@ -143,9 +143,9 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
           ) : null}
 
           {employees.map((employee) => {
-            const assignedSet = new Set(employee.cursos.map((c) => c.wp_curso_id))
-            const assignedCount = employee.cursos.length
-            const initials = getInitials(`${employee.nombre} ${employee.apellido}`)
+            const assignedSet = new Set(employee.courses.map((c) => c.wp_course_id))
+            const assignedCount = employee.courses.length
+            const initials = getInitials(`${employee.first_name} ${employee.last_name}`)
 
             return (
               <article
@@ -162,12 +162,12 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-900">
-                          {employee.nombre} {employee.apellido}
+                          {employee.first_name} {employee.last_name}
                         </p>
                         <p className="truncate text-xs text-slate-400">
                           {employee.email}
-                          {employee.departamento ? ` · ${employee.departamento}` : ""}
-                          {employee.puesto ? ` · ${employee.puesto}` : ""}
+                          {employee.department ? ` · ${employee.department}` : ""}
+                          {employee.position ? ` · ${employee.position}` : ""}
                         </p>
                       </div>
                     </div>
@@ -187,21 +187,21 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
                   <div className="grid gap-2 p-4 sm:grid-cols-2 xl:grid-cols-3">
                     {packageCourses.map((course) => (
                       <label
-                        key={`${employee.id}-${course.wp_curso_id}`}
+                        key={`${employee.id}-${course.wp_course_id}`}
                         className="group flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-[#3579F5]/30 hover:bg-[#F3F8FE] has-[:checked]:border-[#3579F5]/40 has-[:checked]:bg-[#F3F8FE]"
                       >
                         <input
                           type="checkbox"
                           name="course_ids"
-                          value={course.wp_curso_id}
-                          defaultChecked={assignedSet.has(course.wp_curso_id)}
+                          value={course.wp_course_id}
+                          defaultChecked={assignedSet.has(course.wp_course_id)}
                           className="sr-only"
                         />
 
-                        {course.portada_url ? (
+                        {course.cover_url ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
-                            src={course.portada_url}
+                            src={course.cover_url}
                             alt=""
                             className="h-10 w-10 shrink-0 rounded-lg object-cover"
                           />
@@ -212,7 +212,7 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
                         )}
 
                         <p className="line-clamp-2 min-w-0 flex-1 text-xs font-medium leading-snug text-slate-700">
-                          {course.nombre_curso}
+                          {course.course_name}
                         </p>
 
                         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-[#3579F5] group-has-[:checked]:bg-[#3579F5]">

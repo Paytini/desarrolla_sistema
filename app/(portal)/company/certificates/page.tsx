@@ -10,11 +10,11 @@ import { redirect } from "next/navigation"
 
 type CompanyEmployee = {
   id: number
-  nombre: string
-  apellido: string
+  first_name: string
+  last_name: string
   email: string
-  constancias: PortalCertificateRecord[]
-  cursos: PortalCourseRecord[]
+  certificates: PortalCertificateRecord[]
+  courses: PortalCourseRecord[]
 }
 type EmployeeCourse = PortalCourseRecord
 type CompanyCertificate = PortalCertificateRecord & {
@@ -30,20 +30,20 @@ type PendingCertificate = {
 }
 
 async function getCompanyCertificatesRecord(companyId: number) {
-  return prisma.empresa.findUnique({
+  return prisma.company.findUnique({
     where: { id: companyId },
     include: {
-      empleados: {
-        where: { activo: true },
+      employees: {
+        where: { active: true },
         include: {
-          constancias: {
-            orderBy: [{ fecha_emision: "desc" }, { nombre_curso: "asc" }],
+          certificates: {
+            orderBy: [{ issued_at: "desc" }, { course_name: "asc" }],
           },
-          cursos: {
-            orderBy: [{ completado: "desc" }, { fecha_completado: "desc" }],
+          courses: {
+            orderBy: [{ completed: "desc" }, { completed_at: "desc" }],
           },
         },
-        orderBy: { nombre: "asc" },
+        orderBy: { first_name: "asc" },
       },
     },
   })
@@ -57,31 +57,31 @@ export default async function CompanyCertificatesPage() {
   const company = await getCompanyCertificatesRecord(session.user.empresa_id)
   if (!company) redirect("/login")
 
-  const certificates: CompanyCertificate[] = company.empleados.flatMap(
+  const certificates: CompanyCertificate[] = company.employees.flatMap(
     (employee: CompanyEmployee) =>
-      employee.constancias.map((certificate: PortalCertificateRecord) => ({
+      employee.certificates.map((certificate: PortalCertificateRecord) => ({
         ...certificate,
-        employeeName: `${employee.nombre} ${employee.apellido}`.trim(),
+        employeeName: `${employee.first_name} ${employee.last_name}`.trim(),
         employeeEmail: employee.email,
       }))
   )
 
-  const pendingCertificates: PendingCertificate[] = company.empleados.flatMap(
+  const pendingCertificates: PendingCertificate[] = company.employees.flatMap(
     (employee: CompanyEmployee) => {
       const existingCourseIds = new Set(
-        employee.constancias.map((c: PortalCertificateRecord) => c.wp_curso_id)
+        employee.certificates.map((c: PortalCertificateRecord) => c.wp_course_id)
       )
-      return employee.cursos
+      return employee.courses
         .filter(
           (course: EmployeeCourse) =>
-            course.completado && !existingCourseIds.has(course.wp_curso_id)
+            course.completed && !existingCourseIds.has(course.wp_course_id)
         )
         .map((course: EmployeeCourse) => ({
-          id: `${employee.id}-${course.wp_curso_id}`,
-          employeeName: `${employee.nombre} ${employee.apellido}`.trim(),
+          id: `${employee.id}-${course.wp_course_id}`,
+          employeeName: `${employee.first_name} ${employee.last_name}`.trim(),
           employeeEmail: employee.email,
-          courseName: course.nombre_curso,
-          completedAt: course.fecha_completado,
+          courseName: course.course_name,
+          completedAt: course.completed_at,
         }))
     }
   )
@@ -134,20 +134,20 @@ export default async function CompanyCertificatesPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-[#1a1a1a]">
-                        {certificate.nombre_curso}
+                        {certificate.course_name}
                       </p>
                       <p className="truncate text-xs text-[#64748b]">
                         {certificate.employeeName} · Folio:{" "}
-                        <span className="font-mono">{certificate.folio}</span>
+                        <span className="font-mono">{certificate.reference_number}</span>
                       </p>
                     </div>
                     <p className="hidden shrink-0 text-xs text-[#94a3b8] sm:block">
-                      {formatDateTime(certificate.fecha_emision)}
+                      {formatDateTime(certificate.issued_at)}
                     </p>
                     <div className="flex shrink-0 gap-1.5">
-                      {certificate.wp_cert_url ? (
+                      {certificate.certificate_url ? (
                         <a
-                          href={certificate.wp_cert_url}
+                          href={certificate.certificate_url}
                           target="_blank"
                           rel="noreferrer"
                           className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition-all duration-200 hover:bg-gray-200"

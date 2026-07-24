@@ -397,14 +397,14 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const company = await getHrEmployeesSnapshot(session.user.empresa_id)
   if (!company) redirect("/login")
 
-  const activeEmployees = company.empleados.filter((e) => e.activo).length
-  const inactiveEmployees = company.empleados.length - activeEmployees
-  const availableSeats = Math.max(company.asientos_contratados - activeEmployees, 0)
-  const activePackage = company.paquetes[0]?.paquete?.nombre ?? "Sin paquete"
-  const employeesWithAccessIssues = company.empleados.filter((e) =>
-    e.cursos.some((c) => c.acceso_estado === "ERROR")
+  const activeEmployees = company.employees.filter((e) => e.active).length
+  const inactiveEmployees = company.employees.length - activeEmployees
+  const availableSeats = Math.max(company.contracted_seats - activeEmployees, 0)
+  const activePackage = company.packages[0]?.package?.name ?? "Sin paquete"
+  const employeesWithAccessIssues = company.employees.filter((e) =>
+    e.courses.some((c) => c.access_status === "ERROR")
   ).length
-  const filteredEmployees = company.empleados.filter((e) =>
+  const filteredEmployees = company.employees.filter((e) =>
     matchesEmployeeFilters(e, { query, status })
   )
   const currentListPath = buildEmployeeListPath(searchQuery, status)
@@ -466,7 +466,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
           <h2 className="text-base font-semibold text-slate-950">
             Plantilla actual
             <span className="ml-2 text-sm font-normal text-slate-400">
-              {filteredEmployees.length} de {company.empleados.length}
+              {filteredEmployees.length} de {company.employees.length}
             </span>
           </h2>
           <a
@@ -510,26 +510,26 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
         </form>
 
         <div className="space-y-2">
-          {company.empleados.length === 0 ? (
+          {company.employees.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               Aún no hay empleados registrados para esta empresa.
             </div>
           ) : null}
 
-          {company.empleados.length > 0 && filteredEmployees.length === 0 ? (
+          {company.employees.length > 0 && filteredEmployees.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               No encontramos empleados que coincidan con ese filtro.
             </div>
           ) : null}
 
           {filteredEmployees.map((employee) => {
-            const activeCourseCount = employee.cursos.filter(
-              (c) => c.acceso_estado === "ACTIVE"
+            const activeCourseCount = employee.courses.filter(
+              (c) => c.access_status === "ACTIVE"
             ).length
-            const errorCourseCount = employee.cursos.filter(
-              (c) => c.acceso_estado === "ERROR"
+            const errorCourseCount = employee.courses.filter(
+              (c) => c.access_status === "ERROR"
             ).length
-            const initials = getInitials(`${employee.nombre} ${employee.apellido}`)
+            const initials = getInitials(`${employee.first_name} ${employee.last_name}`)
 
             return (
               <div
@@ -540,7 +540,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                   className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
                     errorCourseCount > 0
                       ? "bg-rose-50 text-rose-700"
-                      : employee.activo
+                      : employee.active
                         ? "bg-[#EAF1FE] text-[#3579F5]"
                         : "bg-slate-100 text-slate-500"
                   }`}
@@ -551,10 +551,10 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="truncate text-sm font-semibold text-slate-950">
-                      {employee.nombre} {employee.apellido}
+                      {employee.first_name} {employee.last_name}
                     </p>
-                    <StatusBadge variant={employee.activo ? "green" : "slate"} dot>
-                      {employee.activo ? "Activo" : "Suspendido"}
+                    <StatusBadge variant={employee.active ? "green" : "slate"} dot>
+                      {employee.active ? "Activo" : "Suspendido"}
                     </StatusBadge>
                     {errorCourseCount > 0 && (
                       <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800">
@@ -564,8 +564,8 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                   </div>
                   <p className="truncate text-xs text-slate-500">
                     {employee.email}
-                    {employee.departamento ? ` · ${employee.departamento}` : ""}
-                    {employee.puesto ? ` · ${employee.puesto}` : ""}
+                    {employee.department ? ` · ${employee.department}` : ""}
+                    {employee.position ? ` · ${employee.position}` : ""}
                   </p>
                 </div>
 
@@ -581,18 +581,18 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                     <button
                       type="submit"
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                        employee.activo
+                        employee.active
                           ? "bg-[#1a1a1a] text-white hover:bg-[#333]"
                           : "bg-[#3579F5] text-white hover:bg-[#2A61D6]"
                       }`}
                     >
-                      {employee.activo ? "Suspender" : "Reactivar"}
+                      {employee.active ? "Suspender" : "Reactivar"}
                     </button>
                   </form>
                   <DeleteEmployeeButton
                     action={deleteEmployeeAction}
                     employeeId={employee.id}
-                    employeeName={`${employee.nombre} ${employee.apellido}`.trim()}
+                    employeeName={`${employee.first_name} ${employee.last_name}`.trim()}
                     returnTo={currentListPath}
                   />
                 </div>

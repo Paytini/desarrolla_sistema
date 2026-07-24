@@ -39,39 +39,39 @@ export default async function CompanyHome() {
 
   await checkAndNotifyExpiringPackages().catch(() => {})
 
-  const company = await prisma.empresa.findUnique({
+  const company = await prisma.company.findUnique({
     where: { id: session.user.empresa_id },
     include: {
-      paquetes: {
-        where: { activo: true },
+      packages: {
+        where: { active: true },
         orderBy: { created_at: "desc" },
-        include: { paquete: { include: { cursos: true } } },
+        include: { package: { include: { courses: true } } },
         take: 1,
       },
-      empleados: {
-        where: { activo: true },
-        include: { cursos: true, constancias: true },
+      employees: {
+        where: { active: true },
+        include: { courses: true, certificates: true },
       },
     },
   })
 
   if (!company) redirect("/login")
 
-  const activePackage = company.paquetes[0]?.paquete
-  const activeEmployees = company.empleados.length
-  const totalCertificates = company.empleados.reduce(
-    (sum, employee) => sum + employee.constancias.length,
+  const activePackage = company.packages[0]?.package
+  const activeEmployees = company.employees.length
+  const totalCertificates = company.employees.reduce(
+    (sum: number, employee) => sum + employee.certificates.length,
     0
   )
-  const allProgress = company.empleados.flatMap((employee) => employee.cursos.map((course) => course.progreso_pct))
+  const allProgress = company.employees.flatMap((employee) => employee.courses.map((course) => course.progress_pct))
   const averageProgress = allProgress.length
-    ? Math.round(allProgress.reduce((sum, p) => sum + p, 0) / allProgress.length)
+    ? Math.round(allProgress.reduce((sum: number, p: number) => sum + p, 0) / allProgress.length)
     : 0
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={company.nombre}
+        title={company.name}
         description="Panel de operación académica"
         breadcrumbs={[{ label: "Empresa" }]}
       />
@@ -79,8 +79,8 @@ export default async function CompanyHome() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Paquete activo"
-          value={activePackage?.nombre ?? "Sin paquete"}
-          sub={`${activePackage?.cursos.length ?? 0} cursos`}
+          value={activePackage?.name ?? "Sin paquete"}
+          sub={`${activePackage?.courses.length ?? 0} cursos`}
           icon={Package}
           borderColor="amber"
         />
