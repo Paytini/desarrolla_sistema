@@ -1,4 +1,4 @@
-import Dc3EditorList, { type CourseEntry } from "@/components/empresa/Dc3EditorList"
+import Dc3EditorList, { type CourseEntry } from "@/components/company/Dc3EditorList"
 import { getSuperadminDc3Snapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
@@ -23,10 +23,10 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
   const openParam  = readSearchParam(params, "open")
   const openCourseId = openParam ? Number(openParam) : null
 
-  const { publishedCourses, metadata, paqueteCursos } = await getSuperadminDc3Snapshot()
+  const { publishedCourses, metadata, paqueteCursos: packageCourses } = await getSuperadminDc3Snapshot()
 
   const packagesByCourseId = new Map<number, string[]>()
-  for (const pc of paqueteCursos) {
+  for (const pc of packageCourses) {
     const existing = packagesByCourseId.get(pc.wp_curso_id)
     if (existing) {
       if (!existing.includes(pc.paquete.nombre)) existing.push(pc.paquete.nombre)
@@ -38,9 +38,9 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
   const metadataMap = new Map(metadata.map((m) => [m.wp_curso_id, m]))
 
   const courses: CourseEntry[] = publishedCourses.map((course) => ({
-    wp_curso_id: course.wp_course_id,
-    nombre_curso: decodeHtmlEntities(course.title),
-    paquetes: packagesByCourseId.get(course.wp_course_id) ?? [],
+    wpCourseId: course.wp_course_id,
+    courseName: decodeHtmlEntities(course.title),
+    packages: packagesByCourseId.get(course.wp_course_id) ?? [],
     metadata: metadataMap.get(course.wp_course_id) ?? null,
   }))
 

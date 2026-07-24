@@ -12,14 +12,14 @@ import Typography from "@mui/material/Typography"
 
 type DeletePackageButtonProps = {
   action: (formData: FormData) => void | Promise<void>
-  paqueteId: number
+  packageId: number
   packageName: string
   assignedCompaniesCount: number
 }
 
 export default function DeletePackageButton({
   action,
-  paqueteId,
+  packageId,
   packageName,
   assignedCompaniesCount,
 }: DeletePackageButtonProps) {
@@ -98,7 +98,7 @@ export default function DeletePackageButton({
             Cancelar
           </Button>
           <form action={action}>
-            <input type="hidden" name="paquete_id" value={paqueteId} />
+            <input type="hidden" name="paquete_id" value={packageId} />
             <Button
               type="submit"
               variant="contained"

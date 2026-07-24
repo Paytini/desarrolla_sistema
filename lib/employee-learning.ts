@@ -1,5 +1,5 @@
 import { decodeHtmlEntities } from "@/lib/format"
-import { notifyEmpleadoNewConstancias } from "@/lib/notifications"
+import { notifyEmployeeNewCertificates } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import {
   bridgeGetStudentCertificates,
@@ -35,13 +35,13 @@ function hasWpCourseId<T extends { wp_course_id?: number | null }>(
   return Number.isInteger(item.wp_course_id) && Number(item.wp_course_id) > 0
 }
 
-function buildCertificateFolio(empleadoId: number, courseId: number, completedAt?: string | null) {
+function buildCertificateFolio(employeeId: number, courseId: number, completedAt?: string | null) {
   const baseDate = parseBridgeDate(completedAt) ?? new Date()
   const year = baseDate.getUTCFullYear()
   const month = String(baseDate.getUTCMonth() + 1).padStart(2, "0")
   const day = String(baseDate.getUTCDate()).padStart(2, "0")
 
-  return `D360-${year}-${month}${day}-${empleadoId}-${courseId}`
+  return `D360-${year}-${month}${day}-${employeeId}-${courseId}`
 }
 
 function parseBridgeDate(value?: string | null) {
@@ -97,7 +97,7 @@ function mergeBridgeCertificates(
 }
 
 async function upsertEmployeeCoursesFromBridge(
-  empleadoId: number,
+  employeeId: number,
   courses: BridgeStudentCourse[]
 ) {
   const now = new Date()
@@ -110,7 +110,7 @@ async function upsertEmployeeCoursesFromBridge(
       return prisma.empleadoCurso.upsert({
         where: {
           empleado_id_wp_curso_id: {
-            empleado_id: empleadoId,
+            empleado_id: employeeId,
             wp_curso_id: course.wp_course_id,
           },
         },
@@ -125,7 +125,7 @@ async function upsertEmployeeCoursesFromBridge(
           ultima_sincronizacion: now,
         },
         create: {
-          empleado_id: empleadoId,
+          empleado_id: employeeId,
           wp_curso_id: course.wp_course_id,
           nombre_curso: decodeHtmlEntities(course.title),
           progreso_pct: course.progress_pct,
@@ -144,12 +144,12 @@ async function upsertEmployeeCoursesFromBridge(
 }
 
 async function upsertEmployeeCertificatesFromBridge(
-  empleadoId: number,
+  employeeId: number,
   certificates: BridgeStudentCertificate[]
 ) {
   const syncedAt = new Date()
   const existingCertificates = await prisma.constancia.findMany({
-    where: { empleado_id: empleadoId },
+    where: { empleado_id: employeeId },
   })
 
   const certificateByCourseId = new Map(
@@ -163,7 +163,7 @@ async function upsertEmployeeCertificatesFromBridge(
     .map((certificate) => {
       const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
       const certificateUrl = certificate.certificate_url?.trim() || null
-      const fechaEmision =
+      const issuedAt =
         parseBridgeDate(certificate.completed_at) ??
         existingCertificate?.fecha_emision ??
         syncedAt
@@ -174,7 +174,7 @@ async function upsertEmployeeCertificatesFromBridge(
           data: {
             nombre_curso: decodeHtmlEntities(certificate.title),
             wp_cert_url: certificateUrl ?? existingCertificate.wp_cert_url,
-            fecha_emision: fechaEmision,
+            fecha_emision: issuedAt,
           },
         })
       }
@@ -183,17 +183,17 @@ async function upsertEmployeeCertificatesFromBridge(
         return null
       }
 
-      const nombreCurso = decodeHtmlEntities(certificate.title)
-      newCertificateCourseTitles.push(nombreCurso)
+      const courseName = decodeHtmlEntities(certificate.title)
+      newCertificateCourseTitles.push(courseName)
 
       return prisma.constancia.create({
         data: {
-          empleado_id: empleadoId,
+          empleado_id: employeeId,
           wp_curso_id: certificate.wp_course_id,
-          nombre_curso: nombreCurso,
-          folio: buildCertificateFolio(empleadoId, certificate.wp_course_id, fechaEmision.toISOString()),
+          nombre_curso: courseName,
+          folio: buildCertificateFolio(employeeId, certificate.wp_course_id, issuedAt.toISOString()),
           wp_cert_url: certificateUrl,
-          fecha_emision: fechaEmision,
+          fecha_emision: issuedAt,
         },
       })
     })
@@ -203,7 +203,7 @@ async function upsertEmployeeCertificatesFromBridge(
     try {
       await prisma.$transaction(operations)
       if (newCertificateCourseTitles.length > 0) {
-        await notifyEmpleadoNewConstancias(empleadoId, newCertificateCourseTitles).catch(() => {})
+        await notifyEmployeeNewCertificates(employeeId, newCertificateCourseTitles).catch(() => {})
       }
     } catch (err) {
       if (
@@ -226,49 +226,49 @@ function normalizeBridgeSnapshotCertificates(snapshot: EmployeeLearningBridgeSna
 }
 
 async function resolveEmployeeIdForLearningSync(input: {
-  empleadoId?: number | null
+  employeeId?: number | null
   wpUserId?: number | null
 }) {
-  if (input.empleadoId) {
-    return input.empleadoId
+  if (input.employeeId) {
+    return input.employeeId
   }
 
   if (!input.wpUserId) {
     return null
   }
 
-  const empleado = await prisma.empleado.findUnique({
+  const employee = await prisma.empleado.findUnique({
     where: { wp_user_id: input.wpUserId },
     select: { id: true },
   })
 
-  return empleado?.id ?? null
+  return employee?.id ?? null
 }
 
 export async function syncEmployeeLearningFromBridgeSnapshot(input: {
-  empleadoId?: number | null
+  employeeId?: number | null
   wpUserId?: number | null
   snapshot: EmployeeLearningBridgeSnapshot
 }) {
-  const empleadoId = await resolveEmployeeIdForLearningSync({
-    empleadoId: input.empleadoId,
+  const employeeId = await resolveEmployeeIdForLearningSync({
+    employeeId: input.employeeId,
     wpUserId: input.wpUserId,
   })
 
-  if (!empleadoId) {
+  if (!employeeId) {
     throw new Error("No fue posible resolver al empleado del portal para aplicar el webhook.")
   }
 
   const normalizedCertificates = normalizeBridgeSnapshotCertificates(input.snapshot)
 
-  await upsertEmployeeCoursesFromBridge(empleadoId, input.snapshot.courses)
+  await upsertEmployeeCoursesFromBridge(employeeId, input.snapshot.courses)
 
   const certificatesUpdated = normalizedCertificates.length > 0
-    ? await upsertEmployeeCertificatesFromBridge(empleadoId, normalizedCertificates)
+    ? await upsertEmployeeCertificatesFromBridge(employeeId, normalizedCertificates)
     : 0
 
   return {
-    empleadoId,
+    employeeId,
     coursesUpdated: input.snapshot.courses.filter(hasWpCourseId).length,
     certificatesUpdated,
   }
@@ -280,37 +280,37 @@ export async function syncEmployeeLearningByEmail(
     force?: boolean
   }
 ) {
-  const empleado = await fetchEmployeeLearningRecord(email)
+  const employee = await fetchEmployeeLearningRecord(email)
 
-  if (!empleado) {
+  if (!employee) {
     return {
       ok: false,
       synced: false,
       skipped: false,
-      empleadoId: null,
-      empresaId: null,
+      employeeId: null,
+      companyId: null,
       latestSyncAt: null,
       message: "No se encontro el empleado para sincronizar su avance.",
     }
   }
 
-  const latestSyncAt = getLatestCourseSyncIso(empleado.cursos)
-  const shouldSync = options?.force || shouldSyncEmployeeLearning(empleado)
+  const latestSyncAt = getLatestCourseSyncIso(employee.cursos)
+  const shouldSync = options?.force || shouldSyncEmployeeLearning(employee)
   if (!shouldSync) {
     return {
       ok: true,
       synced: false,
       skipped: true,
-      empleadoId: empleado.id,
-      empresaId: empleado.empresa_id,
+      employeeId: employee.id,
+      companyId: employee.empresa_id,
       latestSyncAt,
       message: "El progreso ya esta actualizado recientemente.",
     }
   }
 
-  const result = await syncEmployeeLearningRecord(empleado.id)
+  const result = await syncEmployeeLearningRecord(employee.id)
   const latestSyncedCourse = await prisma.empleadoCurso.findFirst({
-    where: { empleado_id: empleado.id },
+    where: { empleado_id: employee.id },
     orderBy: { ultima_sincronizacion: "desc" },
     select: { ultima_sincronizacion: true },
   })
@@ -319,23 +319,23 @@ export async function syncEmployeeLearningByEmail(
     ok: true,
     synced: result.synced,
     skipped: false,
-    empleadoId: empleado.id,
-    empresaId: empleado.empresa_id,
+    employeeId: employee.id,
+    companyId: employee.empresa_id,
     coursesUpdated: result.coursesUpdated,
     certificatesUpdated: result.certificatesUpdated,
     latestSyncAt: latestSyncedCourse?.ultima_sincronizacion.toISOString() ?? latestSyncAt,
   }
 }
 
-function shouldSyncEmployeeLearning(empleado: {
+function shouldSyncEmployeeLearning(employee: {
   wp_user_id: number | null
   cursos: Array<{ ultima_sincronizacion: Date }>
 }) {
-  if (!empleado.wp_user_id || !isWordPressBridgeConfigured()) {
+  if (!employee.wp_user_id || !isWordPressBridgeConfigured()) {
     return false
   }
 
-  const latestSync = getLatestCourseSyncTimestamp(empleado.cursos)
+  const latestSync = getLatestCourseSyncTimestamp(employee.cursos)
 
   if (!latestSync) {
     return true
@@ -382,9 +382,9 @@ async function fetchEmployeeLearningRecord(email: string) {
   })
 }
 
-async function fetchEmployeeLearningRecordById(empleadoId: number) {
+async function fetchEmployeeLearningRecordById(employeeId: number) {
   return prisma.empleado.findUnique({
-    where: { id: empleadoId },
+    where: { id: employeeId },
     include: {
       empresa: {
         select: {
@@ -407,10 +407,10 @@ async function fetchEmployeeLearningRecordById(empleadoId: number) {
   })
 }
 
-async function syncEmployeeLearningRecord(empleadoId: number) {
-  const empleado = await fetchEmployeeLearningRecordById(empleadoId)
+async function syncEmployeeLearningRecord(employeeId: number) {
+  const employee = await fetchEmployeeLearningRecordById(employeeId)
 
-  if (!empleado || !empleado.wp_user_id || !isWordPressBridgeConfigured()) {
+  if (!employee || !employee.wp_user_id || !isWordPressBridgeConfigured()) {
     return {
       synced: false,
       bridgeCourses: [] as BridgeStudentCourse[],
@@ -420,8 +420,8 @@ async function syncEmployeeLearningRecord(empleadoId: number) {
   }
 
   const [coursesResult, certificatesResult] = await Promise.allSettled([
-    bridgeGetStudentCourses(empleado.wp_user_id),
-    bridgeGetStudentCertificates(empleado.wp_user_id),
+    bridgeGetStudentCourses(employee.wp_user_id),
+    bridgeGetStudentCertificates(employee.wp_user_id),
   ])
 
   if (coursesResult.status !== "fulfilled") {
@@ -430,7 +430,7 @@ async function syncEmployeeLearningRecord(empleadoId: number) {
 
   const bridgeCourses = coursesResult.value
   const appliedSnapshot = await syncEmployeeLearningFromBridgeSnapshot({
-    empleadoId: empleado.id,
+    employeeId: employee.id,
     snapshot: {
       courses: bridgeCourses.courses,
       certificates:
@@ -448,23 +448,23 @@ async function syncEmployeeLearningRecord(empleadoId: number) {
   }
 }
 
-function scheduleEmployeeLearningSync(empleadoId: number) {
-  if (!empleadoId || backgroundSyncsInFlight.has(empleadoId)) {
+function scheduleEmployeeLearningSync(employeeId: number) {
+  if (!employeeId || backgroundSyncsInFlight.has(employeeId)) {
     return false
   }
 
-  backgroundSyncsInFlight.add(empleadoId)
+  backgroundSyncsInFlight.add(employeeId)
 
   after(async () => {
     try {
-      await syncEmployeeLearningRecord(empleadoId)
+      await syncEmployeeLearningRecord(employeeId)
     } catch (error) {
       console.error("Background employee learning sync failed", {
-        empleadoId,
+        employeeId,
         error: error instanceof Error ? error.message : String(error),
       })
     } finally {
-      backgroundSyncsInFlight.delete(empleadoId)
+      backgroundSyncsInFlight.delete(employeeId)
     }
   })
 
@@ -481,21 +481,21 @@ export async function syncStaleEmployeeLearningBatch(options?: {
 }
 
 export async function syncCompanyEmployeeLearningBatch(
-  empresaId: number,
+  companyId: number,
   options?: {
     limit?: number
     staleOnly?: boolean
   }
 ) {
   return syncEmployeeLearningBatchInternal({
-    empresaId,
+    companyId,
     limit: options?.limit,
     staleOnly: options?.staleOnly ?? false,
   })
 }
 
 async function syncEmployeeLearningBatchInternal(options?: {
-  empresaId?: number
+  companyId?: number
   limit?: number
   staleOnly?: boolean
 }) {
@@ -505,7 +505,7 @@ async function syncEmployeeLearningBatchInternal(options?: {
     where: {
       activo: true,
       wp_user_id: { not: null },
-      ...(options?.empresaId ? { empresa_id: options.empresaId } : {}),
+      ...(options?.companyId ? { empresa_id: options.companyId } : {}),
     },
     select: {
       id: true,
@@ -526,33 +526,33 @@ async function syncEmployeeLearningBatchInternal(options?: {
     },
   })
 
-  const selectedEmployees = (staleOnly ? activeEmployees.filter((empleado) =>
+  const selectedEmployees = (staleOnly ? activeEmployees.filter((employee) =>
       shouldSyncEmployeeLearning({
-        wp_user_id: empleado.wp_user_id,
-        cursos: empleado.cursos,
+        wp_user_id: employee.wp_user_id,
+        cursos: employee.cursos,
       })
     ) : activeEmployees)
-    .filter((empleado) =>
-      options?.empresaId ? empleado.empresa_id === options.empresaId : true
+    .filter((employee) =>
+      options?.companyId ? employee.empresa_id === options.companyId : true
     )
     .slice(0, limit)
 
   const results: Array<{
-    empleadoId: number
+    employeeId: number
     status: "synced" | "failed"
     message?: string
   }> = []
 
-  for (const empleado of selectedEmployees) {
+  for (const employee of selectedEmployees) {
     try {
-      await syncEmployeeLearningRecord(empleado.id)
+      await syncEmployeeLearningRecord(employee.id)
       results.push({
-        empleadoId: empleado.id,
+        employeeId: employee.id,
         status: "synced",
       })
     } catch (error) {
       results.push({
-        empleadoId: empleado.id,
+        employeeId: employee.id,
         status: "failed",
         message: error instanceof Error ? error.message.slice(0, 240) : "Unknown sync error",
       })
@@ -580,13 +580,13 @@ export function scheduleStaleEmployeeLearningBatch(options?: {
 }
 
 export function scheduleCompanyEmployeeLearningBatch(
-  empresaId: number,
+  companyId: number,
   options?: {
     limit?: number
     staleOnly?: boolean
   }
 ) {
-  if (!empresaId) {
+  if (!companyId) {
     return false
   }
 
@@ -594,10 +594,10 @@ export function scheduleCompanyEmployeeLearningBatch(
   const staleOnly = options?.staleOnly ?? false
 
   return scheduleEmployeeLearningBatch({
-    key: `empresa:${empresaId}:${staleOnly ? "stale" : "all"}:${limit}`,
+    key: `company:${companyId}:${staleOnly ? "stale" : "all"}:${limit}`,
     runner: () =>
       syncEmployeeLearningBatchInternal({
-        empresaId,
+        companyId,
         limit,
         staleOnly,
       }),
@@ -631,28 +631,28 @@ function scheduleEmployeeLearningBatch(options: {
 }
 
 function mergeEmployeeCoursesWithBridgeData(
-  empleado: NonNullable<Awaited<ReturnType<typeof fetchEmployeeLearningRecord>>>,
+  employee: NonNullable<Awaited<ReturnType<typeof fetchEmployeeLearningRecord>>>,
   bridgeCourses: BridgeStudentCourse[]
 ) {
   if (bridgeCourses.length === 0) {
-    return empleado
+    return employee
   }
 
   const syncedAt = new Date()
   const bridgeCourseById = new Map(bridgeCourses.map((course) => [course.wp_course_id, course]))
-  const mergedCourses = empleado.cursos
-    .map((curso) => {
-      const bridgeCourse = bridgeCourseById.get(curso.wp_curso_id)
+  const mergedCourses = employee.cursos
+    .map((course) => {
+      const bridgeCourse = bridgeCourseById.get(course.wp_curso_id)
       if (!bridgeCourse) {
-        return curso
+        return course
       }
 
       return {
-        ...curso,
-        nombre_curso: decodeHtmlEntities(bridgeCourse.title || curso.nombre_curso),
+        ...course,
+        nombre_curso: decodeHtmlEntities(bridgeCourse.title || course.nombre_curso),
         progreso_pct: bridgeCourse.progress_pct,
         completado: bridgeCourse.completed,
-        fecha_inicio_curso: parseBridgeDate(bridgeCourse.started_at) ?? curso.fecha_inicio_curso,
+        fecha_inicio_curso: parseBridgeDate(bridgeCourse.started_at) ?? course.fecha_inicio_curso,
         fecha_completado: bridgeCourse.completed ? parseBridgeDate(bridgeCourse.completed_at) : null,
         ultima_sincronizacion: syncedAt,
       }
@@ -670,7 +670,7 @@ function mergeEmployeeCoursesWithBridgeData(
     })
 
   return {
-    ...empleado,
+    ...employee,
     cursos: mergedCourses,
   }
 }
@@ -681,9 +681,9 @@ export async function getEmployeeLearningData(
     forceSync?: boolean
   }
 ) {
-  let empleado = await fetchEmployeeLearningRecord(email)
+  let employee = await fetchEmployeeLearningRecord(email)
 
-  if (!empleado) {
+  if (!employee) {
     return null
   }
 
@@ -694,14 +694,14 @@ export async function getEmployeeLearningData(
 
   const forceSync = options?.forceSync ?? false
 
-  const needsSync = shouldSyncEmployeeLearning(empleado)
+  const needsSync = shouldSyncEmployeeLearning(employee)
 
   if (forceSync && needsSync) {
     try {
-      const result = await syncEmployeeLearningRecord(empleado.id)
+      const result = await syncEmployeeLearningRecord(employee.id)
       latestBridgeCourses = result.bridgeCourses
       syncedFromBridge = result.synced
-      empleado = await fetchEmployeeLearningRecord(email)
+      employee = await fetchEmployeeLearningRecord(email)
     } catch (error) {
       syncError =
         error instanceof Error
@@ -709,22 +709,22 @@ export async function getEmployeeLearningData(
           : "No fue posible refrescar el progreso del alumno desde Tutor LMS."
     }
   } else if (needsSync) {
-    backgroundSyncQueued = scheduleEmployeeLearningSync(empleado.id)
+    backgroundSyncQueued = scheduleEmployeeLearningSync(employee.id)
   }
 
-  if (!empleado) {
+  if (!employee) {
     return null
   }
 
-  empleado = mergeEmployeeCoursesWithBridgeData(empleado, latestBridgeCourses)
+  employee = mergeEmployeeCoursesWithBridgeData(employee, latestBridgeCourses)
 
-  const completedCourseIds = new Set(empleado.constancias.map((certificate) => certificate.wp_curso_id))
-  const pendingCertificates = empleado.cursos.filter(
+  const completedCourseIds = new Set(employee.constancias.map((certificate) => certificate.wp_curso_id))
+  const pendingCertificates = employee.cursos.filter(
     (course) => course.completado && !completedCourseIds.has(course.wp_curso_id)
   )
 
   return {
-    empleado,
+    employee,
     pendingCertificates,
     syncedFromBridge,
     backgroundSyncQueued,

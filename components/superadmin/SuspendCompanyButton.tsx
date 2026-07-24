@@ -7,21 +7,21 @@ import DialogActions from "@mui/material/DialogActions"
 import DialogContent from "@mui/material/DialogContent"
 import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
-import { toggleCompanyStatusAction } from "@/app/(portal)/superadmin/empresas/actions"
+import { toggleCompanyStatusAction } from "@/app/(portal)/superadmin/companies/actions"
 
 interface SuspendCompanyButtonProps {
-  empresaId: number
-  activo: boolean
-  nombre: string
+  companyId: number
+  active: boolean
+  name: string
 }
 
-export function SuspendCompanyButton({ empresaId, activo, nombre }: SuspendCompanyButtonProps) {
+export function SuspendCompanyButton({ companyId, active, name }: SuspendCompanyButtonProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleConfirm() {
     const formData = new FormData()
-    formData.set("empresa_id", String(empresaId))
+    formData.set("empresa_id", String(companyId))
     startTransition(() => {
       void toggleCompanyStatusAction(formData)
     })
@@ -39,16 +39,16 @@ export function SuspendCompanyButton({ empresaId, activo, nombre }: SuspendCompa
           height: 28,
           px: 1.25,
           fontSize: 12,
-          bgcolor: activo ? "#0f172a" : "primary.main",
+          bgcolor: active ? "#0f172a" : "primary.main",
           color: "#fff",
           boxShadow: "none",
           "&:hover": {
-            bgcolor: activo ? "#1e293b" : "primary.dark",
+            bgcolor: active ? "#1e293b" : "primary.dark",
             boxShadow: "none",
           },
         }}
       >
-        {isPending ? "…" : activo ? "Suspender" : "Reactivar"}
+        {isPending ? "…" : active ? "Suspender" : "Reactivar"}
       </Button>
 
       <Dialog
@@ -61,13 +61,13 @@ export function SuspendCompanyButton({ empresaId, activo, nombre }: SuspendCompa
         }}
       >
         <DialogTitle>
-          {activo ? "¿Suspender empresa?" : "¿Reactivar empresa?"}
+          {active ? "¿Suspender empresa?" : "¿Reactivar empresa?"}
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {activo
-              ? `Esto suspenderá "${nombre}". Todos sus empleados y el usuario RH perderán acceso al portal de inmediato.`
-              : `Esto reactivará "${nombre}". Sus empleados recuperarán acceso al portal.`}
+            {active
+              ? `Esto suspenderá "${name}". Todos sus empleados y el usuario RH perderán acceso al portal de inmediato.`
+              : `Esto reactivará "${name}". Sus empleados recuperarán acceso al portal.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
@@ -76,10 +76,10 @@ export function SuspendCompanyButton({ empresaId, activo, nombre }: SuspendCompa
           </Button>
           <Button
             variant="contained"
-            color={activo ? "error" : "primary"}
+            color={active ? "error" : "primary"}
             onClick={handleConfirm}
           >
-            {activo ? "Sí, suspender" : "Sí, reactivar"}
+            {active ? "Sí, suspender" : "Sí, reactivar"}
           </Button>
         </DialogActions>
       </Dialog>

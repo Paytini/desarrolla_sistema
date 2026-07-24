@@ -25,39 +25,39 @@ export const navSuperAdminSections: NavSection[] = [
     accent: "var(--brand)",
     items: [
       { label: "Dashboard",      href: "/superadmin",             icon: LayoutDashboard, exact: true, color: "primary" },
-      { label: "Empresas",       href: "/superadmin/empresas",    icon: Building2,                    color: "violet" },
+      { label: "Empresas",       href: "/superadmin/companies",    icon: Building2,                    color: "violet" },
     ],
   },
   {
     heading: "Operaciones",
     accent: "var(--sidebar-accent-2)",
     items: [
-      { label: "Paquetes",       href: "/superadmin/paquetes",    icon: Package,    color: "amber" },
+      { label: "Paquetes",       href: "/superadmin/packages",    icon: Package,    color: "amber" },
       { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText,   color: "orange" },
-      { label: "Reportes",       href: "/superadmin/reportes",    icon: BarChart3,  color: "emerald" },
-      { label: "Accesos",        href: "/superadmin/accesos",     icon: Users,      color: "charcoal" },
+      { label: "Reportes",       href: "/superadmin/reports",    icon: BarChart3,  color: "emerald" },
+      { label: "Accesos",        href: "/superadmin/access",     icon: Users,      color: "charcoal" },
     ],
   },
   {
     heading: "Sistema",
     accent: "var(--sidebar-accent-3)",
     items: [
-      { label: "Integración WP", href: "/superadmin/integracion", icon: Share2, color: "pink" },
+      { label: "Integración WP", href: "/superadmin/integration", icon: Share2, color: "pink" },
     ],
   },
 ]
 
 export const navRH: NavItem[] = [
-  { label: "Inicio",        href: "/empresa/inicio",       icon: LayoutDashboard, exact: true, color: "primary" },
-  { label: "Empleados",     href: "/empresa/empleados",    icon: Users,                        color: "violet" },
-  { label: "Asignaciones",  href: "/empresa/asignaciones", icon: ClipboardList,                color: "amber" },
-  { label: "Progreso",      href: "/empresa/progreso",     icon: BarChart3,                    color: "emerald" },
-  { label: "Constancias",   href: "/empresa/constancias",  icon: Award,                        color: "orange" },
+  { label: "Inicio",        href: "/company/home",       icon: LayoutDashboard, exact: true, color: "primary" },
+  { label: "Empleados",     href: "/company/employees",    icon: Users,                        color: "violet" },
+  { label: "Asignaciones",  href: "/company/assignments", icon: ClipboardList,                color: "amber" },
+  { label: "Progreso",      href: "/company/progress",     icon: BarChart3,                    color: "emerald" },
+  { label: "Constancias",   href: "/company/certificates",  icon: Award,                        color: "orange" },
 ]
 
-export const navEmpleado: NavItem[] = [
-  { label: "Mis cursos",      href: "/empleado/cursos",      icon: BookOpen, color: "emerald" },
-  { label: "Mis constancias", href: "/empleado/constancias", icon: Award,    color: "orange" },
+export const navEmployee: NavItem[] = [
+  { label: "Mis cursos",      href: "/employee/courses",      icon: BookOpen, color: "emerald" },
+  { label: "Mis constancias", href: "/employee/certificates", icon: Award,    color: "orange" },
 ]
 
 export const roleLabel: Record<Rol, string> = {
@@ -68,8 +68,8 @@ export const roleLabel: Record<Rol, string> = {
 
 export function homeHrefForRole(rol: Rol) {
   return rol === "SUPERADMIN" ? "/superadmin"
-    : rol === "RH"            ? "/empresa/inicio"
-    :                           "/empleado/cursos"
+    : rol === "RH"            ? "/company/home"
+    :                           "/employee/courses"
 }
 
 export function isActive(href: string, pathname: string, exact?: boolean) {

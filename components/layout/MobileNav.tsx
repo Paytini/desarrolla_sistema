@@ -23,7 +23,7 @@ import {
   getInitials,
   homeHrefForRole,
   isActive,
-  navEmpleado,
+  navEmployee,
   navRH,
   navSuperAdminSections,
   roleLabel,
@@ -111,16 +111,16 @@ function MobileNavLink({
 
 export function MobileNav({
   rol,
-  nombre,
-  empresa,
+  name,
+  company,
 }: {
   rol: Rol
-  nombre: string
-  empresa?: string
+  name: string
+  company?: string
 }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const initials = getInitials(nombre)
+  const initials = getInitials(name)
   const homeHref = homeHrefForRole(rol)
 
   return (
@@ -175,7 +175,7 @@ export function MobileNav({
           </Link>
         </Box>
 
-        {empresa && rol !== "SUPERADMIN" && (
+        {company && rol !== "SUPERADMIN" && (
           <Box
             sx={{
               mx: 1.5,
@@ -193,7 +193,7 @@ export function MobileNav({
               Empresa
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {empresa}
+              {company}
             </Typography>
           </Box>
         )}
@@ -233,7 +233,7 @@ export function MobileNav({
             ))
           ) : (
             <List disablePadding>
-              {(rol === "RH" ? navRH : navEmpleado).map((item) => (
+              {(rol === "RH" ? navRH : navEmployee).map((item) => (
                 <MobileNavLink
                   key={item.href}
                   item={item}
@@ -282,7 +282,7 @@ export function MobileNav({
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {nombre}
+              {name}
             </Typography>
             <Typography sx={{ fontSize: "0.6875rem", color: "text.secondary" }}>
               {roleLabel[rol]}

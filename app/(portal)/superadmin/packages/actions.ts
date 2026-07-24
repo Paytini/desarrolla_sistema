@@ -1,0 +1,371 @@
+"use server"
+
+import { revalidatePath, revalidateTag } from "next/cache"
+import { redirect } from "next/navigation"
+import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
+import { requireSuperAdminSession } from "@/lib/auth-guards"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
+import { decodeHtmlEntities } from "@/lib/format"
+import { prisma } from "@/lib/prisma"
+import {
+  bridgeCreateBundle,
+  isWordPressBridgeConfigured,
+} from "@/lib/wordpress-bridge"
+
+function getString(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "").trim()
+}
+
+function getInteger(value: string) {
+  const parsed = Number.parseInt(value, 10)
+  return Number.isInteger(parsed) ? parsed : NaN
+}
+
+
+function getSyncErrorMessage(error: unknown) {
+  const rawMessage =
+    error instanceof Error
+      ? error.message
+      : "No fue posible sincronizar el paquete con la empresa."
+  const normalizedMessage = rawMessage.toLowerCase()
+
+  if (rawMessage.includes("status 404")) {
+    return "El plugin de WordPress no tiene el endpoint nuevo de confirmacion de acceso. Actualiza el plugin Desarrolla360 Bridge en WordPress y vuelve a intentar."
+  }
+
+  if (rawMessage.includes("status 401") || normalizedMessage.includes("credenciales insuficientes")) {
+    return "El bridge de WordPress rechazo la autenticacion. Revisa WP_BRIDGE_PORTAL_KEY y la configuracion del plugin en WordPress."
+  }
+
+  if (normalizedMessage.includes("service user")) {
+    return "El plugin de WordPress no tiene configurado un Service User ID valido para Tutor LMS."
+  }
+
+  if (normalizedMessage.includes("no devolvio una matricula")) {
+    return "Tutor LMS no encontro una matricula valida para el alumno despues de inscribirlo. Revisa si el curso requiere otro flujo de acceso."
+  }
+
+  if (normalizedMessage.includes("no tienes permisos para hacer eso")) {
+    return "Tutor LMS rechazo la confirmacion de acceso del alumno. Actualiza el plugin Desarrolla360 Bridge en WordPress y configura `Tutor API Key` y `Tutor API Secret` en `Settings > Desarrolla360 Bridge` o mediante `D360_TUTOR_API_KEY` y `D360_TUTOR_API_SECRET` en `wp-config.php`."
+  }
+
+  return rawMessage.slice(0, 500)
+}
+
+function getBundleErrorMessage(error: unknown) {
+  const rawMessage =
+    error instanceof Error
+      ? error.message
+      : "No fue posible crear el bundle en Tutor LMS."
+  const normalizedMessage = rawMessage.toLowerCase()
+
+  if (normalizedMessage.includes("wp bridge base url")) {
+    return "El bridge de WordPress no esta configurado en el portal. Revisa WP_BRIDGE_BASE_URL y WP_BRIDGE_PORTAL_KEY."
+  }
+
+  if (normalizedMessage.includes("course bundle addon") || normalizedMessage.includes("bundle addon")) {
+    return "En WordPress no esta activo el addon oficial Course Bundle de Tutor LMS. Activalo y vuelve a intentar."
+  }
+
+  if (normalizedMessage.includes("post type") && normalizedMessage.includes("bundle")) {
+    return "El bridge no pudo detectar el tipo de contenido de bundles en Tutor LMS. Revisa que el addon Course Bundle este activo."
+  }
+
+  if (normalizedMessage.includes("credenciales insuficientes") || rawMessage.includes("status 401")) {
+    return "El bridge de WordPress rechazo la autenticacion al intentar crear el bundle. Revisa WP_BRIDGE_PORTAL_KEY y la configuracion del plugin."
+  }
+
+  return rawMessage.slice(0, 500)
+}
+
+export async function createPackageAction(formData: FormData) {
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
+
+  const nombre = getString(formData, "nombre")
+  const descripcion = getString(formData, "descripcion")
+  const modoEntrega = getString(formData, "modo_entrega") || "DIRECT_ENROLLMENT"
+  const wpBundleIdRaw = getString(formData, "wp_bundle_id")
+  const nombreBundle = getString(formData, "nombre_bundle")
+  const notasOperativas = getString(formData, "notas_operativas")
+  const selectedCoursesRaw = getString(formData, "selected_courses_json")
+
+  if (!nombre || !selectedCoursesRaw) {
+    redirect("/superadmin/packages/new?error=datos")
+  }
+
+  let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> = []
+
+  try {
+    const payload = JSON.parse(selectedCoursesRaw) as Array<{
+      wp_course_id?: number
+      nombre_curso?: string
+      portada_url?: string | null
+    }>
+
+    parsedCourses = payload
+      .map((course) => ({
+        wpCourseId: Number(course.wp_course_id),
+        nombreCurso: decodeHtmlEntities(String(course.nombre_curso ?? "").trim()),
+        portadaUrl: course.portada_url ? String(course.portada_url) : null,
+      }))
+      .filter((course) => Number.isInteger(course.wpCourseId) && course.nombreCurso)
+  } catch {
+    redirect("/superadmin/packages/new?error=cursos")
+  }
+
+  if (parsedCourses.length === 0) {
+    redirect("/superadmin/packages/new?error=cursos")
+  }
+
+  const wpBundleId = wpBundleIdRaw ? Number.parseInt(wpBundleIdRaw, 10) : NaN
+  let resolvedBundleId = Number.isInteger(wpBundleId) ? wpBundleId : null
+  let resolvedBundleName = nombreBundle || null
+
+  if (!resolvedBundleId) {
+    if (!isWordPressBridgeConfigured()) {
+      const detail = encodeURIComponent(
+        "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS."
+      )
+      redirect(`/superadmin/packages/new?error=bundle&detail=${detail}`)
+    }
+
+    try {
+      const bundle = await bridgeCreateBundle({
+        title: nombre,
+        description: descripcion || "",
+        courseIds: parsedCourses.map((course) => course.wpCourseId),
+        visibility: "private",
+      })
+
+      resolvedBundleId = bundle.bundle_id
+      resolvedBundleName = bundle.title
+    } catch (error) {
+      const detail = encodeURIComponent(getBundleErrorMessage(error))
+      redirect(`/superadmin/packages/new?error=bundle&detail=${detail}`)
+    }
+  }
+
+  const pkg = await prisma.paquete.create({
+    data: {
+      nombre,
+      descripcion: descripcion || null,
+      modo_entrega: modoEntrega || "DIRECT_ENROLLMENT",
+      wp_bundle_id: resolvedBundleId,
+      nombre_bundle: resolvedBundleName,
+      notas_operativas: notasOperativas || null,
+      activo: true,
+      cursos: {
+        create: parsedCourses.map((course) => ({
+          wp_curso_id: course.wpCourseId,
+          nombre_curso: course.nombreCurso,
+          portada_url: course.portadaUrl,
+        })),
+      },
+    },
+  })
+
+  await createAuditEvent({
+    actor,
+    accion: "PAQUETE_CREADO",
+    entityType: "PAQUETE",
+    entityId: pkg.id,
+    resumen: `${actor.nombre} creo el paquete ${nombre}.`,
+    metadata: {
+      modo_entrega: modoEntrega || "DIRECT_ENROLLMENT",
+      cursos: parsedCourses.map((course) => ({
+        wp_curso_id: course.wpCourseId,
+        nombre_curso: course.nombreCurso,
+      })),
+      wp_bundle_id: resolvedBundleId,
+      nombre_bundle: resolvedBundleName,
+    },
+  })
+
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/reports")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  redirect("/superadmin/packages?success=paquete_creado")
+}
+
+export async function deletePackageAction(formData: FormData) {
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
+  const packageId = getInteger(getString(formData, "paquete_id"))
+
+  if (!packageId) {
+    redirect("/superadmin/packages?error=paquete")
+  }
+
+  const pkg = await prisma.paquete.findUnique({
+    where: { id: packageId },
+    select: {
+      id: true,
+      nombre: true,
+      activo: true,
+      empresas: {
+        where: { activo: true },
+        select: {
+          empresa_id: true,
+          empresa: {
+            select: { nombre: true },
+          },
+        },
+      },
+    },
+  })
+
+  if (!pkg || !pkg.activo) {
+    redirect("/superadmin/packages?error=paquete")
+  }
+
+  if (pkg.empresas.length > 0) {
+    const companyNames = pkg.empresas
+      .map((assignment) => assignment.empresa.nombre)
+      .join(", ")
+    const detail = encodeURIComponent(
+      `Primero cambia o desactiva el paquete activo en: ${companyNames}.`
+    )
+    redirect(`/superadmin/packages?error=paquete_asignado&detail=${detail}`)
+  }
+
+  await prisma.paquete.update({
+    where: { id: pkg.id },
+    data: { activo: false },
+  })
+
+  await createAuditEvent({
+    actor,
+    accion: "PAQUETE_ELIMINADO",
+    entityType: "PAQUETE",
+    entityId: pkg.id,
+    resumen: `${actor.nombre} elimino el paquete ${pkg.nombre}.`,
+    metadata: {
+      baja_logica: true,
+    },
+  })
+
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/companies")
+  revalidatePath("/superadmin/reports")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  redirect("/superadmin/packages?success=paquete_eliminado")
+}
+
+export async function assignPackageToCompanyAction(formData: FormData) {
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
+
+  const companyId = getInteger(getString(formData, "empresa_id"))
+  const packageId = getInteger(getString(formData, "paquete_id"))
+  const expirationDateRaw = getString(formData, "fecha_vencimiento")
+
+  if (!companyId || !packageId) {
+    redirect("/superadmin/packages?error=asignacion")
+  }
+
+  await prisma.$transaction([
+    prisma.empresaPaquete.updateMany({
+      where: {
+        empresa_id: companyId,
+        activo: true,
+      },
+      data: {
+        activo: false,
+      },
+    }),
+    prisma.empresaPaquete.create({
+      data: {
+        empresa_id: companyId,
+        paquete_id: packageId,
+        activo: true,
+        fecha_vencimiento: (() => {
+          if (!expirationDateRaw) return null
+          const d = new Date(expirationDateRaw)
+          return isNaN(d.getTime()) ? null : d
+        })(),
+      },
+    }),
+  ])
+
+  const [company, pkg] = await Promise.all([
+    prisma.empresa.findUnique({
+      where: { id: companyId },
+      select: { nombre: true },
+    }),
+    prisma.paquete.findUnique({
+      where: { id: packageId },
+      select: { nombre: true },
+    }),
+  ])
+
+  await createAuditEvent({
+    actor,
+    accion: "PAQUETE_ASIGNADO",
+    entityType: "EMPRESA_PAQUETE",
+    entityId: packageId,
+    companyId,
+    resumen: `${actor.nombre} asigno ${pkg?.nombre ?? "un paquete"} a ${company?.nombre ?? "una empresa"}.`,
+    metadata: {
+      empresa_id: companyId,
+      paquete_id: packageId,
+      fecha_vencimiento: expirationDateRaw || null,
+    },
+  })
+
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/companies")
+  revalidatePath("/superadmin/reports")
+  revalidatePath("/company/home")
+  revalidatePath("/company/employees")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
+  redirect("/superadmin/packages?success=paquete_asignado")
+}
+
+export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
+
+  const companyId = getInteger(getString(formData, "empresa_id"))
+  if (!companyId) {
+    redirect("/superadmin/packages?error=sync")
+  }
+
+  try {
+    await syncCompanyPackageEnrollments(companyId)
+  } catch (error) {
+    await createAuditEvent({
+      actor,
+      accion: "SYNC_PAQUETE_EMPRESA_ERROR",
+      entityType: "EMPRESA",
+      entityId: companyId,
+      companyId,
+      resumen: `${actor.nombre} intento sincronizar paquete y hubo error.`,
+      metadata: {
+        message: getSyncErrorMessage(error),
+      },
+    })
+    const detail = encodeURIComponent(getSyncErrorMessage(error))
+    redirect(`/superadmin/packages?error=sync&detail=${detail}`)
+  }
+
+  await createAuditEvent({
+    actor,
+    accion: "SYNC_PAQUETE_EMPRESA_OK",
+    entityType: "EMPRESA",
+    entityId: companyId,
+    companyId,
+    resumen: `${actor.nombre} sincronizo paquete activo con empleados de la empresa.`,
+  })
+
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/reports")
+  revalidatePath("/company/employees")
+  revalidatePath("/company/progress")
+  revalidatePath("/employee/courses")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
+  redirect("/superadmin/packages?success=sync_ok")
+}

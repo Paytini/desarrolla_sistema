@@ -11,10 +11,10 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type EmpresaResult  = { id: number; nombre: string; activo: boolean }
-type EmpleadoResult = { id: number; nombre: string; apellido: string; email: string; empresa: { nombre: string } }
-type PaqueteResult  = { id: number; nombre: string; activo: boolean }
-type SearchResults  = { empresas: EmpresaResult[]; empleados: EmpleadoResult[]; paquetes: PaqueteResult[] }
+type CompanyResult  = { id: number; nombre: string; activo: boolean }
+type EmployeeResult = { id: number; nombre: string; apellido: string; email: string; empresa: { nombre: string } }
+type PackageResult  = { id: number; nombre: string; activo: boolean }
+type SearchResults  = { empresas: CompanyResult[]; empleados: EmployeeResult[]; paquetes: PackageResult[] }
 
 export default function SuperadminSearchBar() {
   return (
@@ -50,7 +50,7 @@ export default function SuperadminSearchBar() {
                 {results.empresas.map((e) => (
                   <ResultRow
                     key={e.id}
-                    href={`/superadmin/empresas/${e.id}`}
+                    href={`/superadmin/companies/${e.id}`}
                     onClose={onClose}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
@@ -71,7 +71,7 @@ export default function SuperadminSearchBar() {
                 {results.empleados.map((e) => (
                   <ResultRow
                     key={e.id}
-                    href="/superadmin/accesos"
+                    href="/superadmin/access"
                     onClose={onClose}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
@@ -96,7 +96,7 @@ export default function SuperadminSearchBar() {
                 {results.paquetes.map((p) => (
                   <ResultRow
                     key={p.id}
-                    href="/superadmin/paquetes"
+                    href="/superadmin/packages"
                     onClose={onClose}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>

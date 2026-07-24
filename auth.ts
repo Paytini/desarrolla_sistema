@@ -4,7 +4,7 @@ import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { verifyTurnstileToken } from "@/lib/turnstile"
-import { getEmpresaAccessStatus } from "@/lib/empresa-status"
+import { getCompanyAccessStatus } from "@/lib/company-status"
 
 class EmpresaBloqueadaError extends CredentialsSignin {
   constructor(reason: "suspendida" | "vencida") {
@@ -79,7 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (!valida) return null
 
           if (usuario.rol !== "SUPERADMIN" && usuario.empresa_id) {
-            const status = await getEmpresaAccessStatus(usuario.empresa_id)
+            const status = await getCompanyAccessStatus(usuario.empresa_id)
             if (status.blocked) {
               throw new EmpresaBloqueadaError(status.reason)
             }

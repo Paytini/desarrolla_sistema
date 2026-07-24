@@ -7,12 +7,12 @@ import { BarChart3, Building2, FileText, Package, Share2, Users, type LucideIcon
 import { SectionCard } from "@/components/shared/SectionCard"
 
 const ACTIONS: { label: string; description: string; href: string; Icon: LucideIcon }[] = [
-  { label: "Empresas",    description: "Clientes y cupos",    href: "/superadmin/empresas",    Icon: Building2 },
-  { label: "Paquetes",    description: "Planes y cursos",     href: "/superadmin/paquetes",    Icon: Package },
-  { label: "Reportes",    description: "Analíticas globales", href: "/superadmin/reportes",    Icon: BarChart3 },
+  { label: "Empresas",    description: "Clientes y cupos",    href: "/superadmin/companies",    Icon: Building2 },
+  { label: "Paquetes",    description: "Planes y cursos",     href: "/superadmin/packages",    Icon: Package },
+  { label: "Reportes",    description: "Analíticas globales", href: "/superadmin/reports",    Icon: BarChart3 },
   { label: "Editor DC-3", description: "Metadatos STPS",     href: "/superadmin/dc3",         Icon: FileText },
-  { label: "Accesos",     description: "Usuarios del portal", href: "/superadmin/accesos",     Icon: Users },
-  { label: "Bridge WP",   description: "Estado del bridge",  href: "/superadmin/integracion", Icon: Share2 },
+  { label: "Accesos",     description: "Usuarios del portal", href: "/superadmin/access",     Icon: Users },
+  { label: "Bridge WP",   description: "Estado del bridge",  href: "/superadmin/integration", Icon: Share2 },
 ]
 
 export function QuickActions() {

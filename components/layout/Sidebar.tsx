@@ -15,7 +15,7 @@ import Typography from "@mui/material/Typography"
 import {
   homeHrefForRole,
   isActive,
-  navEmpleado,
+  navEmployee,
   navRH,
   navSuperAdminSections,
   type NavItem,
@@ -210,7 +210,7 @@ export default function Sidebar({
             ))
           ) : (
             <List disablePadding>
-              {(rol === "RH" ? navRH : navEmpleado).map((item) => (
+              {(rol === "RH" ? navRH : navEmployee).map((item) => (
                 <NavItemRow key={item.href} item={item} pathname={pathname} />
               ))}
             </List>
@@ -219,7 +219,7 @@ export default function Sidebar({
 
         {rol === "SUPERADMIN" && (
           <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
-            <Link href="/superadmin/integracion" style={{ textDecoration: "none" }}>
+            <Link href="/superadmin/integration" style={{ textDecoration: "none" }}>
               <Box
                 sx={{
                   borderRadius: "14px",

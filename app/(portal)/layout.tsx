@@ -2,12 +2,12 @@ import { Suspense } from "react"
 import { Urbanist, Epilogue } from "next/font/google"
 import { PortalThemeProvider } from "@/components/providers/PortalThemeProvider"
 import { PageSkeleton } from "@/components/shared/PageSkeleton"
-import EmpleadoSearchBar from "@/components/search/EmpleadoSearchBar"
+import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
 import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
 import { MobileNav } from "@/components/layout/MobileNav"
 import { NotificationBell } from "@/components/layout/NotificationBell"
 import { PortalGreeting } from "@/components/layout/PortalGreeting"
-import RhSearchBar from "@/components/search/RhSearchBar"
+import HrSearchBar from "@/components/search/HrSearchBar"
 import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import Sidebar from "@/components/layout/Sidebar"
 import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu"
@@ -39,9 +39,9 @@ export default async function PortalLayout({
   if (!session) redirect("/login")
 
   const rol     = session.user.rol     as "SUPERADMIN" | "RH" | "EMPLEADO"
-  const nombre  = session.user.nombre  as string
-  const email   = session.user.email   ?? nombre
-  const empresa = session.user.empresa as string | undefined
+  const name    = session.user.nombre  as string
+  const email   = session.user.email   ?? name
+  const company = session.user.empresa as string | undefined
   const isSuperAdmin = rol === "SUPERADMIN"
 
   const content = (
@@ -49,24 +49,24 @@ export default async function PortalLayout({
       <Sidebar rol={rol} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="relative flex h-16 shrink-0 items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 md:px-6">
-          <MobileNav rol={rol} nombre={nombre} empresa={empresa} />
+          <MobileNav rol={rol} name={name} company={company} />
 
           {isSuperAdmin ? (
             <div className="flex-1" style={{ maxWidth: 560 }}>
               <SuperadminSearchBar />
             </div>
           ) : (
-            <PortalGreeting nombre={nombre} rol={rol} />
+            <PortalGreeting name={name} rol={rol} />
           )}
 
           <div className="flex-1" />
 
           <div className="flex shrink-0 items-center gap-2">
-            {rol === "RH" && <RhSearchBar />}
-            {rol === "EMPLEADO" && <EmpleadoSearchBar />}
+            {rol === "RH" && <HrSearchBar />}
+            {rol === "EMPLEADO" && <EmployeeSearchBar />}
             <NotificationBell />
             <FullscreenToggle />
-            <TopbarUserMenu nombre={nombre} rol={rol} />
+            <TopbarUserMenu name={name} rol={rol} />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-[#F8F9FC] px-8 py-7">
