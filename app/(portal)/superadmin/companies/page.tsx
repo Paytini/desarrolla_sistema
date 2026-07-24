@@ -126,14 +126,15 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
             sx={{
               height: 40,
               borderRadius: '8px',
-              border: '2px solid #CBD5E1',
+              border: '1px solid',
+              borderColor: 'divider',
               bgcolor: '#FFFFFF',
               px: 1.5,
               fontSize: '13px',
-              color: '#1E293B',
+              color: 'text.primary',
               outline: 'none',
               cursor: 'pointer',
-              '&:focus': { borderColor: '#8B5CF6', boxShadow: '3px 3px 0px 0px #8B5CF6' },
+              '&:focus': { borderColor: 'primary.main' },
             }}
           >
             <option value="all">Todos</option>
