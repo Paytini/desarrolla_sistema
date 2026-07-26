@@ -15,15 +15,25 @@ type CourseOption = {
   thumbnail_url?: string | null
 }
 
+type InitialCourse = {
+  wp_course_id: number
+  title: string
+  thumbnail_url?: string | null
+}
+
 type PackageCourseSelectorProps = {
   inputName?: string
+  initialCourses?: InitialCourse[]
 }
 
 export default function PackageCourseSelector({
   inputName = "selected_courses_json",
+  initialCourses = [],
 }: PackageCourseSelectorProps) {
-  const [courses, setCourses]     = useState<CourseOption[]>([])
-  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [courses, setCourses]     = useState<CourseOption[]>(initialCourses)
+  const [selectedIds, setSelectedIds] = useState<number[]>(
+    initialCourses.map((c) => c.wp_course_id)
+  )
   const [query, setQuery]         = useState("")
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState("")
@@ -38,9 +48,14 @@ export default function PackageCourseSelector({
         const payload = (await res.json()) as { courses?: CourseOption[]; message?: string }
         if (!res.ok) throw new Error(payload.message ?? "No fue posible cargar los cursos")
         if (active) {
-          setCourses(
-            (payload.courses ?? []).filter((c) => (c.status ? c.status === "publish" : true))
-          )
+          const fetched = (payload.courses ?? []).filter((c) => (c.status ? c.status === "publish" : true))
+          // Keep any already-assigned course visible even if WordPress no longer
+          // lists it as published, so editing never silently drops it.
+          const fetchedIds = new Set(fetched.map((c) => c.wp_course_id))
+          const missingInitial = initialCourses
+            .filter((c) => !fetchedIds.has(c.wp_course_id))
+            .map((c) => ({ wp_course_id: c.wp_course_id, title: c.title, thumbnail_url: c.thumbnail_url ?? null }))
+          setCourses([...fetched, ...missingInitial])
         }
       } catch (err) {
         if (active) setError(err instanceof Error ? err.message : "No fue posible cargar los cursos")
@@ -50,6 +65,7 @@ export default function PackageCourseSelector({
     }
     loadCourses()
     return () => { active = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const filteredCourses = useMemo(() => {

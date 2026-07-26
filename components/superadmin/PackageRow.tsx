@@ -18,6 +18,7 @@ import {
   ChevronRight,
   CircleAlert,
   ExternalLink,
+  Pencil,
 } from "lucide-react"
 
 import DeletePackageButton from "@/components/superadmin/DeletePackageButton"
@@ -130,12 +131,19 @@ export function PackageRow({
           </Typography>
         </TableCell>
         <TableCell sx={{ ...TD_SX, textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
-          <DeletePackageButton
-            action={deletePackageAction}
-            packageId={pkg.id}
-            packageName={pkg.name}
-            assignedCompaniesCount={pkg.companies.length}
-          />
+          <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+            <Link href={`/superadmin/packages/${pkg.id}/edit`}>
+              <IconButton size="small" sx={{ color: "text.secondary" }} aria-label="Editar paquete">
+                <Pencil size={14} />
+              </IconButton>
+            </Link>
+            <DeletePackageButton
+              action={deletePackageAction}
+              packageId={pkg.id}
+              packageName={pkg.name}
+              assignedCompaniesCount={pkg.companies.length}
+            />
+          </Box>
         </TableCell>
       </TableRow>
 

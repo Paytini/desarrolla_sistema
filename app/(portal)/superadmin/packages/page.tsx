@@ -26,6 +26,7 @@ const successMessages: Record<string, string> = {
   paquete_creado:   "El paquete se creó correctamente.",
   paquete_eliminado:"El paquete se eliminó del catálogo.",
   paquete_asignado: "El paquete activo de la empresa se actualizó correctamente.",
+  paquete_actualizado: "El paquete se actualizó correctamente.",
   sync_ok:          "Se sincronizaron los cursos con los empleados activos.",
 }
 

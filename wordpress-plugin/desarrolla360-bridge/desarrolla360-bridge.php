@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.2.3
+ * Version: 0.2.4
  * Author: Desarrolla360
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.2.3' );
+define( 'D360_BRIDGE_VERSION', '0.2.4' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
 define( 'D360_BRIDGE_WEBHOOK_CRON_HOOK', 'd360_bridge_learning_webhook_tick' );
 define( 'D360_BRIDGE_WEBHOOK_CURSOR_OPTION', 'd360_bridge_learning_webhook_cursor' );
@@ -448,6 +448,16 @@ function d360_bridge_register_rest_routes() {
 		array(
 			'methods'             => WP_REST_Server::READABLE,
 			'callback'            => 'd360_bridge_bundle_diagnostics',
+			'permission_callback' => 'd360_bridge_rest_permissions',
+		)
+	);
+
+	register_rest_route(
+		'desarrolla360/v1',
+		'/bundles/(?P<bundle_id>\d+)',
+		array(
+			'methods'             => WP_REST_Server::EDITABLE,
+			'callback'            => 'd360_bridge_update_bundle',
 			'permission_callback' => 'd360_bridge_rest_permissions',
 		)
 	);
@@ -1423,6 +1433,92 @@ function d360_bridge_create_bundle( WP_REST_Request $request ) {
 		return new WP_Error(
 			'd360_bridge_bundle_fatal',
 			'Fallo interno al crear el bundle: ' . $error->getMessage(),
+			array( 'status' => 500 )
+		);
+	}
+}
+
+function d360_bridge_update_bundle( WP_REST_Request $request ) {
+	$bundle_id = absint( $request['bundle_id'] );
+
+	try {
+		$bundle = get_post( $bundle_id );
+
+		if ( ! $bundle instanceof WP_Post ) {
+			return new WP_Error(
+				'd360_bridge_bundle_not_found',
+				'No se encontro el bundle indicado.',
+				array( 'status' => 404 )
+			);
+		}
+
+		if ( '1' !== (string) get_post_meta( $bundle_id, 'd360_managed_bundle', true ) ) {
+			return new WP_Error(
+				'd360_bridge_bundle_not_managed',
+				'Este bundle no fue creado por el portal Desarrolla360, no se puede actualizar desde aqui.',
+				array( 'status' => 403 )
+			);
+		}
+
+		$params      = $request->get_json_params();
+		$params      = is_array( $params ) ? $params : array();
+		$title       = isset( $params['title'] ) ? sanitize_text_field( $params['title'] ) : null;
+		$description = isset( $params['description'] ) ? wp_kses_post( (string) $params['description'] ) : null;
+		$course_ids  = isset( $params['course_ids'] ) && is_array( $params['course_ids'] ) ? $params['course_ids'] : array();
+		$course_ids  = array_values(
+			array_filter(
+				array_map( 'absint', $course_ids )
+			)
+		);
+
+		if ( empty( $course_ids ) ) {
+			return new WP_Error(
+				'd360_bridge_invalid_bundle',
+				'course_ids es obligatorio para actualizar el bundle.',
+				array( 'status' => 400 )
+			);
+		}
+
+		$validated_course_ids = d360_bridge_validate_bundle_course_ids( $course_ids );
+		if ( is_wp_error( $validated_course_ids ) ) {
+			return $validated_course_ids;
+		}
+
+		if ( null !== $title || null !== $description ) {
+			$update_args = array( 'ID' => $bundle_id );
+			if ( null !== $title && '' !== $title ) {
+				$update_args['post_title'] = $title;
+			}
+			if ( null !== $description ) {
+				$update_args['post_content'] = $description;
+			}
+
+			$updated = wp_update_post( $update_args, true );
+			if ( is_wp_error( $updated ) ) {
+				return $updated;
+			}
+		}
+
+		d360_bridge_store_bundle_course_relationships( $bundle_id, $validated_course_ids );
+		update_post_meta( $bundle_id, 'd360_bundle_course_count', count( $validated_course_ids ) );
+
+		return rest_ensure_response(
+			array(
+				'bundle_id'  => (int) $bundle_id,
+				'title'      => get_the_title( $bundle_id ),
+				'post_type'  => get_post_type( $bundle_id ),
+				'status'     => get_post_status( $bundle_id ),
+				'course_ids' => $validated_course_ids,
+			)
+		);
+	} catch ( Throwable $error ) {
+		if ( function_exists( 'error_log' ) ) {
+			error_log( '[Desarrolla360 Bridge] Bundle update failed: ' . $error->getMessage() );
+		}
+
+		return new WP_Error(
+			'd360_bridge_bundle_update_fatal',
+			'Fallo interno al actualizar el bundle: ' . $error->getMessage(),
 			array( 'status' => 500 )
 		);
 	}

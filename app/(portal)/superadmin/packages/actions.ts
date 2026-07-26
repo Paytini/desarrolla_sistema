@@ -10,6 +10,7 @@ import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import {
   bridgeCreateBundle,
+  bridgeUpdateBundle,
   isWordPressBridgeConfigured,
 } from "@/lib/wordpress-bridge"
 
@@ -187,6 +188,187 @@ export async function createPackageAction(formData: FormData) {
   revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/superadmin/packages?success=paquete_creado")
+}
+
+export async function updatePackageAction(formData: FormData) {
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
+
+  const packageId = getInteger(getString(formData, "package_id"))
+  const nombre = getString(formData, "nombre")
+  const descripcion = getString(formData, "descripcion")
+  const modoEntrega = getString(formData, "modo_entrega") || "DIRECT_ENROLLMENT"
+  const wpBundleIdRaw = getString(formData, "wp_bundle_id")
+  const nombreBundle = getString(formData, "nombre_bundle")
+  const notasOperativas = getString(formData, "notas_operativas")
+  const selectedCoursesRaw = getString(formData, "selected_courses_json")
+
+  if (!packageId) {
+    redirect("/superadmin/packages?error=paquete")
+  }
+
+  const pkg = await prisma.package.findUnique({
+    where: { id: packageId },
+    select: {
+      id: true,
+      active: true,
+      wp_bundle_id: true,
+      courses: {
+        select: { id: true, wp_course_id: true, course_name: true, cover_url: true },
+      },
+    },
+  })
+
+  if (!pkg || !pkg.active) {
+    redirect("/superadmin/packages?error=paquete")
+  }
+
+  if (!nombre || !selectedCoursesRaw) {
+    redirect(`/superadmin/packages/${packageId}/edit?error=datos`)
+  }
+
+  let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> = []
+
+  try {
+    const payload = JSON.parse(selectedCoursesRaw) as Array<{
+      wp_course_id?: number
+      nombre_curso?: string
+      portada_url?: string | null
+    }>
+
+    parsedCourses = payload
+      .map((course) => ({
+        wpCourseId: Number(course.wp_course_id),
+        nombreCurso: decodeHtmlEntities(String(course.nombre_curso ?? "").trim()),
+        portadaUrl: course.portada_url ? String(course.portada_url) : null,
+      }))
+      .filter((course) => Number.isInteger(course.wpCourseId) && course.nombreCurso)
+  } catch {
+    redirect(`/superadmin/packages/${packageId}/edit?error=cursos`)
+  }
+
+  if (parsedCourses.length === 0) {
+    redirect(`/superadmin/packages/${packageId}/edit?error=cursos`)
+  }
+
+  const hadExistingBundle = Boolean(pkg.wp_bundle_id)
+  let resolvedBundleId = pkg.wp_bundle_id
+  let resolvedBundleName = nombreBundle || null
+
+  if (!resolvedBundleId) {
+    const wpBundleId = wpBundleIdRaw ? Number.parseInt(wpBundleIdRaw, 10) : NaN
+    resolvedBundleId = Number.isInteger(wpBundleId) ? wpBundleId : null
+  }
+
+  if (!resolvedBundleId) {
+    if (!isWordPressBridgeConfigured()) {
+      const detail = encodeURIComponent(
+        "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS."
+      )
+      redirect(`/superadmin/packages/${packageId}/edit?error=bundle&detail=${detail}`)
+    }
+
+    try {
+      const bundle = await bridgeCreateBundle({
+        title: nombre,
+        description: descripcion || "",
+        courseIds: parsedCourses.map((course) => course.wpCourseId),
+        visibility: "private",
+      })
+
+      resolvedBundleId = bundle.bundle_id
+      resolvedBundleName = bundle.title
+    } catch (error) {
+      const detail = encodeURIComponent(getBundleErrorMessage(error))
+      redirect(`/superadmin/packages/${packageId}/edit?error=bundle&detail=${detail}`)
+    }
+  } else if (hadExistingBundle) {
+    try {
+      await bridgeUpdateBundle({
+        bundleId: resolvedBundleId,
+        title: nombre,
+        description: descripcion || "",
+        courseIds: parsedCourses.map((course) => course.wpCourseId),
+      })
+    } catch (error) {
+      const detail = encodeURIComponent(getBundleErrorMessage(error))
+      redirect(`/superadmin/packages/${packageId}/edit?error=bundle&detail=${detail}`)
+    }
+  }
+
+  const existingByWpCourseId = new Map(pkg.courses.map((course) => [course.wp_course_id, course]))
+  const nextWpCourseIds = new Set(parsedCourses.map((course) => course.wpCourseId))
+
+  const coursesToDelete = pkg.courses.filter((course) => !nextWpCourseIds.has(course.wp_course_id))
+  const coursesToCreate = parsedCourses.filter((course) => !existingByWpCourseId.has(course.wpCourseId))
+  const coursesToUpdate = parsedCourses.filter((course) => {
+    const existing = existingByWpCourseId.get(course.wpCourseId)
+    if (!existing) return false
+    return existing.course_name !== course.nombreCurso || existing.cover_url !== course.portadaUrl
+  })
+
+  await prisma.$transaction([
+    prisma.package.update({
+      where: { id: packageId },
+      data: {
+        name: nombre,
+        description: descripcion || null,
+        delivery_mode: modoEntrega || "DIRECT_ENROLLMENT",
+        wp_bundle_id: resolvedBundleId,
+        bundle_name: resolvedBundleName,
+        operational_notes: notasOperativas || null,
+      },
+    }),
+    ...(coursesToDelete.length > 0
+      ? [
+          prisma.packageCourse.deleteMany({
+            where: { id: { in: coursesToDelete.map((course) => course.id) } },
+          }),
+        ]
+      : []),
+    ...coursesToUpdate.map((course) =>
+      prisma.packageCourse.update({
+        where: { package_id_wp_course_id: { package_id: packageId, wp_course_id: course.wpCourseId } },
+        data: { course_name: course.nombreCurso, cover_url: course.portadaUrl },
+      })
+    ),
+    ...(coursesToCreate.length > 0
+      ? [
+          prisma.packageCourse.createMany({
+            data: coursesToCreate.map((course) => ({
+              package_id: packageId,
+              wp_course_id: course.wpCourseId,
+              course_name: course.nombreCurso,
+              cover_url: course.portadaUrl,
+            })),
+          }),
+        ]
+      : []),
+  ])
+
+  await createAuditEvent({
+    actor,
+    accion: "PAQUETE_ACTUALIZADO",
+    entityType: "PAQUETE",
+    entityId: packageId,
+    resumen: `${actor.nombre} actualizo el paquete ${nombre}.`,
+    metadata: {
+      modo_entrega: modoEntrega || "DIRECT_ENROLLMENT",
+      cursos: parsedCourses.map((course) => ({
+        wp_curso_id: course.wpCourseId,
+        nombre_curso: course.nombreCurso,
+      })),
+      wp_bundle_id: resolvedBundleId,
+      nombre_bundle: resolvedBundleName,
+    },
+  })
+
+  revalidatePath("/superadmin/packages")
+  revalidatePath("/superadmin/reports")
+  revalidatePath("/company/home")
+  revalidatePath("/company/employees")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  redirect("/superadmin/packages?success=paquete_actualizado")
 }
 
 export async function deletePackageAction(formData: FormData) {
