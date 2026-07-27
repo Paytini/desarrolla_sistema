@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/check-expiring-packages",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/internal/sync/employee-learning?limit=50",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/bridge-health",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

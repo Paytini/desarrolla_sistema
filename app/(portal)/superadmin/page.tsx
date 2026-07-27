@@ -2,7 +2,6 @@ import { redirect } from "next/navigation"
 import { Box, Paper, Stack, Typography } from "@mui/material"
 import { getSuperadminCompaniesSnapshot, getSuperadminReportsSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
-import { checkAndNotifyExpiringPackages } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { ActivityFeed } from "@/components/superadmin/ActivityFeed"
 import { DashboardGreeting } from "@/components/superadmin/DashboardGreeting"
@@ -112,8 +111,6 @@ function CompanyProgressKpi({
 export default async function SuperadminDashboardPage() {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
-
-  await checkAndNotifyExpiringPackages().catch(() => {})
 
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()

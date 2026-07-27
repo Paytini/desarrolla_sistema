@@ -98,6 +98,23 @@ Si quieres sincronizacion academica casi en tiempo real, configura tambien el we
   - `Portal Webhook URL`
   - `Portal Webhook Secret`
 
+### Cron jobs en Vercel
+
+El proyecto incluye `vercel.json` con tres cron jobs (Vercel los detecta y ejecuta
+automaticamente al hacer deploy). Todos requieren `CRON_SECRET` configurado como
+variable de entorno en el proyecto de Vercel — Vercel manda automaticamente
+`Authorization: Bearer $CRON_SECRET` en cada llamada.
+
+| Ruta | Horario | Que hace |
+| --- | --- | --- |
+| `GET /api/cron/check-expiring-packages` | diario, 13:00 UTC | Notifica a superadmin y RH cuando un paquete de empresa esta por vencer (30 dias antes). |
+| `GET /api/internal/sync/employee-learning` | cada 15 min | Respaldo del webhook en tiempo real: sincroniza avances/certificados de alumnos con acceso desactualizado. |
+| `GET /api/cron/bridge-health` | cada hora | Revisa que el bridge de WordPress responda y que el webhook no lleve mas de 26h sin recibir eventos; notifica a superadmin si algo falla (con enfriamiento de 6h entre avisos repetidos). |
+
+En el plan Hobby de Vercel el minimo es una ejecucion diaria por cron y un maximo de 2
+cron jobs por proyecto — si estas en Hobby, ajusta `vercel.json` o pasa a Pro para
+usar los tres tal como estan configurados.
+
 La URL esperada del portal es:
 
 ```bash

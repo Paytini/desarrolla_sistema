@@ -1,30 +1,11 @@
 import { auth } from "@/auth"
+import { hasValidCronSecret } from "@/lib/cron-auth"
 import { syncStaleEmployeeLearningBatch } from "@/lib/employee-learning"
 import { NextResponse } from "next/server"
 
-function hasValidSecret(request: Request) {
-  const expectedSecret =
-    process.env.BACKGROUND_SYNC_SECRET?.trim() ||
-    process.env.SYNC_JOBS_SECRET?.trim() ||
-    process.env.CRON_SECRET?.trim() ||
-    ""
-
-  if (!expectedSecret) {
-    return false
-  }
-
-  const authHeader = request.headers.get("authorization")?.trim() ?? ""
-  if (authHeader.toLowerCase().startsWith("bearer ")) {
-    const token = authHeader.slice(7).trim()
-    return token === expectedSecret
-  }
-
-  return request.headers.get("x-sync-secret")?.trim() === expectedSecret
-}
-
-export async function POST(request: Request) {
+async function runSync(request: Request) {
   const session = await auth()
-  const hasSecret = hasValidSecret(request)
+  const hasSecret = hasValidCronSecret(request)
 
   if (!hasSecret && session?.user.rol !== "SUPERADMIN") {
     return NextResponse.json(
@@ -47,5 +28,14 @@ export async function POST(request: Request) {
     sync_interval_ms: Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "15000", 10) || 15000,
     ...result,
   })
+}
+
+// Vercel Cron only issues GET requests; POST stays for manual/external schedulers.
+export async function GET(request: Request) {
+  return runSync(request)
+}
+
+export async function POST(request: Request) {
+  return runSync(request)
 }
 

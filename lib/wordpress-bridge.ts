@@ -10,6 +10,7 @@ export type BridgeHealthResponse = {
   tutor_rest_available: boolean
   service_user_configured: boolean
   learning_webhook_configured?: boolean
+  error_message?: string
 }
 
 export type BridgeUpsertEmployeeInput = {

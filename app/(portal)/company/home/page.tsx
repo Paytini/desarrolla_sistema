@@ -3,7 +3,6 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import { RingChart } from "@/components/shared/RingChart"
 import { Award, BarChart3, ChevronRight, ClipboardList, Package, Users, type LucideIcon } from "lucide-react"
 import Link from "next/link"
-import { checkAndNotifyExpiringPackages } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -36,8 +35,6 @@ function QuickLink({
 export default async function CompanyHome() {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
-
-  await checkAndNotifyExpiringPackages().catch(() => {})
 
   const company = await prisma.company.findUnique({
     where: { id: session.user.empresa_id },
