@@ -376,6 +376,7 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
 
           {step < 2 ? (
             <Button
+              key="next"
               type="button"
               onClick={handleNext}
               variant="contained"
@@ -384,6 +385,7 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
             </Button>
           ) : (
             <Button
+              key="submit"
               type="submit"
               variant="contained"
               disabled={pending}
