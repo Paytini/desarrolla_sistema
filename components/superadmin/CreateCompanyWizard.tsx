@@ -109,7 +109,21 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
         ))}
       </Stepper>
 
-      <Box component="form" ref={formRef} action={formAction} noValidate>
+      <Box
+        component="form"
+        ref={formRef}
+        action={formAction}
+        noValidate
+        onKeyDown={(e) => {
+          // Pressing Enter in a text field (e.g. right after typing "Cupos") would
+          // otherwise implicitly submit the form the moment step 2 mounts its real
+          // submit button — before the user gets to review Plan. Scoped to <input>
+          // so Tab+Enter still activates the Siguiente/Regresar buttons normally.
+          if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+            e.preventDefault()
+          }
+        }}
+      >
 
         {step !== 0 && (
           <>
