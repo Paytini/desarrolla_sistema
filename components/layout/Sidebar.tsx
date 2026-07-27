@@ -179,53 +179,24 @@ export default function Sidebar({
           }}
         >
           <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            <Image
-              src="/assets/logo_desarrolla_cropped.png"
-              alt="Desarrolla360"
-              width={1554}
-              height={461}
-              style={{ height: 36, width: "auto", objectFit: "contain" }}
-            />
-          </Link>
-        </Box>
-
-        {rol === "RH" && (companyName || companyLogoUrl) && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-              px: 2,
-              py: 1.25,
-              borderBottom: "1px solid",
-              borderColor: SIDEBAR_BORDER,
-            }}
-          >
-            {companyLogoUrl ? (
+            {rol === "RH" && companyLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
               <img
                 src={blobProxyUrl(companyLogoUrl)}
                 alt={companyName ?? "Logo de la empresa"}
-                style={{ height: 28, width: 28, borderRadius: 6, objectFit: "contain", flexShrink: 0 }}
+                style={{ height: 36, width: "auto", maxWidth: 180, objectFit: "contain" }}
               />
-            ) : null}
-            {companyName ? (
-              <Typography
-                sx={{
-                  fontFamily: SIDEBAR_FONT,
-                  fontSize: "0.8125rem",
-                  fontWeight: 700,
-                  color: "text.primary",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {companyName}
-              </Typography>
-            ) : null}
-          </Box>
-        )}
+            ) : (
+              <Image
+                src="/assets/logo_desarrolla_cropped.png"
+                alt="Desarrolla360"
+                width={1554}
+                height={461}
+                style={{ height: 36, width: "auto", objectFit: "contain" }}
+              />
+            )}
+          </Link>
+        </Box>
 
         <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>
           {rol === "SUPERADMIN" ? (

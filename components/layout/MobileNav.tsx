@@ -170,13 +170,22 @@ export function MobileNav({
           }}
         >
           <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }} onClick={() => setOpen(false)}>
-            <Image
-              src="/assets/logo_desarrolla_cropped.png"
-              alt="Desarrolla360"
-              width={1554}
-              height={461}
-              style={{ height: 32, width: "auto", objectFit: "contain" }}
-            />
+            {rol === "RH" && companyLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
+              <img
+                src={blobProxyUrl(companyLogoUrl)}
+                alt={company ?? "Logo de la empresa"}
+                style={{ height: 32, width: "auto", maxWidth: 160, objectFit: "contain" }}
+              />
+            ) : (
+              <Image
+                src="/assets/logo_desarrolla_cropped.png"
+                alt="Desarrolla360"
+                width={1554}
+                height={461}
+                style={{ height: 32, width: "auto", objectFit: "contain" }}
+              />
+            )}
           </Link>
         </Box>
 
@@ -186,9 +195,6 @@ export function MobileNav({
               mx: 1.5,
               mt: 1.5,
               flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 1.25,
               px: 1.5,
               py: 1.25,
               borderRadius: "8px",
@@ -197,22 +203,12 @@ export function MobileNav({
               borderColor: "divider",
             }}
           >
-            {companyLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
-              <img
-                src={blobProxyUrl(companyLogoUrl)}
-                alt={company}
-                style={{ height: 28, width: 28, borderRadius: 6, objectFit: "contain", flexShrink: 0 }}
-              />
-            ) : null}
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="overline" sx={{ display: "block", color: "primary.main", lineHeight: 1, mb: 0.5 }}>
-                Empresa
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {company}
-              </Typography>
-            </Box>
+            <Typography variant="overline" sx={{ display: "block", color: "primary.main", lineHeight: 1, mb: 0.5 }}>
+              Empresa
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {company}
+            </Typography>
           </Box>
         )}
 
