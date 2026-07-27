@@ -13,6 +13,9 @@ import {
 } from "@/lib/auditing"
 import { requireRhSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { requireCompanySlug } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
+import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
@@ -29,10 +32,14 @@ function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
 }
 
-function sanitizeReturnTo(path: string | null | undefined) {
+function employeesPath(slug: string, query?: string) {
+  return companyPath(slug, `/employees${query ?? ""}`)
+}
+
+function sanitizeReturnTo(path: string | null | undefined, slug: string) {
   const value = (path ?? "").trim()
-  if (!value.startsWith("/company/employees")) {
-    return "/company/employees"
+  if (!value.startsWith(employeesPath(slug))) {
+    return employeesPath(slug)
   }
 
   return value
@@ -120,16 +127,20 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
 
   const email = input.email.toLowerCase()
 
-  const [existingEmployee, existingUser] = await Promise.all([
-    prisma.employee.findUnique({
-      where: { email },
-      select: { id: true },
-    }),
-    prisma.user.findUnique({
-      where: { email },
-      select: { id: true },
-    }),
-  ])
+  // email is globally unique across companies, so this check must look
+  // outside the current tenant scope, not just within it.
+  const [existingEmployee, existingUser] = await withoutCompanyContext(() =>
+    Promise.all([
+      prisma.employee.findUnique({
+        where: { email },
+        select: { id: true },
+      }),
+      prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      }),
+    ])
+  )
 
   if (existingEmployee || existingUser) {
     return {
@@ -498,6 +509,7 @@ export async function createEmployeeAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
 
   const companyId = session.user.empresa_id as number
+  const slug = await requireCompanySlug(companyId)
   const nombre = getString(formData, "nombre")
   const apellido = getString(formData, "apellido")
   const apellidoMaterno = getString(formData, "apellido_materno")
@@ -510,7 +522,7 @@ export async function createEmployeeAction(formData: FormData) {
   const password = getString(formData, "password")
 
   if (!nombre || !apellido || !email || !password) {
-    redirect("/company/employees?error=datos")
+    redirect(employeesPath(slug, "?error=datos"))
   }
 
   const result = await createEmployeeForCompany({
@@ -528,62 +540,63 @@ export async function createEmployeeAction(formData: FormData) {
     actor,
   })
 
-  revalidatePath("/company/employees")
-  revalidatePath("/company/assignments")
+  revalidatePath(employeesPath(slug))
+  revalidatePath(companyPath(slug, "/assignments"))
   revalidatePath("/employee/courses")
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   if (!result.ok) {
-    redirect(`/company/employees?error=${result.code}`)
+    redirect(employeesPath(slug, `?error=${result.code}`))
   }
 
   if (result.code === "empleado_creado_sync") {
     if (result.hasActivePackage) {
-      redirect("/company/employees?success=empleado_creado_sync&error=asignacion_manual")
+      redirect(employeesPath(slug, "?success=empleado_creado_sync&error=asignacion_manual"))
     }
-    redirect("/company/employees?success=empleado_creado_sync")
+    redirect(employeesPath(slug, "?success=empleado_creado_sync"))
   }
 
   if (result.code === "empleado_creado_bridge_error") {
     if (result.hasActivePackage) {
-      redirect("/company/employees?success=empleado_creado&error=asignacion_manual")
+      redirect(employeesPath(slug, "?success=empleado_creado&error=asignacion_manual"))
     }
-    redirect("/company/employees?success=empleado_creado&error=bridge_sync")
+    redirect(employeesPath(slug, "?success=empleado_creado&error=bridge_sync"))
   }
 
   if (result.hasActivePackage) {
-    redirect("/company/employees?success=empleado_creado&error=asignacion_manual")
+    redirect(employeesPath(slug, "?success=empleado_creado&error=asignacion_manual"))
   }
 
-  redirect("/company/employees?success=empleado_creado")
+  redirect(employeesPath(slug, "?success=empleado_creado"))
 }
 
 export async function importEmployeesCsvAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
   const companyId = session.user.empresa_id as number
+  const slug = await requireCompanySlug(companyId)
   const fallbackPassword = getString(formData, "password_csv")
   const file = formData.get("archivo_csv")
 
   if (!(file instanceof File) || file.size === 0) {
-    redirect("/company/employees?error=csv_file")
+    redirect(employeesPath(slug, "?error=csv_file"))
   }
 
   if (!file.name.toLowerCase().endsWith(".csv")) {
-    redirect("/company/employees?error=csv_file")
+    redirect(employeesPath(slug, "?error=csv_file"))
   }
 
   const csvText = await file.text()
   const rows = parseCsvText(csvText)
 
   if (rows.length < 2) {
-    redirect("/company/employees?error=csv_empty")
+    redirect(employeesPath(slug, "?error=csv_empty"))
   }
 
   if (rows.length - 1 > CSV_IMPORT_LIMIT) {
-    redirect("/company/employees?error=csv_limit")
+    redirect(employeesPath(slug, "?error=csv_limit"))
   }
 
   const [headerRow, ...dataRows] = rows
@@ -591,20 +604,38 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const normalizedCsv = normalizeCsvEmployees(dataRows, headers, fallbackPassword)
 
   if (normalizedCsv.missingPassword) {
-    redirect("/company/employees?error=csv_password_required")
+    redirect(employeesPath(slug, "?error=csv_password_required"))
   }
 
   if (normalizedCsv.employees.length === 0) {
-    redirect("/company/employees?error=csv_empty")
+    redirect(employeesPath(slug, "?error=csv_empty"))
   }
 
   const companyContext = await loadCompanyProvisioningContext(companyId)
   if (!companyContext) {
-    redirect("/company/employees?error=empresa")
+    redirect(employeesPath(slug, "?error=empresa"))
   }
 
   const candidateEmails = normalizedCsv.employees.map((employee) => employee.email)
-  const [beforeSeatSnapshot, activeEmployees, existingEmployees, existingUsers] = await Promise.all([
+  // email is globally unique across companies, so these existence checks must
+  // look outside the current tenant scope, not just within it.
+  const [existingEmployees, existingUsers] = await withoutCompanyContext(() =>
+    Promise.all([
+      candidateEmails.length > 0
+        ? prisma.employee.findMany({
+            where: { email: { in: candidateEmails } },
+            select: { email: true },
+          })
+        : Promise.resolve([]),
+      candidateEmails.length > 0
+        ? prisma.user.findMany({
+            where: { email: { in: candidateEmails } },
+            select: { email: true },
+          })
+        : Promise.resolve([]),
+    ])
+  )
+  const [beforeSeatSnapshot, activeEmployees] = await Promise.all([
     getCompanySeatSnapshot(companyId),
     prisma.employee.count({
       where: {
@@ -612,22 +643,10 @@ export async function importEmployeesCsvAction(formData: FormData) {
         active: true,
       },
     }),
-    candidateEmails.length > 0
-      ? prisma.employee.findMany({
-          where: { email: { in: candidateEmails } },
-          select: { email: true },
-        })
-      : Promise.resolve([]),
-    candidateEmails.length > 0
-      ? prisma.user.findMany({
-          where: { email: { in: candidateEmails } },
-          select: { email: true },
-        })
-      : Promise.resolve([]),
   ])
 
   if (!beforeSeatSnapshot) {
-    redirect("/company/employees?error=empresa")
+    redirect(employeesPath(slug, "?error=empresa"))
   }
 
   const existingEmails = new Set([
@@ -642,7 +661,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const availableSeats = Math.max(companyContext.contracted_seats - activeEmployees, 0)
 
   if (availableSeats <= 0) {
-    redirect("/company/employees?error=cupos")
+    redirect(employeesPath(slug, "?error=cupos"))
   }
 
   const employeesToCreate = availableEmployees.slice(0, availableSeats)
@@ -753,16 +772,16 @@ export async function importEmployeesCsvAction(formData: FormData) {
     },
   })
 
-  revalidatePath("/company/employees")
-  revalidatePath("/company/home")
-  revalidatePath("/company/progress")
-  revalidatePath("/company/certificates")
+  revalidatePath(employeesPath(slug))
+  revalidatePath(companyPath(slug, "/home"))
+  revalidatePath(companyPath(slug, "/progress"))
+  revalidatePath(companyPath(slug, "/certificates"))
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(
-    `/company/employees?success=csv_imported&created=${created}&synced=${synced}&warnings=${bridgeWarnings}&skipped=${skipped}`
+    employeesPath(slug, `?success=csv_imported&created=${created}&synced=${synced}&warnings=${bridgeWarnings}&skipped=${skipped}`)
   )
 }
 export async function toggleEmployeeStatusAction(formData: FormData) {
@@ -770,8 +789,9 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
 
   const companyId = session.user.empresa_id as number
+  const slug = await requireCompanySlug(companyId)
   const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
-  const returnTo = sanitizeReturnTo(getString(formData, "return_to"))
+  const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
 
   if (!employeeId) {
     redirect(withStatus(returnTo, "error", "empleado"))
@@ -849,7 +869,7 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
     },
   })
 
-  revalidatePath("/company/employees")
+  revalidatePath(employeesPath(slug))
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
@@ -861,8 +881,9 @@ export async function deleteEmployeeAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
 
   const companyId = session.user.empresa_id as number
+  const slug = await requireCompanySlug(companyId)
   const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
-  const returnTo = sanitizeReturnTo(getString(formData, "return_to"))
+  const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
 
   if (!employeeId) {
     redirect(withStatus(returnTo, "error", "empleado"))
@@ -884,9 +905,9 @@ export async function deleteEmployeeAction(formData: FormData) {
     redirect(withStatus(returnTo, "error", errorCode))
   }
 
-  revalidatePath("/company/employees")
-  revalidatePath("/company/home")
-  revalidatePath("/company/progress")
+  revalidatePath(employeesPath(slug))
+  revalidatePath(companyPath(slug, "/home"))
+  revalidatePath(companyPath(slug, "/progress"))
   revalidatePath("/superadmin/access")
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
@@ -898,6 +919,7 @@ export async function triggerCompanyLearningSyncAction() {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
   const companyId = session.user.empresa_id as number
+  const slug = await requireCompanySlug(companyId)
 
   const queued = scheduleCompanyEmployeeLearningBatch(companyId, {
     limit: 100,
@@ -913,14 +935,14 @@ export async function triggerCompanyLearningSyncAction() {
     resumen: `${actor.nombre} solicito sincronizacion de aprendizaje para su empresa.`,
   })
 
-  revalidatePath("/company/employees")
-  revalidatePath("/company/home")
-  revalidatePath("/company/progress")
+  revalidatePath(employeesPath(slug))
+  revalidatePath(companyPath(slug, "/home"))
+  revalidatePath(companyPath(slug, "/progress"))
   revalidatePath("/employee/courses")
   revalidatePath("/employee/certificates")
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
-  redirect(`/company/employees?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
+  redirect(employeesPath(slug, `?success=${queued ? "sync_background_started" : "sync_background_already_running"}`))
 }

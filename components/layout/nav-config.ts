@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import type { KpiColorKey } from "@/lib/kpi-colors"
+import { companyPath } from "@/lib/company-routes"
 
 export type Rol = "SUPERADMIN" | "RH" | "EMPLEADO"
 export type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean; color: KpiColorKey }
@@ -47,13 +48,15 @@ export const navSuperAdminSections: NavSection[] = [
   },
 ]
 
-export const navRH: NavItem[] = [
-  { label: "Inicio",        href: "/company/home",       icon: LayoutDashboard, exact: true, color: "primary" },
-  { label: "Empleados",     href: "/company/employees",    icon: Users,                        color: "violet" },
-  { label: "Asignaciones",  href: "/company/assignments", icon: ClipboardList,                color: "amber" },
-  { label: "Progreso",      href: "/company/progress",     icon: BarChart3,                    color: "emerald" },
-  { label: "Constancias",   href: "/company/certificates",  icon: Award,                        color: "orange" },
-]
+export function navRH(companySlug: string): NavItem[] {
+  return [
+    { label: "Inicio",        href: companyPath(companySlug, "/home"),         icon: LayoutDashboard, exact: true, color: "primary" },
+    { label: "Empleados",     href: companyPath(companySlug, "/employees"),    icon: Users,                        color: "violet" },
+    { label: "Asignaciones",  href: companyPath(companySlug, "/assignments"),  icon: ClipboardList,                color: "amber" },
+    { label: "Progreso",      href: companyPath(companySlug, "/progress"),     icon: BarChart3,                    color: "emerald" },
+    { label: "Constancias",   href: companyPath(companySlug, "/certificates"), icon: Award,                        color: "orange" },
+  ]
+}
 
 export const navEmployee: NavItem[] = [
   { label: "Mis cursos",      href: "/employee/courses",      icon: BookOpen, color: "emerald" },
@@ -66,9 +69,9 @@ export const roleLabel: Record<Rol, string> = {
   EMPLEADO:   "Empleado",
 }
 
-export function homeHrefForRole(rol: Rol) {
+export function homeHrefForRole(rol: Rol, companySlug?: string) {
   return rol === "SUPERADMIN" ? "/superadmin"
-    : rol === "RH"            ? "/company/home"
+    : rol === "RH"            ? companyPath(companySlug ?? "", "/home")
     :                           "/employee/courses"
 }
 

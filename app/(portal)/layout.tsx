@@ -15,6 +15,7 @@ import { OnboardingTour } from "@/components/layout/OnboardingTour"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { getCompanyBranding } from "@/lib/company-branding"
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -44,12 +45,22 @@ export default async function PortalLayout({
   const company = session.user.empresa as string | undefined
   const isSuperAdmin = rol === "SUPERADMIN"
 
+  const branding = rol === "RH" && session.user.empresa_id
+    ? await getCompanyBranding(session.user.empresa_id)
+    : null
+
   const content = (
     <div className={cn("flex h-screen overflow-hidden", urbanist.variable, epilogue.variable, "portal-v4")}>
-      <Sidebar rol={rol} />
+      <Sidebar rol={rol} companySlug={branding?.slug} companyName={company} companyLogoUrl={branding?.logo_url} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="relative flex h-16 shrink-0 items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 md:px-6">
-          <MobileNav rol={rol} name={name} company={company} />
+          <MobileNav
+            rol={rol}
+            name={name}
+            company={company}
+            companySlug={branding?.slug}
+            companyLogoUrl={branding?.logo_url}
+          />
 
           {isSuperAdmin ? (
             <div className="flex-1" style={{ maxWidth: 560 }}>
@@ -62,7 +73,7 @@ export default async function PortalLayout({
           <div className="flex-1" />
 
           <div className="flex shrink-0 items-center gap-2">
-            {rol === "RH" && <HrSearchBar />}
+            {rol === "RH" && branding?.slug && <HrSearchBar companySlug={branding.slug} />}
             {rol === "EMPLEADO" && <EmployeeSearchBar />}
             <NotificationBell />
             <FullscreenToggle />

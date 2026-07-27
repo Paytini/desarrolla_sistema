@@ -8,6 +8,7 @@ declare module "next-auth" {
       empresa_id: number | null
       nombre: string
       empresa?: string
+      empresa_slug?: string
     } & DefaultSession["user"]
   }
 }
@@ -19,5 +20,6 @@ declare module "next-auth/jwt" {
     empresa_id?: number | null
     nombre?: string
     empresa?: string | null
+    empresa_slug?: string | null
   }
 }

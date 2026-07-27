@@ -8,6 +8,7 @@ import { getHrAssignmentsSnapshot } from "@/lib/dashboard-cache"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { readSearchParam } from "@/lib/search-params"
 import { redirect } from "next/navigation"
+import { companyPath } from "@/lib/company-routes"
 import { assignEmployeeCoursesAction } from "./actions"
 
 const successMessages: Record<string, string> = {
@@ -78,7 +79,7 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
       <PageHeader
         title="Asignación de cursos"
         description="Asigna cursos del paquete activo a cada colaborador"
-        breadcrumbs={[{ label: "Empresa", href: "/company/home" }, { label: "Asignaciones" }]}
+        breadcrumbs={[{ label: "Empresa", href: companyPath(company.slug, "/home") }, { label: "Asignaciones" }]}
       />
 
       {success ? (

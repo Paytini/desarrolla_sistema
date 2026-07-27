@@ -84,6 +84,8 @@ model Notification {
 model Company {
   id                 Int      @id @default(autoincrement())
   name               String
+  slug               String   @unique // used in portal URLs, e.g. /company/acme
+  logo_url           String? // company-branded logo shown in the portal
   hr_email           String   @unique // HR contact's email
   phone              String?
   rfc                String? // Mexican tax ID

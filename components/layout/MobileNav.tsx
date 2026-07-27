@@ -30,6 +30,7 @@ import {
   type NavItem,
   type Rol,
 } from "@/components/layout/nav-config"
+import { blobProxyUrl } from "@/lib/blob-proxy"
 
 const ACCENT_MAP: Record<string, string> = {
   "var(--brand)":            "#3579F5",
@@ -113,15 +114,19 @@ export function MobileNav({
   rol,
   name,
   company,
+  companySlug,
+  companyLogoUrl,
 }: {
   rol: Rol
   name: string
   company?: string
+  companySlug?: string
+  companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const initials = getInitials(name)
-  const homeHref = homeHrefForRole(rol)
+  const homeHref = homeHrefForRole(rol, companySlug)
 
   return (
     <>
@@ -181,6 +186,9 @@ export function MobileNav({
               mx: 1.5,
               mt: 1.5,
               flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 1.25,
               px: 1.5,
               py: 1.25,
               borderRadius: "8px",
@@ -189,12 +197,22 @@ export function MobileNav({
               borderColor: "divider",
             }}
           >
-            <Typography variant="overline" sx={{ display: "block", color: "primary.main", lineHeight: 1, mb: 0.5 }}>
-              Empresa
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {company}
-            </Typography>
+            {companyLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
+              <img
+                src={blobProxyUrl(companyLogoUrl)}
+                alt={company}
+                style={{ height: 28, width: 28, borderRadius: 6, objectFit: "contain", flexShrink: 0 }}
+              />
+            ) : null}
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="overline" sx={{ display: "block", color: "primary.main", lineHeight: 1, mb: 0.5 }}>
+                Empresa
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {company}
+              </Typography>
+            </Box>
           </Box>
         )}
 
@@ -233,7 +251,7 @@ export function MobileNav({
             ))
           ) : (
             <List disablePadding>
-              {(rol === "RH" ? navRH : navEmployee).map((item) => (
+              {(rol === "RH" ? navRH(companySlug ?? "") : navEmployee).map((item) => (
                 <MobileNavLink
                   key={item.href}
                   item={item}

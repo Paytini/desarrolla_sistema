@@ -5,6 +5,8 @@ import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { getCompanyBranding } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
 import {
   scheduleCompanyEmployeeLearningBatch,
@@ -93,10 +95,14 @@ export async function retryCompanySyncAction(formData: FormData) {
     },
   })
 
+  const branding = await getCompanyBranding(companyId)
+
   revalidatePath("/superadmin/reports")
   revalidatePath("/superadmin/packages")
-  revalidatePath("/company/employees")
-  revalidatePath("/company/progress")
+  if (branding) {
+    revalidatePath(companyPath(branding.slug, "/employees"))
+    revalidatePath(companyPath(branding.slug, "/progress"))
+  }
   revalidatePath("/employee/courses")
   revalidatePath("/employee/certificates")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")

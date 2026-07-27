@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
+import { companyPath } from "@/lib/company-routes"
 
 function getInitials(name: string) {
   return name
@@ -127,7 +128,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
       <PageHeader
         title="Progreso"
         description="Avance y actividad de cursos por colaborador"
-        breadcrumbs={[{ label: "Empresa", href: "/company/home" }, { label: "Progreso" }]}
+        breadcrumbs={[{ label: "Empresa", href: companyPath(company.slug, "/home") }, { label: "Progreso" }]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

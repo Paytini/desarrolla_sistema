@@ -3,6 +3,8 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
 
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { getCompanyBranding } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
 import {
   syncEmployeeLearningFromBridgeSnapshot,
   type EmployeeLearningBridgeSnapshot,
@@ -125,9 +127,12 @@ export async function POST(request: Request) {
     revalidatePath("/employee/certificates")
 
     if (payload.company_id) {
-      revalidatePath("/company/home")
-      revalidatePath("/company/progress")
-      revalidatePath("/company/certificates")
+      const branding = await getCompanyBranding(payload.company_id)
+      if (branding) {
+        revalidatePath(companyPath(branding.slug, "/home"))
+        revalidatePath(companyPath(branding.slug, "/progress"))
+        revalidatePath(companyPath(branding.slug, "/certificates"))
+      }
       revalidateTag(companyCacheRootTag(payload.company_id), "max")
       revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     }

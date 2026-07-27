@@ -37,6 +37,7 @@ async function main() {
     },
     create: {
       name: "Empresa Demo Logistics",
+      slug: "empresa-demo-logistics",
       hr_email: "rh@empresa-demo.com",
       phone: "6640000000",
       rfc: "EDL240101AAA",

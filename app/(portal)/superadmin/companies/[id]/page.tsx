@@ -1,11 +1,15 @@
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
+import { CompanyBrandingForm } from "@/components/superadmin/CompanyBrandingForm"
+import { updateCompanyBrandingAction } from "../actions"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
-import { ArrowLeft, Calendar, Mail, Phone, User } from "lucide-react"
+import { readSearchParam } from "@/lib/search-params"
+import { AlertCircle, ArrowLeft, Calendar, CheckCircle2, Mail, Phone, User } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
+import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
 import Divider from "@mui/material/Divider"
@@ -15,6 +19,14 @@ import TableCell from "@mui/material/TableCell"
 import TableHead from "@mui/material/TableHead"
 import TableRow from "@mui/material/TableRow"
 import Typography from "@mui/material/Typography"
+
+const brandingSuccessMessages: Record<string, string> = {
+  marca_actualizada: "Slug y logo actualizados correctamente.",
+}
+const brandingErrorMessages: Record<string, string> = {
+  slug: "El slug no puede estar vacío.",
+  slug_en_uso: "Ese slug ya lo usa otra empresa.",
+}
 
 function DonutChart({ pct, size = 160 }: { pct: number; size?: number }) {
   const sw    = 14
@@ -67,15 +79,22 @@ const TH_SX = {
 
 const TD_SX = { borderBottom: "1px solid #f8fafc" }
 
-type PageProps = { params: Promise<{ id: string }> }
+type PageProps = {
+  params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
 
-export default async function CompanyDetailPage({ params }: PageProps) {
+export default async function CompanyDetailPage({ params, searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
   const { id }    = await params
   const companyId = Number(id)
   if (!Number.isInteger(companyId) || companyId <= 0) notFound()
+
+  const query   = await searchParams
+  const success = readSearchParam(query, "success")
+  const error   = readSearchParam(query, "error")
 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
@@ -146,6 +165,17 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
   return (
     <Box sx={{ display: "grid", gap: 2.5 }}>
+      {success && (
+        <Alert severity="success" icon={<CheckCircle2 size={16} />} sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}>
+          {brandingSuccessMessages[success] ?? success}
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" icon={<AlertCircle size={16} />} sx={{ borderRadius: 2 }}>
+          {brandingErrorMessages[error] ?? error}
+        </Alert>
+      )}
+
       <Box sx={{ display: "grid", gap: 1.5 }}>
         <Link
           href="/superadmin/companies"
@@ -351,6 +381,15 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           </PanelBox>
         </Box>
       </Box>
+
+      <PanelBox title="Marca y URL" description="Logo y slug que ve esta empresa dentro del portal">
+        <CompanyBrandingForm
+          companyId={company.id}
+          currentSlug={company.slug}
+          currentLogoUrl={company.logo_url}
+          action={updateCompanyBrandingAction}
+        />
+      </PanelBox>
 
       {courseStats.length > 0 && (
         <PanelBox

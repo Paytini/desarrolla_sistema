@@ -11,8 +11,10 @@ import {
 } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { companyPath } from "@/lib/company-routes"
 import { notifySuperadmins } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
+import { ensureUniqueCompanySlug, slugify } from "@/lib/slug"
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -63,11 +65,13 @@ export async function createCompanyAction(
     const d = new Date(expirationDateRaw)
     return isNaN(d.getTime()) ? null : d
   })()
+  const slug = await ensureUniqueCompanySlug(nombre)
 
   const createdResult = await prisma.$transaction(async (tx) => {
     const company = await tx.company.create({
       data: {
         name:              nombre,
+        slug,
         hr_email:          emailRh,
         phone:             telefono || null,
         rfc:               rfc || null,
@@ -205,5 +209,52 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(companyCacheRootTag(companyId), "max")
   redirect(`/superadmin/companies?success=${company.active ? "empresa_suspendida" : "empresa_activada"}`)
+}
+
+export async function updateCompanyBrandingAction(formData: FormData) {
+  const session = await requireSuperAdminSession()
+  const actor = getAuditActorFromSession(session)
+
+  const companyId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
+  const slug = slugify(getString(formData, "slug"))
+  const logoUrl = getString(formData, "logo_url")
+
+  if (!companyId) {
+    redirect("/superadmin/companies?error=empresa")
+  }
+  if (!slug) {
+    redirect(`/superadmin/companies/${companyId}?error=slug`)
+  }
+
+  const slugTaken = await prisma.company.findFirst({
+    where: { slug, id: { not: companyId } },
+    select: { id: true },
+  })
+  if (slugTaken) {
+    redirect(`/superadmin/companies/${companyId}?error=slug_en_uso`)
+  }
+
+  const company = await prisma.company.update({
+    where: { id: companyId },
+    data: { slug, logo_url: logoUrl || null },
+    select: { name: true },
+  })
+
+  await createAuditEvent({
+    actor,
+    accion: "EMPRESA_MARCA_ACTUALIZADA",
+    entityType: "EMPRESA",
+    entityId: companyId,
+    companyId,
+    resumen: `${actor.nombre} actualizo el slug/logo de la empresa ${company.name}.`,
+    metadata: { slug, tiene_logo: Boolean(logoUrl) },
+  })
+
+  revalidatePath(`/superadmin/companies/${companyId}`)
+  revalidatePath("/superadmin/companies")
+  revalidatePath(companyPath(slug, "/home"))
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(companyCacheRootTag(companyId), "max")
+  redirect(`/superadmin/companies/${companyId}?success=marca_actualizada`)
 }
 

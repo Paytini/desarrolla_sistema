@@ -17,6 +17,7 @@ import { formatDate, getInitials } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
+import { companyPath } from "@/lib/company-routes"
 import {
   createEmployeeAction,
   deleteEmployeeAction,
@@ -75,12 +76,13 @@ function getSuccessMessage(
   return successMessages[success] ?? success
 }
 
-function buildEmployeeListPath(query: string, status: string) {
+function buildEmployeeListPath(slug: string, query: string, status: string) {
+  const basePath = companyPath(slug, "/employees")
   const searchParams = new URLSearchParams()
   if (query) searchParams.set("q", query)
   if (status !== "all") searchParams.set("status", status)
   const serialized = searchParams.toString()
-  return serialized ? `/company/employees?${serialized}` : "/company/employees"
+  return serialized ? `${basePath}?${serialized}` : basePath
 }
 
 
@@ -407,11 +409,10 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const filteredEmployees = company.employees.filter((e) =>
     matchesEmployeeFilters(e, { query, status })
   )
-  const currentListPath = buildEmployeeListPath(searchQuery, status)
+  const employeesBasePath = companyPath(company.slug, "/employees")
+  const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status)
   const exportHref = `/api/company/employees/export${
-    currentListPath === "/company/employees"
-      ? ""
-      : currentListPath.replace("/company/employees", "")
+    currentListPath === employeesBasePath ? "" : currentListPath.replace(employeesBasePath, "")
   }`
 
   return (
@@ -419,7 +420,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
       <PageHeader
         title="Empleados"
         description="Gestión de la plantilla de colaboradores"
-        breadcrumbs={[{ label: "Empresa", href: "/company/home" }, { label: "Empleados" }]}
+        breadcrumbs={[{ label: "Empresa", href: companyPath(company.slug, "/home") }, { label: "Empleados" }]}
       />
 
       {success ? (
@@ -501,7 +502,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
           </button>
           {(searchQuery || status !== "all") ? (
             <a
-              href="/company/employees"
+              href={employeesBasePath}
               className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Limpiar

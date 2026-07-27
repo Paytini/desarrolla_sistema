@@ -22,6 +22,7 @@ import {
   type Rol,
 } from "@/components/layout/nav-config"
 import { kpiColorMap } from "@/lib/kpi-colors"
+import { blobProxyUrl } from "@/lib/blob-proxy"
 
 const SIDEBAR_W = 288
 
@@ -113,11 +114,17 @@ function NavItemRow({
 
 export default function Sidebar({
   rol,
+  companySlug,
+  companyName,
+  companyLogoUrl,
 }: {
   rol: Rol
+  companySlug?: string
+  companyName?: string
+  companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
-  const homeHref  = homeHrefForRole(rol)
+  const homeHref  = homeHrefForRole(rol, companySlug)
 
   return (
     <Box
@@ -182,6 +189,44 @@ export default function Sidebar({
           </Link>
         </Box>
 
+        {rol === "RH" && (companyName || companyLogoUrl) && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              px: 2,
+              py: 1.25,
+              borderBottom: "1px solid",
+              borderColor: SIDEBAR_BORDER,
+            }}
+          >
+            {companyLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
+              <img
+                src={blobProxyUrl(companyLogoUrl)}
+                alt={companyName ?? "Logo de la empresa"}
+                style={{ height: 28, width: 28, borderRadius: 6, objectFit: "contain", flexShrink: 0 }}
+              />
+            ) : null}
+            {companyName ? (
+              <Typography
+                sx={{
+                  fontFamily: SIDEBAR_FONT,
+                  fontSize: "0.8125rem",
+                  fontWeight: 700,
+                  color: "text.primary",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {companyName}
+              </Typography>
+            ) : null}
+          </Box>
+        )}
+
         <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>
           {rol === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
@@ -210,7 +255,7 @@ export default function Sidebar({
             ))
           ) : (
             <List disablePadding>
-              {(rol === "RH" ? navRH : navEmployee).map((item) => (
+              {(rol === "RH" ? navRH(companySlug ?? "") : navEmployee).map((item) => (
                 <NavItemRow key={item.href} item={item} pathname={pathname} />
               ))}
             </List>

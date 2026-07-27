@@ -6,6 +6,7 @@ import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
+import { companyPath } from "@/lib/company-routes"
 
 function QuickLink({
   href,
@@ -106,16 +107,16 @@ export default async function CompanyHome() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
         <div className="grid gap-3 sm:grid-cols-2">
-          <QuickLink href="/company/employees" label="Gestión de empleados" Icon={Users} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
-          <QuickLink href="/company/assignments" label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
+          <QuickLink href={companyPath(company.slug, "/employees")} label="Gestión de empleados" Icon={Users} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
+          <QuickLink href={companyPath(company.slug, "/assignments")} label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
           <QuickLink
-            href="/company/progress"
+            href={companyPath(company.slug, "/progress")}
             label="Progreso y trayectorias"
             Icon={BarChart3}
             iconCls="bg-[#EAF1FE] text-[#3579F5]"
           />
           <QuickLink
-            href="/company/certificates"
+            href={companyPath(company.slug, "/certificates")}
             label="Constancias DC-3"
             Icon={Award}
             iconCls="bg-[#EAF1FE] text-[#3579F5]"

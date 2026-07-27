@@ -5,6 +5,8 @@ import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { getCompanyBranding } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
 import {
   deleteEmployeeRecord,
   togglePortalUserStatus,
@@ -67,13 +69,16 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   }
 
   revalidatePath("/superadmin/access")
-  revalidatePath("/company/employees")
-  revalidatePath("/company/home")
-  revalidatePath("/company/progress")
   revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   if (deletedEmployee) {
     revalidateTag(companyCacheRootTag(deletedEmployee.company_id), "max")
+    const branding = await getCompanyBranding(deletedEmployee.company_id)
+    if (branding) {
+      revalidatePath(companyPath(branding.slug, "/employees"))
+      revalidatePath(companyPath(branding.slug, "/home"))
+      revalidatePath(companyPath(branding.slug, "/progress"))
+    }
   }
   redirect("/superadmin/access?success=empleado_eliminado")
 }

@@ -5,6 +5,8 @@ import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { getCompanyBranding } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
 import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
@@ -365,8 +367,10 @@ export async function updatePackageAction(formData: FormData) {
 
   revalidatePath("/superadmin/packages")
   revalidatePath("/superadmin/reports")
-  revalidatePath("/company/home")
-  revalidatePath("/company/employees")
+  // Editing a package's catalog can affect any company subscribed to it, not just
+  // one — revalidate every /company/[slug]/* page via the shared layout instead
+  // of picking a single company.
+  revalidatePath(companyPath("[slug]", "/home"), "layout")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   redirect("/superadmin/packages?success=paquete_actualizado")
 }
@@ -496,11 +500,15 @@ export async function assignPackageToCompanyAction(formData: FormData) {
     },
   })
 
+  const assignedCompanyBranding = await getCompanyBranding(companyId)
+
   revalidatePath("/superadmin/packages")
   revalidatePath("/superadmin/companies")
   revalidatePath("/superadmin/reports")
-  revalidatePath("/company/home")
-  revalidatePath("/company/employees")
+  if (assignedCompanyBranding) {
+    revalidatePath(companyPath(assignedCompanyBranding.slug, "/home"))
+    revalidatePath(companyPath(assignedCompanyBranding.slug, "/employees"))
+  }
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(companyCacheRootTag(companyId), "max")
   redirect("/superadmin/packages?success=paquete_asignado")
@@ -542,10 +550,14 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
     resumen: `${actor.nombre} sincronizo paquete activo con empleados de la empresa.`,
   })
 
+  const syncedCompanyBranding = await getCompanyBranding(companyId)
+
   revalidatePath("/superadmin/packages")
   revalidatePath("/superadmin/reports")
-  revalidatePath("/company/employees")
-  revalidatePath("/company/progress")
+  if (syncedCompanyBranding) {
+    revalidatePath(companyPath(syncedCompanyBranding.slug, "/employees"))
+    revalidatePath(companyPath(syncedCompanyBranding.slug, "/progress"))
+  }
   revalidatePath("/employee/courses")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(companyCacheRootTag(companyId), "max")

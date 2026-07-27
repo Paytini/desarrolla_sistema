@@ -31,6 +31,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.empresa_id = (user as { empresa_id?: number | null }).empresa_id
         token.nombre = (user as { nombre?: string }).nombre
         token.empresa = (user as { empresa?: string | null }).empresa
+        token.empresa_slug = (user as { empresa_slug?: string | null }).empresa_slug
       }
       return token
     },
@@ -40,6 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.empresa_id = token.empresa_id as number | null
       session.user.nombre = token.nombre as string
       session.user.empresa = token.empresa as string | undefined
+      session.user.empresa_slug = token.empresa_slug as string | undefined
       return session
     },
   },
@@ -65,7 +67,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             where: { email: credentials.email as string },
             include: {
               company: {
-                select: { name: true },
+                select: { name: true, slug: true },
               },
             },
           })
@@ -97,6 +99,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             rol: usuario.role,
             empresa_id: usuario.company_id,
             empresa: usuario.company?.name ?? null,
+            empresa_slug: usuario.company?.slug ?? null,
           }
         } catch (error) {
           if (error instanceof EmpresaBloqueadaError) throw error

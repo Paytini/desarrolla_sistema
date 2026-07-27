@@ -9,12 +9,13 @@ import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
+import { companyPath } from "@/lib/company-routes"
 
 type EmployeeResult = { id: number; first_name: string; last_name: string; email: string; department: string | null }
 type CourseResult   = { wp_course_id: number; course_name: string }
 type SearchResults  = { employees: EmployeeResult[]; courses: CourseResult[] }
 
-export default function HrSearchBar() {
+export default function HrSearchBar({ companySlug }: { companySlug: string }) {
   return (
     <SearchPalette<SearchResults>
       searchUrl={(q) => `/api/internal/hr-search?q=${encodeURIComponent(q)}`}
@@ -42,7 +43,7 @@ export default function HrSearchBar() {
               <Box component="section">
                 <GroupHeader icon={Users} label="Empleados" count={results.employees.length} />
                 {results.employees.map((e) => (
-                  <ResultRow key={e.id} href="/company/employees" onClose={onClose}>
+                  <ResultRow key={e.id} href={companyPath(companySlug, "/employees")} onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"
@@ -77,7 +78,7 @@ export default function HrSearchBar() {
               <Box component="section">
                 <GroupHeader icon={BookOpen} label="Cursos del paquete" count={results.courses.length} />
                 {results.courses.map((c) => (
-                  <ResultRow key={c.wp_course_id} href="/company/progress" onClose={onClose}>
+                  <ResultRow key={c.wp_course_id} href={companyPath(companySlug, "/progress")} onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"

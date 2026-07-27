@@ -4,6 +4,8 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { requireRhSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { requireCompanySlug } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
 import { replaceEmployeePackageCourses } from "@/lib/course-sync"
 import { notifyCompanyRH, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
@@ -43,11 +45,13 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   const session = await requireRhSession()
 
   const companyId = session.user.empresa_id as number
+  const slug = await requireCompanySlug(companyId)
+  const assignmentsPath = (query?: string) => companyPath(slug, `/assignments${query ?? ""}`)
   const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
   const selectedCourseIds = parseCourseIds(formData.getAll("course_ids"))
 
   if (!employeeId) {
-    redirect("/company/assignments?error=datos")
+    redirect(assignmentsPath("?error=datos"))
   }
 
   const [employee, company] = await Promise.all([
@@ -85,12 +89,12 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
   ])
 
   if (!employee || !company) {
-    redirect("/company/assignments?error=empleado")
+    redirect(assignmentsPath("?error=empleado"))
   }
 
   const activePackage = company.packages[0]
   if (!activePackage) {
-    redirect("/company/assignments?error=paquete")
+    redirect(assignmentsPath("?error=paquete"))
   }
 
   const packageCourses = activePackage.package.courses as PortalPackageCourseRecord[]
@@ -109,7 +113,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     })
 
   if (selectedCourseIds.length > 0 && validSelectedCourses.length === 0) {
-    redirect("/company/assignments?error=cursos")
+    redirect(assignmentsPath("?error=cursos"))
   }
 
   await replaceEmployeePackageCourses(employee.id, validSelectedCourses)
@@ -121,12 +125,12 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       : `Se te asignaron ${courseNames.length} cursos nuevos.`
 
   if (validSelectedCourses.length === 0) {
-    revalidatePath("/company/assignments")
-    revalidatePath("/company/progress")
+    revalidatePath(assignmentsPath())
+    revalidatePath(companyPath(slug, "/progress"))
     revalidatePath("/employee/courses")
     revalidateTag(companyCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect("/company/assignments?success=limpio_local")
+    redirect(assignmentsPath("?success=limpio_local"))
   }
 
   if (!employee.wp_user_id || !isWordPressBridgeConfigured()) {
@@ -135,12 +139,12 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       titulo: "Nuevo curso asignado",
       mensaje: courseAssignmentMessage,
     })
-    revalidatePath("/company/assignments")
-    revalidatePath("/company/progress")
+    revalidatePath(assignmentsPath())
+    revalidatePath(companyPath(slug, "/progress"))
     revalidatePath("/employee/courses")
     revalidateTag(companyCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect("/company/assignments?success=asignado_local")
+    redirect(assignmentsPath("?success=asignado_local"))
   }
 
   try {
@@ -209,11 +213,11 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
       mensaje: syncFailMensaje,
     })
 
-    revalidatePath("/company/assignments")
+    revalidatePath(assignmentsPath())
     revalidatePath("/employee/courses")
     revalidateTag(companyCacheRootTag(companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect("/company/assignments?success=asignado_local&error=bridge_sync")
+    redirect(assignmentsPath("?success=asignado_local&error=bridge_sync"))
   }
 
   await notifyUsuarioByEmail(employee.email, {
@@ -222,10 +226,10 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     mensaje: courseAssignmentMessage,
   })
 
-  revalidatePath("/company/assignments")
-  revalidatePath("/company/progress")
+  revalidatePath(assignmentsPath())
+  revalidatePath(companyPath(slug, "/progress"))
   revalidatePath("/employee/courses")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect("/company/assignments?success=asignado_sync")
+  redirect(assignmentsPath("?success=asignado_sync"))
 }

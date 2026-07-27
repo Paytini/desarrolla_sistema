@@ -7,6 +7,7 @@ import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
+import { companyPath } from "@/lib/company-routes"
 
 type CompanyEmployee = {
   id: number
@@ -95,7 +96,7 @@ export default async function CompanyCertificatesPage() {
       <PageHeader
         title="Constancias DC-3"
         description="Constancias de habilidades laborales para cumplimiento STPS"
-        breadcrumbs={[{ label: "Empresa", href: "/company/home" }, { label: "Constancias DC-3" }]}
+        breadcrumbs={[{ label: "Empresa", href: companyPath(company.slug, "/home") }, { label: "Constancias DC-3" }]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

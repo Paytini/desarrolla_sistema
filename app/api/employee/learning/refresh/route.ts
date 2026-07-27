@@ -3,6 +3,8 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { getCompanyBranding } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
 import { syncEmployeeLearningByEmail } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
 
@@ -48,9 +50,12 @@ export async function POST(request: Request) {
   revalidatePath("/employee/certificates")
 
   if (result.companyId) {
-    revalidatePath("/company/home")
-    revalidatePath("/company/progress")
-    revalidatePath("/company/certificates")
+    const branding = await getCompanyBranding(result.companyId)
+    if (branding) {
+      revalidatePath(companyPath(branding.slug, "/home"))
+      revalidatePath(companyPath(branding.slug, "/progress"))
+      revalidatePath(companyPath(branding.slug, "/certificates"))
+    }
     revalidateTag(companyCacheRootTag(result.companyId), "max")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   }
