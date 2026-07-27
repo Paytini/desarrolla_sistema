@@ -352,6 +352,7 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
           }}
         >
           <Button
+            type="button"
             onClick={() => setStep((s) => s - 1)}
             variant="outlined"
             sx={{ visibility: step === 0 ? "hidden" : "visible" }}
