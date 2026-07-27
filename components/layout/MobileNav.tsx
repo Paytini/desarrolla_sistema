@@ -170,7 +170,7 @@ export function MobileNav({
           }}
         >
           <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }} onClick={() => setOpen(false)}>
-            {rol === "RH" && companyLogoUrl ? (
+            {(rol === "RH" || rol === "EMPLEADO") && companyLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
               <img
                 src={blobProxyUrl(companyLogoUrl)}

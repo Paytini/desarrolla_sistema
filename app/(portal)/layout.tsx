@@ -45,7 +45,7 @@ export default async function PortalLayout({
   const company = session.user.empresa as string | undefined
   const isSuperAdmin = rol === "SUPERADMIN"
 
-  const branding = rol === "RH" && session.user.empresa_id
+  const branding = (rol === "RH" || rol === "EMPLEADO") && session.user.empresa_id
     ? await getCompanyBranding(session.user.empresa_id)
     : null
 
