@@ -15,6 +15,8 @@ import { companyPath } from "@/lib/company-routes"
 import { notifySuperadmins } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { ensureUniqueCompanySlug, slugify } from "@/lib/slug"
+import { sendEmail } from "@/lib/ses"
+import { buildCredentialsEmail } from "@/lib/email-templates/credentials"
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -131,6 +133,36 @@ export async function createCompanyAction(
       paquete_inicial_id:    createdResult.assignedPackageId,
     },
   })
+
+  try {
+    const { subject, html, text } = buildCredentialsEmail({
+      nombreRh,
+      nombreEmpresa: nombre,
+      email: emailRh,
+      password: passwordRh,
+    })
+    await sendEmail({ to: emailRh, subject, html, text })
+    await createAuditEvent({
+      actor,
+      accion:    "EMAIL_CREDENCIALES_ENVIADO",
+      entityType: "EMPRESA",
+      entityId:  createdResult.companyId,
+      companyId: createdResult.companyId,
+      resumen:   `Se envio el correo de credenciales a ${emailRh}.`,
+    })
+  } catch (error) {
+    await createAuditEvent({
+      actor,
+      accion:    "EMAIL_CREDENCIALES_FALLIDO",
+      entityType: "EMPRESA",
+      entityId:  createdResult.companyId,
+      companyId: createdResult.companyId,
+      resumen:   `No se pudo enviar el correo de credenciales a ${emailRh}.`,
+      metadata: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    })
+  }
 
   if (createdResult.assignedPackageId) {
     await createAuditEvent({
