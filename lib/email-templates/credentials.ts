@@ -15,13 +15,24 @@ export function buildCredentialsEmail({
   password: string
 }) {
   const loginUrl = getPortalLoginUrl()
-  const subject = `Tu acceso al portal Desarrolla360 — ${nombreEmpresa}`
+  const subject = `¡Bienvenido a Desarrolla360, ${nombreEmpresa}!`
+
+  const features = [
+    "Dar de alta y gestionar a tus empleados",
+    "Asignar cursos y paquetes de capacitación",
+    "Ver el avance y progreso académico de tu equipo",
+    "Generar y descargar constancias DC-3",
+  ]
 
   const text = [
     `Hola ${nombreRh},`,
     ``,
-    `Se creó el acceso de ${nombreEmpresa} al portal Desarrolla360. Estas son tus credenciales:`,
+    `¡Bienvenido a Desarrolla360! Ya activamos el portal para ${nombreEmpresa}, listo para que empieces a capacitar a tu equipo.`,
     ``,
+    `Desde tu panel de RH vas a poder:`,
+    ...features.map((f) => `  • ${f}`),
+    ``,
+    `Estas son tus credenciales de acceso:`,
     `Correo: ${email}`,
     `Contraseña temporal: ${password}`,
     ``,
@@ -33,8 +44,13 @@ export function buildCredentialsEmail({
   const html = `
     <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
       <p>Hola ${escapeHtml(nombreRh)},</p>
-      <p>Se creó el acceso de <strong>${escapeHtml(nombreEmpresa)}</strong> al portal Desarrolla360. Estas son tus credenciales:</p>
-      <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+      <p>¡Bienvenido a Desarrolla360! Ya activamos el portal para <strong>${escapeHtml(nombreEmpresa)}</strong>, listo para que empieces a capacitar a tu equipo.</p>
+      <p style="margin-bottom: 4px;">Desde tu panel de RH vas a poder:</p>
+      <ul style="margin: 0 0 16px; padding-left: 20px; color: #334155;">
+        ${features.map((f) => `<li style="margin-bottom: 4px;">${escapeHtml(f)}</li>`).join("\n        ")}
+      </ul>
+      <p style="margin-bottom: 4px;">Estas son tus credenciales de acceso:</p>
+      <table style="width: 100%; border-collapse: collapse; margin: 8px 0 16px;">
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Correo</td>
           <td style="padding: 8px 0; font-weight: 600;">${escapeHtml(email)}</td>
