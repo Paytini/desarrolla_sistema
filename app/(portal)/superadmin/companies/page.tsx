@@ -3,9 +3,9 @@ import { readSearchParam } from "@/lib/search-params"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { AlertCircle, Building2, CheckCircle2, Plus, X } from "lucide-react"
+import { Building2, Plus, X } from "lucide-react"
 import Link from "next/link"
-import Alert from "@mui/material/Alert"
+import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Table from "@mui/material/Table"
@@ -101,14 +101,14 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
       />
 
       {success && (
-        <Alert severity="success" icon={<CheckCircle2 size={16} />} sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}>
+        <DismissibleAlert severity="success">
           {successMessages[success] ?? success}
-        </Alert>
+        </DismissibleAlert>
       )}
       {error && (
-        <Alert severity="error" icon={<AlertCircle size={16} />} sx={{ borderRadius: 2 }}>
+        <DismissibleAlert severity="error">
           {errorMessages[error] ?? error}
-        </Alert>
+        </DismissibleAlert>
       )}
 
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1.5 }}>

@@ -6,10 +6,10 @@ import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { readSearchParam } from "@/lib/search-params"
-import { AlertCircle, ArrowLeft, Calendar, CheckCircle2, Mail, Phone, User } from "lucide-react"
+import { ArrowLeft, Calendar, Mail, Phone, User } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import Alert from "@mui/material/Alert"
+import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
 import Divider from "@mui/material/Divider"
@@ -166,14 +166,14 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
   return (
     <Box sx={{ display: "grid", gap: 2.5 }}>
       {success && (
-        <Alert severity="success" icon={<CheckCircle2 size={16} />} sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}>
+        <DismissibleAlert severity="success">
           {brandingSuccessMessages[success] ?? success}
-        </Alert>
+        </DismissibleAlert>
       )}
       {error && (
-        <Alert severity="error" icon={<AlertCircle size={16} />} sx={{ borderRadius: 2 }}>
+        <DismissibleAlert severity="error">
           {brandingErrorMessages[error] ?? error}
-        </Alert>
+        </DismissibleAlert>
       )}
 
       <Box sx={{ display: "grid", gap: 1.5 }}>

@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
 import { Stack } from "@mui/material"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { getSuperadminAccessSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
@@ -71,12 +70,12 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
       />
 
       {success && (
-        <DismissibleAlert icon={<CheckCircle2 size={16} />} severity="success">
+        <DismissibleAlert severity="success">
           {successMessages[success] ?? success}
         </DismissibleAlert>
       )}
       {error && (
-        <DismissibleAlert icon={<AlertCircle size={16} />} severity="error">
+        <DismissibleAlert severity="error">
           {errorMessages[error] ?? error}
         </DismissibleAlert>
       )}

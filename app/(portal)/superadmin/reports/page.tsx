@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { SubmitButton } from "@/components/superadmin/SubmitButton"
-import { RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react"
+import { RefreshCw, CheckCircle2 } from "lucide-react"
 import KpiCard from "@/components/shared/KpiCard"
 import { getSuperadminReportsSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { retryCompanySyncAction, triggerGlobalLearningSyncAction } from "./actions"
-import Alert from "@mui/material/Alert"
+import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Chip from "@mui/material/Chip"
@@ -172,14 +172,14 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
       />
 
       {success && (
-        <Alert severity="success" icon={<CheckCircle2 size={16} />} sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}>
+        <DismissibleAlert severity="success">
           {detail ? `${successMessages[success] ?? success} — ${detail}` : (successMessages[success] ?? success)}
-        </Alert>
+        </DismissibleAlert>
       )}
       {error && (
-        <Alert severity="error" icon={<AlertCircle size={16} />} sx={{ borderRadius: 2 }}>
+        <DismissibleAlert severity="error">
           {errorMessages[error] ?? error}
-        </Alert>
+        </DismissibleAlert>
       )}
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", lg: "repeat(4,1fr)" } }}>

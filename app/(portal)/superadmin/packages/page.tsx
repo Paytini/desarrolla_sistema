@@ -5,13 +5,13 @@ import { SearchInput } from "@/components/shared/SearchInput"
 import { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
-import { AlertCircle, CheckCircle2, Package, Plus, RotateCw, X } from "lucide-react"
+import { Package, Plus, RotateCw, X } from "lucide-react"
 import Link from "next/link"
 import {
   assignPackageToCompanyAction,
   syncPackageToCompanyEmployeesAction,
 } from "./actions"
-import Alert from "@mui/material/Alert"
+import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Chip from "@mui/material/Chip"
@@ -165,14 +165,14 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
       />
 
       {success && (
-        <Alert severity="success" icon={<CheckCircle2 size={16} />} sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}>
+        <DismissibleAlert severity="success">
           {successMessages[success] ?? success}
-        </Alert>
+        </DismissibleAlert>
       )}
       {error && (
-        <Alert severity="error" icon={<AlertCircle size={16} />} sx={{ borderRadius: 2 }}>
+        <DismissibleAlert severity="error">
           {detail ? `${errorMessages[error] ?? error} — ${detail}` : (errorMessages[error] ?? error)}
-        </Alert>
+        </DismissibleAlert>
       )}
 
       {packages.length > 0 && (

@@ -1,29 +1,42 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import type { ReactNode } from "react"
+import type { SxProps, Theme } from "@mui/material"
 import { Alert, Collapse, IconButton } from "@mui/material"
-import { X } from "lucide-react"
+import { AlertCircle, CheckCircle2, X } from "lucide-react"
+import { useAutoDismiss } from "@/lib/use-auto-dismiss"
 
 type DismissibleAlertProps = {
-  icon: ReactNode
+  icon?: ReactNode
   children: ReactNode
   severity: "success" | "error"
+  sx?: SxProps<Theme>
 }
 
-export function DismissibleAlert({ icon, children, severity }: DismissibleAlertProps) {
-  const [open, setOpen] = useState(true)
+const SEVERITY_SX = {
+  success: { borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" },
+  error: { borderRadius: 2 },
+} as const
+
+const DEFAULT_ICON = {
+  success: <CheckCircle2 size={16} />,
+  error: <AlertCircle size={16} />,
+} as const
+
+export function DismissibleAlert({ icon, children, severity, sx }: DismissibleAlertProps) {
+  const [open, setOpen] = useAutoDismiss()
 
   return (
     <Collapse in={open}>
       <Alert
-        icon={icon}
+        icon={icon ?? DEFAULT_ICON[severity]}
         severity={severity}
         action={
           <IconButton size="small" aria-label="Cerrar aviso" onClick={() => setOpen(false)}>
             <X size={14} />
           </IconButton>
         }
-        sx={{ alignItems: "center" }}
+        sx={{ alignItems: "center", ...SEVERITY_SX[severity], ...sx }}
       >
         {children}
       </Alert>

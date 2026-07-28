@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { AlertCircle, ArrowLeft } from "lucide-react"
-import Alert from "@mui/material/Alert"
+import { ArrowLeft } from "lucide-react"
+import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 
@@ -58,15 +58,11 @@ export default async function NewPackagePage({ searchParams }: PageProps) {
       </Box>
 
       {error && (
-        <Alert
-          severity="error"
-          icon={<AlertCircle size={16} />}
-          sx={{ borderRadius: 2, mb: 3 }}
-        >
+        <DismissibleAlert severity="error" sx={{ mb: 3 }}>
           {detail
             ? `${errorMessages[error] ?? error} — ${detail}`
             : (errorMessages[error] ?? error)}
-        </Alert>
+        </DismissibleAlert>
       )}
 
       <PackageForm action={createPackageAction} submitLabel="Guardar paquete" />
