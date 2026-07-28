@@ -1,6 +1,15 @@
+function getPortalBaseUrl() {
+  return process.env.NEXTAUTH_URL?.trim().replace(/\/$/, "") ?? ""
+}
+
 function getPortalLoginUrl() {
-  const baseUrl = process.env.NEXTAUTH_URL?.trim().replace(/\/$/, "")
+  const baseUrl = getPortalBaseUrl()
   return baseUrl ? `${baseUrl}/login` : "/login"
+}
+
+function getLogoUrl() {
+  const baseUrl = getPortalBaseUrl()
+  return `${baseUrl}/assets/logo_desarrolla_cropped.png`
 }
 
 export function buildCredentialsEmail({
@@ -43,6 +52,9 @@ export function buildCredentialsEmail({
 
   const html = `
     <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <img src="${getLogoUrl()}" alt="Desarrolla360" width="160" style="width: 160px; height: auto;" />
+      </div>
       <p>Hola ${escapeHtml(nombreRh)},</p>
       <p>¡Bienvenido a Desarrolla360! Ya activamos el portal para <strong>${escapeHtml(nombreEmpresa)}</strong>, listo para que empieces a capacitar a tu equipo.</p>
       <p style="margin-bottom: 4px;">Desde tu panel de RH vas a poder:</p>
