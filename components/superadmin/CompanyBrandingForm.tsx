@@ -51,12 +51,12 @@ export function CompanyBrandingForm({
       <input type="hidden" name="empresa_id" value={companyId} />
       <input type="hidden" name="logo_url" value={logoUrl} />
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1.5 }}>
         <Box
           sx={{
-            width: 56,
-            height: 56,
-            borderRadius: "10px",
+            width: 180,
+            height: 180,
+            borderRadius: "14px",
             border: "1px solid #E5E7EB",
             display: "flex",
             alignItems: "center",
@@ -71,10 +71,10 @@ export function CompanyBrandingForm({
             <img
               src={blobProxyUrl(logoUrl)}
               alt="Logo de la empresa"
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
             />
           ) : (
-            <Typography sx={{ fontSize: "10px", color: "#9CA3AF", textAlign: "center" }}>Sin logo</Typography>
+            <Typography sx={{ fontSize: "13px", color: "#9CA3AF", textAlign: "center", px: 2 }}>Sin logo</Typography>
           )}
         </Box>
 
