@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { sendEmail } from "@/lib/ses"
 import { buildCertificateReadyEmail } from "@/lib/email-templates/certificate-ready"
+import { buildPackageExpiringEmail } from "@/lib/email-templates/package-expiring"
 
 type NotifyContent = {
   tipo: string
@@ -103,7 +104,16 @@ export async function checkAndNotifyExpiringPackages() {
     select: {
       id: true,
       expiration_date: true,
-      company: { select: { id: true, name: true } },
+      company: {
+        select: {
+          id: true,
+          name: true,
+          users: {
+            where: { role: "RH", active: true },
+            select: { name: true, email: true },
+          },
+        },
+      },
     },
   })
 
@@ -135,6 +145,23 @@ export async function checkAndNotifyExpiringPackages() {
       entidadTipo: "EMPRESA_PAQUETE",
       entidadId: ep.id,
     })
+
+    for (const rhUser of ep.company.users) {
+      try {
+        const { subject, html, text } = buildPackageExpiringEmail({
+          nombreRh: rhUser.name,
+          nombreEmpresa: ep.company.name,
+          daysLabel,
+        })
+        await sendEmail({ to: rhUser.email, subject, html, text })
+      } catch (error) {
+        console.error("No se pudo enviar el correo de paquete por vencer", {
+          companyPackageId: ep.id,
+          rhEmail: rhUser.email,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
   }
 }
 
