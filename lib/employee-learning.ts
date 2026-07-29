@@ -156,7 +156,7 @@ async function upsertEmployeeCertificatesFromBridge(
     existingCertificates.map((certificate) => [certificate.wp_course_id, certificate])
   )
 
-  const newCertificateCourseTitles: string[] = []
+  const newCertificates: { courseName: string; certificateUrl: string }[] = []
 
   const operations = certificates
     .filter(hasWpCourseId)
@@ -184,7 +184,7 @@ async function upsertEmployeeCertificatesFromBridge(
       }
 
       const courseName = decodeHtmlEntities(certificate.title)
-      newCertificateCourseTitles.push(courseName)
+      newCertificates.push({ courseName, certificateUrl })
 
       return prisma.certificate.create({
         data: {
@@ -202,8 +202,8 @@ async function upsertEmployeeCertificatesFromBridge(
   if (operations.length > 0) {
     try {
       await prisma.$transaction(operations)
-      if (newCertificateCourseTitles.length > 0) {
-        await notifyEmployeeNewCertificates(employeeId, newCertificateCourseTitles).catch(() => {})
+      if (newCertificates.length > 0) {
+        await notifyEmployeeNewCertificates(employeeId, newCertificates).catch(() => {})
       }
     } catch (err) {
       if (

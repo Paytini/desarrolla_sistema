@@ -1,16 +1,4 @@
-function getPortalBaseUrl() {
-  return process.env.NEXTAUTH_URL?.trim().replace(/\/$/, "") ?? ""
-}
-
-function getPortalLoginUrl() {
-  const baseUrl = getPortalBaseUrl()
-  return baseUrl ? `${baseUrl}/login` : "/login"
-}
-
-function getLogoUrl() {
-  const baseUrl = getPortalBaseUrl()
-  return `${baseUrl}/assets/logo_desarrolla_cropped.png`
-}
+import { escapeHtml, getLogoUrl, getPortalLoginUrl } from "./shared"
 
 export function buildCredentialsEmail({
   nombreRh,
@@ -84,12 +72,4 @@ export function buildCredentialsEmail({
   `.trim()
 
   return { subject, html, text }
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
 }

@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma"
+import { sendEmail } from "@/lib/ses"
+import { buildCertificateReadyEmail } from "@/lib/email-templates/certificate-ready"
 
 type NotifyContent = {
   tipo: string
@@ -51,21 +53,40 @@ export async function notifyUsuarioByEmail(email: string, content: NotifyContent
   await createNotifications([usuario.id], content)
 }
 
-export async function notifyEmployeeNewCertificates(employeeId: number, courseTitles: string[]) {
-  if (courseTitles.length === 0) return
-  const employee = await prisma.employee.findUnique({ where: { id: employeeId }, select: { email: true } })
+export async function notifyEmployeeNewCertificates(
+  employeeId: number,
+  certificates: { courseName: string; certificateUrl: string }[]
+) {
+  if (certificates.length === 0) return
+  const employee = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: { email: true, first_name: true, last_name: true },
+  })
   if (!employee) return
 
   const message =
-    courseTitles.length === 1
-      ? `Tu constancia DC-3 de "${courseTitles[0]}" ya está lista.`
-      : `Tienes ${courseTitles.length} constancias DC-3 nuevas disponibles.`
+    certificates.length === 1
+      ? `Tu constancia DC-3 de "${certificates[0].courseName}" ya está lista.`
+      : `Tienes ${certificates.length} constancias DC-3 nuevas disponibles.`
 
   await notifyUsuarioByEmail(employee.email, {
     tipo: "CONSTANCIA_LISTA",
     titulo: "Constancia DC-3 lista",
     mensaje: message,
   })
+
+  try {
+    const { subject, html, text } = buildCertificateReadyEmail({
+      employeeName: `${employee.first_name} ${employee.last_name}`.trim(),
+      certificates,
+    })
+    await sendEmail({ to: employee.email, subject, html, text })
+  } catch (error) {
+    console.error("No se pudo enviar el correo de constancia lista", {
+      employeeId,
+      message: error instanceof Error ? error.message : String(error),
+    })
+  }
 }
 
 const PACKAGE_EXPIRY_WARNING_DAYS = 30
