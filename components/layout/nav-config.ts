@@ -3,6 +3,7 @@ import {
   BarChart3,
   BookOpen,
   Building2,
+  CalendarClock,
   ClipboardList,
   FileText,
   LayoutDashboard,
@@ -54,6 +55,7 @@ export function navRH(companySlug: string): NavItem[] {
     { label: "Empleados",     href: companyPath(companySlug, "/employees"),    icon: Users,                        color: "violet" },
     { label: "Asignaciones",  href: companyPath(companySlug, "/assignments"),  icon: ClipboardList,                color: "amber" },
     { label: "Progreso",      href: companyPath(companySlug, "/progress"),     icon: BarChart3,                    color: "emerald" },
+    { label: "Consultoría",   href: companyPath(companySlug, "/consulting"),   icon: CalendarClock,                color: "pink" },
     { label: "Constancias",   href: companyPath(companySlug, "/certificates"), icon: Award,                        color: "orange" },
   ]
 }
