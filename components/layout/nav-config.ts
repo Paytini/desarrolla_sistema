@@ -34,10 +34,11 @@ export const navSuperAdminSections: NavSection[] = [
     heading: "Operaciones",
     accent: "var(--sidebar-accent-2)",
     items: [
-      { label: "Paquetes",       href: "/superadmin/packages",    icon: Package,    color: "amber" },
-      { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText,   color: "orange" },
-      { label: "Reportes",       href: "/superadmin/reports",    icon: BarChart3,  color: "emerald" },
-      { label: "Accesos",        href: "/superadmin/access",     icon: Users,      color: "charcoal" },
+      { label: "Paquetes",       href: "/superadmin/packages",    icon: Package,        color: "amber" },
+      { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText,       color: "orange" },
+      { label: "Reportes",       href: "/superadmin/reports",    icon: BarChart3,       color: "emerald" },
+      { label: "Accesos",        href: "/superadmin/access",     icon: Users,           color: "charcoal" },
+      { label: "Consultorías",   href: "/superadmin/consulting", icon: CalendarClock,   color: "rose" },
     ],
   },
   {
