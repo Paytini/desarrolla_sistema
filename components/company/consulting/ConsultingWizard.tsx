@@ -38,7 +38,7 @@ export function ConsultingWizard({ companySlug, requesterName, requesterEmail }:
   const [contactMethod, setContactMethod] = useState("")
   const [state, formAction, pending] = useActionState(createConsultingRequestAction, null)
 
-  const homeHref = companyPath(companySlug, "/home")
+  const dashboardHref = companyPath(companySlug, "/consulting")
 
   if (state && "success" in state && state.success) {
     return (
@@ -65,7 +65,7 @@ export function ConsultingWizard({ companySlug, requesterName, requesterEmail }:
           {date && time ? formatConsultingDateTime(date, time) : ""}. Te contactaremos por{" "}
           {CONTACT_METHOD_LABELS[contactMethod] ?? contactMethod} al {phone}.
         </Typography>
-        <Link href={homeHref} style={{ textDecoration: "none" }}>
+        <Link href={dashboardHref} style={{ textDecoration: "none" }}>
           <Box
             component="span"
             sx={{
@@ -93,11 +93,11 @@ export function ConsultingWizard({ companySlug, requesterName, requesterEmail }:
       sx={{ maxWidth: 760, mx: "auto", border: "1px solid", borderColor: "divider", borderRadius: "16px", p: { xs: 3, sm: 5 } }}
     >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 4 }}>
-        <Link href={homeHref} style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}>
+        <Link href={dashboardHref} style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}>
           ← Volver al inicio
         </Link>
         <ProgressDots steps={4} activeStep={step} />
-        <Link href={homeHref} style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}>
+        <Link href={dashboardHref} style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}>
           Cancelar
         </Link>
       </Box>

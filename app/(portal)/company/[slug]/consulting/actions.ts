@@ -1,8 +1,11 @@
 "use server"
 
 import type { ConsultingArea, ConsultingContactMethod } from "@prisma/client"
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { requireRhSession } from "@/lib/auth-guards"
-import { getCompanyBranding } from "@/lib/company-branding"
+import { getCompanyBranding, requireCompanySlug } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
 import { CONSULTING_AREAS } from "@/lib/consulting-areas"
 import { formatConsultingDateTime, isDateSelectable, isTimeSlotValid } from "@/lib/consulting-schedule"
 import { buildConsultingRequestEmail } from "@/lib/email-templates/consulting-request"
@@ -16,6 +19,22 @@ const VALID_CONTACT_METHODS: ConsultingContactMethod[] = ["CALL", "WHATSAPP", "E
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
+}
+
+function sanitizeReturnTo(path: string | null | undefined, slug: string) {
+  const value = (path ?? "").trim()
+  const base = companyPath(slug, "/consulting")
+  if (!value.startsWith(base)) return base
+  return value
+}
+
+function withStatus(path: string, key: "success" | "error", value: string) {
+  const [pathname, rawQuery = ""] = path.split("?", 2)
+  const searchParams = new URLSearchParams(rawQuery)
+  searchParams.set(key, value)
+
+  const query = searchParams.toString()
+  return query ? `${pathname}?${query}` : pathname
 }
 
 export async function createConsultingRequestAction(
@@ -97,4 +116,34 @@ export async function createConsultingRequestAction(
   }
 
   return { success: true }
+}
+
+export async function cancelConsultingRequestAction(formData: FormData) {
+  const session = await requireRhSession()
+  const companyId = session.user.empresa_id as number
+  const slug = await requireCompanySlug(companyId)
+  const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
+  const requestId = Number.parseInt(getString(formData, "request_id"), 10)
+
+  if (!requestId) {
+    redirect(withStatus(returnTo, "error", "solicitud"))
+  }
+
+  const existing = await prisma.consultingRequest.findFirst({
+    where: { id: requestId, company_id: companyId, status: "PENDING" },
+    select: { id: true },
+  })
+
+  if (!existing) {
+    redirect(withStatus(returnTo, "error", "solicitud"))
+  }
+
+  await prisma.consultingRequest.update({
+    where: { id: requestId },
+    data: { status: "CANCELLED" },
+  })
+
+  revalidatePath(companyPath(slug, "/consulting"))
+
+  redirect(withStatus(returnTo, "success", "solicitud_cancelada"))
 }
