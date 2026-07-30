@@ -59,7 +59,13 @@ export function getTodayInConsultingTimeZone(): string {
 export function isBusinessDayString(dateStr: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false
   const [year, month, day] = dateStr.split("-").map(Number)
-  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  const date = new Date(Date.UTC(year, month - 1, day))
+  const isValidCalendarDate =
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() + 1 === month &&
+    date.getUTCDate() === day
+  if (!isValidCalendarDate) return false
+  const weekday = date.getUTCDay()
   return weekday >= 1 && weekday <= 5
 }
 
