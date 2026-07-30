@@ -1,4 +1,5 @@
 import KpiCard from "@/components/shared/KpiCard"
+import { LearningActivityChart, type LearningActivityPoint } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
@@ -16,6 +17,64 @@ function getInitials(name: string) {
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("")
+}
+
+const WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+
+function toDateKey(date: Date): string {
+  return date.toISOString().slice(0, 10)
+}
+
+function getLastSevenDayKeys(): { key: string; label: string }[] {
+  const days: { key: string; label: string }[] = []
+  const today = new Date()
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(today)
+    day.setUTCDate(day.getUTCDate() - i)
+    days.push({ key: toDateKey(day), label: WEEKDAY_LABELS[day.getUTCDay()] })
+  }
+  return days
+}
+
+async function getWeeklyLearningActivity(companyId: number) {
+  const weekDays = getLastSevenDayKeys()
+  const currentWeekStart = new Date(`${weekDays[0].key}T00:00:00.000Z`)
+  const previousWeekStart = new Date(currentWeekStart)
+  previousWeekStart.setUTCDate(previousWeekStart.getUTCDate() - 7)
+
+  const [currentWeekCertificates, previousWeekCount] = await Promise.all([
+    prisma.certificate.findMany({
+      where: { employee: { company_id: companyId }, issued_at: { gte: currentWeekStart } },
+      select: { issued_at: true },
+    }),
+    prisma.certificate.count({
+      where: {
+        employee: { company_id: companyId },
+        issued_at: { gte: previousWeekStart, lt: currentWeekStart },
+      },
+    }),
+  ])
+
+  const countsByDay = new Map(weekDays.map((day) => [day.key, 0]))
+  for (const certificate of currentWeekCertificates) {
+    const key = toDateKey(certificate.issued_at)
+    if (countsByDay.has(key)) countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1)
+  }
+
+  const data: LearningActivityPoint[] = weekDays.map((day) => ({
+    label: day.label,
+    completions: countsByDay.get(day.key) ?? 0,
+  }))
+
+  const currentWeekTotal = currentWeekCertificates.length
+  const changeVsPreviousWeek =
+    previousWeekCount > 0
+      ? Math.round(((currentWeekTotal - previousWeekCount) / previousWeekCount) * 100)
+      : currentWeekTotal > 0
+        ? 100
+        : null
+
+  return { data, changeVsPreviousWeek }
 }
 
 type PageProps = {
@@ -54,6 +113,8 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
   })
 
   if (!company) redirect("/login")
+
+  const { data: learningActivityData, changeVsPreviousWeek } = await getWeeklyLearningActivity(company.id)
 
   const packageCourses = company.packages[0]?.package?.courses ?? []
   const thumbnailMap = new Map<number, string>(
@@ -137,6 +198,8 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
         <KpiCard label="Cursos iniciados" value={String(startedCourses)} sub="Con actividad real" icon={BookOpen} borderColor="charcoal" />
         <KpiCard label="Cursos completados" value={String(completedCourses)} sub="Cerrados por empleados" icon={CheckCircle} borderColor="emerald" />
       </div>
+
+      <LearningActivityChart data={learningActivityData} changeVsPreviousWeek={changeVsPreviousWeek} />
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-lg bg-white p-5">
