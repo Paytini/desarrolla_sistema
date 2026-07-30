@@ -97,6 +97,8 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
             requestId={request.id}
             areaLabel={areaOption?.label ?? request.area}
             companyName={request.company.name}
+            preferredDate={toDateKey(request.preferred_date)}
+            preferredTime={request.preferred_time}
           />
         ) : null}
       </div>
