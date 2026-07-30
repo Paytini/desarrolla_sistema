@@ -34,6 +34,23 @@ function buildMonthGrid(year: number, month: number): (string | null)[] {
   return cells
 }
 
+/**
+ * `getMaxSelectableDate()` is a raw date offset from today and may itself fall on a
+ * non-selectable day (weekend), which would let "next month" navigate into a month
+ * with zero selectable cells. Walk backward (at most a few days — business days recur
+ * at least every 3 days) to find the actual last selectable date.
+ */
+function findLastSelectableDate(maxDate: string): string {
+  const [y, m, d] = maxDate.split("-").map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d))
+  for (let i = 0; i < 7; i++) {
+    const candidate = date.toISOString().slice(0, 10)
+    if (isDateSelectable(candidate)) return candidate
+    date.setUTCDate(date.getUTCDate() - 1)
+  }
+  return maxDate // shouldn't happen — business days recur within any 7-day window
+}
+
 type ScheduleStepProps = {
   date: string | null
   time: string | null
@@ -46,8 +63,9 @@ type ScheduleStepProps = {
 export function ScheduleStep({ date, time, onChangeDate, onChangeTime, onBack, onNext }: ScheduleStepProps) {
   const minDate = useMemo(() => getMinSelectableDate(), [])
   const maxDate = useMemo(() => getMaxSelectableDate(), [])
+  const lastSelectableMaxDate = useMemo(() => findLastSelectableDate(maxDate), [maxDate])
   const [minYear, minMonth] = minDate.split("-").map(Number)
-  const [maxYear, maxMonth] = maxDate.split("-").map(Number)
+  const [maxYear, maxMonth] = lastSelectableMaxDate.split("-").map(Number)
 
   const [viewYear, setViewYear] = useState(minYear)
   const [viewMonth, setViewMonth] = useState(minMonth - 1) // 0-indexed
