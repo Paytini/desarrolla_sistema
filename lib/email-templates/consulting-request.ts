@@ -67,7 +67,7 @@ export function buildConsultingRequestEmail({
       <p style="margin-bottom: 4px; color: #64748b; font-size: 13px;">Contexto</p>
       <p style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(context)}</p>
     </div>
-  `
+  `.trim()
 
   return { subject, html, text }
 }

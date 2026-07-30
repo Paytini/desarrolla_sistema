@@ -84,13 +84,17 @@ export async function createConsultingRequestAction(
     console.error("No se pudo enviar el correo de solicitud de consultoría", error)
   }
 
-  await notifySuperadmins({
-    tipo: "CONSULTORIA_SOLICITADA",
-    titulo: "Nueva solicitud de consultoría",
-    mensaje: `${branding.name} solicitó una consultoría de ${areaOption.label}.`,
-    entidadTipo: "CONSULTING_REQUEST",
-    entidadId: request.id,
-  })
+  try {
+    await notifySuperadmins({
+      tipo: "CONSULTORIA_SOLICITADA",
+      titulo: "Nueva solicitud de consultoría",
+      mensaje: `${branding.name} solicitó una consultoría de ${areaOption.label}.`,
+      entidadTipo: "CONSULTING_REQUEST",
+      entidadId: request.id,
+    })
+  } catch (error) {
+    console.error("No se pudo crear la notificación interna de la solicitud de consultoría", error)
+  }
 
   return { success: true }
 }
