@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { LifeBuoy } from "lucide-react"
+import { CalendarClock, LifeBuoy } from "lucide-react"
 
 import Box from "@mui/material/Box"
 import List from "@mui/material/List"
@@ -23,6 +23,7 @@ import {
 } from "@/components/layout/nav-config"
 import { kpiColorMap } from "@/lib/kpi-colors"
 import { blobProxyUrl } from "@/lib/blob-proxy"
+import { companyPath } from "@/lib/company-routes"
 
 const SIDEBAR_W = 288
 
@@ -257,6 +258,36 @@ export default function Sidebar({
                 </Typography>
                 <Typography sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}>
                   Guías de DC-3, integración WordPress y estado del sistema.
+                </Typography>
+              </Box>
+            </Link>
+          </Box>
+        )}
+
+        {rol === "RH" && (
+          <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
+            <Link href={companyPath(companySlug ?? "", "/consulting")} style={{ textDecoration: "none" }}>
+              <Box
+                sx={{
+                  borderRadius: "14px",
+                  bgcolor: "var(--panel-ink-v4, #161B23)",
+                  px: 2,
+                  py: 1.75,
+                  transition: "transform 150ms ease",
+                  "&:hover": { transform: "scale(1.015)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
+                  <CalendarClock size={15} strokeWidth={2} color="#3579F5" />
+                  <Typography sx={{ fontSize: "0.6875rem", fontWeight: 700, color: "#3579F5", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Consultoría
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}>
+                  Agenda una sesión en vivo
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}>
+                  Habla con nuestro equipo de consultores sobre CTPAT, OEA, DC-3 y más.
                 </Typography>
               </Box>
             </Link>
