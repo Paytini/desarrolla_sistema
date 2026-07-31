@@ -1,9 +1,10 @@
 import {
-  ClipboardList,
+  Award,
+  BadgeCheck,
+  Building2,
+  Compass,
   Flame,
   GraduationCap,
-  Package,
-  Settings,
   ShieldCheck,
   Users,
   type LucideIcon,
@@ -11,13 +12,14 @@ import {
 import type { KpiColorKey } from "@/lib/kpi-colors"
 
 export type ConsultingAreaId =
-  | "LOGISTICS"
+  | "CTPAT"
+  | "OEA"
   | "FIRE_SAFETY"
-  | "MANUFACTURING"
-  | "INDUSTRIAL_SAFETY"
-  | "ISO_STANDARDS"
-  | "CONOCER_CERT"
   | "HUMAN_RESOURCES"
+  | "EC0217"
+  | "EC0634"
+  | "EC0306"
+  | "EC0397_01"
 
 export type ConsultingAreaOption = {
   id: ConsultingAreaId
@@ -29,53 +31,60 @@ export type ConsultingAreaOption = {
 
 export const CONSULTING_AREAS: ConsultingAreaOption[] = [
   {
-    id: "LOGISTICS",
-    label: "Logística y Cadena de Suministro",
-    description: "Optimización de almacenes, CTPAT y OEA.",
-    icon: Package,
-    color: "violet",
-  },
-  {
-    id: "FIRE_SAFETY",
-    label: "Sistema contra Incendios",
-    description: "Primeros auxilios, extintores y residuos peligrosos.",
-    icon: Flame,
+    id: "CTPAT",
+    label: "CTPAT",
+    description: "Seguridad en la cadena de suministro.",
+    icon: ShieldCheck,
     color: "rose",
   },
   {
-    id: "MANUFACTURING",
-    label: "Manufactura y Procesos",
-    description: "Eficiencia operativa y gestión de calidad.",
-    icon: Settings,
-    color: "amber",
-  },
-  {
-    id: "INDUSTRIAL_SAFETY",
-    label: "Seguridad Industrial (DC-3)",
-    description: "Cumplimiento de normas STPS y seguridad patrimonial.",
-    icon: ShieldCheck,
+    id: "OEA",
+    label: "OEA",
+    description: "Operador Económico Autorizado.",
+    icon: Building2,
     color: "primary",
   },
   {
-    id: "ISO_STANDARDS",
-    label: "Normas ISO",
-    description: "Espacios confinados, trabajo en alturas, LOTO y más.",
-    icon: ClipboardList,
-    color: "charcoal",
-  },
-  {
-    id: "CONOCER_CERT",
-    label: "Certificaciones CONOCER",
-    description: "EC0634, EC0217 y estándares de competencia laboral.",
-    icon: GraduationCap,
+    id: "FIRE_SAFETY",
+    label: "Sistemas Contra Incendios",
+    description: "Soluciones completas contra incendios.",
+    icon: Flame,
     color: "orange",
   },
   {
     id: "HUMAN_RESOURCES",
     label: "Recursos Humanos",
-    description: "NOM-035, liderazgo, clima organizacional y reclutamiento.",
+    description: "Gestión y desarrollo del talento.",
     icon: Users,
+    color: "violet",
+  },
+  {
+    id: "EC0217",
+    label: "EC0217",
+    description: "Impartición de cursos de formación del capital humano de manera presencial grupal.",
+    icon: GraduationCap,
     color: "emerald",
+  },
+  {
+    id: "EC0634",
+    label: "EC0634",
+    description: "Auditoría de la seguridad en la cadena de suministro de comercio exterior.",
+    icon: Award,
+    color: "amber",
+  },
+  {
+    id: "EC0306",
+    label: "EC0306",
+    description: "Reclutamiento y Selección de Personal Operativo y Administración.",
+    icon: BadgeCheck,
+    color: "charcoal",
+  },
+  {
+    id: "EC0397_01",
+    label: "EC0397.01",
+    description: "Vigilancia del cumplimiento de la normatividad en seguridad y salud en el trabajo.",
+    icon: Compass,
+    color: "pink",
   },
 ]
 

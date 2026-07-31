@@ -23,13 +23,23 @@ enum Role {
 }
 
 enum ConsultingArea {
-  LOGISTICS // Logística y Cadena de Suministro
-  FIRE_SAFETY // Sistema contra Incendios
-  MANUFACTURING // Manufactura y Procesos
-  INDUSTRIAL_SAFETY // Seguridad Industrial (DC-3)
-  ISO_STANDARDS // Normas ISO
-  CONOCER_CERT // Certificaciones CONOCER
+  CTPAT // Seguridad en la cadena de suministro
+  OEA // Operador Económico Autorizado
+  FIRE_SAFETY // Sistemas Contra Incendios
   HUMAN_RESOURCES // Recursos Humanos
+  EC0217 // Impartición de cursos de formación del capital humano
+  EC0634 // Auditoría de la seguridad en la cadena de suministro
+  EC0306 // Reclutamiento y Selección de Personal Operativo y Administración
+  EC0397_01 // Vigilancia del cumplimiento de la normatividad en seguridad y salud en el trabajo
+
+  // Retired from the selectable catalog (lib/consulting-areas.ts) but kept in the
+  // enum — existing consulting_requests rows still reference these and Postgres
+  // enum values can't be dropped without recreating the type.
+  LOGISTICS
+  MANUFACTURING
+  INDUSTRIAL_SAFETY
+  ISO_STANDARDS
+  CONOCER_CERT
 }
 
 enum ConsultingContactMethod {
