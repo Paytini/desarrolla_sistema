@@ -2,6 +2,7 @@
 
 **Fecha:** 2026-08-01 · Precios verificados en las páginas oficiales ese día. Todos los montos en **USD/mes**.
 **Base:** fases y volúmenes de [INFORME-CAPACIDAD.md](INFORME-CAPACIDAD.md); hallazgos de [INFORME-RENDIMIENTO.md](INFORME-RENDIMIENTO.md).
+**Portal:** https://empresas.desarrolla360.com (interno: https://desarrolla-sistema.vercel.app)
 
 > ⚠️ Los costos de uso (cómputo, requests, correos) son **estimaciones** derivadas del modelo de tráfico de cada fase. Los precios unitarios sí son los oficiales vigentes. Configurar *Spend Management* en Vercel (alertas + pausa automática) desde el día 1.
 

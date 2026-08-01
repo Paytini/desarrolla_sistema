@@ -1,8 +1,14 @@
 # Informe de Rendimiento — Portal Empresarial Desarrolla360
 
 **Fecha:** 2026-08-01
-**Alcance:** análisis de código de las rutas críticas (login, registro de empleados, enrolamiento, certificados DC-3, sincronización con Tutor LMS, dashboards) + mediciones reales de los sitios WordPress con Playwright y curl.
+**Alcance:** análisis de código de las rutas críticas (login, registro de empleados, enrolamiento, certificados DC-3, sincronización con Tutor LMS, dashboards) + mediciones reales del portal y de los sitios WordPress con Playwright y curl.
 **Meta:** escalar de MVP funcional a empresa mediana (~100,000 usuarios tomando cursos).
+
+**URLs del sistema:**
+- Portal en producción: **https://empresas.desarrolla360.com** (login: `/login`)
+- Despliegue interno Vercel: https://desarrolla-sistema.vercel.app
+- WordPress / Tutor LMS (beta): https://betatutorlms.desarrolla360.com
+- Sitio público WordPress: https://desarrolla360.com
 
 Informe complementario: [INFORME-CAPACIDAD.md](INFORME-CAPACIDAD.md) — estimación de carga soportada por fase.
 
@@ -43,6 +49,7 @@ Nada de esto requiere romper el monolito. Las soluciones recomendadas son cambio
 
 | Sitio | TTFB | Carga completa | Peso | Notas |
 |---|---|---|---|---|
+| **`empresas.desarrolla360.com/login` (el portal)** | **0.15–0.17 s** (constante, 3 muestras; igual vía `desarrolla-sistema.vercel.app`) | — | 15 KB el documento | El shell de login responde rápido y estable desde el edge de Vercel. Los cuellos de este informe están en las rutas autenticadas (queries, bridge, bcrypt), no en la entrega estática. |
 | `desarrolla360.com` | **1.1–1.4 s** (constante, 3 muestras) | 3.0 s (FCP 1.9 s) | ~1.9–2.5 MB, 108 recursos | TTFB alto y estable ⇒ **no hay caché de página completa / CDN** delante de WordPress. 30 hojas de estilo + 40 scripts. |
 | `betatutorlms.desarrolla360.com` | **0.3 s caliente / 6.5–7.6 s frío** | 7.7 s en frío | ~8 MB (7.2 MB es el video, servido por WP — ver "lo que está bien") | La variación 0.3 s ↔ 7.6 s indica caché de página que expira; cuando expira, PHP tarda ~6+ s en generar. Ese mismo servidor PHP atiende las llamadas del bridge. |
 | `betatutorlms/wp-json/` | 0.14–7.6 s | — | **2 MB** el índice | El índice REST completo está expuesto y pesa 2 MB; síntoma de muchos plugins registrando rutas. |

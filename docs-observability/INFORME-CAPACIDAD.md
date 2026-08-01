@@ -3,6 +3,7 @@
 **Fecha:** 2026-08-01
 **Base:** hallazgos y plan de fases de [INFORME-RENDIMIENTO.md](INFORME-RENDIMIENTO.md).
 **Meta de negocio:** 100,000 usuarios registrados tomando cursos.
+**Portal:** https://empresas.desarrolla360.com (interno: https://desarrolla-sistema.vercel.app)
 
 > ⚠️ Estas son **estimaciones de orden de magnitud** derivadas del análisis de código y de las mediciones de latencia, no de una prueba de carga real. Antes de cada fase conviene validar con una prueba k6/artillery contra un entorno de staging (sección 6).
 
