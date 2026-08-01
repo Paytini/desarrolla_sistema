@@ -28,7 +28,7 @@ El proyecto separa dos frentes:
 - `NextAuth v5` con credenciales
 - `Prisma`
 - `PostgreSQL`
-- `Tailwind CSS v4`
+- `MUI`
 
 ## Estructura recomendada
 
@@ -97,6 +97,35 @@ Si quieres sincronizacion academica casi en tiempo real, configura tambien el we
 - En WordPress > `Settings > Desarrolla360 Bridge` define:
   - `Portal Webhook URL`
   - `Portal Webhook Secret`
+
+### Cron jobs en Vercel
+
+El proyecto incluye `vercel.json` con cron jobs (Vercel los detecta y ejecuta
+automaticamente al hacer deploy). Todos requieren `CRON_SECRET` configurado como
+variable de entorno en el proyecto de Vercel — Vercel manda automaticamente
+`Authorization: Bearer $CRON_SECRET` en cada llamada.
+
+El plan **Hobby** de Vercel permite maximo 2 cron jobs por proyecto y minimo una
+ejecucion diaria por job, asi que hoy solo estos dos estan activos:
+
+| Ruta | Horario | Que hace |
+| --- | --- | --- |
+| `GET /api/cron/check-expiring-packages` | diario, 13:00 UTC | Notifica a superadmin y RH cuando un paquete de empresa esta por vencer (30 dias antes). |
+| `GET /api/internal/sync/employee-learning?limit=100` | diario, 13:30 UTC | Respaldo del webhook en tiempo real: sincroniza avances/certificados de hasta 100 alumnos con acceso desactualizado. |
+
+Hay una tercera ruta ya construida y probada, `GET /api/cron/bridge-health`
+(revisa que el bridge de WordPress responda y que el webhook no lleve mas de 26h
+sin recibir eventos, notificando a superadmin con un enfriamiento de 6h entre avisos
+repetidos), pero **no esta agregada a `vercel.json`** por el limite de 2 jobs de Hobby.
+Al subir a Pro, agrega este bloque a `crons` para activarla (y considera regresar el
+sync de aprendizaje a un intervalo mas corto, por ejemplo cada 15 min):
+
+```json
+{
+  "path": "/api/cron/bridge-health",
+  "schedule": "0 * * * *"
+}
+```
 
 La URL esperada del portal es:
 

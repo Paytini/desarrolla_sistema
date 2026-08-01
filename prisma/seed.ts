@@ -15,200 +15,201 @@ const prisma = new PrismaClient({ adapter })
 async function main() {
   const hash = await bcrypt.hash("admin123", 12)
   const rhHash = await bcrypt.hash("rh123456", 12)
-  const empleadoHash = await bcrypt.hash("empleado123", 12)
+  const employeeHash = await bcrypt.hash("empleado123", 12)
 
-  await prisma.usuario.upsert({
+  await prisma.user.upsert({
     where:  { email: "admin@desarrolla360.com" },
     update: {},
     create: {
       email:         "admin@desarrolla360.com",
       password_hash: hash,
-      nombre:        "SuperAdmin",
-      rol:           "SUPERADMIN",
-      activo:        true,
+      name:          "SuperAdmin",
+      role:          "SUPERADMIN",
+      active:        true,
     },
   })
 
-  const empresa = await prisma.empresa.upsert({
-    where: { email_rh: "rh@empresa-demo.com" },
+  const company = await prisma.company.upsert({
+    where: { hr_email: "rh@empresa-demo.com" },
     update: {
-      asientos_contratados: 100,
-      asientos_usados: 1,
+      contracted_seats: 100,
+      used_seats: 1,
     },
     create: {
-      nombre: "Empresa Demo Logistics",
-      email_rh: "rh@empresa-demo.com",
-      telefono: "6640000000",
+      name: "Empresa Demo Logistics",
+      slug: "empresa-demo-logistics",
+      hr_email: "rh@empresa-demo.com",
+      phone: "6640000000",
       rfc: "EDL240101AAA",
-      asientos_contratados: 100,
-      asientos_usados: 1,
-      activo: true,
-      notas: "Empresa de demostracion para ambiente local.",
+      contracted_seats: 100,
+      used_seats: 1,
+      active: true,
+      notes: "Empresa de demostracion para ambiente local.",
     },
   })
 
-  await prisma.usuario.upsert({
+  await prisma.user.upsert({
     where: { email: "rh@empresa-demo.com" },
     update: {
-      empresa_id: empresa.id,
+      company_id: company.id,
     },
     create: {
       email: "rh@empresa-demo.com",
       password_hash: rhHash,
-      nombre: "Responsable RH",
-      rol: "RH",
-      empresa_id: empresa.id,
-      activo: true,
+      name: "Responsable RH",
+      role: "RH",
+      company_id: company.id,
+      active: true,
     },
   })
 
-  await prisma.usuario.upsert({
+  await prisma.user.upsert({
     where: { email: "empleado@empresa-demo.com" },
     update: {
-      empresa_id: empresa.id,
+      company_id: company.id,
     },
     create: {
       email: "empleado@empresa-demo.com",
-      password_hash: empleadoHash,
-      nombre: "Empleado Demo",
-      rol: "EMPLEADO",
-      empresa_id: empresa.id,
-      activo: true,
+      password_hash: employeeHash,
+      name: "Empleado Demo",
+      role: "EMPLEADO",
+      company_id: company.id,
+      active: true,
     },
   })
 
-  const empleado = await prisma.empleado.upsert({
+  const employee = await prisma.employee.upsert({
     where: { email: "empleado@empresa-demo.com" },
     update: {
-      empresa_id: empresa.id,
-      departamento: "Logistica",
-      puesto: "Analista CTPAT",
+      company_id: company.id,
+      department: "Logistica",
+      position: "Analista CTPAT",
     },
     create: {
-      empresa_id: empresa.id,
-      nombre: "Empleado",
-      apellido: "Demo",
+      company_id: company.id,
+      first_name: "Empleado",
+      last_name: "Demo",
       email: "empleado@empresa-demo.com",
-      departamento: "Logistica",
-      puesto: "Analista CTPAT",
-      activo: true,
+      department: "Logistica",
+      position: "Analista CTPAT",
+      active: true,
     },
   })
 
-  let paquete = await prisma.paquete.findFirst({
-    where: { nombre: "Paquete CTPAT Empresarial" },
+  let pkg = await prisma.package.findFirst({
+    where: { name: "Paquete CTPAT Empresarial" },
   })
 
-  if (!paquete) {
-    paquete = await prisma.paquete.create({
+  if (!pkg) {
+    pkg = await prisma.package.create({
       data: {
-        nombre: "Paquete CTPAT Empresarial",
-        descripcion: "Paquete demo con cursos base para cumplimiento y cadena de suministro.",
-        activo: true,
+        name: "Paquete CTPAT Empresarial",
+        description: "Paquete demo con cursos base para cumplimiento y cadena de suministro.",
+        active: true,
       },
     })
   }
 
-  await prisma.paqueteCurso.upsert({
+  await prisma.packageCourse.upsert({
     where: {
-      paquete_id_wp_curso_id: {
-        paquete_id: paquete.id,
-        wp_curso_id: 101,
+      package_id_wp_course_id: {
+        package_id: pkg.id,
+        wp_course_id: 101,
       },
     },
     update: {},
     create: {
-      paquete_id: paquete.id,
-      wp_curso_id: 101,
-      nombre_curso: "Introduccion a CTPAT",
+      package_id: pkg.id,
+      wp_course_id: 101,
+      course_name: "Introduccion a CTPAT",
     },
   })
 
-  await prisma.paqueteCurso.upsert({
+  await prisma.packageCourse.upsert({
     where: {
-      paquete_id_wp_curso_id: {
-        paquete_id: paquete.id,
-        wp_curso_id: 102,
+      package_id_wp_course_id: {
+        package_id: pkg.id,
+        wp_course_id: 102,
       },
     },
     update: {},
     create: {
-      paquete_id: paquete.id,
-      wp_curso_id: 102,
-      nombre_curso: "Cadena de suministro segura",
+      package_id: pkg.id,
+      wp_course_id: 102,
+      course_name: "Cadena de suministro segura",
     },
   })
 
-  const empresaPaquete = await prisma.empresaPaquete.findFirst({
+  const companyPackage = await prisma.companyPackage.findFirst({
     where: {
-      empresa_id: empresa.id,
-      paquete_id: paquete.id,
-      activo: true,
+      company_id: company.id,
+      package_id: pkg.id,
+      active: true,
     },
   })
 
-  if (!empresaPaquete) {
-    await prisma.empresaPaquete.create({
+  if (!companyPackage) {
+    await prisma.companyPackage.create({
       data: {
-        empresa_id: empresa.id,
-        paquete_id: paquete.id,
-        activo: true,
+        company_id: company.id,
+        package_id: pkg.id,
+        active: true,
       },
     })
   }
 
-  await prisma.empleadoCurso.upsert({
+  await prisma.employeeCourse.upsert({
     where: {
-      empleado_id_wp_curso_id: {
-        empleado_id: empleado.id,
-        wp_curso_id: 101,
+      employee_id_wp_course_id: {
+        employee_id: employee.id,
+        wp_course_id: 101,
       },
     },
     update: {
-      progreso_pct: 75,
+      progress_pct: 75,
     },
     create: {
-      empleado_id: empleado.id,
-      wp_curso_id: 101,
-      nombre_curso: "Introduccion a CTPAT",
-      progreso_pct: 75,
-      completado: false,
+      employee_id: employee.id,
+      wp_course_id: 101,
+      course_name: "Introduccion a CTPAT",
+      progress_pct: 75,
+      completed: false,
     },
   })
 
-  await prisma.empleadoCurso.upsert({
+  await prisma.employeeCourse.upsert({
     where: {
-      empleado_id_wp_curso_id: {
-        empleado_id: empleado.id,
-        wp_curso_id: 102,
+      employee_id_wp_course_id: {
+        employee_id: employee.id,
+        wp_course_id: 102,
       },
     },
     update: {
-      progreso_pct: 100,
-      completado: true,
+      progress_pct: 100,
+      completed: true,
     },
     create: {
-      empleado_id: empleado.id,
-      wp_curso_id: 102,
-      nombre_curso: "Cadena de suministro segura",
-      progreso_pct: 100,
-      completado: true,
-      fecha_completado: new Date(),
+      employee_id: employee.id,
+      wp_course_id: 102,
+      course_name: "Cadena de suministro segura",
+      progress_pct: 100,
+      completed: true,
+      completed_at: new Date(),
     },
   })
 
-  const existingConstancia = await prisma.constancia.findUnique({
-    where: { folio: "D360-2026-0416-001" },
+  const existingCertificate = await prisma.certificate.findUnique({
+    where: { reference_number: "D360-2026-0416-001" },
   })
 
-  if (!existingConstancia) {
-    await prisma.constancia.create({
+  if (!existingCertificate) {
+    await prisma.certificate.create({
       data: {
-        empleado_id: empleado.id,
-        wp_curso_id: 102,
-        nombre_curso: "Cadena de suministro segura",
-        folio: "D360-2026-0416-001",
-        wp_cert_url: "https://www.desarrolla360.com/certificados/demo-102.pdf",
+        employee_id: employee.id,
+        wp_course_id: 102,
+        course_name: "Cadena de suministro segura",
+        reference_number: "D360-2026-0416-001",
+        certificate_url: "https://www.desarrolla360.com/certificados/demo-102.pdf",
       },
     })
   }

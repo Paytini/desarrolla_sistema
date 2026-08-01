@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
-import { getEmpresaAccessStatus } from "@/lib/empresa-status"
+import { getCompanyAccessStatus } from "@/lib/company-status"
+import { enterCompanyContext } from "@/lib/tenant-context"
 
 export async function requireSuperAdminSession() {
   const session = await auth()
@@ -17,10 +18,14 @@ export async function requireRhSession() {
     redirect("/login")
   }
 
-  const status = await getEmpresaAccessStatus(session.user.empresa_id)
+  const status = await getCompanyAccessStatus(session.user.empresa_id)
   if (status.blocked) {
-    redirect(`/cuenta-suspendida?reason=${status.reason}`)
+    redirect(`/account-suspended?reason=${status.reason}`)
   }
+
+  // Scopes every Employee/CompanyPackage query made for the rest of this
+  // request/action to this company — see lib/prisma.ts tenant guard.
+  enterCompanyContext(session.user.empresa_id)
 
   return session
 }

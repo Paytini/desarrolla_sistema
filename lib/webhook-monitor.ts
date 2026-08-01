@@ -18,13 +18,13 @@ type StoredWebhookStatusPayload = {
 export async function recordTutorLearningWebhookEvent(
   payload: StoredWebhookStatusPayload
 ) {
-  await prisma.integracionEstado.upsert({
-    where: { clave: TUTOR_WEBHOOK_STATUS_KEY },
+  await prisma.integrationState.upsert({
+    where: { key: TUTOR_WEBHOOK_STATUS_KEY },
     update: {
       payload,
     },
     create: {
-      clave: TUTOR_WEBHOOK_STATUS_KEY,
+      key: TUTOR_WEBHOOK_STATUS_KEY,
       payload,
     },
   })
@@ -40,8 +40,8 @@ function parseStoredPayload(payload: unknown): StoredWebhookStatusPayload | null
 
 export async function getTutorLearningWebhookDiagnostics() {
   const [storedStatus, bridgeHealth] = await Promise.all([
-    prisma.integracionEstado.findUnique({
-      where: { clave: TUTOR_WEBHOOK_STATUS_KEY },
+    prisma.integrationState.findUnique({
+      where: { key: TUTOR_WEBHOOK_STATUS_KEY },
     }),
     isWordPressBridgeConfigured()
       ? bridgeHealthCheck().catch((error) => ({

@@ -41,6 +41,7 @@ export function PasswordToggleInput({
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
+                type="button"
                 tabIndex={-1}
                 size="small"
                 aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}

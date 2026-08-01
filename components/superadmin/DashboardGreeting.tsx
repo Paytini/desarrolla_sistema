@@ -8,11 +8,11 @@ const periodConfig = {
   evening:   "Buenas noches",
 } as const
 
-export function DashboardGreeting({ nombre }: { nombre: string }) {
+export function DashboardGreeting({ name }: { name: string }) {
   const hour     = new Date().getHours()
   const period   = hour < 12 ? "morning" : hour < 19 ? "afternoon" : "evening"
   const greeting = periodConfig[period]
-  const firstName = nombre.split(" ")[0] ?? nombre
+  const firstName = name.split(" ")[0] ?? name
 
   return (
     <Box sx={{ mb: 0.5 }}>

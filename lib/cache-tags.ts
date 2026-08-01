@@ -1,38 +1,38 @@
 const SUPERADMIN_CACHE_PREFIX = "d360:dashboard:superadmin"
-const EMPRESA_CACHE_PREFIX = "d360:dashboard:empresa"
+const COMPANY_CACHE_PREFIX = "d360:dashboard:empresa"
 
 export const SUPERADMIN_GLOBAL_TAG = `${SUPERADMIN_CACHE_PREFIX}:all`
-export const SUPERADMIN_REPORTES_TAG = `${SUPERADMIN_CACHE_PREFIX}:reportes`
-export const SUPERADMIN_EMPRESAS_TAG = `${SUPERADMIN_CACHE_PREFIX}:empresas`
-export const SUPERADMIN_PAQUETES_TAG = `${SUPERADMIN_CACHE_PREFIX}:paquetes`
-export const SUPERADMIN_ACCESOS_TAG = `${SUPERADMIN_CACHE_PREFIX}:accesos`
+export const SUPERADMIN_REPORTS_TAG = `${SUPERADMIN_CACHE_PREFIX}:reportes`
+export const SUPERADMIN_COMPANIES_TAG = `${SUPERADMIN_CACHE_PREFIX}:empresas`
+export const SUPERADMIN_PACKAGES_TAG = `${SUPERADMIN_CACHE_PREFIX}:paquetes`
+export const SUPERADMIN_ACCESS_TAG = `${SUPERADMIN_CACHE_PREFIX}:accesos`
 export const SUPERADMIN_DC3_TAG = `${SUPERADMIN_CACHE_PREFIX}:dc3`
 
 export const SUPERADMIN_DASHBOARD_TAGS = [
   SUPERADMIN_GLOBAL_TAG,
-  SUPERADMIN_REPORTES_TAG,
-  SUPERADMIN_EMPRESAS_TAG,
-  SUPERADMIN_PAQUETES_TAG,
-  SUPERADMIN_ACCESOS_TAG,
+  SUPERADMIN_REPORTS_TAG,
+  SUPERADMIN_COMPANIES_TAG,
+  SUPERADMIN_PACKAGES_TAG,
+  SUPERADMIN_ACCESS_TAG,
   SUPERADMIN_DC3_TAG,
 ] as const
 
-export function empresaCacheRootTag(empresaId: number) {
-  return `${EMPRESA_CACHE_PREFIX}:${empresaId}`
+export function companyCacheRootTag(companyId: number) {
+  return `${COMPANY_CACHE_PREFIX}:${companyId}`
 }
 
-export function empresaEmpleadosTag(empresaId: number) {
-  return `${empresaCacheRootTag(empresaId)}:empleados`
+export function companyEmployeesTag(companyId: number) {
+  return `${companyCacheRootTag(companyId)}:empleados`
 }
 
-export function empresaAsignacionesTag(empresaId: number) {
-  return `${empresaCacheRootTag(empresaId)}:asignaciones`
+export function companyAssignmentsTag(companyId: number) {
+  return `${companyCacheRootTag(companyId)}:asignaciones`
 }
 
-export function getEmpresaDashboardTags(empresaId: number) {
+export function getCompanyDashboardTags(companyId: number) {
   return [
-    empresaCacheRootTag(empresaId),
-    empresaEmpleadosTag(empresaId),
-    empresaAsignacionesTag(empresaId),
+    companyCacheRootTag(companyId),
+    companyEmployeesTag(companyId),
+    companyAssignmentsTag(companyId),
   ] as const
 }

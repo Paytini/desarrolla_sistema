@@ -2,7 +2,9 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
 
-import { SUPERADMIN_GLOBAL_TAG, empresaCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { getCompanyBranding } from "@/lib/company-branding"
+import { companyPath } from "@/lib/company-routes"
 import {
   syncEmployeeLearningFromBridgeSnapshot,
   type EmployeeLearningBridgeSnapshot,
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await syncEmployeeLearningFromBridgeSnapshot({
-      empleadoId: payload.employee_id ?? null,
+      employeeId: payload.employee_id ?? null,
       wpUserId: payload.student_wp_user_id,
       snapshot: {
         courses: payload.courses ?? [],
@@ -121,14 +123,17 @@ export async function POST(request: Request) {
       certificates_updated: result.certificatesUpdated,
     })
 
-    revalidatePath("/empleado/cursos")
-    revalidatePath("/empleado/constancias")
+    revalidatePath("/employee/courses")
+    revalidatePath("/employee/certificates")
 
     if (payload.company_id) {
-      revalidatePath("/empresa/inicio")
-      revalidatePath("/empresa/progreso")
-      revalidatePath("/empresa/constancias")
-      revalidateTag(empresaCacheRootTag(payload.company_id), "max")
+      const branding = await getCompanyBranding(payload.company_id)
+      if (branding) {
+        revalidatePath(companyPath(branding.slug, "/home"))
+        revalidatePath(companyPath(branding.slug, "/progress"))
+        revalidatePath(companyPath(branding.slug, "/certificates"))
+      }
+      revalidateTag(companyCacheRootTag(payload.company_id), "max")
       revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     }
 

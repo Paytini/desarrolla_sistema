@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (session.user.rol === "RH" && session.user.empresa_id) {
-    const belongs = await prisma.empleado.findFirst({
-      where: { wp_user_id: studentId, empresa_id: session.user.empresa_id },
+    const belongs = await prisma.employee.findFirst({
+      where: { wp_user_id: studentId, company_id: session.user.empresa_id },
       select: { id: true },
     })
     if (!belongs) {

@@ -1,33 +1,33 @@
 export type PortalCourseRecord = {
   id: number
-  empleado_id: number
-  wp_curso_id: number
-  nombre_curso: string
-  progreso_pct: number
-  completado: boolean
-  acceso_estado: string
-  acceso_origen: string | null
-  acceso_error: string | null
-  ultimo_intento_acceso: Date | null
-  fecha_inicio_curso: Date | null
-  fecha_completado: Date | null
-  ultima_sincronizacion: Date
+  employee_id: number
+  wp_course_id: number
+  course_name: string
+  progress_pct: number
+  completed: boolean
+  access_status: string
+  access_source: string | null
+  access_error: string | null
+  last_access_attempt: Date | null
+  course_start_date: Date | null
+  completed_at: Date | null
+  last_synced_at: Date
 }
 
 export type PortalCertificateRecord = {
   id: number
-  empleado_id: number
-  wp_curso_id: number
-  nombre_curso: string
-  folio: string
-  wp_cert_url: string | null
-  fecha_emision: Date
+  employee_id: number
+  wp_course_id: number
+  course_name: string
+  reference_number: string
+  certificate_url: string | null
+  issued_at: Date
 }
 
 export type PortalPackageCourseRecord = {
   id?: number
-  paquete_id?: number
-  wp_curso_id: number
-  nombre_curso: string
-  portada_url?: string | null
+  package_id?: number
+  wp_course_id: number
+  course_name: string
+  cover_url?: string | null
 }

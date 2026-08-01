@@ -5,39 +5,39 @@ import { PDFDocument, PDFImage, StandardFonts, rgb } from "pdf-lib"
 import { prisma } from "@/lib/prisma"
 
 const POS = {
-  nombre:           { x: 40,  y: 590, size: 10 },
+  name:             { x: 40,  y: 590, size: 10 },
   curpStartX:       31,
   curpY:            559,
   curpStep:         14.6,
-  ocupacion:        { x: 305, y: 559, size: 9 },
-  puesto:           { x: 40,  y: 535, size: 10 },
-  razonSocial:      { x: 40,  y: 475, size: 10 },
+  occupation:       { x: 305, y: 559, size: 9 },
+  position:         { x: 40,  y: 535, size: 10 },
+  companyLegalName: { x: 40,  y: 475, size: 10 },
   rfcStartX:        32,
   rfcY:             442,
   rfcStep:          14,
-  curso:            { x: 32,  y: 390, size: 9  },
-  duracion:         { x: 32,  y: 364, size: 10 },
-  fechas: {
+  course:           { x: 32,  y: 390, size: 9  },
+  duration:         { x: 32,  y: 364, size: 10 },
+  dates: {
     y: 362,
     step: 17,
-    inicioAnioX: 250,
-    inicioMesX:  322,
-    inicioDiaX:  363,
-    finAnioX:    426,
-    finMesX:     505,
-    finDiaX:     545, 
+    startYearX:  250,
+    startMonthX: 322,
+    startDayX:   363,
+    endYearX:    426,
+    endMonthX:   505,
+    endDayX:     545,
   },
-  areaTematica:     { x: 32,  y: 339, size: 10 },
-  agenteCapacitador:{ x: 32,  y: 313, size: 10 },  
-  instructorFirma:  { x: 85,  y: 220, w: 90,  h: 27 },
-  instructorNombre: { x: 90,  y: 216, size: 7 },
-  logoFirma: { x: 32, y: 735, w: 140, h: 42 },
+  subjectArea:      { x: 32,  y: 339, size: 10 },
+  trainingAgent:    { x: 32,  y: 313, size: 10 },
+  instructorSignature: { x: 85,  y: 220, w: 90,  h: 27 },
+  instructorName:   { x: 90,  y: 216, size: 7 },
+  logoImage: { x: 32, y: 735, w: 140, h: 42 },
   logoMask: { x: 0, y: 715, w: 612, h: 78 },
   folio:            { x: 430, y: 60,  size: 8 },
-  emision:          { x: 430, y: 50,  size: 8 },
+  issuedDate:       { x: 430, y: 50,  size: 8 },
 } as const
 
-const TEXTO_COLOR = rgb(0.04, 0.18, 0.62)
+const TEXT_COLOR = rgb(0.04, 0.18, 0.62)
 
 export class Dc3MissingFieldsError extends Error {
   readonly fields: string[]
@@ -49,52 +49,52 @@ export class Dc3MissingFieldsError extends Error {
 }
 
 export type Dc3GenerateInput = {
-  constanciaId: number
+  certificateId: number
 }
 
-export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promise<Uint8Array> {
-  const constancia = await prisma.constancia.findUnique({
-    where: { id: constanciaId },
+export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promise<Uint8Array> {
+  const certificate = await prisma.certificate.findUnique({
+    where: { id: certificateId },
     include: {
-      empleado: { include: { empresa: true } },
+      employee: { include: { company: true } },
     },
   })
 
-  if (!constancia) {
-    throw new Error(`Constancia ${constanciaId} no encontrada`)
+  if (!certificate) {
+    throw new Error(`Constancia ${certificateId} no encontrada`)
   }
-  const empleado = constancia.empleado
-  const empresa = empleado.empresa
-  if (!empresa) {
+  const employee = certificate.employee
+  const company = employee.company
+  if (!company) {
     throw new Error("La constancia esta vinculada a un empleado sin empresa")
   }
 
-  const [metadata, empleadoCurso] = await Promise.all([
-    prisma.cursoDc3Metadata.findUnique({ where: { wp_curso_id: constancia.wp_curso_id } }),
-    prisma.empleadoCurso.findUnique({
+  const [metadata, employeeCourse] = await Promise.all([
+    prisma.courseDc3Metadata.findUnique({ where: { wp_course_id: certificate.wp_course_id } }),
+    prisma.employeeCourse.findUnique({
       where: {
-        empleado_id_wp_curso_id: {
-          empleado_id: constancia.empleado_id,
-          wp_curso_id: constancia.wp_curso_id,
+        employee_id_wp_course_id: {
+          employee_id: certificate.employee_id,
+          wp_course_id: certificate.wp_course_id,
         },
       },
     }),
   ])
 
   const missing: string[] = []
-  if (!empleado.nombre || !empleado.apellido) missing.push("Nombre completo del trabajador")
-  if (!empleado.curp) missing.push("CURP del trabajador")
-  if (!empleado.ocupacion_especifica) missing.push("Ocupacion especifica")
-  if (!empleado.ocupacion_especifica_clave) missing.push("Clave de ocupacion especifica")
-  if (!empresa.nombre) missing.push("Razon social de la empresa")
-  if (!empresa.rfc) missing.push("RFC de la empresa")
+  if (!employee.first_name || !employee.last_name) missing.push("Nombre completo del trabajador")
+  if (!employee.curp) missing.push("CURP del trabajador")
+  if (!employee.occupation_name) missing.push("Ocupacion especifica")
+  if (!employee.occupation_code) missing.push("Clave de ocupacion especifica")
+  if (!company.name) missing.push("Razon social de la empresa")
+  if (!company.rfc) missing.push("RFC de la empresa")
 
   if (missing.length > 0) {
     throw new Dc3MissingFieldsError(missing)
   }
 
-  const fechaTermino = empleadoCurso?.fecha_completado ?? constancia.fecha_emision
-  const fechaInicio = empleadoCurso?.fecha_inicio_curso ?? constancia.fecha_emision
+  const endDate = employeeCourse?.completed_at ?? certificate.issued_at
+  const startDate = employeeCourse?.course_start_date ?? certificate.issued_at
 
   const templatePath = path.join(process.cwd(), "public", "templates", "dc3.pdf")
   const templateBytes = await fs.readFile(templatePath)
@@ -107,86 +107,86 @@ export async function generateDc3Pdf({ constanciaId }: Dc3GenerateInput): Promis
   const draw = (text: string, x: number, y: number, size = 10) => {
     const clean = sanitizeText(text).toUpperCase()
     if (!clean) return
-    page.drawText(clean, { x, y, size, font: helvetica, color: TEXTO_COLOR })
+    page.drawText(clean, { x, y, size, font: helvetica, color: TEXT_COLOR })
   }
 
-  const fullName = [empleado.apellido, empleado.apellido_materno, empleado.nombre]
+  const fullName = [employee.last_name, employee.second_last_name, employee.first_name]
     .filter(Boolean)
     .join(" ")
     .trim()
-  draw(fullName, POS.nombre.x, POS.nombre.y, POS.nombre.size)
+  draw(fullName, POS.name.x, POS.name.y, POS.name.size)
 
-  const curp = empleado.curp!.toUpperCase().slice(0, 18)
+  const curp = employee.curp!.toUpperCase().slice(0, 18)
   for (let i = 0; i < curp.length; i++) {
     draw(curp[i], POS.curpStartX + i * POS.curpStep, POS.curpY, 10)
   }
 
   draw(
-    `${empleado.ocupacion_especifica_clave} ${empleado.ocupacion_especifica}`,
-    POS.ocupacion.x,
-    POS.ocupacion.y,
-    POS.ocupacion.size,
+    `${employee.occupation_code} ${employee.occupation_name}`,
+    POS.occupation.x,
+    POS.occupation.y,
+    POS.occupation.size,
   )
 
-  if (empleado.puesto) {
-    draw(empleado.puesto, POS.puesto.x, POS.puesto.y, POS.puesto.size)
+  if (employee.position) {
+    draw(employee.position, POS.position.x, POS.position.y, POS.position.size)
   }
 
-  draw(empresa.nombre, POS.razonSocial.x, POS.razonSocial.y, POS.razonSocial.size)
+  draw(company.name, POS.companyLegalName.x, POS.companyLegalName.y, POS.companyLegalName.size)
 
-  const rfc = empresa.rfc!.toUpperCase().slice(0, 13)
+  const rfc = company.rfc!.toUpperCase().slice(0, 13)
   for (let i = 0; i < rfc.length; i++) {
     draw(rfc[i], POS.rfcStartX + i * POS.rfcStep, POS.rfcY, 10)
   }
 
-  draw(truncate(metadata?.nombre_curso || constancia.nombre_curso, 90), POS.curso.x, POS.curso.y, POS.curso.size)
+  draw(truncate(metadata?.course_name || certificate.course_name, 90), POS.course.x, POS.course.y, POS.course.size)
 
-  if (metadata?.duracion_horas != null) {
-    draw(formatHoras(metadata.duracion_horas), POS.duracion.x, POS.duracion.y, POS.duracion.size)
+  if (metadata?.duration_hours != null) {
+    draw(formatHours(metadata.duration_hours), POS.duration.x, POS.duration.y, POS.duration.size)
   }
 
-  const start = splitDate(fechaInicio)
-  const end = splitDate(fechaTermino)
-  const { y: fy, step: dateStep, inicioAnioX, inicioMesX, inicioDiaX, finAnioX, finMesX, finDiaX } = POS.fechas
+  const start = splitDate(startDate)
+  const end = splitDate(endDate)
+  const { y: fy, step: dateStep, startYearX, startMonthX, startDayX, endYearX, endMonthX, endDayX } = POS.dates
   const drawDigits = (digits: string, startX: number) => {
     for (let i = 0; i < digits.length; i++) {
       draw(digits[i], startX + i * dateStep, fy, 10)
     }
   }
-  drawDigits(start.y, inicioAnioX)
-  drawDigits(start.m, inicioMesX)
-  drawDigits(start.d, inicioDiaX)
-  drawDigits(end.y, finAnioX)
-  drawDigits(end.m, finMesX)
-  drawDigits(end.d, finDiaX)
+  drawDigits(start.y, startYearX)
+  drawDigits(start.m, startMonthX)
+  drawDigits(start.d, startDayX)
+  drawDigits(end.y, endYearX)
+  drawDigits(end.m, endMonthX)
+  drawDigits(end.d, endDayX)
 
-  if (metadata?.area_tematica_nombre) {
-    const area = metadata.area_tematica_clave
-      ? `${metadata.area_tematica_clave} ${metadata.area_tematica_nombre}`
-      : metadata.area_tematica_nombre
-    draw(area, POS.areaTematica.x, POS.areaTematica.y, POS.areaTematica.size)
+  if (metadata?.subject_area_name) {
+    const subjectArea = metadata.subject_area_code
+      ? `${metadata.subject_area_code} ${metadata.subject_area_name}`
+      : metadata.subject_area_name
+    draw(subjectArea, POS.subjectArea.x, POS.subjectArea.y, POS.subjectArea.size)
   }
 
-  if (metadata?.agente_capacitador_nombre) {
-    const agente = metadata.agente_capacitador_registro
-      ? `${metadata.agente_capacitador_nombre} - ${metadata.agente_capacitador_registro}`
-      : metadata.agente_capacitador_nombre
-    draw(agente, POS.agenteCapacitador.x, POS.agenteCapacitador.y, POS.agenteCapacitador.size)
+  if (metadata?.training_agent_name) {
+    const trainingAgent = metadata.training_agent_registration
+      ? `${metadata.training_agent_name} - ${metadata.training_agent_registration}`
+      : metadata.training_agent_name
+    draw(trainingAgent, POS.trainingAgent.x, POS.trainingAgent.y, POS.trainingAgent.size)
   }
 
-  if (metadata?.instructor_firma_url) {
-    await drawInstructorFirma(pdf, page, metadata.instructor_firma_url)
+  if (metadata?.instructor_signature_url) {
+    await drawInstructorSignature(pdf, page, metadata.instructor_signature_url)
   }
-  if (metadata?.instructor_nombre) {
-    draw(metadata.instructor_nombre, POS.instructorNombre.x, POS.instructorNombre.y, POS.instructorNombre.size)
+  if (metadata?.instructor_name) {
+    draw(metadata.instructor_name, POS.instructorName.x, POS.instructorName.y, POS.instructorName.size)
   }
 
-  draw(`FOLIO: ${constancia.folio}`, POS.folio.x, POS.folio.y, POS.folio.size)
+  draw(`FOLIO: ${certificate.reference_number}`, POS.folio.x, POS.folio.y, POS.folio.size)
   draw(
-    `EMISION: ${constancia.fecha_emision.toISOString().slice(0, 10)}`,
-    POS.emision.x,
-    POS.emision.y,
-    POS.emision.size,
+    `EMISION: ${certificate.issued_at.toISOString().slice(0, 10)}`,
+    POS.issuedDate.x,
+    POS.issuedDate.y,
+    POS.issuedDate.size,
   )
 
   while (pdf.getPageCount() > 1) {
@@ -223,8 +223,8 @@ function splitDate(d: Date) {
   }
 }
 
-function formatHoras(horas: number) {
-  return Number.isInteger(horas) ? String(horas) : horas.toFixed(1).replace(/\.0$/, "")
+function formatHours(hours: number) {
+  return Number.isInteger(hours) ? String(hours) : hours.toFixed(1).replace(/\.0$/, "")
 }
 
 async function fetchImageBytes(urlOrPath: string): Promise<Buffer> {
@@ -272,23 +272,23 @@ async function drawLogoDesarrolla(
     const image = await pdf.embedPng(await processImage(rawBytes))
     const { x: mx, y: my, w: mw, h: mh } = POS.logoMask
     page.drawRectangle({ x: mx, y: my, width: mw, height: mh, color: rgb(1, 1, 1) })
-    const { x, y, w, h } = POS.logoFirma
+    const { x, y, w, h } = POS.logoImage
     page.drawImage(image, { x, y, width: w, height: h, opacity: 1 })
   } catch (err) {
     console.warn("[dc3] no se pudo dibujar el logo:", err)
   }
 }
 
-async function drawInstructorFirma(
+async function drawInstructorSignature(
   pdf: PDFDocument,
   page: ReturnType<PDFDocument["getPages"]>[number],
-  firmaUrl: string,
+  signatureUrl: string,
 ) {
   let rawBytes: Buffer
   try {
-    rawBytes = await fetchImageBytes(firmaUrl)
+    rawBytes = await fetchImageBytes(signatureUrl)
   } catch (err) {
-    console.warn(`[dc3] no se pudo obtener la firma (${firmaUrl}):`, err)
+    console.warn(`[dc3] no se pudo obtener la firma (${signatureUrl}):`, err)
     return
   }
 
@@ -296,7 +296,7 @@ async function drawInstructorFirma(
   try {
     pngBytes = await processImage(rawBytes)
   } catch (err) {
-    console.error(`[dc3] sharp no pudo procesar la firma (${firmaUrl}):`, err)
+    console.error(`[dc3] sharp no pudo procesar la firma (${signatureUrl}):`, err)
     return
   }
 
@@ -304,10 +304,10 @@ async function drawInstructorFirma(
   try {
     image = await pdf.embedPng(pngBytes)
   } catch (err) {
-    console.error(`[dc3] pdf-lib no pudo embeber la firma (${firmaUrl}):`, err)
+    console.error(`[dc3] pdf-lib no pudo embeber la firma (${signatureUrl}):`, err)
     return
   }
 
-  const { x, y, w, h } = POS.instructorFirma
+  const { x, y, w, h } = POS.instructorSignature
   page.drawImage(image, { x, y, width: w, height: h, opacity: 1 })
 }

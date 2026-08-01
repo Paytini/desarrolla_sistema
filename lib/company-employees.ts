@@ -1,12 +1,12 @@
 export type EmployeeFilterStatus = "all" | "active" | "inactive"
 
 type EmployeeSearchable = {
-  nombre: string
-  apellido: string
+  first_name: string
+  last_name: string
   email: string
-  departamento: string | null
-  puesto: string | null
-  activo: boolean
+  department: string | null
+  position: string | null
+  active: boolean
 }
 
 export function normalizeEmployeeFilterStatus(value: string | null | undefined): EmployeeFilterStatus {
@@ -31,11 +31,11 @@ export function matchesEmployeeFilters(
   const query = normalizeEmployeeSearchQuery(options.query)
   const status = options.status ?? "all"
 
-  if (status === "active" && !employee.activo) {
+  if (status === "active" && !employee.active) {
     return false
   }
 
-  if (status === "inactive" && employee.activo) {
+  if (status === "inactive" && employee.active) {
     return false
   }
 
@@ -44,11 +44,11 @@ export function matchesEmployeeFilters(
   }
 
   const haystack = [
-    employee.nombre,
-    employee.apellido,
+    employee.first_name,
+    employee.last_name,
     employee.email,
-    employee.departamento ?? "",
-    employee.puesto ?? "",
+    employee.department ?? "",
+    employee.position ?? "",
   ]
     .join(" ")
     .toLowerCase()

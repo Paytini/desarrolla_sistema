@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
-//  Desarrolla360 — Portal Empresarial
-//  Base de datos: PostgreSQL
+//  Desarrolla360 — Business Portal
+//  Database: PostgreSQL
 //  ORM: Prisma
 // ─────────────────────────────────────────────────────────────
 
@@ -16,350 +16,352 @@ datasource db {
 //  ENUMS
 // ─────────────────────────────────────────────────────────────
 
-enum Rol {
-  SUPERADMIN // Desarrolla360 — acceso total
-  RH // Encargado de empresa — gestiona sus empleados
-  EMPLEADO // Trabajador — ve sus propios cursos
+enum Role {
+  SUPERADMIN // Desarrolla360 — full access
+  RH // Company HR admin — manages their own employees
+  EMPLEADO // Worker — sees their own courses
 }
 
 // ─────────────────────────────────────────────────────────────
-//  USUARIO
-//  Maneja el login del portal para los tres roles.
-//  Los empleados también tienen un usuario aquí (rol EMPLEADO).
-//  wp_user_id vincula con WordPress cuando aplica.
+//  USER
+//  Handles portal login for all three roles.
+//  Employees also have a user record here (role EMPLEADO).
+//  wp_user_id links to WordPress when applicable.
 // ─────────────────────────────────────────────────────────────
 
-model Usuario {
+model User {
   id            Int       @id @default(autoincrement())
   email         String    @unique
   password_hash String
-  rol           Rol
-  nombre        String
-  empresa_id    Int? // null para SUPERADMIN
-  wp_user_id    Int? // ID del usuario en WordPress (nullable)
-  activo        Boolean   @default(true)
-  ultimo_acceso DateTime?
+  role          Role
+  name          String
+  company_id    Int? // null for SUPERADMIN
+  wp_user_id    Int? // WordPress user ID (nullable)
+  active        Boolean   @default(true)
+  last_access   DateTime?
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 
-  empresa        Empresa?       @relation(fields: [empresa_id], references: [id])
-  sesiones       SesionPortal[]
-  notificaciones Notificacion[]
+  company       Company?       @relation(fields: [company_id], references: [id])
+  sessions      PortalSession[]
+  notifications Notification[]
 
-  @@index([empresa_id])
-  @@map("usuarios")
+  @@index([company_id])
+  @@map("users")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  NOTIFICACION
-//  Notificaciones dirigidas a un usuario (hoy: SuperAdmin),
-//  generadas cuando ocurren eventos relevantes del sistema.
+//  NOTIFICATION
+//  Notifications directed at a user (today: SuperAdmin),
+//  generated when relevant system events occur.
 // ─────────────────────────────────────────────────────────────
 
-model Notificacion {
-  id           Int      @id @default(autoincrement())
-  usuario_id   Int
-  tipo         String
-  titulo       String
-  mensaje      String
-  leida        Boolean  @default(false)
-  entidad_tipo String?
-  entidad_id   Int?
-  created_at   DateTime @default(now())
+model Notification {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  type        String
+  title       String
+  message     String
+  read        Boolean  @default(false)
+  entity_type String?
+  entity_id   Int?
+  created_at  DateTime @default(now())
 
-  usuario Usuario @relation(fields: [usuario_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
 
-  @@index([usuario_id, leida])
+  @@index([user_id, read])
   @@index([created_at])
-  @@map("notificaciones")
+  @@map("notifications")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  EMPRESA
-//  Cada cliente que compró un paquete de cursos.
-//  asientos_contratados: lo define el SuperAdmin al crear la empresa.
-//  asientos_usados: se actualiza automáticamente al dar alta/baja empleados.
+//  COMPANY
+//  Each client that purchased a course package.
+//  contracted_seats: set by the SuperAdmin when creating the company.
+//  used_seats: updated automatically as employees are added/removed.
 // ─────────────────────────────────────────────────────────────
 
-model Empresa {
-  id                    Int      @id @default(autoincrement())
-  nombre                String
-  email_rh              String   @unique // correo del encargado de RH
-  telefono              String?
-  rfc                   String?
-  asientos_contratados  Int // máximo de empleados permitidos
-  asientos_usados       Int      @default(0)
-  activo                Boolean  @default(true)
-  notas                 String?  @db.Text // notas internas de Desarrolla360
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
+model Company {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  slug               String   @unique // used in portal URLs, e.g. /company/acme
+  logo_url           String? // company-branded logo shown in the portal
+  hr_email           String   @unique // HR contact's email
+  phone              String?
+  rfc                String? // Mexican tax ID
+  contracted_seats   Int // maximum employees allowed
+  used_seats         Int      @default(0)
+  active             Boolean  @default(true)
+  notes              String?  @db.Text // internal Desarrolla360 notes
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
-  usuarios          Usuario[]
-  empleados         Empleado[]
-  paquetes          EmpresaPaquete[]
+  users     User[]
+  employees Employee[]
+  packages  CompanyPackage[]
 
-  @@map("empresas")
+  @@map("companies")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  PAQUETE
-//  Catálogo de paquetes de cursos que ofrece Desarrolla360.
-//  Los cursos dentro de cada paquete se almacenan en PaqueteCurso.
+//  PACKAGE
+//  Catalog of course packages Desarrolla360 offers.
+//  The courses within each package are stored in PackageCourse.
 // ─────────────────────────────────────────────────────────────
 
-model Paquete {
-  id               Int      @id @default(autoincrement())
-  nombre           String // "CTPAT Básico", "Cadena de Suministro", etc.
-  descripcion      String?  @db.Text
-  modo_entrega     String   @default("DIRECT_ENROLLMENT") // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
-  wp_bundle_id     Int? // opcional: bundle privado en Tutor LMS para organizacion academica
-  nombre_bundle    String? // nombre cacheado del bundle privado
-  notas_operativas String?  @db.Text
-  activo           Boolean  @default(true)
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+model Package {
+  id                Int      @id @default(autoincrement())
+  name              String // "Basic CTPAT", "Supply Chain", etc.
+  description       String?  @db.Text
+  delivery_mode     String   @default("DIRECT_ENROLLMENT") // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
+  wp_bundle_id      Int? // optional: private bundle in Tutor LMS for academic organization
+  bundle_name       String? // cached name of the private bundle
+  operational_notes String?  @db.Text
+  active            Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 
-  cursos   PaqueteCurso[]
-  empresas EmpresaPaquete[]
+  courses  PackageCourse[]
+  companies CompanyPackage[]
 
-  @@map("paquetes")
+  @@map("packages")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  PAQUETE_CURSO
-//  Qué cursos de Tutor LMS incluye cada paquete.
-//  wp_curso_id: ID del curso en WordPress/Tutor LMS.
+//  PACKAGE_COURSE
+//  Which Tutor LMS courses each package includes.
+//  wp_course_id: the course's ID in WordPress/Tutor LMS.
 // ─────────────────────────────────────────────────────────────
 
-model PaqueteCurso {
+model PackageCourse {
   id            Int     @id @default(autoincrement())
-  paquete_id    Int
-  wp_curso_id   Int // ID del curso en Tutor LMS Pro
-  nombre_curso  String // nombre cacheado para no consultar WP siempre
-  portada_url   String? // URL de la imagen destacada del curso en WordPress
-  descripcion   String? @db.Text
-  num_lecciones Int?
+  package_id    Int
+  wp_course_id  Int // course ID in Tutor LMS Pro
+  course_name   String // cached name so we don't always query WP
+  cover_url     String? // URL of the course's featured image in WordPress
+  description   String? @db.Text
+  lesson_count  Int?
 
-  paquete Paquete @relation(fields: [paquete_id], references: [id])
+  package Package @relation(fields: [package_id], references: [id])
 
-  @@unique([paquete_id, wp_curso_id])
-  @@index([paquete_id])
-  @@map("paquete_cursos")
+  @@unique([package_id, wp_course_id])
+  @@index([package_id])
+  @@map("package_courses")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CURSO_DC3_METADATA
-//  Ficha oficial DC-3 por curso Tutor LMS.
-//  Se cachea en el portal para generar constancias con datos
-//  controlados, sin depender de consultar WordPress en vivo.
+//  COURSE_DC3_METADATA
+//  Official DC-3 record per Tutor LMS course.
+//  Cached in the portal to generate certificates with controlled
+//  data, without depending on querying WordPress live.
 // ─────────────────────────────────────────────────────────────
 
-model CursoDc3Metadata {
-  id                          Int       @id @default(autoincrement())
-  wp_curso_id                 Int       @unique
-  nombre_curso                String?
-  duracion_horas              Float?
-  area_tematica_nombre        String?
-  area_tematica_clave         String?
-  agente_capacitador_nombre   String?
-  agente_capacitador_registro String?
-  instructor_nombre           String?
-  instructor_firma_url        String?
-  fuente                      String    @default("MANUAL") // MANUAL | WORDPRESS_BRIDGE
-  ultima_sincronizacion       DateTime?
-  created_at                  DateTime  @default(now())
-  updated_at                  DateTime  @updatedAt
+model CourseDc3Metadata {
+  id                           Int       @id @default(autoincrement())
+  wp_course_id                 Int       @unique
+  course_name                  String?
+  duration_hours               Float?
+  subject_area_name            String?
+  subject_area_code            String?
+  training_agent_name          String?
+  training_agent_registration  String?
+  instructor_name              String?
+  instructor_signature_url     String?
+  source                       String    @default("MANUAL") // MANUAL | WORDPRESS_BRIDGE
+  last_synced_at               DateTime?
+  created_at                   DateTime  @default(now())
+  updated_at                   DateTime  @updatedAt
 
-  @@index([wp_curso_id])
-  @@map("curso_dc3_metadata")
+  @@index([wp_course_id])
+  @@map("course_dc3_metadata")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  EMPRESA_PAQUETE
-//  Relación entre empresa y el paquete que contrató.
-//  Incluye fechas para manejar vencimientos y renovaciones.
+//  COMPANY_PACKAGE
+//  Relationship between a company and the package it contracted.
+//  Includes dates to handle expirations and renewals.
 // ─────────────────────────────────────────────────────────────
 
-model EmpresaPaquete {
+model CompanyPackage {
   id                Int       @id @default(autoincrement())
-  empresa_id        Int
-  paquete_id        Int
-  fecha_inicio      DateTime  @default(now())
-  fecha_vencimiento DateTime? // null = sin vencimiento
-  activo            Boolean   @default(true)
+  company_id        Int
+  package_id        Int
+  start_date        DateTime  @default(now())
+  expiration_date   DateTime? // null = no expiration
+  active            Boolean   @default(true)
   created_at        DateTime  @default(now())
 
-  empresa Empresa @relation(fields: [empresa_id], references: [id])
-  paquete Paquete @relation(fields: [paquete_id], references: [id])
+  company Company @relation(fields: [company_id], references: [id])
+  package Package @relation(fields: [package_id], references: [id])
 
-  @@index([empresa_id])
-  @@map("empresa_paquetes")
+  @@index([company_id])
+  @@map("company_packages")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  EMPLEADO
-//  Registrado por el área de RH de la empresa.
-//  wp_user_id: se llena cuando el empleado ya existe en WordPress
-//  o cuando se crea su usuario en WP para acceder a Tutor LMS.
+//  EMPLOYEE
+//  Registered by the company's HR team.
+//  wp_user_id: filled in once the employee exists in WordPress
+//  or once their WP user is created to access Tutor LMS.
 // ─────────────────────────────────────────────────────────────
 
-model Empleado {
-  id                         Int      @id @default(autoincrement())
-  empresa_id                 Int
-  wp_user_id                 Int?     @unique // ID en WordPress, único si ya está vinculado
-  nombre                     String
-  apellido                   String
-  apellido_materno           String?
-  email                      String   @unique
-  curp                       String?
-  departamento               String?
-  puesto                     String?
-  ocupacion_especifica_clave String?
-  ocupacion_especifica       String?
-  activo                     Boolean  @default(true)
-  created_at                 DateTime @default(now())
-  updated_at                 DateTime @updatedAt
+model Employee {
+  id                 Int      @id @default(autoincrement())
+  company_id         Int
+  wp_user_id         Int?     @unique // WordPress ID, unique once linked
+  first_name         String
+  last_name          String
+  second_last_name   String?
+  email              String   @unique
+  curp               String? // Mexican personal ID
+  department         String?
+  position           String?
+  occupation_code    String?
+  occupation_name    String?
+  active             Boolean  @default(true)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
-  empresa     Empresa         @relation(fields: [empresa_id], references: [id])
-  cursos      EmpleadoCurso[]
-  constancias Constancia[]
+  company      Company          @relation(fields: [company_id], references: [id])
+  courses      EmployeeCourse[]
+  certificates Certificate[]
 
-  @@index([empresa_id])
-  @@map("empleados")
+  @@index([company_id])
+  @@map("employees")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  EMPLEADO_CURSO
-//  Progreso de cada empleado en cada curso.
-//  Los datos vienen de la REST API de Tutor LMS y se cachean aquí
-//  para no consultar WordPress en cada carga de página.
-//  ultima_sincronizacion: cuándo se actualizó por última vez desde WP.
+//  EMPLOYEE_COURSE
+//  Each employee's progress in each course.
+//  Data comes from the Tutor LMS REST API and is cached here
+//  so we don't query WordPress on every page load.
+//  last_synced_at: when it was last refreshed from WP.
 // ─────────────────────────────────────────────────────────────
 
-model EmpleadoCurso {
-  id                    Int       @id @default(autoincrement())
-  empleado_id           Int
-  wp_curso_id           Int // ID del curso en Tutor LMS
-  nombre_curso          String // cacheado desde WP
-  progreso_pct          Int       @default(0) // 0–100
-  completado            Boolean   @default(false)
-  acceso_estado         String    @default("PENDING") // PENDING | ACTIVE | ERROR | REQUIRES_REVIEW
-  acceso_origen         String? // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
-  acceso_error          String?   @db.Text
-  ultimo_intento_acceso DateTime?
-  fecha_inicio_curso    DateTime?
-  fecha_completado      DateTime?
-  ultima_sincronizacion DateTime  @default(now())
+model EmployeeCourse {
+  id                     Int       @id @default(autoincrement())
+  employee_id            Int
+  wp_course_id           Int // course ID in Tutor LMS
+  course_name            String // cached from WP
+  progress_pct           Int       @default(0) // 0–100
+  completed              Boolean   @default(false)
+  access_status          String    @default("PENDING") // PENDING | ACTIVE | ERROR | REQUIRES_REVIEW
+  access_source          String? // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
+  access_error           String?   @db.Text
+  last_access_attempt    DateTime?
+  course_start_date      DateTime?
+  completed_at           DateTime?
+  last_synced_at         DateTime  @default(now())
 
-  empleado Empleado @relation(fields: [empleado_id], references: [id])
+  employee Employee @relation(fields: [employee_id], references: [id])
 
-  @@unique([empleado_id, wp_curso_id])
-  @@index([empleado_id])
-  @@map("empleado_cursos")
+  @@unique([employee_id, wp_course_id])
+  @@index([employee_id])
+  @@map("employee_courses")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CONSTANCIA
-//  Registro de cada certificado obtenido por un empleado.
-//  folio: generado por el portal (ej. D360-2025-0312-001).
-//  wp_cert_url: enlace al PDF generado por Tutor LMS Pro.
+//  CERTIFICATE
+//  Record of each certificate an employee earned.
+//  reference_number: generated by the portal (e.g. D360-2025-0312-001).
+//  certificate_url: link to the PDF generated by Tutor LMS Pro.
 // ─────────────────────────────────────────────────────────────
 
-model Constancia {
-  id                      Int       @id @default(autoincrement())
-  empleado_id             Int
-  wp_curso_id             Int
-  nombre_curso            String
-  folio                   String    @unique // D360-YYYY-MMDD-NNN
-  wp_cert_url             String? // URL del PDF en WordPress
-  fecha_emision           DateTime  @default(now())
+model Certificate {
+  id                Int       @id @default(autoincrement())
+  employee_id       Int
+  wp_course_id      Int
+  course_name       String
+  reference_number  String    @unique // D360-YYYY-MMDD-NNN
+  certificate_url   String? // URL of the PDF in WordPress
+  issued_at         DateTime  @default(now())
 
-  empleado Empleado @relation(fields: [empleado_id], references: [id])
+  employee Employee @relation(fields: [employee_id], references: [id])
 
-  @@index([empleado_id])
-  @@map("constancias")
+  @@index([employee_id])
+  @@map("certificates")
 }
 
-model IntegracionEstado {
+model IntegrationState {
   id         Int      @id @default(autoincrement())
-  clave      String   @unique
+  key        String   @unique
   payload    Json?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@map("integracion_estados")
+  @@map("integration_states")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  SESION_PORTAL
-//  Tokens de sesión activos en el portal.
-//  NextAuth los maneja automáticamente, pero esta tabla
-//  permite revocar accesos desde el panel de SuperAdmin.
+//  PORTAL_SESSION
+//  Active portal session tokens.
+//  NextAuth manages these automatically, but this table lets
+//  SuperAdmin revoke access from the admin panel.
 // ─────────────────────────────────────────────────────────────
 
-model SesionPortal {
+model PortalSession {
   id         Int      @id @default(autoincrement())
-  usuario_id Int
+  user_id    Int
   token      String   @unique @db.VarChar(512)
-  expira_en  DateTime
+  expires_at DateTime
   ip_address String?
   created_at DateTime @default(now())
 
-  usuario Usuario @relation(fields: [usuario_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
 
-  @@index([usuario_id])
-  @@map("sesiones_portal")
+  @@index([user_id])
+  @@map("portal_sessions")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  AUDITORIA_EVENTO
-//  Bitacora de acciones administrativas relevantes
-//  (alta de empresa, asignacion de paquete, suspensiones, etc.).
+//  AUDIT_EVENT
+//  Log of relevant administrative actions
+//  (company creation, package assignment, suspensions, etc.).
 // ─────────────────────────────────────────────────────────────
 
-model AuditoriaEvento {
-  id               Int      @id @default(autoincrement())
-  actor_usuario_id Int?
-  actor_nombre     String
-  actor_email      String?
-  actor_rol        String
-  accion           String
-  entidad_tipo     String
-  entidad_id       Int?
-  empresa_id       Int?
-  resumen          String
-  metadata         Json?
-  created_at       DateTime @default(now())
+model AuditEvent {
+  id             Int      @id @default(autoincrement())
+  actor_user_id  Int?
+  actor_name     String
+  actor_email    String?
+  actor_role     String
+  action         String
+  entity_type    String
+  entity_id      Int?
+  company_id     Int?
+  summary        String
+  metadata       Json?
+  created_at     DateTime @default(now())
 
   @@index([created_at])
-  @@index([empresa_id])
-  @@index([accion])
-  @@map("auditoria_eventos")
+  @@index([company_id])
+  @@index([action])
+  @@map("audit_events")
 }
 
 // ─────────────────────────────────────────────────────────────
-//  HISTORIAL_CUPO
-//  Registro historico de cambios en cupos por empresa.
-//  Sirve para trazabilidad de capacidad contratada vs usada.
+//  SEAT_HISTORY
+//  Historical record of seat changes per company.
+//  Used for traceability of contracted vs. used capacity.
 // ─────────────────────────────────────────────────────────────
 
-model HistorialCupo {
+model SeatHistory {
   id                           Int      @id @default(autoincrement())
-  empresa_id                   Int
-  actor_usuario_id             Int?
-  actor_nombre                 String
+  company_id                   Int
+  actor_user_id                Int?
+  actor_name                   String
   actor_email                  String?
-  actor_rol                    String
-  motivo                       String
-  detalle                      String?  @db.Text
-  asientos_contratados_antes   Int
-  asientos_contratados_despues Int
-  asientos_usados_antes        Int
-  asientos_usados_despues      Int
-  empleados_suspendidos        Int      @default(0)
+  actor_role                   String
+  reason                       String
+  detail                       String?  @db.Text
+  contracted_seats_before      Int
+  contracted_seats_after       Int
+  used_seats_before            Int
+  used_seats_after             Int
+  suspended_employees          Int      @default(0)
   created_at                   DateTime @default(now())
 
-  @@index([empresa_id])
+  @@index([company_id])
   @@index([created_at])
-  @@map("historial_cupos")
+  @@map("seat_history")
 }

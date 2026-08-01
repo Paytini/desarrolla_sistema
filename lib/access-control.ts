@@ -8,54 +8,54 @@ import {
 import { bridgeDeleteEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
 
 type DeleteEmployeeOptions = {
-  empleadoId: number
-  empresaId?: number
+  employeeId: number
+  companyId?: number
   actor?: AuditActor
   source?: "RH" | "SUPERADMIN" | "SYSTEM"
 }
 
 export async function deleteEmployeeRecord({
-  empleadoId,
-  empresaId,
+  employeeId,
+  companyId,
   actor,
   source = "SYSTEM",
 }: DeleteEmployeeOptions) {
-  const empleado = await prisma.empleado.findFirst({
+  const employee = await prisma.employee.findFirst({
     where: {
-      id: empleadoId,
-      ...(empresaId ? { empresa_id: empresaId } : {}),
+      id: employeeId,
+      ...(companyId ? { company_id: companyId } : {}),
     },
     select: {
       id: true,
-      empresa_id: true,
+      company_id: true,
       email: true,
       wp_user_id: true,
-      nombre: true,
-      apellido: true,
+      first_name: true,
+      last_name: true,
     },
   })
 
-  if (!empleado) {
+  if (!employee) {
     throw new Error("Empleado no encontrado")
   }
 
   const actingUser: AuditActor = actor ?? {
-    usuarioId: null,
+    userId: null,
     nombre: "Sistema",
     email: null,
     rol: source,
   }
-  const beforeSeatSnapshot = await getCompanySeatSnapshot(empleado.empresa_id)
-  const empresa = await prisma.empresa.findUnique({
-    where: { id: empleado.empresa_id },
-    select: { nombre: true },
+  const beforeSeatSnapshot = await getCompanySeatSnapshot(employee.company_id)
+  const company = await prisma.company.findUnique({
+    where: { id: employee.company_id },
+    select: { name: true },
   })
 
   if (isWordPressBridgeConfigured()) {
     const bridgeResponse = await bridgeDeleteEmployee({
-      employeeId: empleado.id,
-      wpUserId: empleado.wp_user_id,
-      email: empleado.email,
+      employeeId: employee.id,
+      wpUserId: employee.wp_user_id,
+      email: employee.email,
     })
 
     if (!bridgeResponse.deleted && bridgeResponse.found) {
@@ -64,57 +64,57 @@ export async function deleteEmployeeRecord({
   }
 
   await prisma.$transaction(async (tx) => {
-    const usuario = await tx.usuario.findFirst({
+    const user = await tx.user.findFirst({
       where: {
-        email: empleado.email,
-        empresa_id: empleado.empresa_id,
-        rol: "EMPLEADO",
+        email: employee.email,
+        company_id: employee.company_id,
+        role: "EMPLEADO",
       },
       select: { id: true },
     })
 
-    if (usuario) {
-      await tx.sesionPortal.deleteMany({
-        where: { usuario_id: usuario.id },
+    if (user) {
+      await tx.portalSession.deleteMany({
+        where: { user_id: user.id },
       })
 
-      await tx.usuario.delete({
-        where: { id: usuario.id },
+      await tx.user.delete({
+        where: { id: user.id },
       })
     }
 
-    await tx.constancia.deleteMany({
-      where: { empleado_id: empleado.id },
+    await tx.certificate.deleteMany({
+      where: { employee_id: employee.id },
     })
 
-    await tx.empleadoCurso.deleteMany({
-      where: { empleado_id: empleado.id },
+    await tx.employeeCourse.deleteMany({
+      where: { employee_id: employee.id },
     })
 
-    await tx.empleado.delete({
-      where: { id: empleado.id },
+    await tx.employee.delete({
+      where: { id: employee.id },
     })
 
-    const activeEmployees = await tx.empleado.count({
+    const activeEmployees = await tx.employee.count({
       where: {
-        empresa_id: empleado.empresa_id,
-        activo: true,
+        company_id: employee.company_id,
+        active: true,
       },
     })
 
-    await tx.empresa.update({
-      where: { id: empleado.empresa_id },
-      data: { asientos_usados: activeEmployees },
+    await tx.company.update({
+      where: { id: employee.company_id },
+      data: { used_seats: activeEmployees },
     })
   })
 
-  const afterSeatSnapshot = await getCompanySeatSnapshot(empleado.empresa_id)
+  const afterSeatSnapshot = await getCompanySeatSnapshot(employee.company_id)
   if (beforeSeatSnapshot && afterSeatSnapshot) {
     await createSeatHistoryEntry({
       actor: actingUser,
-      empresaId: empleado.empresa_id,
+      companyId: employee.company_id,
       motivo: "empleado_eliminado",
-      detalle: `${empleado.nombre} ${empleado.apellido} (${empleado.email})`,
+      detalle: `${employee.first_name} ${employee.last_name} (${employee.email})`,
       before: beforeSeatSnapshot,
       after: afterSeatSnapshot,
     })
@@ -123,64 +123,64 @@ export async function deleteEmployeeRecord({
   await createAuditEvent({
     actor: actingUser,
     accion: "EMPLEADO_ELIMINADO",
-    entidadTipo: "EMPLEADO",
-    entidadId: empleado.id,
-    empresaId: empleado.empresa_id,
-    resumen: `${actingUser.nombre} elimino al empleado ${empleado.nombre} ${empleado.apellido} de ${empresa?.nombre ?? "la empresa"}.`,
+    entityType: "EMPLEADO",
+    entityId: employee.id,
+    companyId: employee.company_id,
+    resumen: `${actingUser.nombre} elimino al empleado ${employee.first_name} ${employee.last_name} de ${company?.name ?? "la empresa"}.`,
     metadata: {
-      email: empleado.email,
+      email: employee.email,
       source,
     },
   })
 
-  return empleado
+  return employee
 }
 
 export async function togglePortalUserStatus(
   userId: number,
   callerRole: "SUPERADMIN" | "RH" | "SYSTEM" = "SYSTEM"
 ) {
-  const usuario = await prisma.usuario.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       id: true,
-      activo: true,
-      rol: true,
+      active: true,
+      role: true,
     },
   })
 
-  if (!usuario) {
+  if (!user) {
     throw new Error("Usuario no encontrado")
   }
 
-  if (usuario.rol === "SUPERADMIN" && callerRole !== "SUPERADMIN") {
+  if (user.role === "SUPERADMIN" && callerRole !== "SUPERADMIN") {
     throw new Error("No autorizado para modificar una cuenta de SUPERADMIN")
   }
 
-  await prisma.usuario.update({
+  await prisma.user.update({
     where: { id: userId },
-    data: { activo: !usuario.activo },
+    data: { active: !user.active },
   })
 
-  return usuario
+  return user
 }
 
 export async function revokeUserPortalSessions(userId: number) {
-  return prisma.sesionPortal.deleteMany({
-    where: { usuario_id: userId },
+  return prisma.portalSession.deleteMany({
+    where: { user_id: userId },
   })
 }
 
 export async function revokePortalSession(sessionId: number) {
-  return prisma.sesionPortal.deleteMany({
+  return prisma.portalSession.deleteMany({
     where: { id: sessionId },
   })
 }
 
 export async function purgeExpiredPortalSessions() {
-  return prisma.sesionPortal.deleteMany({
+  return prisma.portalSession.deleteMany({
     where: {
-      expira_en: {
+      expires_at: {
         lt: new Date(),
       },
     },

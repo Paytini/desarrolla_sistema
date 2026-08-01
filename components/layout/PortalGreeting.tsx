@@ -10,11 +10,11 @@ const periodConfig = {
   evening:   { label: "Buenas noches", icon: Moon },
 } as const
 
-export function PortalGreeting({ nombre }: { nombre: string; rol: string }) {
+export function PortalGreeting({ name }: { name: string; rol: string }) {
   const hour     = new Date().getHours()
   const period   = hour < 12 ? "morning" : hour < 19 ? "afternoon" : "evening"
   const { label: greeting, icon: Icon } = periodConfig[period]
-  const firstName = nombre.split(" ")[0] ?? nombre
+  const firstName = name.split(" ")[0] ?? name
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>

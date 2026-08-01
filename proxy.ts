@@ -12,10 +12,10 @@ export default auth((req) => {
   if (pathname.startsWith("/superadmin") && rol !== "SUPERADMIN") {
     return NextResponse.redirect(new URL("/login", req.url))
   }
-  if (pathname.startsWith("/empresa") && rol !== "RH") {
+  if (pathname.startsWith("/company") && rol !== "RH") {
     return NextResponse.redirect(new URL("/login", req.url))
   }
-  if (pathname.startsWith("/empleado") && rol !== "EMPLEADO") {
+  if (pathname.startsWith("/employee") && rol !== "EMPLEADO") {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
@@ -23,5 +23,5 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ["/superadmin/:path*", "/empresa/:path*", "/empleado/:path*", "/login"],
+  matcher: ["/superadmin/:path*", "/company/:path*", "/employee/:path*", "/login"],
 }

@@ -1,4 +1,7 @@
 import { prisma } from "@/lib/prisma"
+import { sendEmail } from "@/lib/ses"
+import { buildCertificateReadyEmail } from "@/lib/email-templates/certificate-ready"
+import { buildPackageExpiringEmail } from "@/lib/email-templates/package-expiring"
 
 type NotifyContent = {
   tipo: string
@@ -11,14 +14,14 @@ type NotifyContent = {
 async function createNotifications(usuarioIds: number[], content: NotifyContent) {
   if (usuarioIds.length === 0) return
 
-  await prisma.notificacion.createMany({
-    data: usuarioIds.map((usuario_id) => ({
-      usuario_id,
-      tipo: content.tipo,
-      titulo: content.titulo,
-      mensaje: content.mensaje,
-      entidad_tipo: content.entidadTipo ?? null,
-      entidad_id: content.entidadId ?? null,
+  await prisma.notification.createMany({
+    data: usuarioIds.map((user_id) => ({
+      user_id,
+      type: content.tipo,
+      title: content.titulo,
+      message: content.mensaje,
+      entity_type: content.entidadTipo ?? null,
+      entity_id: content.entidadId ?? null,
     })),
   })
 }
@@ -26,10 +29,10 @@ async function createNotifications(usuarioIds: number[], content: NotifyContent)
 export async function notifySuperadmins(
   content: NotifyContent & { excludeUsuarioId?: number | null }
 ) {
-  const superadmins = await prisma.usuario.findMany({
+  const superadmins = await prisma.user.findMany({
     where: {
-      rol: "SUPERADMIN",
-      activo: true,
+      role: "SUPERADMIN",
+      active: true,
       ...(content.excludeUsuarioId ? { id: { not: content.excludeUsuarioId } } : {}),
     },
     select: { id: true },
@@ -37,35 +40,54 @@ export async function notifySuperadmins(
   await createNotifications(superadmins.map((u) => u.id), content)
 }
 
-export async function notifyEmpresaRH(empresaId: number, content: NotifyContent) {
-  const rhUsers = await prisma.usuario.findMany({
-    where: { empresa_id: empresaId, rol: "RH", activo: true },
+export async function notifyCompanyRH(companyId: number, content: NotifyContent) {
+  const rhUsers = await prisma.user.findMany({
+    where: { company_id: companyId, role: "RH", active: true },
     select: { id: true },
   })
   await createNotifications(rhUsers.map((u) => u.id), content)
 }
 
 export async function notifyUsuarioByEmail(email: string, content: NotifyContent) {
-  const usuario = await prisma.usuario.findUnique({ where: { email }, select: { id: true } })
+  const usuario = await prisma.user.findUnique({ where: { email }, select: { id: true } })
   if (!usuario) return
   await createNotifications([usuario.id], content)
 }
 
-export async function notifyEmpleadoNewConstancias(empleadoId: number, cursoTitles: string[]) {
-  if (cursoTitles.length === 0) return
-  const empleado = await prisma.empleado.findUnique({ where: { id: empleadoId }, select: { email: true } })
-  if (!empleado) return
+export async function notifyEmployeeNewCertificates(
+  employeeId: number,
+  certificates: { courseName: string; certificateUrl: string }[]
+) {
+  if (certificates.length === 0) return
+  const employee = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: { email: true, first_name: true, last_name: true },
+  })
+  if (!employee) return
 
-  const mensaje =
-    cursoTitles.length === 1
-      ? `Tu constancia DC-3 de "${cursoTitles[0]}" ya está lista.`
-      : `Tienes ${cursoTitles.length} constancias DC-3 nuevas disponibles.`
+  const message =
+    certificates.length === 1
+      ? `Tu constancia DC-3 de "${certificates[0].courseName}" ya está lista.`
+      : `Tienes ${certificates.length} constancias DC-3 nuevas disponibles.`
 
-  await notifyUsuarioByEmail(empleado.email, {
+  await notifyUsuarioByEmail(employee.email, {
     tipo: "CONSTANCIA_LISTA",
     titulo: "Constancia DC-3 lista",
-    mensaje,
+    mensaje: message,
   })
+
+  try {
+    const { subject, html, text } = buildCertificateReadyEmail({
+      employeeName: `${employee.first_name} ${employee.last_name}`.trim(),
+      certificates,
+    })
+    await sendEmail({ to: employee.email, subject, html, text })
+  } catch (error) {
+    console.error("No se pudo enviar el correo de constancia lista", {
+      employeeId,
+      message: error instanceof Error ? error.message : String(error),
+    })
+  }
 }
 
 const PACKAGE_EXPIRY_WARNING_DAYS = 30
@@ -74,66 +96,92 @@ export async function checkAndNotifyExpiringPackages() {
   const now = new Date()
   const threshold = new Date(now.getTime() + PACKAGE_EXPIRY_WARNING_DAYS * 24 * 60 * 60 * 1000)
 
-  const expiring = await prisma.empresaPaquete.findMany({
+  const expiring = await prisma.companyPackage.findMany({
     where: {
-      activo: true,
-      fecha_vencimiento: { not: null, lte: threshold, gte: now },
+      active: true,
+      expiration_date: { not: null, lte: threshold, gte: now },
     },
     select: {
       id: true,
-      fecha_vencimiento: true,
-      empresa: { select: { id: true, nombre: true } },
+      expiration_date: true,
+      company: {
+        select: {
+          id: true,
+          name: true,
+          users: {
+            where: { role: "RH", active: true },
+            select: { name: true, email: true },
+          },
+        },
+      },
     },
   })
 
   for (const ep of expiring) {
-    const alreadyNotified = await prisma.notificacion.findFirst({
-      where: { tipo: "PAQUETE_POR_VENCER", entidad_id: ep.id },
+    const alreadyNotified = await prisma.notification.findFirst({
+      where: { type: "PAQUETE_POR_VENCER", entity_id: ep.id },
       select: { id: true },
     })
     if (alreadyNotified) continue
 
     const days = Math.max(
       0,
-      Math.ceil((ep.fecha_vencimiento!.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+      Math.ceil((ep.expiration_date!.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
     )
-    const diasLabel = `${days} día${days === 1 ? "" : "s"}`
+    const daysLabel = `${days} día${days === 1 ? "" : "s"}`
 
     await notifySuperadmins({
       tipo: "PAQUETE_POR_VENCER",
       titulo: "Paquete por vencer",
-      mensaje: `El paquete de ${ep.empresa.nombre} vence en ${diasLabel}.`,
+      mensaje: `El paquete de ${ep.company.name} vence en ${daysLabel}.`,
       entidadTipo: "EMPRESA_PAQUETE",
       entidadId: ep.id,
     })
 
-    await notifyEmpresaRH(ep.empresa.id, {
+    await notifyCompanyRH(ep.company.id, {
       tipo: "PAQUETE_POR_VENCER",
       titulo: "Tu paquete está por vencer",
-      mensaje: `Tu paquete vence en ${diasLabel}. Contacta a soporte para renovarlo.`,
+      mensaje: `Tu paquete vence en ${daysLabel}. Contacta a soporte para renovarlo.`,
       entidadTipo: "EMPRESA_PAQUETE",
       entidadId: ep.id,
     })
+
+    for (const rhUser of ep.company.users) {
+      try {
+        const { subject, html, text } = buildPackageExpiringEmail({
+          nombreRh: rhUser.name,
+          nombreEmpresa: ep.company.name,
+          daysLabel,
+        })
+        await sendEmail({ to: rhUser.email, subject, html, text })
+      } catch (error) {
+        console.error("No se pudo enviar el correo de paquete por vencer", {
+          companyPackageId: ep.id,
+          rhEmail: rhUser.email,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
   }
 }
 
-export async function getRecentNotifications(usuarioId: number, limit = 20) {
-  return prisma.notificacion.findMany({
-    where: { usuario_id: usuarioId },
+export async function getRecentNotifications(userId: number, limit = 20) {
+  return prisma.notification.findMany({
+    where: { user_id: userId },
     orderBy: { created_at: "desc" },
     take: limit,
   })
 }
 
-export async function getUnreadNotificationCount(usuarioId: number) {
-  return prisma.notificacion.count({
-    where: { usuario_id: usuarioId, leida: false },
+export async function getUnreadNotificationCount(userId: number) {
+  return prisma.notification.count({
+    where: { user_id: userId, read: false },
   })
 }
 
-export async function markAllNotificationsRead(usuarioId: number) {
-  await prisma.notificacion.updateMany({
-    where: { usuario_id: usuarioId, leida: false },
-    data: { leida: true },
+export async function markAllNotificationsRead(userId: number) {
+  await prisma.notification.updateMany({
+    where: { user_id: userId, read: false },
+    data: { read: true },
   })
 }

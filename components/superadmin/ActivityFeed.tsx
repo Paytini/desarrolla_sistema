@@ -2,17 +2,17 @@ import { Box, Chip, Stack, Typography } from "@mui/material"
 import { formatDateTime } from "@/lib/format"
 import { SectionCard } from "@/components/shared/SectionCard"
 
-export type AuditoriaItem = {
+export type ActivityItem = {
   id: number
-  actor_nombre: string
-  actor_rol: string
-  accion: string
-  entidad_tipo: string
-  resumen: string
+  actor_name: string
+  actor_role: string
+  action: string
+  entity_type: string
+  summary: string
   created_at: Date
 }
 
-const ACCION_META: Record<
+const ACTION_META: Record<
   string,
   { label: string; dotColor: string; bgColor: string; textColor: string }
 > = {
@@ -27,7 +27,7 @@ const ACCION_META: Record<
 
 const DEFAULT_META = { label: "Evento", dotColor: "#94a3b8", bgColor: "#f8fafc", textColor: "#64748b" }
 
-export function ActivityFeed({ items }: { items: AuditoriaItem[] }) {
+export function ActivityFeed({ items }: { items: ActivityItem[] }) {
   return (
     <SectionCard title="Actividad reciente" disableContentPadding>
       <Box sx={{ maxHeight: 360, overflowY: "auto" }}>
@@ -42,7 +42,7 @@ export function ActivityFeed({ items }: { items: AuditoriaItem[] }) {
             <Box sx={{ position: "absolute", left: 28, top: 16, bottom: 16, width: "1px", bgcolor: "#f1f5f9" }} />
             <Stack spacing={0}>
               {items.map((item) => {
-                const meta = ACCION_META[item.accion] ?? DEFAULT_META
+                const meta = ACTION_META[item.action] ?? DEFAULT_META
                 return (
                   <Stack
                     key={item.id}
@@ -88,10 +88,10 @@ export function ActivityFeed({ items }: { items: AuditoriaItem[] }) {
                         }}
                       />
                       <Typography sx={{ fontSize: 13, color: "text.primary" }}>
-                        {item.resumen}
+                        {item.summary}
                       </Typography>
                       <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
-                        · {item.actor_nombre}
+                        · {item.actor_name}
                       </Typography>
                     </Stack>
                     <Typography

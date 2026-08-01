@@ -23,13 +23,14 @@ import {
   getInitials,
   homeHrefForRole,
   isActive,
-  navEmpleado,
+  navEmployee,
   navRH,
   navSuperAdminSections,
   roleLabel,
   type NavItem,
   type Rol,
 } from "@/components/layout/nav-config"
+import { blobProxyUrl } from "@/lib/blob-proxy"
 
 const ACCENT_MAP: Record<string, string> = {
   "var(--brand)":            "#3579F5",
@@ -111,17 +112,21 @@ function MobileNavLink({
 
 export function MobileNav({
   rol,
-  nombre,
-  empresa,
+  name,
+  company,
+  companySlug,
+  companyLogoUrl,
 }: {
   rol: Rol
-  nombre: string
-  empresa?: string
+  name: string
+  company?: string
+  companySlug?: string
+  companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const initials = getInitials(nombre)
-  const homeHref = homeHrefForRole(rol)
+  const initials = getInitials(name)
+  const homeHref = homeHrefForRole(rol, companySlug)
 
   return (
     <>
@@ -165,17 +170,26 @@ export function MobileNav({
           }}
         >
           <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }} onClick={() => setOpen(false)}>
-            <Image
-              src="/assets/logo_desarrolla_cropped.png"
-              alt="Desarrolla360"
-              width={1554}
-              height={461}
-              style={{ height: 32, width: "auto", objectFit: "contain" }}
-            />
+            {(rol === "RH" || rol === "EMPLEADO") && companyLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
+              <img
+                src={blobProxyUrl(companyLogoUrl)}
+                alt={company ?? "Logo de la empresa"}
+                style={{ height: 32, width: "auto", maxWidth: 160, objectFit: "contain" }}
+              />
+            ) : (
+              <Image
+                src="/assets/logo_desarrolla_cropped.png"
+                alt="Desarrolla360"
+                width={1554}
+                height={461}
+                style={{ height: 32, width: "auto", objectFit: "contain" }}
+              />
+            )}
           </Link>
         </Box>
 
-        {empresa && rol !== "SUPERADMIN" && (
+        {company && rol !== "SUPERADMIN" && (
           <Box
             sx={{
               mx: 1.5,
@@ -193,7 +207,7 @@ export function MobileNav({
               Empresa
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {empresa}
+              {company}
             </Typography>
           </Box>
         )}
@@ -233,7 +247,7 @@ export function MobileNav({
             ))
           ) : (
             <List disablePadding>
-              {(rol === "RH" ? navRH : navEmpleado).map((item) => (
+              {(rol === "RH" ? navRH(companySlug ?? "") : navEmployee).map((item) => (
                 <MobileNavLink
                   key={item.href}
                   item={item}
@@ -282,7 +296,7 @@ export function MobileNav({
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {nombre}
+              {name}
             </Typography>
             <Typography sx={{ fontSize: "0.6875rem", color: "text.secondary" }}>
               {roleLabel[rol]}

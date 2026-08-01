@@ -15,13 +15,14 @@ import Typography from "@mui/material/Typography"
 import {
   homeHrefForRole,
   isActive,
-  navEmpleado,
+  navEmployee,
   navRH,
   navSuperAdminSections,
   type NavItem,
   type Rol,
 } from "@/components/layout/nav-config"
 import { kpiColorMap } from "@/lib/kpi-colors"
+import { blobProxyUrl } from "@/lib/blob-proxy"
 
 const SIDEBAR_W = 288
 
@@ -113,11 +114,17 @@ function NavItemRow({
 
 export default function Sidebar({
   rol,
+  companySlug,
+  companyName,
+  companyLogoUrl,
 }: {
   rol: Rol
+  companySlug?: string
+  companyName?: string
+  companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
-  const homeHref  = homeHrefForRole(rol)
+  const homeHref  = homeHrefForRole(rol, companySlug)
 
   return (
     <Box
@@ -172,13 +179,22 @@ export default function Sidebar({
           }}
         >
           <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            <Image
-              src="/assets/logo_desarrolla_cropped.png"
-              alt="Desarrolla360"
-              width={1554}
-              height={461}
-              style={{ height: 36, width: "auto", objectFit: "contain" }}
-            />
+            {(rol === "RH" || rol === "EMPLEADO") && companyLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
+              <img
+                src={blobProxyUrl(companyLogoUrl)}
+                alt={companyName ?? "Logo de la empresa"}
+                style={{ height: 36, width: "auto", maxWidth: 180, objectFit: "contain" }}
+              />
+            ) : (
+              <Image
+                src="/assets/logo_desarrolla_cropped.png"
+                alt="Desarrolla360"
+                width={1554}
+                height={461}
+                style={{ height: 36, width: "auto", objectFit: "contain" }}
+              />
+            )}
           </Link>
         </Box>
 
@@ -210,7 +226,7 @@ export default function Sidebar({
             ))
           ) : (
             <List disablePadding>
-              {(rol === "RH" ? navRH : navEmpleado).map((item) => (
+              {(rol === "RH" ? navRH(companySlug ?? "") : navEmployee).map((item) => (
                 <NavItemRow key={item.href} item={item} pathname={pathname} />
               ))}
             </List>
@@ -219,7 +235,7 @@ export default function Sidebar({
 
         {rol === "SUPERADMIN" && (
           <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
-            <Link href="/superadmin/integracion" style={{ textDecoration: "none" }}>
+            <Link href="/superadmin/integration" style={{ textDecoration: "none" }}>
               <Box
                 sx={{
                   borderRadius: "14px",

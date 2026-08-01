@@ -10,6 +10,7 @@ export type BridgeHealthResponse = {
   tutor_rest_available: boolean
   service_user_configured: boolean
   learning_webhook_configured?: boolean
+  error_message?: string
 }
 
 export type BridgeUpsertEmployeeInput = {
@@ -59,6 +60,21 @@ export type BridgeCreateBundleResponse = {
   status: string
   visibility: string
   permalink: string
+  course_ids: number[]
+}
+
+export type BridgeUpdateBundleInput = {
+  bundleId: number
+  title?: string | null
+  description?: string | null
+  courseIds: number[]
+}
+
+export type BridgeUpdateBundleResponse = {
+  bundle_id: number
+  title: string
+  post_type: string
+  status: string
   course_ids: number[]
 }
 
@@ -347,6 +363,17 @@ export async function bridgeCreateBundle(input: BridgeCreateBundleInput) {
       description: input.description ?? "",
       course_ids: input.courseIds,
       visibility: input.visibility ?? "private",
+    }),
+  })
+}
+
+export async function bridgeUpdateBundle(input: BridgeUpdateBundleInput) {
+  return bridgeRequest<BridgeUpdateBundleResponse>(`/bundles/${input.bundleId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      title: input.title ?? undefined,
+      description: input.description ?? undefined,
+      course_ids: input.courseIds,
     }),
   })
 }

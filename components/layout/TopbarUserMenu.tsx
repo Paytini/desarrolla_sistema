@@ -14,15 +14,15 @@ import Typography from "@mui/material/Typography"
 import { avatarColor, getInitials, roleLabel, type Rol } from "@/components/layout/nav-config"
 
 interface TopbarUserMenuProps {
-  nombre: string
+  name: string
   rol: Rol
 }
 
-export function TopbarUserMenu({ nombre, rol }: TopbarUserMenuProps) {
+export function TopbarUserMenu({ name, rol }: TopbarUserMenuProps) {
   const [open, setOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
-  const color    = avatarColor(nombre)
-  const initials = getInitials(nombre)
+  const color    = avatarColor(name)
+  const initials = getInitials(name)
 
   return (
     <>
@@ -68,7 +68,7 @@ export function TopbarUserMenu({ nombre, rol }: TopbarUserMenuProps) {
               whiteSpace: "nowrap",
             }}
           >
-            {nombre}
+            {name}
           </Typography>
           <Typography
             sx={{
@@ -142,7 +142,7 @@ export function TopbarUserMenu({ nombre, rol }: TopbarUserMenuProps) {
                 </Avatar>
                 <Box sx={{ textAlign: "center" }}>
                   <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "text.primary", lineHeight: 1.3 }}>
-                    {nombre}
+                    {name}
                   </Typography>
                   <Typography sx={{ fontSize: "0.75rem", color: "text.secondary", mt: "2px" }}>
                     {roleLabel[rol]}
