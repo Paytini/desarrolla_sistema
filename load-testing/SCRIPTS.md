@@ -115,6 +115,45 @@ Al terminar, corta `db:watch` con Ctrl-C para ver el resumen de picos.
 
 ---
 
+### Escalera: Encontrar el techo de la máquina
+
+**Este es el escenario con el que debemos empezar** cuando no sabemos cuánta carga aguanta el entorno. Sube la presión por pasos y **se detiene en cuanto aparecen fallos**, porque el número que sirve es el último punto limpio, no el punto de colapso.
+
+```bash
+LT_COMPANIES=5 LT_EMPLOYEES_PER_COMPANY=100 npm run seed
+npm run check-target
+npm run db:watch -- --label ladder     # terminal D
+npm run simulate:ladder
+```
+
+Pasos por defecto: `1/s×120s×6p → 2/s×180s×8p → 4/s×180s×12p → 8/s×180s×12p`, cortando si el error supera el 5%.
+
+Termina con un resumen así:
+
+```
+ Paso | Usuarios/s | Fallidos | % error | p95     | Veredicto
+ 1    | 1          | 0        | 0.0%    | 837 ms  | OK
+ 2    | 3          | 4        | 6.7%    | 3985 ms | SUPERA EL UMBRAL
+
+ Techo sostenible en esta máquina: **1 usuarios/s**
+```
+
+Cada paso deja su propio JSON en `reports/raw/21-http-user-session-ladder-rN.json`, así que puedes compararlos entre sí con `npm run report <archivo>`.
+
+Ajustes:
+
+```bash
+LT_LADDER_MAX_ERROR_PCT=2 npm run simulate:ladder             # más estricto
+LT_LADDER_STEPS="0.5:120:4,1:120:6" npm run simulate:ladder   # empezar más abajo
+LT_LADDER_PAUSE_SEC=45 npm run simulate:ladder                # más respiro entre pasos
+```
+
+Formato de cada paso: `arrivalRate:duracionSeg:paginasPorSesion`.
+
+> **Por qué importa parar a tiempo.** Con `LT_HTTP_ARRIVAL_RATE=10` durante 300 s se crean 3,000 usuarios virtuales que, con los think times por defecto, iban a navegar ~10 minutos cada uno: ~6,000 sesiones simultáneas. En una corrida real así fallaron los 3,000 (`ERR_SOCKET_TIMEOUT`) y ninguno llegó siquiera a hacer login. Eso no mide capacidad, solo confirma que lo rompiste.
+
+---
+
 ### Avalancha de las 8:00 AM
 
 Siembra suficientes usuarios distintos para que la avalancha no reutilice siempre los mismos (Artillery cicla el CSV si se le acaban):
@@ -378,6 +417,13 @@ Con `--spike` cambia a `config.sim.spike` y usa `arrivalCount` en vez de `arriva
 
 Si defines `LT_TARGET_URL`, la inyecta como override para poder apuntar a un despliegue remoto sin editar los `.yml` (ver [TARGET-REMOTO.md](TARGET-REMOTO.md)).
 
+### `scripts/run-ladder.js` — `npm run simulate:ladder`
+Orquesta varias corridas de `run-http.js` con carga creciente y **corta en cuanto la tasa de error supera el umbral** (5% por defecto, `LT_LADDER_MAX_ERROR_PCT`). Devuelve el último punto sostenible.
+
+Pasa `LT_OUTPUT_LABEL` a cada paso para que no se pisen los resultados: cada uno queda en `reports/raw/21-http-user-session-ladder-rN.json`.
+
+Configurable con `LT_LADDER_STEPS` (lista `rate:duracion:paginas` separada por comas), `LT_LADDER_MAX_ERROR_PCT` y `LT_LADDER_PAUSE_SEC`.
+
 ### `scripts/run-browser.js` — `npm run simulate:browser`
 Modo observación. Traduce `config.sim.browser` a las opciones de lanzamiento de Playwright (`headless`, `slowMo`) y avisa de que este modo **no sirve para medir capacidad**. Limita a 10 navegadores: por encima de eso la máquina sufre y los números pierden sentido.
 
@@ -389,6 +435,21 @@ Ejecuta los 6 escenarios originales en secuencia y llama a `summarize.js`. Tarda
 
 ### `scripts/summarize.js`
 Convierte los JSON de `reports/raw/` en una tabla markdown con p50/p95/p99, throughput, tasa de error y veredicto contra umbrales. Tolera archivos corruptos o incompletos: avisa y sigue, en vez de tumbar el informe entero.
+
+### `scripts/report.js` — `npm run report`
+Convierte los resultados crudos en un reporte visual con gráficas mermaid: latencia p50/p95/p99 por ventana, throughput, errores, conexiones de Postgres y latencia de `/api/health`.
+
+```bash
+npm run report                                          # lo más reciente de reports/
+node scripts/report.js reports/raw/21-http-user-session.json
+node scripts/report.js <artillery.json> <db-watch.jsonl>  # cruza ambos — lo más útil
+```
+
+Escribe `reports/REPORTE-<nombre>.md`. Incluye tabla por endpoint (ordenada por p95), que es donde se ve si los usuarios murieron antes de llegar al login, y una sección de lectura que contrasta contra los umbrales del proyecto (p95 ≤ 3000 ms, error ≤ 5%).
+
+Las series se reducen a 14 puntos promediando por bloques para que las gráficas sean legibles; la forma de la curva se conserva pero los picos instantáneos se suavizan. `xychart-beta` no dibuja leyenda, por eso el script escribe debajo el orden de las series.
+
+La skill `loadtest-report` (en `.claude/skills/`) envuelve este script: lo ejecuta y añade la interpretación contra los hallazgos G-*.
 
 ### `scripts/db-watch.js` — `npm run db:watch`
 Instrumentación del lado servidor, para correr **en paralelo** a una carga. Cada 2 segundos consulta `pg_stat_activity` (conexiones totales, por estado, consulta más larga, bloqueadas) y cronometra `GET /api/health`.

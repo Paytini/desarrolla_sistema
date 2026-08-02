@@ -57,7 +57,10 @@ function buildOverrides() {
 }
 
 const overrides = buildOverrides()
-const outPath = path.join(rawDir, isSpike ? "21-http-user-session-spike.json" : "21-http-user-session.json")
+// LT_OUTPUT_LABEL permite que un orquestador (scripts/run-ladder.js) guarde el
+// resultado de cada paso en su propio archivo en vez de pisar el anterior.
+const outLabel = process.env.LT_OUTPUT_LABEL ? `-${process.env.LT_OUTPUT_LABEL}` : ""
+const outPath = path.join(rawDir, `21-http-user-session${isSpike ? "-spike" : ""}${outLabel}.json`)
 
 console.log("=".repeat(70))
 console.log(isSpike ? "MODO SPIKE — avalancha simultanea (arrivalCount + duration)" : "MODO HTTP — sesion reutilizada (capacidad)")

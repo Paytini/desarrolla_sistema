@@ -41,7 +41,7 @@ npm run mock-bridge          # terminal A — sustituye a WordPress
 
 npm run seed                 # terminal C
 npm run check-target         # ← si esto falla, para y revisa el diagnóstico
-npm run simulate:http
+npm run simulate:ladder      # empieza por aquí: encuentra cuánto aguanta tu máquina
 npm run teardown             # al terminar si se desea limpiar los datos sembrados
 ```
 
@@ -60,11 +60,13 @@ Secuencias completas por escenario (con la escala de siembra que le conviene a c
 | `npm run check-target` | Verifica que los 3 roles pueden autenticarse |
 | `npm run simulate:browser` | Observación: navegador visible, login por UI |
 | `npm run simulate:http` | Capacidad: HTTP puro con sesión reutilizada |
+| `npm run simulate:ladder` | **Escalera**: sube la carga por pasos y para al encontrar el techo |
 | `npm run simulate:spike` | Avalancha de las 8:00 AM (llegada simultánea) |
 | `npm run simulate:enrollment` | Enrolamiento masivo — hallazgo G-2 |
 | `npm run simulate:zip` | ZIP de constancias — hallazgo G-5 |
 | `npm run simulate:cache-storm` | Polling vs caché de superadmin — hallazgo G-4 |
 | `npm run db:watch` | Muestrea conexiones de Postgres durante una carga — hallazgo G-3 |
+| `npm run report` | Reporte visual con gráficas a partir de los resultados de una corrida |
 | `npm run run-all` | Los 6 escenarios originales + informe (~25-30 min) |
 
 Los hallazgos G-* son de [../docs-observability/INFORME-RENDIMIENTO.md](../docs-observability/INFORME-RENDIMIENTO.md); los resultados medidos están en [INFORME-LOADTEST-BASELINE.md](../docs-observability/INFORME-LOADTEST-BASELINE.md).

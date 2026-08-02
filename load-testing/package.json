@@ -12,10 +12,12 @@
     "simulate:browser": "node scripts/run-browser.js",
     "simulate:http": "node scripts/run-http.js",
     "simulate:spike": "node scripts/run-http.js --spike",
+    "simulate:ladder": "node scripts/run-ladder.js",
     "simulate:enrollment": "node scripts/run-scenario.js 30-mass-enrollment",
     "simulate:zip": "node scripts/run-scenario.js 31-zip-constancias",
     "simulate:cache-storm": "node scripts/run-scenario.js 32-cache-invalidation-storm",
-    "db:watch": "node scripts/db-watch.js"
+    "db:watch": "node scripts/db-watch.js",
+    "report": "node scripts/report.js"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1101.0",
