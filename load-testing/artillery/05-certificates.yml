@@ -1,0 +1,68 @@
+config:
+  # Artillery's template engine does not support the `||` fallback expression
+  # (confirmed empirically in task 9: with LT_TARGET_URL unset this resolves to
+  # an empty string). Hardcoded. Only localhost:3005 is an approved target.
+  target: "http://localhost:3005"
+  processor: "./processor.js"
+  payload:
+    - path: "../data/payloads/certificates.csv"
+      fields: ["certId", "email", "password"]
+      skipHeader: true
+      order: random
+    - path: "../data/payloads/rh-credentials.csv"
+      fields: ["rhEmail", "rhPassword", "rhSlug"]
+      skipHeader: true
+      order: random
+  phases:
+    - duration: 60
+      arrivalRate: 2
+      name: "warmup"
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 10
+      name: "descargas"
+  plugins:
+    ensure: {}
+    expect: {}
+  ensure:
+    thresholds:
+      - "http.response_time.p95": 4000
+    maxErrorRate: 2
+scenarios:
+  - name: "empleado-descarga-dc3"
+    weight: 9
+    flow:
+      - function: "setDummyToken"
+      - get:
+          url: "/api/auth/csrf"
+          capture: [{ json: "$.csrfToken", as: "csrfToken" }]
+      - post:
+          url: "/api/auth/callback/credentials"
+          form:
+            csrfToken: "{{ csrfToken }}"
+            email: "{{ email }}"
+            password: "{{ password }}"
+            turnstileToken: "{{ turnstileToken }}"
+      - get:
+          url: "/api/certificates/{{ certId }}/dc3"
+          expect:
+            - statusCode: 200
+            - contentType: "application/pdf"
+  - name: "rh-descarga-zip"
+    weight: 1
+    flow:
+      - function: "setDummyToken"
+      - get:
+          url: "/api/auth/csrf"
+          capture: [{ json: "$.csrfToken", as: "csrfToken" }]
+      - post:
+          url: "/api/auth/callback/credentials"
+          form:
+            csrfToken: "{{ csrfToken }}"
+            email: "{{ rhEmail }}"
+            password: "{{ rhPassword }}"
+            turnstileToken: "{{ turnstileToken }}"
+      - get:
+          url: "/api/certificates/zip"
+          expect:
+            - statusCode: 200

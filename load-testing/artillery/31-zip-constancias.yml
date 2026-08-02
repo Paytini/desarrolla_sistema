@@ -1,0 +1,55 @@
+config:
+  # Artillery's template engine does not support the `||` fallback expression
+  # (confirmed empirically in sibling scenario files). Hardcoded. Only
+  # localhost:3005 is an approved target.
+  target: "http://localhost:3005"
+  # Reused as-is (read-only) — setDummyToken is the only helper this scenario
+  # needs and it already lives here; no reason to duplicate it into
+  # processor-gaps.js.
+  processor: "./processor.js"
+  payload:
+    path: "../data/payloads/rh-credentials.csv"
+    fields: ["email", "password", "slug"]
+    skipHeader: true
+    order: random
+  phases:
+    # G-5: /api/certificates/zip generates every DC-3 PDF serially, in memory,
+    # with no cap. The point of this scenario is NOT volume — it's proving the
+    # endpoint is expensive even at low concurrency, then checking whether
+    # that cost compounds when a few requests overlap.
+    - duration: 30
+      arrivalCount: 3
+      name: "baseline-secuencial (~1 cada 10s, un solo request en vuelo la mayor parte del tiempo)"
+    - pause: 5
+    - duration: 8
+      arrivalCount: 3
+      name: "variante-2-3-concurrentes (3 llegan casi juntas)"
+  plugins:
+    ensure: {}
+    expect: {}
+  ensure:
+    # Generous — this is a known-expensive route under audit, not a route
+    # we're pass/fail gating. p95 threshold is a smoke check, not a target.
+    thresholds:
+      - "http.response_time.p95": 20000
+    maxErrorRate: 50
+scenarios:
+  - name: "rh-descarga-zip-constancias"
+    flow:
+      - function: "setDummyToken"
+      - get:
+          url: "/api/auth/csrf"
+          capture:
+            - json: "$.csrfToken"
+              as: "csrfToken"
+      - post:
+          url: "/api/auth/callback/credentials"
+          form:
+            csrfToken: "{{ csrfToken }}"
+            email: "{{ email }}"
+            password: "{{ password }}"
+            turnstileToken: "{{ turnstileToken }}"
+      - get:
+          url: "/api/certificates/zip"
+          expect:
+            - statusCode: 200

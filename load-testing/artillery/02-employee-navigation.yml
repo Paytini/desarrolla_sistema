@@ -1,0 +1,28 @@
+config:
+  # Artillery's template engine does not support the `||` fallback expression
+  # (confirmed empirically in task 9: with LT_TARGET_URL unset this resolves to
+  # an empty string). Hardcoded. Only localhost:3005 is an approved target.
+  target: "http://localhost:3005"
+  processor: "./flows.js"
+  engines:
+    playwright: {}
+  payload:
+    path: "../data/payloads/employee-credentials.csv"
+    fields: ["email", "password"]
+    skipHeader: true
+    order: random
+  phases:
+    - duration: 60
+      arrivalRate: 1
+      name: "warmup"
+    - duration: 180
+      arrivalRate: 2
+      rampTo: 6
+      name: "normal"
+  ensure:
+    maxErrorRate: 5
+  plugins:
+    ensure: {}
+scenarios:
+  - engine: playwright
+    testFunction: "employeeJourney"

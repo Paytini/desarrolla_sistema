@@ -1,0 +1,41 @@
+config:
+  # Artillery's template engine does not support the `||` fallback expression
+  # (confirmed empirically in sibling scenario files). Hardcoded. Only
+  # localhost:3005 is an approved target.
+  target: "http://localhost:3005"
+  processor: "./processor-gaps.js"
+  engines:
+    playwright:
+      launchOptions:
+        headless: true
+        args: ["--disable-dev-shm-usage"]
+      contextOptions:
+        viewport: { width: 1366, height: 850 }
+      # Generous defaults: the button click itself is instant, but the
+      # subsequent server-action wall time (the thing under test) is handled
+      # with an explicit 300s waitForURL timeout in processor-gaps.js, not
+      # these Playwright per-action defaults.
+      defaultNavigationTimeout: 30
+      defaultTimeout: 20
+  phases:
+    # Deliberately a single VU: this scenario proves out G-2 (3N sequential
+    # bridge calls with no concurrency limit) by sweeping the sync button for
+    # every seeded LT company (39/40/41, 40 employees each) back-to-back and
+    # measuring real wall time per company. Running many VUs concurrently
+    # would just race multiple full-company syncs against each other and
+    # muddy the number we actually care about (how long ONE assign-package
+    # sync takes today). Bump arrivalCount if you want repeated sweeps.
+    - duration: 5
+      arrivalCount: 1
+      name: "mass-enrollment-sweep (3 empresas LT x 40 empleados)"
+  ensure:
+    # No pass/fail gate here on purpose — this scenario exists to observe and
+    # report a real number (does it finish, how long does it take), not to
+    # enforce a threshold. See docs-observability/INFORME-RENDIMIENTO.md G-2.
+    maxErrorRate: 100
+  plugins:
+    ensure: {}
+scenarios:
+  - name: "sync todas las empresas LT (paquete -> empleados)"
+    engine: playwright
+    testFunction: "massEnrollmentSweep"

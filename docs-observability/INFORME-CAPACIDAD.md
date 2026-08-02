@@ -23,12 +23,14 @@ Supuestos de la estimación:
 | WordPress/Tutor LMS | responde el bridge en ~300 ms caliente, 6+ s frío (medido) |
 | Streaming de video | **no cuenta contra el portal** — lo sirve WordPress directamente (verificado con Playwright) |
 
-**Dónde muere primero la app (en orden, según el análisis):**
-1. Conexiones a Postgres (pool sin límite × lambdas concurrentes) — G-3.
-2. Invalidación de caché global cada 15 s → la query unbounded del superadmin se re-ejecuta sin parar — G-4.
-3. Amplificación del polling: 4 POST/min por pestaña de empleado abierta — G-4.
-4. CPU de bcrypt en bursts de login — A-1.
-5. WordPress PHP (el bridge) como dependencia lenta sin timeout — G-1.
+> **Actualización 2026-08-02:** este orden se basaba en análisis de código. Tras las pruebas de carga reales ([INFORME-LOADTEST-BASELINE.md](INFORME-LOADTEST-BASELINE.md)) queda corregido — el punto 2 original resultó falso.
+
+**Dónde muere primero la app (orden corregido con medición):**
+1. **CPU del login** — 950 ms por login, dominado por bcryptjs. Es lo primero que satura: a 30 usuarios llegando en 5 s el p95 del login sube a 5,379 ms. *(A-1)*
+2. **Conexiones a Postgres** — medidas acumulándose de 12 a 20 sin liberarse tras el pico, con `EAUTHTIMEOUT` en el log. La instancia tiene `max_connections = 60`. *(G-3)*
+3. **Operaciones administrativas largas** — enrolar 40 empleados tarda 144 s, muy por encima de cualquier presupuesto serverless. *(G-2)*
+4. **WordPress PHP** como dependencia lenta sin timeout en el camino crítico. *(G-1)*
+5. Volumen de polling: 4 POST/min por pestaña abierta — desperdicio real, aunque **no** destruye la caché del superadmin como se creyó. *(G-4, corregido)*
 
 ---
 

@@ -1,0 +1,29 @@
+{
+  "name": "d360-load-testing",
+  "private": true,
+  "description": "Seeders y load tests (Artillery + Playwright) del Portal Desarrolla360. NO tocar codigo de la app.",
+  "scripts": {
+    "verify": "node seeders/00-verify-connection.js",
+    "seed": "node seeders/01-seed-catalog.js && node seeders/02-seed-companies.js && node seeders/03-seed-employees.js && node seeders/04-generate-csv.js",
+    "teardown": "node seeders/99-teardown.js",
+    "mock-bridge": "node mock-bridge/server.js",
+    "check-target": "node scripts/check-target.js",
+    "run-all": "node scripts/run-all.js",
+    "simulate:browser": "node scripts/run-browser.js",
+    "simulate:http": "node scripts/run-http.js",
+    "simulate:spike": "node scripts/run-http.js --spike",
+    "simulate:enrollment": "node scripts/run-scenario.js 30-mass-enrollment",
+    "simulate:zip": "node scripts/run-scenario.js 31-zip-constancias",
+    "simulate:cache-storm": "node scripts/run-scenario.js 32-cache-invalidation-storm",
+    "db:watch": "node scripts/db-watch.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.1101.0",
+    "artillery": "^2.0.0",
+    "bcryptjs": "^3.0.0",
+    "dotenv": "^16.4.0",
+    "pg": "^8.13.0",
+    "playwright": "^1.62.1",
+    "sharp": "^0.35.3"
+  }
+}

@@ -16,13 +16,16 @@ Informe complementario: [INFORME-CAPACIDAD.md](INFORME-CAPACIDAD.md) — estimac
 
 ## 1. Resumen ejecutivo
 
-El MVP tiene una arquitectura de base **correcta** (espejo local de datos académicos, JWT sin estado, streaming de cursos delegado a Tutor LMS), pero hay **5 hallazgos graves** que hoy limitan la app a unos pocos cientos de usuarios concurrentes y hacen fallar operaciones administrativas medianas (sincronizar un paquete a 50+ empleados, importar CSV de 200 filas, descargar ZIP de constancias de una empresa grande):
+> **Estado de validación (2026-08-02).** Los hallazgos de este informe se sometieron después a pruebas de carga reales ([INFORME-LOADTEST-BASELINE.md](INFORME-LOADTEST-BASELINE.md)). Resultado: **G-1, G-2, G-3, A-1, A-3 confirmados con medición**; **G-4 refutado** y rebajado a Media (ver su sección); **G-5 confirmado en dirección** pero sin llegar al caso catastrófico. Las secciones corregidas están marcadas.
 
-1. **Ninguna llamada HTTP a WordPress tiene timeout** — un WP lento congela la petición del usuario hasta que Vercel mata la función.
-2. **Enrolamiento masivo secuencial**: 3 llamadas HTTP a WP *por empleado*, una tras otra, sin `maxDuration` configurado.
-3. **Pool de conexiones a Supabase sin límites reales** — `connection_limit=1` en la URL es ignorado por el adapter `pg`; cada lambda abre hasta 10 conexiones y en producción ni siquiera se reutiliza el singleton.
-4. **La caché del dashboard superadmin se destruye cada 15 segundos** por el polling de cualquier empleado con una pestaña abierta, y esa caché protege la query más pesada de la app (todas las empresas × empleados × cursos, sin límite).
-5. **Ruta ZIP de constancias**: genera N PDFs en serie, sin tope, todo en memoria — OOM/timeout garantizado en empresas grandes.
+El MVP tiene una arquitectura de base **correcta** (espejo local de datos académicos, JWT sin estado, streaming de cursos delegado a Tutor LMS), pero hay **4 hallazgos graves** que hoy limitan la app y hacen fallar operaciones administrativas medianas (sincronizar un paquete a 40+ empleados, importar CSV de 200 filas, descargar ZIP de constancias de una empresa grande):
+
+1. **Ninguna llamada HTTP a WordPress tiene timeout** — un WP lento congela la petición del usuario hasta que Vercel mata la función. ✅ *Confirmado: bajo carga, las llamadas salientes fallaron masivamente.*
+2. **Enrolamiento masivo secuencial**: 3 llamadas HTTP a WP *por empleado*, una tras otra, sin `maxDuration`. ✅ *Confirmado y peor de lo estimado: **144 s de media** para 40 empleados.*
+3. **Pool de conexiones a Supabase sin límites reales** — `connection_limit=1` en la URL es ignorado por el adapter `pg`; cada lambda abre hasta 10 conexiones y en producción ni siquiera se reutiliza el singleton. ✅ *Confirmado: conexiones acumulándose de 12 a 20 sin liberarse, y error `EAUTHTIMEOUT / 08006` en el log. La instancia tiene `max_connections = 60`.*
+4. **Ruta ZIP de constancias**: genera N PDFs en serie, sin tope, todo en memoria. ⚠️ *Confirmado en dirección (~500 ms por PDF, sin paralelismo), no se reprodujo el OOM por falta de datos a escala.*
+
+~~5. La caché del dashboard superadmin se destruye cada 15 segundos por el polling.~~ **Refutado por medición** — ver G-4.
 
 Nada de esto requiere romper el monolito. Las soluciones recomendadas son cambios dentro de la misma app Next.js + configuración de Vercel (crons, `after()`, tabla de jobs), más un endpoint batch en el plugin de WordPress.
 
@@ -103,16 +106,24 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 
 ---
 
-### 🔴 G-4. Polling de empleados invalida la caché global del superadmin cada 15 s
+### 🟡 G-4. Polling de empleados — ~~invalida la caché global del superadmin~~ **CORREGIDO: refutado por medición**
 
-**Evidencia:** `EmployeeLearningRefresh` se monta con `pollIntervalMs={15_000}` en las 2 páginas de empleado; cada poll llama `POST /api/employee/learning/refresh`, que ejecuta `revalidateTag(SUPERADMIN_GLOBAL_TAG)` (route:59-60). Ese tag protege los **5 snapshots** de superadmin, incluido [dashboard-cache.ts:18-54](../lib/dashboard-cache.ts#L18): `company.findMany` con `employees → courses` anidados **sin `take`** — todas las empresas × empleados × cursos del sistema. 37 sitios de invalidación en total.
+> ⚠️ **Corrección del 2026-08-02.** Este hallazgo se publicó como 🔴 Grave. La prueba de carga [`32-cache-invalidation-storm`](../load-testing/artillery/32-cache-invalidation-storm.yml) lo **refutó** y se rebaja a 🟡 Media. Se deja el texto corregido en vez de borrarlo para que quede el registro.
 
-**Impacto:** con un solo empleado con pestaña abierta, la caché de superadmin muere cada 15 s y cada visita de superadmin re-ejecuta la query más cara de la app. Con 1,000 pestañas abiertas: ~67 invalidaciones/s + 4,000 POSTs/min de polling. A 100k usuarios esto es, por sí solo, un DoS interno contra Postgres.
+**Lo que se afirmó:** que cada poll de empleado destruía la caché de los 5 dashboards de superadmin, obligando a re-ejecutar la query más pesada de la app cada 15 s.
 
-**Soluciones:**
-1. **(Recomendada, 2 cambios quirúrgicos)** (a) El refresh de empleado solo debe invalidar **sus** tags (`companyCacheRootTag` de su empresa), nunca `SUPERADMIN_GLOBAL_TAG` — los snapshots superadmin ya tienen `revalidate: 45-90 s`, la frescura llega sola. (b) Subir el poll a 60 s + jitter y pausarlo cuando la pestaña no está visible (ya detectan visibilidad).
-2. Lo anterior + reemplazar el polling por refresco dirigido por webhook: el webhook de Tutor ya avisa cuándo cambió algo; el cliente solo necesita re-consultar cuando `latestSyncAt` cambie (endpoint ligero HEAD/ETag en vez de sync forzado).
-3. Server-Sent Events para push real. No encaja bien en serverless Vercel — descartada salvo necesidad de UX en vivo.
+**Por qué era incorrecto:** la llamada es `revalidateTag(SUPERADMIN_GLOBAL_TAG, **"max"**)` ([refresh/route.ts:60](../app/api/employee/learning/refresh/route.ts#L60)). En Next.js 16 ese segundo argumento cambia por completo el mecanismo: con un perfil (`"max"`) el tag se marca **stale** y se sirve con *stale-while-revalidate* — el contenido viejo sale de inmediato y la actualización ocurre en segundo plano. Solo **sin** el segundo argumento (forma ya deprecada) se produce la expiración inmediata y el fallo de caché bloqueante que yo asumí. Verificado en la documentación oficial de Next.js y en el código fuente de `revalidate.ts`.
+
+**Medición que lo confirma:** dos corridas completas con 60 empleados haciendo poll al intervalo real de 15 s, contra una corrida de control sin ningún poller. **Delta en la latencia de las páginas de superadmin: ~0 ms.** El `git blame` confirma que el argumento `"max"` está en el código desde mayo de 2026, o sea antes de esta auditoría.
+
+**Lo que sí queda en pie (por eso Media y no Baja):**
+- El **volumen de polling** es real y desperdiciado: cada pestaña de empleado abierta genera 4 POST/min, cada uno con sus queries de cooldown y su recálculo. Con 10,000 pestañas son 40,000 POST/min que no aportan nada mientras no haya cambios.
+- El **recálculo en segundo plano** de la query sin `take` sigue costando CPU y base de datos; simplemente no bloquea al usuario que pide la página. No se midió su costo — haría falta instrumentación del lado de la base de datos.
+
+**Soluciones (revisadas a la baja):**
+1. **(Recomendada)** Subir el poll a 60 s + jitter y pausarlo con la pestaña oculta (ya detectan visibilidad). Reduce el tráfico inútil ÷4 sin tocar el mecanismo de caché.
+2. Refresco dirigido por webhook en vez de polling: el webhook de Tutor ya avisa cuándo cambió algo; el cliente solo consulta cuando `latestSyncAt` cambia (endpoint ligero con ETag).
+3. Acotar la query de [dashboard-cache.ts:18-54](../lib/dashboard-cache.ts#L18) (ver A-4) para que el recálculo en segundo plano sea barato. Es la solución de fondo.
 
 ---
 
@@ -265,7 +276,7 @@ Pregunta directa del negocio: **sí se puede, y sin salir del monolito.** Herram
 |---|---|---|
 | 1 | Timeout + retry en `bridgeRequest` | G-1 |
 | 2 | Pool `pg` configurado + singleton en prod + Prisma fuera del proxy | G-3 |
-| 3 | Quitar `revalidateTag` global del refresh de empleado + poll a 60 s | G-4 |
+| 3 | Poll a 60 s + jitter + pausa con pestaña oculta (ya NO hace falta tocar `revalidateTag`: ver corrección en G-4) | G-4 |
 | 4 | `bcrypt` nativo + `last_access` en `after()` + quitar fetch de sesión redundante | A-1, A-2 (parcial) |
 | 5 | Migración de índices | M-2 |
 | 6 | `regions` + `maxDuration` en vercel.json/rutas | M-4 |
