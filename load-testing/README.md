@@ -41,7 +41,7 @@ npm run mock-bridge          # terminal A — sustituye a WordPress
 
 npm run seed                 # terminal C
 npm run check-target         # ← si esto falla, para y revisa el diagnóstico
-npm run simulate:ladder      # empieza por aquí: encuentra cuánto aguanta tu máquina
+npm run simulate:ladder      # Comenzar por aquí: encuentra cuánto aguanta tu máquina
 npm run teardown             # al terminar si se desea limpiar los datos sembrados
 ```
 
