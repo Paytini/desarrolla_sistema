@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Avatar,
   Box,
@@ -21,6 +22,7 @@ import { alpha } from "@mui/material/styles"
 import { Pause, Play, Trash2, Users, UserX, type LucideIcon } from "lucide-react"
 import { ConfirmIconButton } from "@/components/shared/ConfirmIconButton"
 import { SearchInput } from "@/components/shared/SearchInput"
+import { Pagination } from "@/components/shared/Pagination"
 import { getInitials } from "@/components/layout/nav-config"
 import { deleteEmployeeAsSuperAdminAction, toggleRhUserStatusAction } from "@/app/(portal)/superadmin/access/actions"
 
@@ -172,15 +174,45 @@ function EmptyState({ icon: Icon, label }: { icon: LucideIcon; label: string }) 
   )
 }
 
+type EmployeePagination = {
+  currentPage: number
+  totalPages: number
+  totalResults: number
+}
+
 type AccessTabsProps = {
   rhUsers: HrAccessRow[]
   employees: EmployeeAccessRow[]
+  defaultTab?: "rh" | "employees"
+  employeeSearch: string
+  employeesGrandTotal: number
+  employeePagination: EmployeePagination
 }
 
-export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
-  const [tab, setTab]         = useState<"rh" | "employees">("rh")
+export function AccessTabs({
+  rhUsers,
+  employees,
+  defaultTab = "rh",
+  employeeSearch,
+  employeesGrandTotal,
+  employeePagination,
+}: AccessTabsProps) {
+  const router = useRouter()
+  const [tab, setTab]         = useState<"rh" | "employees">(defaultTab)
   const [rhSearch, setRhSearch]   = useState("")
-  const [employeeSearch, setEmployeeSearch] = useState("")
+
+  function handleTabChange(value: "rh" | "employees") {
+    setTab(value)
+    router.replace(value === "employees" ? "/superadmin/access?tab=employees" : "/superadmin/access", { scroll: false })
+  }
+
+  function buildEmployeePageUrl(page: number) {
+    const qs = new URLSearchParams()
+    qs.set("tab", "employees")
+    if (employeeSearch) qs.set("q", employeeSearch)
+    if (page > 1) qs.set("page", String(page))
+    return `/superadmin/access?${qs.toString()}`
+  }
 
   const filteredRh = rhSearch.trim()
     ? rhUsers.filter((u) => {
@@ -193,23 +225,11 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
       })
     : rhUsers
 
-  const filteredEmployees = employeeSearch.trim()
-    ? employees.filter((e) => {
-        const q = employeeSearch.toLowerCase()
-        return (
-          e.name.toLowerCase().includes(q) ||
-          e.lastName.toLowerCase().includes(q) ||
-          e.email.toLowerCase().includes(q) ||
-          e.companyName.toLowerCase().includes(q)
-        )
-      })
-    : employees
-
   return (
     <Paper elevation={0} sx={{ borderRadius: '8px', backgroundColor: '#FFFFFF' }}>
-      <Tabs value={tab} onChange={(_, value: "rh" | "employees") => setTab(value)} sx={{ px: 2.5, pt: 1, borderBottom: '1px solid #E5E7EB' }}>
+      <Tabs value={tab} onChange={(_, value: "rh" | "employees") => handleTabChange(value)} sx={{ px: 2.5, pt: 1, borderBottom: '1px solid #E5E7EB' }}>
         <Tab value="rh" label={`Usuarios RH (${rhUsers.length})`} />
-        <Tab value="employees" label={`Empleados (${employees.length})`} />
+        <Tab value="employees" label={`Empleados (${employeesGrandTotal})`} />
       </Tabs>
 
       {tab === "rh" && (
@@ -300,16 +320,19 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
               title="Empleados del portal"
               description="Elimina accesos cuando sea necesario liberar una cuenta."
             />
-            <SearchInput
-              value={employeeSearch}
-              onChange={setEmployeeSearch}
-              placeholder="Buscar por nombre, email o empresa…"
-              width={280}
-            />
+            <Box component="form" method="GET" action="/superadmin/access" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <input type="hidden" name="tab" value="employees" />
+              <SearchInput
+                name="q"
+                defaultValue={employeeSearch}
+                placeholder="Buscar por nombre, email o empresa…"
+                width={280}
+              />
+            </Box>
           </Box>
-          {employees.length === 0 ? (
+          {employeePagination.totalResults === 0 && !employeeSearch ? (
             <EmptyState icon={UserX} label="Aún no hay empleados registrados." />
-          ) : filteredEmployees.length === 0 ? (
+          ) : employees.length === 0 ? (
             <EmptyState icon={UserX} label={`Sin resultados para "${employeeSearch}".`} />
           ) : (
             <Table>
@@ -326,7 +349,7 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredEmployees.map((employee) => (
+                {employees.map((employee) => (
                   <TableRow key={employee.id} hover>
                     <TableCell sx={cellSx}>
                       <RowIdentity
@@ -384,6 +407,14 @@ export function AccessTabs({ rhUsers, employees }: AccessTabsProps) {
             </Table>
           )}
         </Stack>
+      )}
+      {tab === "employees" && employees.length > 0 && (
+        <Pagination
+          currentPage={employeePagination.currentPage}
+          totalPages={employeePagination.totalPages}
+          totalResults={employeePagination.totalResults}
+          buildPageUrl={buildEmployeePageUrl}
+        />
       )}
     </Paper>
   )
