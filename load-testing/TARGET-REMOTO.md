@@ -6,16 +6,26 @@ Para medir capacidad de verdad hay que apuntar la suite a un **despliegue real e
 
 ---
 
-## Por qué un *preview*, nunca producción
+## Preview o producción: qué cambia
 
-| | Preview | Producción |
+| | Preview | `empresas.desarrolla360.com` |
 |---|---|---|
-| Datos | Los mismos de Supabase, pero puedes usar una branch de base de datos | Datos reales de clientes |
-| Turnstile | Puedes desplegar con las claves de prueba | Captcha real → los logins scriptados no pasan |
-| Bridge WordPress | Puedes apuntarlo a un mock | Toda la carga golpea el WP real de producción |
-| Costo | Cuenta contra tu plan Vercel igual | Además degrada el servicio a usuarios reales |
+| Base de datos | Puedes usar una branch de Supabase aparte | **La base real** — aunque el portal esté en modo de prueba |
+| Turnstile | Despliegas con las claves de prueba | Depende de cómo esté configurado hoy |
+| Bridge WordPress | Lo apuntas al mock | Apunta al WordPress real salvo que lo cambies |
+| Impacto de un error | Ninguno | Datos y servicio reales |
 
-**Nunca** apuntes una corrida de carga a `https://empresas.desarrolla360.com`. Los escenarios de este repo tienen el target fijado a `localhost:3005` justamente para que no ocurra por accidente.
+**Estado actual (2026-08-02):** `empresas.desarrolla360.com` está en modo de prueba, sin clientes reales usándolo. Eso hace que apuntarle una carga sea **posible**, no automáticamente inocuo. Antes de hacerlo, comprueba tres cosas:
+
+1. **¿A qué base apunta?** Si es la misma Supabase de siempre, los seeders escribirán ahí. El namespace aislado protege los datos reales (ya hay filas reales en esa base — empresas y empleados de pruebas comerciales), pero cualquier error de configuración se paga con datos de verdad.
+2. **¿A qué bridge apunta?** Si `WP_BRIDGE_BASE_URL` sigue apuntando a `betatutorlms.desarrolla360.com`, toda la carga cae sobre ese WordPress — que en frío tarda 6+ s. Para una prueba de capacidad del portal, quieres el mock.
+3. **¿Turnstile en modo prueba?** Con el captcha real, ningún login scriptado pasa y la corrida no mide nada.
+
+Si las tres respuestas te convienen, adelante. Si alguna no, un preview te da el mismo dato sin el riesgo.
+
+> Los `.yml` tienen el target fijado a `localhost:3005` a propósito: apuntar fuera exige poner `LT_TARGET_URL` de forma explícita. Es una decisión consciente, no un accidente.
+
+**Cuando el portal salga de modo de prueba**, esta sección deja de aplicar: vuelve a ser preview siempre.
 
 ---
 
@@ -40,8 +50,6 @@ DIRECT_URL="..."
 BRIDGE_WEBHOOK_SECRET="lt-webhook-secret"
 CRON_SECRET="lt-cron-secret"
 ```
-
-> ⚠️ Antes del primer deploy: `npm install @aws-sdk/client-ses sharp`. Ambas se importan pero no están declaradas en `package.json` — el build de Vercel falla sin ellas (ver INFORME-LOADTEST-BASELINE.md §6).
 
 ### 2. Exponer el mock del bridge
 

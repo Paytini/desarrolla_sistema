@@ -94,7 +94,9 @@ Resultados crudos generados por la suite (`load-testing/reports/INFORME-LOADTEST
 
 ---
 
-## 6. Hallazgo adicional (no previsto): la app no compila
+## 6. Hallazgo adicional (no previsto): la app no compilaba — ✅ RESUELTO
+
+> **Actualización 2026-08-02:** resuelto por el equipo poco después de detectarlo. Se deja el registro porque explica por qué la baseline se corrió con un `npm install --no-save`.
 
 Al preparar el entorno, `npm run build` **falló**:
 
@@ -102,16 +104,16 @@ Al preparar el entorno, `npm run build` **falló**:
 Module not found: Can't resolve '@aws-sdk/client-ses'
 ```
 
-Dos dependencias se importan pero **no están declaradas en `package.json` ni en `package-lock.json` ni instaladas**:
+Estado verificado de las dos dependencias que se importan sin declarar:
 
-| Paquete | Importado en |
-|---|---|
-| `@aws-sdk/client-ses` | `lib/ses.ts:1` |
-| `sharp` | `lib/dc3-pdf.ts:3`, `app/api/upload/company-logo/route.ts:2`, `app/api/upload/instructor-signature/route.ts:2` |
+| Paquete | Importado en | Estado hoy |
+|---|---|---|
+| `@aws-sdk/client-ses` | `lib/ses.ts:1` | ✅ **Declarado** en `package.json` (`^3.1097.0`). Corregido. |
+| `sharp` | `lib/dc3-pdf.ts:3`, `app/api/upload/company-logo/route.ts:2`, `app/api/upload/instructor-signature/route.ts:2` | ⚠️ Sigue sin declarar, pero **resuelve** como `optionalDependency` de Next.js (0.34.5). El build funciona. |
 
-**El próximo deploy desde esta rama fallará.** Se instalaron con `npm install --no-save` solo para poder correr las pruebas (sin tocar `package.json`). Esto amplía el hallazgo **M-6** del informe de rendimiento, que solo mencionaba `sharp`.
+**Qué queda pendiente, y con qué gravedad real:** importar `sharp` sin declararlo funciona hoy solo porque Next lo arrastra. Se rompería con `npm install --no-optional`, en un entorno donde el binario nativo no compile, o si una versión futura de Next dejara de incluirlo. No es un bloqueo — es una dependencia implícita que conviene hacer explícita con `npm install sharp`.
 
-**Acción requerida:** `npm install @aws-sdk/client-ses sharp` y commitear el `package.json` actualizado.
+Esto matiza el hallazgo **M-6** del informe de rendimiento: era correcto que `sharp` no está declarado, pero la consecuencia es fragilidad latente, no un build roto.
 
 ---
 

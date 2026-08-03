@@ -6,7 +6,9 @@ Seeders y pruebas de carga (Artillery + Playwright) para el Portal Empresarial D
 
 ## Nunca apuntar a producción
 
-No ejecutes nada de aquí contra `https://empresas.desarrolla360.com` ni contra el WordPress real. Los escenarios tienen el target fijado a `localhost:3005` a propósito. Para medir contra un despliegue real, lee [TARGET-REMOTO.md](TARGET-REMOTO.md) — usa un *preview* de Vercel, nunca producción.
+Los escenarios tienen el target fijado a `localhost:3005` a propósito: apuntar fuera exige poner `LT_TARGET_URL` de forma explícita.
+
+`empresas.desarrolla360.com` está hoy en modo de prueba, pero sigue usando la base de datos real y —salvo que lo cambies— el WordPress real. Antes de apuntarle una carga, lee [TARGET-REMOTO.md](TARGET-REMOTO.md): explica qué verificar y cuándo conviene más un *preview* de Vercel.
 
 ---
 

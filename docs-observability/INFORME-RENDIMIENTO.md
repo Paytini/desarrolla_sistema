@@ -247,7 +247,9 @@ Una sola migración; riesgo nulo. Sin ellos, A-4 no rinde.
 
 ### 🟡 M-6. `sharp` no está declarado en `package.json`
 
-Se importa en `lib/dc3-pdf.ts:3` y en el upload de firmas, pero solo resuelve por hoisting transitivo de Next. Un `npm update` puede romper producción. **Solución:** `npm i sharp` explícito (+ considerar añadirlo a `serverExternalPackages`).
+Se importa en `lib/dc3-pdf.ts:3` y en el upload de firmas sin estar declarado. Verificado (2026-08-02): resuelve como **`optionalDependency` de Next.js** (0.34.5 en el lockfile, marcada `optional: true`). El build funciona hoy; se rompería con `npm install --no-optional`, en un entorno donde el binario nativo no compile, o si una versión futura de Next dejara de incluirlo. **Solución:** `npm i sharp` explícito (+ considerar añadirlo a `serverExternalPackages`).
+
+> Nota: durante las pruebas de carga se detectó que `@aws-sdk/client-ses` tenía el mismo problema **y sí rompía el build**. Ya fue corregido — está declarado en `package.json`. Ver [INFORME-LOADTEST-BASELINE.md §6](INFORME-LOADTEST-BASELINE.md).
 
 ### 🟢 B-1. `lib/tutorlms-api.ts` es código muerto en la app Next (cero imports; la lógica vive en el plugin PHP). Borrarlo o documentarlo como reserva.
 ### 🟢 B-2. Imágenes sin `next/image` (thumbnails de cursos con `<img>` crudo; `remotePatterns` solo permite `avatar.iran.liara.run`). Añadir el host de WP y migrar a `next/image`.

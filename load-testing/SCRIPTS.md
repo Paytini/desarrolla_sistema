@@ -250,7 +250,7 @@ Debe imprimir `residuo namespace: 0`. Luego puedes cortar las terminales A y B.
 | `check-target` falla con `fetch failed` | Igual que el anterior | Igual |
 | Login falla con `CredentialsSignin` | Datos no sembrados, o Turnstile sin las claves de prueba | `npm run seed`, y revisa que `.env.app` tenga las claves `1x0000...` **y** que la app se compilara con ese archivo cargado |
 | `401` del mock del bridge | Terminal A caída o clave distinta | Reinicia el mock; `LT_BRIDGE_KEY` debe coincidir con `WP_BRIDGE_PORTAL_KEY` de `.env.app` |
-| El build falla con `Can't resolve '@aws-sdk/client-ses'` | Dependencias no declaradas en el `package.json` de la app | `cd .. && npm install @aws-sdk/client-ses sharp` |
+| El build falla con `Can't resolve 'sharp'` | `sharp` se importa sin estar declarado; resuelve por las `optionalDependencies` de Next, así que falla solo si se instaló con `--no-optional` | `cd .. && npm install sharp` |
 | `residuo namespace` distinto de 0 | Algo quedó fuera de los patrones de borrado | No lo ignores — revisa qué quedó antes de volver a sembrar |
 | Muchos `ERR_SOCKET_TIMEOUT` en modo navegador | Demasiados Chromium compitiendo con la app | Baja `LT_BROWSER_VUS`, o usa `simulate:http` si lo que quieres es medir |
 
