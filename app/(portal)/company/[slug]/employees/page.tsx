@@ -14,10 +14,12 @@ import {
 } from "@/lib/company-employees"
 import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, getInitials } from "@/lib/format"
+import { paginate } from "@/lib/pagination"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { companyPath } from "@/lib/company-routes"
+import { Pagination } from "@/components/shared/Pagination"
 import {
   createEmployeeAction,
   deleteEmployeeAction,
@@ -76,11 +78,12 @@ function getSuccessMessage(
   return successMessages[success] ?? success
 }
 
-function buildEmployeeListPath(slug: string, query: string, status: string) {
+function buildEmployeeListPath(slug: string, query: string, status: string, page: number = 1) {
   const basePath = companyPath(slug, "/employees")
   const searchParams = new URLSearchParams()
   if (query) searchParams.set("q", query)
   if (status !== "all") searchParams.set("status", status)
+  if (page > 1) searchParams.set("page", String(page))
   const serialized = searchParams.toString()
   return serialized ? `${basePath}?${serialized}` : basePath
 }
@@ -395,6 +398,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const searchQuery = (readSearchParam(params, "q") ?? "").trim()
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
   const company = await getHrEmployeesSnapshot(session.user.empresa_id)
   if (!company) redirect("/login")
@@ -409,8 +413,10 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const filteredEmployees = company.employees.filter((e) =>
     matchesEmployeeFilters(e, { query, status })
   )
+  const PAGE_SIZE = 20
+  const { items: pagedEmployees, currentPage, totalPages } = paginate(filteredEmployees, page, PAGE_SIZE)
   const employeesBasePath = companyPath(company.slug, "/employees")
-  const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status)
+  const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status, currentPage)
   const exportHref = `/api/company/employees/export${
     currentListPath === employeesBasePath ? "" : currentListPath.replace(employeesBasePath, "")
   }`
@@ -523,7 +529,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
             </div>
           ) : null}
 
-          {filteredEmployees.map((employee) => {
+          {pagedEmployees.map((employee) => {
             const activeCourseCount = employee.courses.filter(
               (c) => c.access_status === "ACTIVE"
             ).length
@@ -601,6 +607,12 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
             )
           })}
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalResults={filteredEmployees.length}
+          buildPageUrl={(p) => buildEmployeeListPath(company.slug, searchQuery, status, p)}
+        />
       </section>
     </div>
   )

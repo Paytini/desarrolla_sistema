@@ -4,8 +4,10 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import StatusNotice from "@/components/shared/StatusNotice"
 import { BookOpen, Check, Package, Users } from "lucide-react"
 import { SearchInput } from "@/components/shared/SearchInput"
+import { Pagination } from "@/components/shared/Pagination"
 import { getHrAssignmentsSnapshot } from "@/lib/dashboard-cache"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
+import { paginate } from "@/lib/pagination"
 import { readSearchParam } from "@/lib/search-params"
 import { redirect } from "next/navigation"
 import { companyPath } from "@/lib/company-routes"
@@ -67,12 +69,24 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
   const allEmployees = company.employees as AssignmentEmployee[]
 
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
-  const employees = searchQuery
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
+  const filteredEmployees = searchQuery
     ? allEmployees.filter((e) =>
         `${e.first_name} ${e.last_name}`.toLowerCase().includes(searchQuery) ||
         e.email.toLowerCase().includes(searchQuery)
       )
     : allEmployees
+
+  const ASSIGNMENTS_PAGE_SIZE = 10
+  const { items: employees, currentPage, totalPages } = paginate(filteredEmployees, page, ASSIGNMENTS_PAGE_SIZE)
+
+  function pageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (searchQuery) qs.set("q", searchQuery)
+    if (p > 1) qs.set("page", String(p))
+    const str = qs.toString()
+    return str ? `?${str}` : "?"
+  }
 
   return (
     <div className="space-y-6">
@@ -109,7 +123,7 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
               Asignaciones por empleado
               {searchQuery && (
                 <span className="ml-2 text-sm font-normal text-slate-400">
-                  {employees.length} resultado{employees.length !== 1 ? "s" : ""}
+                  {filteredEmployees.length} resultado{filteredEmployees.length !== 1 ? "s" : ""}
                 </span>
               )}
             </h2>
@@ -226,6 +240,12 @@ export default async function CompanyAssignmentsPage({ searchParams }: PageProps
               </article>
             )
           })}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalResults={filteredEmployees.length}
+            buildPageUrl={pageUrl}
+          />
         </section>
       ) : null}
     </div>

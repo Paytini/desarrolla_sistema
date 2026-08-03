@@ -1,10 +1,14 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { ZipDownloadButton } from "@/components/company/ZipDownloadButton"
+import { SearchInput } from "@/components/shared/SearchInput"
+import { Pagination } from "@/components/shared/Pagination"
 import { Award, Clock, Users } from "lucide-react"
 import { formatDateTime, getInitials } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
+import { paginate } from "@/lib/pagination"
 import { prisma } from "@/lib/prisma"
+import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { companyPath } from "@/lib/company-routes"
@@ -51,12 +55,24 @@ async function getCompanyCertificatesRecord(companyId: number) {
 }
 
 
-export default async function CompanyCertificatesPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
+
+const CERTIFICATES_PAGE_SIZE = 20
+
+export default async function CompanyCertificatesPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
   const company = await getCompanyCertificatesRecord(session.user.empresa_id)
   if (!company) redirect("/login")
+
+  const params = await searchParams
+  const issuedQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
+  const issuedPage = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
+  const pendingQuery = (readSearchParam(params, "pq") ?? "").trim().toLowerCase()
+  const pendingPage = Math.max(1, Number(readSearchParam(params, "ppage") ?? "1"))
 
   const certificates: CompanyCertificate[] = company.employees.flatMap(
     (employee: CompanyEmployee) =>
@@ -87,6 +103,48 @@ export default async function CompanyCertificatesPage() {
     }
   )
 
+  const filteredCertificates = issuedQuery
+    ? certificates.filter(
+        (c) =>
+          c.employeeName.toLowerCase().includes(issuedQuery) ||
+          c.course_name.toLowerCase().includes(issuedQuery)
+      )
+    : certificates
+  const {
+    items: pagedCertificates,
+    currentPage: issuedCurrentPage,
+    totalPages: issuedTotalPages,
+  } = paginate(filteredCertificates, issuedPage, CERTIFICATES_PAGE_SIZE)
+
+  const filteredPending = pendingQuery
+    ? pendingCertificates.filter(
+        (c) =>
+          c.employeeName.toLowerCase().includes(pendingQuery) ||
+          c.courseName.toLowerCase().includes(pendingQuery)
+      )
+    : pendingCertificates
+  const {
+    items: pagedPending,
+    currentPage: pendingCurrentPage,
+    totalPages: pendingTotalPages,
+  } = paginate(filteredPending, pendingPage, CERTIFICATES_PAGE_SIZE)
+
+  function issuedPageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (issuedQuery) qs.set("q", issuedQuery)
+    if (p > 1) qs.set("page", String(p))
+    const str = qs.toString()
+    return str ? `?${str}` : "?"
+  }
+
+  function pendingPageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (pendingQuery) qs.set("pq", pendingQuery)
+    if (p > 1) qs.set("ppage", String(p))
+    const str = qs.toString()
+    return str ? `?${str}` : "?"
+  }
+
   const employeesWithCertificates = new Set(
     certificates.map((c: CompanyCertificate) => c.employeeEmail)
   ).size
@@ -107,23 +165,36 @@ export default async function CompanyCertificatesPage() {
 
       <div className="space-y-5">
         <section className="rounded-lg bg-white p-5">
-          <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-[#1a1a1a]">
               Constancias emitidas
-              <span className="ml-2 text-sm font-normal text-[#94a3b8]">{certificates.length}</span>
+              <span className="ml-2 text-sm font-normal text-[#94a3b8]">
+                {issuedQuery ? `${filteredCertificates.length} de ${certificates.length}` : certificates.length}
+              </span>
             </h2>
-            {certificates.length > 0 ? (
-              <ZipDownloadButton count={certificates.length} />
-            ) : null}
+            <div className="flex items-center gap-2">
+              {certificates.length > 0 ? (
+                <form className="flex gap-2">
+                  <SearchInput name="q" defaultValue={issuedQuery} placeholder="Buscar empleado o curso..." width={200} />
+                </form>
+              ) : null}
+              {certificates.length > 0 ? (
+                <ZipDownloadButton count={certificates.length} />
+              ) : null}
+            </div>
           </div>
 
           {certificates.length === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
               Aún no hay constancias emitidas para los empleados activos.
             </div>
+          ) : filteredCertificates.length === 0 ? (
+            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
+              Sin resultados para &quot;{issuedQuery}&quot;.
+            </div>
           ) : (
             <div className="space-y-2">
-              {certificates.map((certificate: CompanyCertificate) => {
+              {pagedCertificates.map((certificate: CompanyCertificate) => {
                 const initials = getInitials(certificate.employeeName)
                 return (
                   <div
@@ -170,23 +241,40 @@ export default async function CompanyCertificatesPage() {
               })}
             </div>
           )}
+          <Pagination
+            currentPage={issuedCurrentPage}
+            totalPages={issuedTotalPages}
+            totalResults={filteredCertificates.length}
+            buildPageUrl={issuedPageUrl}
+          />
         </section>
 
         <section className="rounded-lg bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-[#1a1a1a]">
-            Pendientes por aparecer
-            <span className="ml-2 text-sm font-normal text-[#94a3b8]">
-              {pendingCertificates.length}
-            </span>
-          </h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-[#1a1a1a]">
+              Pendientes por aparecer
+              <span className="ml-2 text-sm font-normal text-[#94a3b8]">
+                {pendingQuery ? `${filteredPending.length} de ${pendingCertificates.length}` : pendingCertificates.length}
+              </span>
+            </h2>
+            {pendingCertificates.length > 0 ? (
+              <form className="flex gap-2">
+                <SearchInput name="pq" defaultValue={pendingQuery} placeholder="Buscar empleado o curso..." width={200} />
+              </form>
+            ) : null}
+          </div>
 
           {pendingCertificates.length === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-5 text-center text-sm text-gray-400">
               Todo lo emitido ya está reflejado. No hay pendientes.
             </div>
+          ) : filteredPending.length === 0 ? (
+            <div className="rounded-lg bg-gray-50 px-4 py-5 text-center text-sm text-gray-400">
+              Sin resultados para &quot;{pendingQuery}&quot;.
+            </div>
           ) : (
             <div className="space-y-2">
-              {pendingCertificates.map((item: PendingCertificate) => (
+              {pagedPending.map((item: PendingCertificate) => (
                 <div
                   key={item.id}
                   className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/50 px-4 py-3"
@@ -212,6 +300,12 @@ export default async function CompanyCertificatesPage() {
               ))}
             </div>
           )}
+          <Pagination
+            currentPage={pendingCurrentPage}
+            totalPages={pendingTotalPages}
+            totalResults={filteredPending.length}
+            buildPageUrl={pendingPageUrl}
+          />
         </section>
       </div>
     </div>

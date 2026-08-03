@@ -1,16 +1,19 @@
 "use client"
 
-import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, RotateCw, Upload, X } from "lucide-react"
+import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, RotateCw, Search, Upload, X } from "lucide-react"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Chip from "@mui/material/Chip"
 import IconButton from "@mui/material/IconButton"
+import InputAdornment from "@mui/material/InputAdornment"
 import Paper from "@mui/material/Paper"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 import { formatDate } from "@/lib/format"
+
+const DC3_PAGE_SIZE = 20
 
 type CourseMetadata = {
   id: number
@@ -758,6 +761,8 @@ export default function Dc3EditorList({
   openCourseId?: number | null
 }) {
   const [filter, setFilter] = useState<FilterValue>("all")
+  const [query, setQuery]   = useState("")
+  const [page, setPage]     = useState(1)
 
   const counts: Record<FilterValue, number> = {
     all:        courses.length,
@@ -766,11 +771,25 @@ export default function Dc3EditorList({
     empty:      courses.filter((c) => getStatus(c.metadata) === "empty").length,
   }
 
-  const filtered =
+  const statusFiltered =
     filter === "all" ? courses : courses.filter((c) => getStatus(c.metadata) === filter)
+  const filtered = query.trim()
+    ? statusFiltered.filter((c) => c.courseName.toLowerCase().includes(query.trim().toLowerCase()))
+    : statusFiltered
+
+  // A deep link to a specific course (e.g. from another page) should always be
+  // able to find it, so pagination steps aside rather than hiding it on some
+  // other page.
+  const hasOpenTarget = openCourseId != null && filtered.some((c) => c.wpCourseId === openCourseId)
+  const totalPages    = Math.max(1, Math.ceil(filtered.length / DC3_PAGE_SIZE))
+  const currentPage   = hasOpenTarget ? 1 : Math.min(page, totalPages)
+  const paged         = hasOpenTarget
+    ? filtered
+    : filtered.slice((currentPage - 1) * DC3_PAGE_SIZE, currentPage * DC3_PAGE_SIZE)
 
   return (
     <Box sx={{ display: "grid", gap: 2 }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1.5 }}>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
         {FILTERS.map(({ value, label }) => {
           const active = filter === value
@@ -779,7 +798,7 @@ export default function Dc3EditorList({
               key={value}
               component="button"
               type="button"
-              onClick={() => setFilter(value)}
+              onClick={() => { setFilter(value); setPage(1) }}
               sx={{
                 display: "flex",
                 alignItems: "center",
@@ -819,6 +838,24 @@ export default function Dc3EditorList({
         })}
       </Box>
 
+        <TextField
+          size="small"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setPage(1) }}
+          placeholder="Buscar curso…"
+          sx={{ width: 220 }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={14} style={{ color: "#9CA3AF" }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+      </Box>
+
       <Box sx={{ display: "grid", gap: 1 }}>
         {filtered.length === 0 ? (
           <Box
@@ -833,11 +870,11 @@ export default function Dc3EditorList({
             }}
           >
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              No hay cursos en esta categoría.
+              {query.trim() ? `Sin resultados para "${query.trim()}".` : "No hay cursos en esta categoría."}
             </Typography>
           </Box>
         ) : (
-          filtered.map((course) => (
+          paged.map((course) => (
             <CourseEditorCard
               key={course.wpCourseId}
               course={course}
@@ -848,6 +885,34 @@ export default function Dc3EditorList({
           ))
         )}
       </Box>
+
+      {!hasOpenTarget && totalPages > 1 && (
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pt: 1 }}>
+          <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+            {filtered.length} resultado{filtered.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              disabled={currentPage <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              sx={{ height: 28, fontSize: 12 }}
+            >
+              ← Anterior
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              disabled={currentPage >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              sx={{ height: 28, fontSize: 12 }}
+            >
+              Siguiente →
+            </Button>
+          </Box>
+        </Box>
+      )}
     </Box>
   )
 }

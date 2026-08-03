@@ -3,8 +3,10 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
 import { SearchInput } from "@/components/shared/SearchInput"
+import { Pagination } from "@/components/shared/Pagination"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { paginate } from "@/lib/pagination"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -28,6 +30,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
 
   const params = await searchParams
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
   const company = await prisma.company.findUnique({
     where: { id: session.user.empresa_id },
@@ -62,6 +65,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
       .map((c) => [c.wp_course_id, c.cover_url as string])
   )
 
+  const PAGE_SIZE = 20
   const employees = company.employees
   const filteredEmployees = searchQuery
     ? employees.filter((e) =>
@@ -69,6 +73,15 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
         e.email.toLowerCase().includes(searchQuery)
       )
     : employees
+  const { items: pagedEmployees, currentPage, totalPages } = paginate(filteredEmployees, page, PAGE_SIZE)
+
+  function pageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (searchQuery) qs.set("q", searchQuery)
+    if (p > 1) qs.set("page", String(p))
+    const str = qs.toString()
+    return str ? `?${str}` : "?"
+  }
   const allCourses = employees.flatMap((e) => e.courses)
   const averageProgress = allCourses.length
     ? Math.round(allCourses.reduce((sum, c) => sum + c.progress_pct, 0) / allCourses.length)
@@ -177,7 +190,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
             </div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
-              {filteredEmployees.map((employee) => {
+              {pagedEmployees.map((employee) => {
                 const courses = employee.courses
                 const avg = courses.length
                   ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length)
@@ -264,6 +277,12 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
               })}
             </div>
           )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalResults={filteredEmployees.length}
+            buildPageUrl={pageUrl}
+          />
         </section>
 
         <section className="rounded-lg bg-white p-5">
