@@ -13,16 +13,8 @@ type EmployeeOnboardingTabsProps = {
 }
 
 const TABS = [
-  {
-    id: "manual",
-    label: "Alta manual",
-    description: "Registra una persona cuando RH necesita resolver un caso puntual.",
-  },
-  {
-    id: "csv",
-    label: "Carga CSV",
-    description: "Importa varios empleados con una plantilla validada.",
-  },
+  { id: "manual", label: "Alta manual" },
+  { id: "csv", label: "Carga CSV" },
 ] as const
 
 type TabId = (typeof TABS)[number]["id"]
@@ -102,40 +94,6 @@ export default function EmployeeOnboardingTabs({
             <Tab key={tab.id} value={tab.id} label={tab.label} />
           ))}
         </Tabs>
-      </Box>
-
-      <Box
-        sx={{
-          mt: 1.5,
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-          gap: 1,
-        }}
-      >
-        {TABS.map((tab) => (
-          <Box
-            key={tab.id}
-            sx={{
-              borderRadius: 2,
-              border: "1px solid",
-              borderColor: activeTab === tab.id ? "rgba(53,121,245,0.3)" : "divider",
-              bgcolor: activeTab === tab.id ? "rgba(53,121,245,0.04)" : "background.default",
-              px: 2,
-              py: 1.5,
-              transition: "all 0.15s ease",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{
-                color: activeTab === tab.id ? "text.primary" : "text.secondary",
-                transition: "color 0.15s ease",
-              }}
-            >
-              {tab.description}
-            </Typography>
-          </Box>
-        ))}
       </Box>
 
       <Box
