@@ -3,6 +3,7 @@ import {
   BarChart3,
   BookOpen,
   Building2,
+  CalendarClock,
   ClipboardList,
   FileText,
   LayoutDashboard,
@@ -33,10 +34,11 @@ export const navSuperAdminSections: NavSection[] = [
     heading: "Operaciones",
     accent: "var(--sidebar-accent-2)",
     items: [
-      { label: "Paquetes",       href: "/superadmin/packages",    icon: Package,    color: "amber" },
-      { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText,   color: "orange" },
-      { label: "Reportes",       href: "/superadmin/reports",    icon: BarChart3,  color: "emerald" },
-      { label: "Accesos",        href: "/superadmin/access",     icon: Users,      color: "charcoal" },
+      { label: "Paquetes",       href: "/superadmin/packages",    icon: Package,        color: "amber" },
+      { label: "Editor DC-3",    href: "/superadmin/dc3",         icon: FileText,       color: "orange" },
+      { label: "Reportes",       href: "/superadmin/reports",    icon: BarChart3,       color: "emerald" },
+      { label: "Accesos",        href: "/superadmin/access",     icon: Users,           color: "charcoal" },
+      { label: "Consultorías",   href: "/superadmin/consulting", icon: CalendarClock,   color: "rose" },
     ],
   },
   {
@@ -54,6 +56,7 @@ export function navRH(companySlug: string): NavItem[] {
     { label: "Empleados",     href: companyPath(companySlug, "/employees"),    icon: Users,                        color: "violet" },
     { label: "Asignaciones",  href: companyPath(companySlug, "/assignments"),  icon: ClipboardList,                color: "amber" },
     { label: "Progreso",      href: companyPath(companySlug, "/progress"),     icon: BarChart3,                    color: "emerald" },
+    { label: "Consultoría",   href: companyPath(companySlug, "/consulting"),   icon: CalendarClock,                color: "pink" },
     { label: "Constancias",   href: companyPath(companySlug, "/certificates"), icon: Award,                        color: "orange" },
   ]
 }

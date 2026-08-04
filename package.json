@@ -31,6 +31,7 @@
     "pg": "^8.20.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "recharts": "^3.10.1",
     "remixicon": "^4.9.1",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.2.2"
