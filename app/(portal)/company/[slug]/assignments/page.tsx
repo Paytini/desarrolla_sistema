@@ -15,9 +15,9 @@ import { assignEmployeeCoursesAction } from "./actions"
 
 const successMessages: Record<string, string> = {
   asignado_local:
-    "Los cursos fueron asignados en el portal. Si falta sincronizacion con WordPress, se completara en el siguiente sync.",
+    "Los cursos fueron asignados en el portal. Si falta actualizar el acceso, se completara en el siguiente sync.",
   asignado_sync:
-    "Los cursos se asignaron correctamente y quedaron sincronizados con WordPress/Tutor LMS.",
+    "Los cursos se asignaron correctamente y el acceso ya quedo actualizado.",
   limpio_local:
     "Se actualizaron las asignaciones y el empleado quedo sin cursos activos dentro del portal.",
 }
@@ -28,7 +28,7 @@ const errorMessages: Record<string, string> = {
   paquete: "Tu empresa no tiene un paquete activo asignado.",
   cursos: "Selecciona cursos validos del paquete activo.",
   bridge_sync:
-    "Los cursos quedaron asignados en el portal, pero fallo la sincronizacion con WordPress. Revisa el bridge y vuelve a intentar.",
+    "Los cursos quedaron asignados en el portal, pero fallo la actualizacion del acceso. Intenta de nuevo en unos minutos.",
 }
 
 type PageProps = {

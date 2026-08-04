@@ -63,8 +63,8 @@ export default function DeleteEmployeeButton({
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Esta acción eliminará al empleado del portal y también intentará remover su usuario en
-            WordPress/Tutor LMS.
+            Esta acción eliminará al empleado del portal y también intentará remover su acceso a
+            los cursos asignados.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>

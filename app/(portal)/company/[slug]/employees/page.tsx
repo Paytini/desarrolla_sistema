@@ -31,7 +31,7 @@ import {
 const successMessages: Record<string, string> = {
   empleado_creado: "El empleado se creo correctamente y ya puede entrar al portal con sus credenciales.",
   empleado_creado_sync:
-    "El empleado se creo y tambien quedo provisionado en WordPress/Tutor LMS. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
+    "El empleado se creo y su acceso ya quedo activo. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
   empleado_suspendido: "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
   empleado_eliminado: "El empleado se elimino del portal y su cupo fue liberado.",
@@ -47,7 +47,7 @@ const errorMessages: Record<string, string> = {
   cupos: "La empresa ya alcanzo el limite de empleados contratados.",
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
-  bridge_sync: "El empleado se creo en el portal, pero no fue posible sincronizarlo con WordPress. Revisa la configuracion del puente.",
+  bridge_sync: "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
   asignacion_manual:
     "El empleado se creo, pero aun no tiene cursos asignados. Asignalo desde RH > Asignaciones segun su area.",
   csv_file: "Selecciona un archivo CSV valido para importar empleados.",
@@ -56,7 +56,7 @@ const errorMessages: Record<string, string> = {
   csv_password_required:
     "Define un password temporal por defecto o incluye la columna password en el CSV para que RH pueda entregar credenciales conocidas.",
   bridge_delete:
-    "No fue posible eliminar al empleado en WordPress/Tutor LMS. El registro del portal se mantuvo intacto para evitar inconsistencias.",
+    "No fue posible eliminar el acceso del empleado a los cursos. El registro del portal se mantuvo intacto para evitar inconsistencias.",
 }
 
 type PageProps = {
@@ -73,7 +73,7 @@ function getSuccessMessage(
     const synced = readSearchParam(params, "synced") ?? "0"
     const warnings = readSearchParam(params, "warnings") ?? "0"
     const skipped = readSearchParam(params, "skipped") ?? "0"
-    return `Importacion completada. Creados: ${created}. Sincronizados con WordPress/Tutor: ${synced}. Con advertencia de bridge: ${warnings}. Omitidos: ${skipped}.`
+    return `Importacion completada. Creados: ${created}. Con acceso activado: ${synced}. Con advertencia de activacion: ${warnings}. Omitidos: ${skipped}.`
   }
   return successMessages[success] ?? success
 }

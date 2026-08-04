@@ -205,7 +205,7 @@ export async function assignEmployeeCoursesAction(formData: FormData) {
     await notifyCompanyRH(companyId, {
       tipo: "SYNC_FALLIDO",
       titulo: "Sincronización fallida",
-      mensaje: `Falló la sincronización con WordPress al asignar cursos a ${employee.first_name} ${employee.last_name}.`,
+      mensaje: `Falló la actualización de acceso al asignar cursos a ${employee.first_name} ${employee.last_name}.`,
     })
     await notifySuperadmins({
       tipo: "SYNC_FALLIDO",
