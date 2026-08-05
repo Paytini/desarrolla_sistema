@@ -113,6 +113,100 @@ export async function replaceEmployeePackageCourses(
   await prisma.$transaction(operations)
 }
 
+export async function setCourseAssignment(
+  companyId: number,
+  courseId: number,
+  courseName: string,
+  employeeIds: number[],
+  accessSource?: string | null
+) {
+  const currentRows = await prisma.employeeCourse.findMany({
+    where: { wp_course_id: courseId, employee: { company_id: companyId } },
+    select: { employee_id: true },
+  })
+  const currentIds = new Set(currentRows.map((row) => row.employee_id))
+  const desiredIds = new Set(employeeIds)
+
+  const toAdd = employeeIds.filter((id) => !currentIds.has(id))
+  const toRemove = [...currentIds].filter((id) => !desiredIds.has(id))
+
+  const syncedAt = new Date()
+
+  if (toRemove.length > 0) {
+    await prisma.employeeCourse.deleteMany({
+      where: { wp_course_id: courseId, employee_id: { in: toRemove } },
+    })
+  }
+
+  if (toAdd.length > 0) {
+    await prisma.$transaction(
+      toAdd.map((employeeId) =>
+        buildPackageCourseUpsertOperation(
+          employeeId,
+          { wp_course_id: courseId, course_name: courseName, access_source: accessSource },
+          syncedAt
+        )
+      )
+    )
+  }
+
+  const addedEmployees = await prisma.employee.findMany({
+    where: { id: { in: toAdd } },
+    select: { id: true, wp_user_id: true, email: true, first_name: true, last_name: true },
+  })
+
+  const bridgeErrors: Array<{ employeeId: number; message: string }> = []
+
+  if (isWordPressBridgeConfigured()) {
+    for (const employee of addedEmployees) {
+      if (!employee.wp_user_id) continue
+
+      try {
+        const enrollment = await bridgeEnrollCourses(employee.wp_user_id, [courseId])
+        assertEnrollmentSucceeded(enrollment, [courseId])
+
+        const studentCourses = await bridgeGetStudentCourses(employee.wp_user_id)
+        const match = studentCourses.courses.find(
+          (course) => hasValidWpCourseId(course) && course.wp_course_id === courseId
+        )
+
+        if (match) {
+          await prisma.employeeCourse.update({
+            where: {
+              employee_id_wp_course_id: { employee_id: employee.id, wp_course_id: courseId },
+            },
+            data: {
+              course_name: decodeHtmlEntities(match.title),
+              progress_pct: match.progress_pct,
+              completed: match.completed,
+              access_status: "ACTIVE",
+              access_error: null,
+              last_access_attempt: syncedAt,
+              course_start_date: parseBridgeDate(match.started_at),
+              completed_at: parseBridgeDate(match.completed_at),
+              last_synced_at: syncedAt,
+            },
+          })
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message.slice(0, 500)
+            : "No fue posible confirmar el acceso académico en Tutor LMS."
+
+        await markEmployeeCourseAccessError(employee.id, [courseId], accessSource, message)
+        bridgeErrors.push({ employeeId: employee.id, message })
+      }
+    }
+  }
+
+  return {
+    addedEmployees,
+    removedCount: toRemove.length,
+    bridgeErrors,
+  }
+}
+
 export async function syncCompanyPackageEnrollments(companyId: number) {
   const company = await prisma.company.findUnique({
     where: { id: companyId },
