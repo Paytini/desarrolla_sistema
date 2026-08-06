@@ -1,12 +1,28 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import JSZip from "jszip"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { generateDc3Pdf, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
+import {
+  buildIssuedCertificates,
+  filterIssuedCertificates,
+  getCompanyCertificatesRecord,
+} from "@/lib/certificates"
+import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 
 export const runtime = "nodejs"
 
-export async function GET() {
+type CompanyEmployee = {
+  id: number
+  first_name: string
+  last_name: string
+  email: string
+  department: string | null
+  certificates: PortalCertificateRecord[]
+  courses: PortalCourseRecord[]
+}
+
+export async function GET(request: NextRequest) {
   const session = await getSession()
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
@@ -39,14 +55,17 @@ export async function GET() {
     if (!empresa_id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
-    const found = await prisma.certificate.findMany({
-      where: {
-        employee: { company_id: empresa_id, active: true },
-      },
-      select: { id: true, reference_number: true },
-      orderBy: { issued_at: "desc" },
+
+    const company = await getCompanyCertificatesRecord(empresa_id)
+    const employees = (company?.employees ?? []) as CompanyEmployee[]
+    const issued = buildIssuedCertificates(employees)
+    const filtered = filterIssuedCertificates(issued, {
+      q: request.nextUrl.searchParams.get("q") ?? undefined,
+      department: request.nextUrl.searchParams.get("dept") ?? undefined,
+      course: request.nextUrl.searchParams.get("course") ?? undefined,
     })
-    constancias = found.map((c) => ({ id: c.id, folio: c.reference_number }))
+
+    constancias = filtered.map((c) => ({ id: c.id, folio: c.reference_number }))
   }
 
   if (constancias.length === 0) {
