@@ -3,7 +3,10 @@
 import { useMemo, useRef, useState, useTransition } from "react"
 import { BookOpen, Check, ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
+import { paginate } from "@/lib/pagination"
 import { setCourseAssignmentsAction } from "./actions"
+
+const EMPLOYEES_PAGE_SIZE = 20
 
 type CourseInfo = {
   wp_course_id: number
@@ -46,6 +49,7 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
   const [employeeSearch, setEmployeeSearch] = useState("")
   const [department, setDepartment] = useState("")
   const [position, setPosition] = useState("")
+  const [employeePage, setEmployeePage] = useState(1)
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null)
   const [isPending, startTransition] = useTransition()
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -76,6 +80,20 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
       return true
     })
   }, [employees, employeeSearch, department, position])
+
+  const employeeFilterKey = `${selectedCourseId}|${employeeSearch}|${department}|${position}`
+  const [lastEmployeeFilterKey, setLastEmployeeFilterKey] = useState(employeeFilterKey)
+  if (employeeFilterKey !== lastEmployeeFilterKey) {
+    setLastEmployeeFilterKey(employeeFilterKey)
+    setEmployeePage(1)
+  }
+
+  const {
+    items: pagedEmployees,
+    currentPage: employeeCurrentPage,
+    totalPages: employeeTotalPages,
+    totalResults: employeeTotalResults,
+  } = paginate(filteredEmployees, employeePage, EMPLOYEES_PAGE_SIZE)
 
   const workingSet = selectedCourseId != null ? workingAssignments[selectedCourseId] ?? new Set<number>() : new Set<number>()
   const savedSet = selectedCourseId != null ? savedAssignments[selectedCourseId] ?? new Set<number>() : new Set<number>()
@@ -323,13 +341,13 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
               Sin colaboradores para estos filtros.
             </div>
           ) : (
-            <div className="grid max-h-[420px] gap-2 overflow-y-auto p-0.5 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredEmployees.map((employee) => {
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {pagedEmployees.map((employee) => {
                 const checked = workingSet.has(employee.id)
                 return (
                   <label
                     key={employee.id}
-                    className="group flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-[#3579F5]/30 hover:bg-[#F3F8FE] has-[:checked]:border-[#3579F5]/40 has-[:checked]:bg-[#F3F8FE]"
+                    className="group relative flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-[#3579F5]/30 hover:bg-[#F3F8FE] has-[:checked]:border-[#3579F5]/40 has-[:checked]:bg-[#F3F8FE]"
                   >
                     <input
                       type="checkbox"
@@ -352,6 +370,32 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
                   </label>
                 )
               })}
+            </div>
+          )}
+
+          {employeeTotalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <p className="text-slate-500">
+                {employeeTotalResults} resultado{employeeTotalResults !== 1 ? "s" : ""} · página {employeeCurrentPage} de {employeeTotalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEmployeePage((p) => Math.max(1, p - 1))}
+                  disabled={employeeCurrentPage <= 1}
+                  className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-medium text-[#374151] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  ← Anterior
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEmployeePage((p) => Math.min(employeeTotalPages, p + 1))}
+                  disabled={employeeCurrentPage >= employeeTotalPages}
+                  className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-medium text-[#374151] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Siguiente →
+                </button>
+              </div>
             </div>
           )}
 
