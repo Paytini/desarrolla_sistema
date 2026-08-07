@@ -9,31 +9,31 @@ import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
 import Typography from "@mui/material/Typography"
 
-type DeleteEmployeeButtonProps = {
+type CancelConsultingRequestButtonProps = {
   action: (formData: FormData) => void | Promise<void>
-  employeeId: number
-  employeeName: string
+  requestId: number
+  areaLabel: string
   returnTo?: string
 }
 
-export default function DeleteEmployeeButton({
+export function CancelConsultingRequestButton({
   action,
-  employeeId,
-  employeeName,
+  requestId,
+  areaLabel,
   returnTo,
-}: DeleteEmployeeButtonProps) {
+}: CancelConsultingRequestButtonProps) {
   const [open, setOpen] = useState(false)
 
   return (
     <>
       <Button
-        variant="contained"
+        variant="outlined"
         color="error"
         size="small"
         onClick={() => setOpen(true)}
-        sx={{ height: 28, px: 1.5, fontSize: 12, boxShadow: "none", "&:hover": { boxShadow: "none" } }}
+        sx={{ height: 28, px: 1.5, fontSize: 12, flexShrink: 0 }}
       >
-        Eliminar
+        Cancelar
       </Button>
 
       <Dialog
@@ -57,22 +57,22 @@ export default function DeleteEmployeeButton({
               display: "block",
             }}
           >
-            Confirmar eliminación
+            Confirmar cancelación
           </Typography>
-          ¿Eliminar a {employeeName}?
+          ¿Cancelar la consultoría de {areaLabel}?
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Esta acción eliminará al empleado del portal y también intentará remover su acceso a
-            los cursos asignados.
+            Esta acción marcará la solicitud como cancelada. Tendrás que agendar una nueva si cambias de
+            opinión.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button variant="outlined" onClick={() => setOpen(false)}>
-            Cancelar
+            Volver
           </Button>
           <form action={action}>
-            <input type="hidden" name="empleado_id" value={employeeId} />
+            <input type="hidden" name="request_id" value={requestId} />
             {returnTo && <input type="hidden" name="return_to" value={returnTo} />}
             <Button
               type="submit"
@@ -81,7 +81,7 @@ export default function DeleteEmployeeButton({
               onClick={() => setOpen(false)}
               sx={{ boxShadow: "none", "&:hover": { boxShadow: "none" } }}
             >
-              Sí, eliminar
+              Sí, cancelar
             </Button>
           </form>
         </DialogActions>

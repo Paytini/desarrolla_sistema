@@ -49,7 +49,7 @@ export default async function EmployeeCertificatesPage() {
 
       {!learningData?.syncError && learningData?.backgroundSyncQueued ? (
         <Alert severity="info" sx={{ borderRadius: 2, border: "1px solid #bae6fd", bgcolor: "#f0f9ff", color: "#0c4a6e" }}>
-          Verificando constancias con Tutor LMS. La vista se actualizará automáticamente.
+          Verificando tus constancias más recientes. La vista se actualizará automáticamente.
         </Alert>
       ) : null}
 

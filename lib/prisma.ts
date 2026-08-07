@@ -17,7 +17,7 @@ const pool =
 // Models that carry a direct company_id column. Any query against them, while an
 // RH request is active (see lib/tenant-context.ts), gets company_id forced onto
 // where/data — a safety net in case a query is ever written without it by hand.
-const TENANT_SCOPED_MODELS = new Set(["Employee", "CompanyPackage"])
+const TENANT_SCOPED_MODELS = new Set(["Employee", "CompanyPackage", "ConsultingRequest"])
 
 const WHERE_SCOPED_OPERATIONS = new Set([
   "findFirst",

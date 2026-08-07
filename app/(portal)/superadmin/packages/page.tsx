@@ -5,6 +5,7 @@ import { SearchInput } from "@/components/shared/SearchInput"
 import { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
+import { paginate } from "@/lib/pagination"
 import { Package, Plus, RotateCw, X } from "lucide-react"
 import Link from "next/link"
 import {
@@ -12,6 +13,7 @@ import {
   syncPackageToCompanyEmployeesAction,
 } from "./actions"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
+import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Chip from "@mui/material/Chip"
@@ -95,6 +97,8 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
   const assignedFilter= readSearchParam(params, "asignado") ?? "all"
   const sort          = readSearchParam(params, "sort") ?? "recientes"
   const page          = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
+  const companyQ      = readSearchParam(params, "empresa_q")?.toLowerCase() ?? ""
+  const companyPage   = Math.max(1, Number(readSearchParam(params, "empresa_page") ?? "1"))
 
   const { paquetes: packages, empresas: companies, dc3MetadataByCourseId } = await getSuperadminPackagesSnapshot()
 
@@ -129,9 +133,24 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
     return new Date(b.pkg.created_at).getTime() - new Date(a.pkg.created_at).getTime()
   })
 
-  const totalPages     = Math.max(1, Math.ceil(sortedPackages.length / PAGE_SIZE))
-  const currentPage    = Math.min(page, totalPages)
-  const pagedPackages  = sortedPackages.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const { items: pagedPackages, currentPage, totalPages } = paginate(sortedPackages, page, PAGE_SIZE)
+
+  const filteredCompanies = companyQ
+    ? companies.filter((c) => c.name.toLowerCase().includes(companyQ))
+    : companies
+  const {
+    items: pagedCompanies,
+    currentPage: companiesCurrentPage,
+    totalPages: companiesTotalPages,
+  } = paginate(filteredCompanies, companyPage, PAGE_SIZE)
+
+  function companiesPageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (companyQ) qs.set("empresa_q", companyQ)
+    if (p > 1) qs.set("empresa_page", String(p))
+    const str = qs.toString()
+    return `/superadmin/packages${str ? `?${str}` : ""}#asignacion-por-empresa`
+  }
 
   const hasFilters = q !== "" || dc3Filter !== "all" || assignedFilter !== "all"
 
@@ -340,10 +359,32 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
       </PanelBox>
 
       <PanelBox
+        id="asignacion-por-empresa"
         title="Asignación por empresa"
-        description="Asigna el paquete activo de cada empresa y sincroniza con sus empleados."
+        description={`Asigna el paquete activo de cada empresa y sincroniza con sus empleados.${companyQ ? " · filtro activo" : ""}`}
+        action={
+          <Box component="form" method="GET" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <SearchInput name="empresa_q" defaultValue={companyQ} placeholder="Buscar empresa…" width={200} />
+            {companyQ && (
+              <Link
+                href="/superadmin/packages#asignacion-por-empresa"
+                style={{ display: "inline-flex", alignItems: "center", color: "#64748b" }}
+                aria-label="Limpiar búsqueda"
+              >
+                <X size={14} />
+              </Link>
+            )}
+          </Box>
+        }
         noPadding
       >
+        {filteredCompanies.length === 0 ? (
+          <Box sx={{ py: 6, textAlign: "center" }}>
+            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+              Sin resultados para ese filtro.
+            </Typography>
+          </Box>
+        ) : (
         <Table>
           <TableHead>
             <TableRow>
@@ -355,7 +396,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
             </TableRow>
           </TableHead>
           <TableBody>
-            {companies.map((company) => {
+            {pagedCompanies.map((company) => {
               const activePackage = company.packages[0]?.package
               const syncable      = company.employees.filter((e) => e.wp_user_id).length
 
@@ -444,6 +485,13 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
             })}
           </TableBody>
         </Table>
+        )}
+        <Pagination
+          currentPage={companiesCurrentPage}
+          totalPages={companiesTotalPages}
+          totalResults={filteredCompanies.length}
+          buildPageUrl={companiesPageUrl}
+        />
       </PanelBox>
     </Box>
   )

@@ -8,11 +8,13 @@ interface PanelBoxProps {
   action?: ReactNode
   children: ReactNode
   noPadding?: boolean
+  id?: string
 }
 
-export function PanelBox({ title, description, count, action, children, noPadding }: PanelBoxProps) {
+export function PanelBox({ title, description, count, action, children, noPadding, id }: PanelBoxProps) {
   return (
     <Paper
+      id={id}
       elevation={0}
       sx={{
         borderRadius: '8px',

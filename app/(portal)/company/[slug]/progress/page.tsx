@@ -1,10 +1,13 @@
 import KpiCard from "@/components/shared/KpiCard"
+import { LearningActivityChart, type LearningActivityPoint } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
 import { SearchInput } from "@/components/shared/SearchInput"
+import { Pagination } from "@/components/shared/Pagination"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { paginate } from "@/lib/pagination"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -18,6 +21,64 @@ function getInitials(name: string) {
     .join("")
 }
 
+const WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+
+function toDateKey(date: Date): string {
+  return date.toISOString().slice(0, 10)
+}
+
+function getLastSevenDayKeys(): { key: string; label: string }[] {
+  const days: { key: string; label: string }[] = []
+  const today = new Date()
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(today)
+    day.setUTCDate(day.getUTCDate() - i)
+    days.push({ key: toDateKey(day), label: WEEKDAY_LABELS[day.getUTCDay()] })
+  }
+  return days
+}
+
+async function getWeeklyLearningActivity(companyId: number) {
+  const weekDays = getLastSevenDayKeys()
+  const currentWeekStart = new Date(`${weekDays[0].key}T00:00:00.000Z`)
+  const previousWeekStart = new Date(currentWeekStart)
+  previousWeekStart.setUTCDate(previousWeekStart.getUTCDate() - 7)
+
+  const [currentWeekCertificates, previousWeekCount] = await Promise.all([
+    prisma.certificate.findMany({
+      where: { employee: { company_id: companyId }, issued_at: { gte: currentWeekStart } },
+      select: { issued_at: true },
+    }),
+    prisma.certificate.count({
+      where: {
+        employee: { company_id: companyId },
+        issued_at: { gte: previousWeekStart, lt: currentWeekStart },
+      },
+    }),
+  ])
+
+  const countsByDay = new Map(weekDays.map((day) => [day.key, 0]))
+  for (const certificate of currentWeekCertificates) {
+    const key = toDateKey(certificate.issued_at)
+    if (countsByDay.has(key)) countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1)
+  }
+
+  const data: LearningActivityPoint[] = weekDays.map((day) => ({
+    label: day.label,
+    completions: countsByDay.get(day.key) ?? 0,
+  }))
+
+  const currentWeekTotal = currentWeekCertificates.length
+  const changeVsPreviousWeek =
+    previousWeekCount > 0
+      ? Math.round(((currentWeekTotal - previousWeekCount) / previousWeekCount) * 100)
+      : currentWeekTotal > 0
+        ? 100
+        : null
+
+  return { data, changeVsPreviousWeek }
+}
+
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
@@ -28,6 +89,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
 
   const params = await searchParams
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
   const company = await prisma.company.findUnique({
     where: { id: session.user.empresa_id },
@@ -55,6 +117,8 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
 
   if (!company) redirect("/login")
 
+  const { data: learningActivityData, changeVsPreviousWeek } = await getWeeklyLearningActivity(company.id)
+
   const packageCourses = company.packages[0]?.package?.courses ?? []
   const thumbnailMap = new Map<number, string>(
     packageCourses
@@ -62,6 +126,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
       .map((c) => [c.wp_course_id, c.cover_url as string])
   )
 
+  const PAGE_SIZE = 20
   const employees = company.employees
   const filteredEmployees = searchQuery
     ? employees.filter((e) =>
@@ -69,6 +134,15 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
         e.email.toLowerCase().includes(searchQuery)
       )
     : employees
+  const { items: pagedEmployees, currentPage, totalPages } = paginate(filteredEmployees, page, PAGE_SIZE)
+
+  function pageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (searchQuery) qs.set("q", searchQuery)
+    if (p > 1) qs.set("page", String(p))
+    const str = qs.toString()
+    return str ? `?${str}` : "?"
+  }
   const allCourses = employees.flatMap((e) => e.courses)
   const averageProgress = allCourses.length
     ? Math.round(allCourses.reduce((sum, c) => sum + c.progress_pct, 0) / allCourses.length)
@@ -138,6 +212,8 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
         <KpiCard label="Cursos completados" value={String(completedCourses)} sub="Cerrados por empleados" icon={CheckCircle} borderColor="emerald" />
       </div>
 
+      <LearningActivityChart data={learningActivityData} changeVsPreviousWeek={changeVsPreviousWeek} />
+
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-lg bg-white p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -177,7 +253,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
             </div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
-              {filteredEmployees.map((employee) => {
+              {pagedEmployees.map((employee) => {
                 const courses = employee.courses
                 const avg = courses.length
                   ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length)
@@ -264,6 +340,12 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
               })}
             </div>
           )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalResults={filteredEmployees.length}
+            buildPageUrl={pageUrl}
+          />
         </section>
 
         <section className="rounded-lg bg-white p-5">

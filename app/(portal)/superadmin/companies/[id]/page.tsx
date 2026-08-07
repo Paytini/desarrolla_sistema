@@ -6,10 +6,13 @@ import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { readSearchParam } from "@/lib/search-params"
-import { ArrowLeft, Calendar, Mail, Phone, User } from "lucide-react"
+import { paginate } from "@/lib/pagination"
+import { ArrowLeft, Calendar, Mail, Phone, User, X } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
+import { Pagination } from "@/components/shared/Pagination"
+import { SearchInput } from "@/components/shared/SearchInput"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
 import Divider from "@mui/material/Divider"
@@ -95,6 +98,8 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
   const query   = await searchParams
   const success = readSearchParam(query, "success")
   const error   = readSearchParam(query, "error")
+  const q       = readSearchParam(query, "q")?.toLowerCase() ?? ""
+  const page    = Math.max(1, Number(readSearchParam(query, "page") ?? "1"))
 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
@@ -146,6 +151,28 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
       return { ...e, avg, completed, total: e.courses.length, certificatesCount: e.certificates.length, hasError, lastSync }
     })
     .sort((a, b) => b.avg - a.avg)
+
+  const filteredEmployeeStats = q
+    ? employeeStats.filter((e) =>
+        `${e.first_name} ${e.last_name}`.toLowerCase().includes(q) || e.email.toLowerCase().includes(q)
+      )
+    : employeeStats
+
+  const EMPLOYEES_PAGE_SIZE = 20
+  const {
+    items: pagedEmployeeStats,
+    currentPage: employeesPage,
+    totalPages: employeesTotalPages,
+    totalResults: employeesTotalResults,
+  } = paginate(filteredEmployeeStats, page, EMPLOYEES_PAGE_SIZE)
+
+  function employeesPageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (q) qs.set("q", q)
+    if (p > 1) qs.set("page", String(p))
+    const str = qs.toString()
+    return `/superadmin/companies/${companyId}${str ? `?${str}` : ""}`
+  }
 
   const courseStats = packageCourses.map((pc) => {
     const assigned   = allCourses.filter((c) => c.wp_course_id === pc.wp_course_id)
@@ -279,13 +306,32 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
           </Box>
         </PanelBox>
 
-        <PanelBox title="Progreso por empleado" description="Mayor a menor">
+        <PanelBox
+          title="Progreso por empleado"
+          description={`Mayor a menor · ${employeesTotalResults} empleado${employeesTotalResults !== 1 ? "s" : ""}${q ? " · filtro activo" : ""}`}
+          action={
+            <Box component="form" method="GET" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+              <SearchInput name="q" defaultValue={q} placeholder="Buscar empleado…" width={180} />
+              {q && (
+                <Link
+                  href={`/superadmin/companies/${companyId}`}
+                  style={{ display: "inline-flex", alignItems: "center", color: "#64748b" }}
+                  aria-label="Limpiar búsqueda"
+                >
+                  <X size={14} />
+                </Link>
+              )}
+            </Box>
+          }
+        >
           <Box sx={{ p: 2.5 }}>
             {employeeStats.length === 0 ? (
               <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>Sin empleados activos.</Typography>
+            ) : filteredEmployeeStats.length === 0 ? (
+              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>Sin resultados para ese filtro.</Typography>
             ) : (
               <Box sx={{ display: "grid", gap: 1.5 }}>
-                {employeeStats.map((e) => (
+                {pagedEmployeeStats.map((e) => (
                   <Box key={e.id} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                     <Box
                       sx={{
@@ -324,6 +370,12 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
               </Box>
             )}
           </Box>
+          <Pagination
+            currentPage={employeesPage}
+            totalPages={employeesTotalPages}
+            totalResults={employeesTotalResults}
+            buildPageUrl={employeesPageUrl}
+          />
         </PanelBox>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>

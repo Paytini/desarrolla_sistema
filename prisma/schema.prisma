@@ -22,6 +22,38 @@ enum Role {
   EMPLEADO // Worker — sees their own courses
 }
 
+enum ConsultingArea {
+  CTPAT // Seguridad en la cadena de suministro
+  OEA // Operador Económico Autorizado
+  FIRE_SAFETY // Sistemas Contra Incendios
+  HUMAN_RESOURCES // Recursos Humanos
+  EC0217 // Impartición de cursos de formación del capital humano
+  EC0634 // Auditoría de la seguridad en la cadena de suministro
+  EC0306 // Reclutamiento y Selección de Personal Operativo y Administración
+  EC0397_01 // Vigilancia del cumplimiento de la normatividad en seguridad y salud en el trabajo
+
+  // Retired from the selectable catalog (lib/consulting-areas.ts) but kept in the
+  // enum — existing consulting_requests rows still reference these and Postgres
+  // enum values can't be dropped without recreating the type.
+  LOGISTICS
+  MANUFACTURING
+  INDUSTRIAL_SAFETY
+  ISO_STANDARDS
+  CONOCER_CERT
+}
+
+enum ConsultingContactMethod {
+  CALL
+  WHATSAPP
+  EMAIL
+}
+
+enum ConsultingRequestStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
 // ─────────────────────────────────────────────────────────────
 //  USER
 //  Handles portal login for all three roles.
@@ -42,9 +74,10 @@ model User {
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 
-  company       Company?       @relation(fields: [company_id], references: [id])
-  sessions      PortalSession[]
-  notifications Notification[]
+  company             Company?             @relation(fields: [company_id], references: [id])
+  sessions            PortalSession[]
+  notifications       Notification[]
+  consultingRequests  ConsultingRequest[]
 
   @@index([company_id])
   @@map("users")
@@ -96,9 +129,10 @@ model Company {
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
-  users     User[]
-  employees Employee[]
-  packages  CompanyPackage[]
+  users               User[]
+  employees           Employee[]
+  packages            CompanyPackage[]
+  consultingRequests  ConsultingRequest[]
 
   @@map("companies")
 }
@@ -196,6 +230,34 @@ model CompanyPackage {
 
   @@index([company_id])
   @@map("company_packages")
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CONSULTING_REQUEST
+//  A live consulting session an RH user booked from the portal.
+//  Reviewed manually by the consulting team — status starts PENDING
+//  and is updated outside the portal for now (no UI to change it yet).
+// ─────────────────────────────────────────────────────────────
+
+model ConsultingRequest {
+  id                    Int                      @id @default(autoincrement())
+  company_id            Int
+  requested_by_user_id  Int
+  area                  ConsultingArea
+  context               String                   @db.Text
+  preferred_date        DateTime                 @db.Date
+  preferred_time        String // "10:00", 24h, wall-clock time in `timezone`
+  timezone              String                   @default("America/Tijuana")
+  contact_phone         String
+  contact_method        ConsultingContactMethod
+  status                ConsultingRequestStatus  @default(PENDING)
+  created_at            DateTime                 @default(now())
+
+  company     Company @relation(fields: [company_id], references: [id])
+  requestedBy User    @relation(fields: [requested_by_user_id], references: [id])
+
+  @@index([company_id])
+  @@map("consulting_requests")
 }
 
 // ─────────────────────────────────────────────────────────────

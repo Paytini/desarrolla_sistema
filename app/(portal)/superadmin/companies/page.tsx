@@ -1,11 +1,13 @@
 import { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
+import { paginate } from "@/lib/pagination"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Building2, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
+import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Table from "@mui/material/Table"
@@ -69,9 +71,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
     return matchQ && matchStatus
   })
 
-  const totalPages     = Math.max(1, Math.ceil(filteredCompanies.length / PAGE_SIZE))
-  const currentPage    = Math.min(page, totalPages)
-  const pagedCompanies = filteredCompanies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const { items: pagedCompanies, currentPage, totalPages } = paginate(filteredCompanies, page, PAGE_SIZE)
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
@@ -204,71 +204,12 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
           </Table>
         )}
 
-        {totalPages > 1 && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderTop: "1px solid",
-              borderColor: "divider",
-              px: 2.5,
-              py: 1.5,
-            }}
-          >
-            <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-              {filteredCompanies.length} resultado{filteredCompanies.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-              {currentPage > 1 ? (
-                <Link
-                  href={pageUrl(currentPage - 1)}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    height: 28,
-                    paddingLeft: 10,
-                    paddingRight: 10,
-                    fontSize: 12,
-                    fontWeight: 500,
-                    color: "#0f172a",
-                    textDecoration: "none",
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  ← Anterior
-                </Link>
-              ) : (
-                <Button variant="outlined" size="small" disabled sx={{ height: 28, fontSize: 12 }}>
-                  ← Anterior
-                </Button>
-              )}
-              {currentPage < totalPages ? (
-                <Link
-                  href={pageUrl(currentPage + 1)}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    height: 28,
-                    paddingLeft: 10,
-                    paddingRight: 10,
-                    fontSize: 12,
-                    fontWeight: 500,
-                    color: "#0f172a",
-                    textDecoration: "none",
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  Siguiente →
-                </Link>
-              ) : (
-                <Button variant="outlined" size="small" disabled sx={{ height: 28, fontSize: 12 }}>
-                  Siguiente →
-                </Button>
-              )}
-            </Box>
-          </Box>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalResults={filteredCompanies.length}
+          buildPageUrl={pageUrl}
+        />
       </PanelBox>
     </Box>
   )

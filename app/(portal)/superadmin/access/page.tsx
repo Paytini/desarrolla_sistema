@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { Stack } from "@mui/material"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
-import { getSuperadminAccessSnapshot } from "@/lib/dashboard-cache"
+import { EMPLOYEES_ACCESS_PAGE_SIZE, getSuperadminAccessSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -29,8 +29,14 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
   const params = await searchParams
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
+  const tab = readSearchParam(params, "tab") === "employees" ? "employees" : "rh"
+  const q = readSearchParam(params, "q")?.toLowerCase() ?? ""
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { rhUsers, employeeUsers, employees } = await getSuperadminAccessSnapshot()
+  const { rhUsers, employeeUsers, employees, total: employeesTotal, grandTotal: employeesGrandTotal } =
+    await getSuperadminAccessSnapshot(q, page)
+  const employeesTotalPages = Math.max(1, Math.ceil(employeesTotal / EMPLOYEES_ACCESS_PAGE_SIZE))
+  const employeesCurrentPage = Math.min(page, employeesTotalPages)
 
   const employeeUserByEmail = new Map(employeeUsers.map((u) => [u.email.toLowerCase(), u]))
 
@@ -80,7 +86,18 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
         </DismissibleAlert>
       )}
 
-      <AccessTabs rhUsers={rhRows} employees={employeeRows} />
+      <AccessTabs
+        rhUsers={rhRows}
+        employees={employeeRows}
+        defaultTab={tab}
+        employeeSearch={q}
+        employeesGrandTotal={employeesGrandTotal}
+        employeePagination={{
+          currentPage: employeesCurrentPage,
+          totalPages: employeesTotalPages,
+          totalResults: employeesTotal,
+        }}
+      />
     </Stack>
   )
 }

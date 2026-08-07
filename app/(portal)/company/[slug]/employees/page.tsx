@@ -1,4 +1,5 @@
 import CnoSelect from "@/components/company/CnoSelect"
+import CsvEmployeeImportForm from "@/components/company/CsvEmployeeImportForm"
 import CurpInfoButton from "@/components/company/CurpInfoButton"
 import DeleteEmployeeButton from "@/components/company/DeleteEmployeeButton"
 import EmployeeOnboardingTabs from "@/components/company/EmployeeOnboardingTabs"
@@ -14,14 +15,15 @@ import {
 } from "@/lib/company-employees"
 import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, getInitials } from "@/lib/format"
+import { paginate } from "@/lib/pagination"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { companyPath } from "@/lib/company-routes"
+import { Pagination } from "@/components/shared/Pagination"
 import {
   createEmployeeAction,
   deleteEmployeeAction,
-  importEmployeesCsvAction,
   toggleEmployeeStatusAction,
   triggerCompanyLearningSyncAction,
 } from "./actions"
@@ -29,7 +31,7 @@ import {
 const successMessages: Record<string, string> = {
   empleado_creado: "El empleado se creo correctamente y ya puede entrar al portal con sus credenciales.",
   empleado_creado_sync:
-    "El empleado se creo y tambien quedo provisionado en WordPress/Tutor LMS. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
+    "El empleado se creo y su acceso ya quedo activo. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
   empleado_suspendido: "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
   empleado_eliminado: "El empleado se elimino del portal y su cupo fue liberado.",
@@ -45,7 +47,7 @@ const errorMessages: Record<string, string> = {
   cupos: "La empresa ya alcanzo el limite de empleados contratados.",
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
-  bridge_sync: "El empleado se creo en el portal, pero no fue posible sincronizarlo con WordPress. Revisa la configuracion del puente.",
+  bridge_sync: "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
   asignacion_manual:
     "El empleado se creo, pero aun no tiene cursos asignados. Asignalo desde RH > Asignaciones segun su area.",
   csv_file: "Selecciona un archivo CSV valido para importar empleados.",
@@ -54,7 +56,7 @@ const errorMessages: Record<string, string> = {
   csv_password_required:
     "Define un password temporal por defecto o incluye la columna password en el CSV para que RH pueda entregar credenciales conocidas.",
   bridge_delete:
-    "No fue posible eliminar al empleado en WordPress/Tutor LMS. El registro del portal se mantuvo intacto para evitar inconsistencias.",
+    "No fue posible eliminar el acceso del empleado a los cursos. El registro del portal se mantuvo intacto para evitar inconsistencias.",
 }
 
 type PageProps = {
@@ -71,16 +73,17 @@ function getSuccessMessage(
     const synced = readSearchParam(params, "synced") ?? "0"
     const warnings = readSearchParam(params, "warnings") ?? "0"
     const skipped = readSearchParam(params, "skipped") ?? "0"
-    return `Importacion completada. Creados: ${created}. Sincronizados con WordPress/Tutor: ${synced}. Con advertencia de bridge: ${warnings}. Omitidos: ${skipped}.`
+    return `Importacion completada. Creados: ${created}. Con acceso activado: ${synced}. Con advertencia de activacion: ${warnings}. Omitidos: ${skipped}.`
   }
   return successMessages[success] ?? success
 }
 
-function buildEmployeeListPath(slug: string, query: string, status: string) {
+function buildEmployeeListPath(slug: string, query: string, status: string, page: number = 1) {
   const basePath = companyPath(slug, "/employees")
   const searchParams = new URLSearchParams()
   if (query) searchParams.set("q", query)
   if (status !== "all") searchParams.set("status", status)
+  if (page > 1) searchParams.set("page", String(page))
   const serialized = searchParams.toString()
   return serialized ? `${basePath}?${serialized}` : basePath
 }
@@ -183,208 +186,6 @@ function ManualEmployeeForm() {
   )
 }
 
-function CsvEmployeeImportForm() {
-  const columns = [
-    { key: "nombre", label: "nombre", required: true },
-    { key: "apellido", label: "apellido", required: true },
-    { key: "email", label: "email", required: true },
-    { key: "curp", label: "curp", required: true },
-    { key: "departamento", label: "departamento", required: true },
-    { key: "puesto", label: "puesto", required: true },
-    { key: "ocupacion_especifica_clave", label: "ocupacion_especifica_clave", required: true },
-    { key: "ocupacion_especifica", label: "ocupacion_especifica", required: true },
-    { key: "password", label: "password", required: false },
-  ]
-  const sampleRows = [
-    {
-      nombre: "Ana",
-      apellido: "Perez",
-      email: "ana@empresa.com",
-      curp: "PEAA900101HBCXXX01",
-      departamento: "Operaciones",
-      puesto: "Supervisor",
-      ocupacion_especifica_clave: "03.4",
-      ocupacion_especifica: "Instalacion y mantenimiento",
-      password: "Temporal123",
-    },
-    {
-      nombre: "Luis",
-      apellido: "Lopez",
-      email: "luis@empresa.com",
-      curp: "LOPL910202HBCXXX02",
-      departamento: "Seguridad",
-      puesto: "Supervisor",
-      ocupacion_especifica_clave: "07.2",
-      ocupacion_especifica: "Supervision de seguridad",
-      password: "Temporal123",
-    },
-  ]
-
-  return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap gap-2">
-        {columns.map((column) => (
-          <span
-            key={column.key}
-            className={`rounded-full border px-3 py-1 text-xs font-medium ${
-              column.required
-                ? "border-[#3579F5]/30 bg-[#EAF1FE] text-[#2A61D6]"
-                : "border-slate-200 bg-slate-50 text-slate-700"
-            }`}
-          >
-            {column.label}
-          </span>
-        ))}
-      </div>
-
-      <form
-        action={importEmployeesCsvAction}
-        className="grid gap-4"
-        data-loading-message="Importando empleados..."
-        data-loading-detail="Estamos leyendo el CSV, creando usuarios y sincronizando accesos. Mantendremos este modal abierto hasta terminar."
-      >
-        <label className="grid gap-1.5 text-sm">
-          <span className="font-medium text-slate-700">Archivo CSV</span>
-          <input
-            name="archivo_csv"
-            type="file"
-            accept=".csv,text/csv"
-            required
-            className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition file:mr-3 file:rounded-full file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700"
-          />
-        </label>
-
-        <label className="grid gap-1.5 text-sm">
-          <span className="font-medium text-slate-700">Password temporal por defecto</span>
-          <input
-            name="password_csv"
-            type="text"
-            minLength={8}
-            placeholder="Recomendado si tu CSV no incluye columna password"
-            className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#3579F5]"
-          />
-        </label>
-
-        <div className="max-w-full overflow-hidden rounded-lg bg-white p-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-slate-950">Ejemplo visual tipo Excel</p>
-                <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white">
-                  CSV
-                </span>
-              </div>
-              <p className="text-xs leading-5 text-slate-500">
-                Copia estos encabezados exactamente. Las columnas marcadas como obligatorias deben venir llenas.
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium">
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF1FE] px-2.5 py-1 text-[#2A61D6]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#3579F5]" />
-                  Obligatorio
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                  Opcional
-                </span>
-              </div>
-            </div>
-
-            <a
-              href="/api/templates/employees-csv"
-              className="inline-flex self-start items-center rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-slate-800 transition-all duration-200 hover:bg-gray-200"
-            >
-              Descargar plantilla CSV
-            </a>
-          </div>
-
-          <div className="mt-4 max-w-full overflow-x-auto rounded-lg bg-white">
-            <table className="min-w-[1280px] border-separate border-spacing-0 text-sm">
-              <thead>
-                <tr className="bg-slate-100 text-center text-xs font-semibold text-slate-500">
-                  <th className="w-12 border-b border-r border-slate-200 px-3 py-2" />
-                  {columns.map((column, index) => (
-                    <th
-                      key={`letter-${column.key}`}
-                      className="border-b border-r border-slate-200 px-4 py-2 last:border-r-0"
-                    >
-                      {String.fromCharCode(65 + index)}
-                    </th>
-                  ))}
-                </tr>
-                <tr className="bg-white text-left text-slate-800">
-                  <th className="border-b border-r border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-500">
-                    1
-                  </th>
-                  {columns.map((column) => (
-                    <th
-                      key={column.key}
-                      className="border-b border-r border-slate-200 px-4 py-3 last:border-r-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">{column.label}</span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                            column.required
-                              ? "bg-[#EAF1FE] text-[#2A61D6]"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          {column.required ? "obligatorio" : "opcional"}
-                        </span>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="text-slate-700">
-                {sampleRows.map((row, rowIndex) => (
-                  <tr key={row.email} className="transition hover:bg-[#EAF1FE]/40">
-                    <td className="border-b border-r border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-500">
-                      {rowIndex + 2}
-                    </td>
-                    {columns.map((column) => (
-                      <td
-                        key={`${row.email}-${column.key}`}
-                        className="whitespace-nowrap border-b border-r border-slate-200 px-4 py-3 last:border-r-0"
-                      >
-                        {row[column.key as keyof typeof row]}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-                <tr className="bg-slate-50/70 text-slate-400">
-                  <td className="border-r border-slate-200 px-3 py-3 text-center text-xs font-semibold">
-                    ...
-                  </td>
-                  <td colSpan={columns.length} className="px-4 py-3 text-xs">
-                    Puedes agregar mas empleados, uno por fila, hasta 200 registros por archivo.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-3 grid gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-950 md:grid-cols-[auto_1fr] md:items-start">
-            <span className="rounded-full bg-amber-200 px-2.5 py-1 font-semibold text-amber-950">
-              Nota
-            </span>
-            <p>
-              Si el CSV no incluye la columna <span className="font-semibold">password</span>, captura arriba un password temporal por defecto para todos los empleados de esa carga.
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="inline-flex w-fit items-center rounded-full bg-[#3579F5] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#2A61D6]"
-        >
-          Importar empleados
-        </button>
-      </form>
-    </div>
-  )
-}
-
 export default async function CompanyEmployeesPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
@@ -395,6 +196,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const searchQuery = (readSearchParam(params, "q") ?? "").trim()
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
   const company = await getHrEmployeesSnapshot(session.user.empresa_id)
   if (!company) redirect("/login")
@@ -409,8 +211,10 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const filteredEmployees = company.employees.filter((e) =>
     matchesEmployeeFilters(e, { query, status })
   )
+  const PAGE_SIZE = 20
+  const { items: pagedEmployees, currentPage, totalPages } = paginate(filteredEmployees, page, PAGE_SIZE)
   const employeesBasePath = companyPath(company.slug, "/employees")
-  const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status)
+  const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status, currentPage)
   const exportHref = `/api/company/employees/export${
     currentListPath === employeesBasePath ? "" : currentListPath.replace(employeesBasePath, "")
   }`
@@ -523,7 +327,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
             </div>
           ) : null}
 
-          {filteredEmployees.map((employee) => {
+          {pagedEmployees.map((employee) => {
             const activeCourseCount = employee.courses.filter(
               (c) => c.access_status === "ACTIVE"
             ).length
@@ -601,6 +405,12 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
             )
           })}
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalResults={filteredEmployees.length}
+          buildPageUrl={(p) => buildEmployeeListPath(company.slug, searchQuery, status, p)}
+        />
       </section>
     </div>
   )

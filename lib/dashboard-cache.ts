@@ -208,40 +208,57 @@ export async function getSuperadminDc3Snapshot() {
   return getSuperadminDc3SnapshotCached()
 }
 
-const getSuperadminAccessSnapshotCached = unstable_cache(
+const getSuperadminAccessRhSnapshotCached = unstable_cache(
   async () => {
-    const [rhUsers, employeeUsers, employees] = await Promise.all([
-      prisma.user.findMany({
-        where: { role: "RH" },
-        orderBy: [{ active: "desc" }, { created_at: "desc" }],
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          active: true,
-          last_access: true,
-          created_at: true,
-          company: {
-            select: {
-              id: true,
-              name: true,
-              active: true,
-              contracted_seats: true,
-              used_seats: true,
-            },
+    return prisma.user.findMany({
+      where: { role: "RH" },
+      orderBy: [{ active: "desc" }, { created_at: "desc" }],
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        active: true,
+        last_access: true,
+        created_at: true,
+        company: {
+          select: {
+            id: true,
+            name: true,
+            active: true,
+            contracted_seats: true,
+            used_seats: true,
           },
         },
-      }),
-      prisma.user.findMany({
-        where: { role: "EMPLEADO" },
-        select: {
-          id: true,
-          email: true,
-          active: true,
-          last_access: true,
-        },
-      }),
+      },
+    })
+  },
+  ["dashboard-snapshot", "superadmin", "accesos", "rh"],
+  {
+    revalidate: 45,
+    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_ACCESS_TAG],
+  }
+)
+
+export const EMPLOYEES_ACCESS_PAGE_SIZE = 20
+
+const getSuperadminAccessEmployeesSnapshotCached = unstable_cache(
+  async (query: string, page: number) => {
+    const where = query
+      ? {
+          OR: [
+            { first_name: { contains: query, mode: "insensitive" as const } },
+            { last_name: { contains: query, mode: "insensitive" as const } },
+            { email: { contains: query, mode: "insensitive" as const } },
+            { company: { name: { contains: query, mode: "insensitive" as const } } },
+          ],
+        }
+      : {}
+
+    const [grandTotal, total, employees] = await Promise.all([
+      prisma.employee.count(),
+      prisma.employee.count({ where }),
       prisma.employee.findMany({
+        where,
         orderBy: [{ active: "desc" }, { created_at: "desc" }],
         select: {
           id: true,
@@ -258,21 +275,36 @@ const getSuperadminAccessSnapshotCached = unstable_cache(
             },
           },
         },
-        take: 18,
+        skip: (page - 1) * EMPLOYEES_ACCESS_PAGE_SIZE,
+        take: EMPLOYEES_ACCESS_PAGE_SIZE,
       }),
     ])
 
-    return { rhUsers, employeeUsers, employees }
+    const employeeUsers = await prisma.user.findMany({
+      where: { role: "EMPLEADO", email: { in: employees.map((e) => e.email) } },
+      select: {
+        id: true,
+        email: true,
+        active: true,
+        last_access: true,
+      },
+    })
+
+    return { employees, employeeUsers, total, grandTotal }
   },
-  ["dashboard-snapshot", "superadmin", "accesos"],
+  ["dashboard-snapshot", "superadmin", "accesos", "empleados"],
   {
     revalidate: 45,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_ACCESS_TAG],
   }
 )
 
-export async function getSuperadminAccessSnapshot() {
-  return getSuperadminAccessSnapshotCached()
+export async function getSuperadminAccessSnapshot(employeeQuery: string, employeePage: number) {
+  const [rhUsers, employeesData] = await Promise.all([
+    getSuperadminAccessRhSnapshotCached(),
+    getSuperadminAccessEmployeesSnapshotCached(employeeQuery, employeePage),
+  ])
+  return { rhUsers, ...employeesData }
 }
 
 export async function getHrEmployeesSnapshot(companyId: number) {

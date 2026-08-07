@@ -1,235 +1,121 @@
 "use server"
 
 import { revalidatePath, revalidateTag } from "next/cache"
-import { redirect } from "next/navigation"
 import { requireRhSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { requireCompanySlug } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
-import { replaceEmployeePackageCourses } from "@/lib/course-sync"
+import { setCourseAssignment } from "@/lib/course-sync"
 import { notifyCompanyRH, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
-import {
-  bridgeEnrollCourses,
-  bridgeGetStudentCourses,
-  isWordPressBridgeConfigured,
-} from "@/lib/wordpress-bridge"
 
-function parseCourseIds(values: FormDataEntryValue[]) {
-  return [
-    ...new Set(
-      values
-        .map((value) => Number.parseInt(String(value), 10))
-        .filter((id) => Number.isInteger(id) && id > 0)
-    ),
-  ]
+export type CourseAssignmentResult = {
+  ok: boolean
+  message: string
 }
 
-function hasValidWpCourseId<T extends { wp_course_id?: number | null }>(
-  course: T
-): course is T & { wp_course_id: number } {
-  return Number.isInteger(course.wp_course_id) && Number(course.wp_course_id) > 0
+function parseEmployeeIds(values: number[]) {
+  return [...new Set(values.filter((id) => Number.isInteger(id) && id > 0))]
 }
 
-function parseBridgeDate(value?: string | null) {
-  if (!value) {
-    return null
-  }
-
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date
-}
-
-export async function assignEmployeeCoursesAction(formData: FormData) {
+export async function setCourseAssignmentsAction(
+  courseId: number,
+  employeeIds: number[]
+): Promise<CourseAssignmentResult> {
   const session = await requireRhSession()
-
   const companyId = session.user.empresa_id as number
   const slug = await requireCompanySlug(companyId)
-  const assignmentsPath = (query?: string) => companyPath(slug, `/assignments${query ?? ""}`)
-  const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
-  const selectedCourseIds = parseCourseIds(formData.getAll("course_ids"))
+  const assignmentsPath = companyPath(slug, "/assignments")
 
-  if (!employeeId) {
-    redirect(assignmentsPath("?error=datos"))
+  if (!Number.isInteger(courseId) || courseId <= 0) {
+    return { ok: false, message: "Curso inválido." }
   }
 
-  const [employee, company] = await Promise.all([
-    prisma.employee.findFirst({
-      where: {
-        id: employeeId,
-        company_id: companyId,
-        active: true,
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    include: {
+      packages: {
+        where: { active: true },
+        orderBy: { created_at: "desc" },
+        include: { package: { include: { courses: true } } },
+        take: 1,
       },
-      select: {
-        id: true,
-        wp_user_id: true,
-        first_name: true,
-        last_name: true,
-        email: true,
+      employees: {
+        where: { active: true },
+        select: { id: true, first_name: true, last_name: true, email: true },
       },
-    }),
-    prisma.company.findUnique({
-      where: { id: companyId },
-      include: {
-        packages: {
-          where: { active: true },
-          orderBy: { created_at: "desc" },
-          include: {
-            package: {
-              include: {
-                courses: true,
-              },
-            },
-          },
-          take: 1,
-        },
-      },
-    }),
-  ])
+    },
+  })
 
-  if (!employee || !company) {
-    redirect(assignmentsPath("?error=empleado"))
-  }
-
-  const activePackage = company.packages[0]
-  if (!activePackage) {
-    redirect(assignmentsPath("?error=paquete"))
+  const activePackage = company?.packages[0]
+  if (!company || !activePackage) {
+    return { ok: false, message: "Tu empresa no tiene un paquete activo asignado." }
   }
 
   const packageCourses = activePackage.package.courses as PortalPackageCourseRecord[]
-  const allowedCourseMap = new Map(
-    packageCourses.map((course: PortalPackageCourseRecord) => [course.wp_course_id, course])
+  const course = packageCourses.find((c) => c.wp_course_id === courseId)
+  if (!course) {
+    return { ok: false, message: "El curso seleccionado no pertenece al paquete activo." }
+  }
+
+  const validEmployeeIds = parseEmployeeIds(employeeIds).filter((id) =>
+    company.employees.some((employee) => employee.id === id)
   )
 
-  const validSelectedCourses = selectedCourseIds
-    .filter((courseId) => allowedCourseMap.has(courseId))
-    .map((courseId) => {
-      const course = allowedCourseMap.get(courseId)!
-      return {
-        wp_course_id: course.wp_course_id,
-        course_name: course.course_name,
-      }
-    })
+  const { addedEmployees, removedCount, bridgeErrors } = await setCourseAssignment(
+    companyId,
+    courseId,
+    course.course_name,
+    validEmployeeIds,
+    activePackage.package.delivery_mode
+  )
 
-  if (selectedCourseIds.length > 0 && validSelectedCourses.length === 0) {
-    redirect(assignmentsPath("?error=cursos"))
-  }
-
-  await replaceEmployeePackageCourses(employee.id, validSelectedCourses)
-
-  const courseNames = validSelectedCourses.map((course) => course.course_name)
-  const courseAssignmentMessage =
-    courseNames.length === 1
-      ? `Se te asignó el curso "${courseNames[0]}".`
-      : `Se te asignaron ${courseNames.length} cursos nuevos.`
-
-  if (validSelectedCourses.length === 0) {
-    revalidatePath(assignmentsPath())
-    revalidatePath(companyPath(slug, "/progress"))
-    revalidatePath("/employee/courses")
-    revalidateTag(companyCacheRootTag(companyId), "max")
-    revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect(assignmentsPath("?success=limpio_local"))
-  }
-
-  if (!employee.wp_user_id || !isWordPressBridgeConfigured()) {
+  for (const employee of addedEmployees) {
     await notifyUsuarioByEmail(employee.email, {
       tipo: "CURSO_ASIGNADO",
       titulo: "Nuevo curso asignado",
-      mensaje: courseAssignmentMessage,
+      mensaje: `Se te asignó el curso "${course.course_name}".`,
     })
-    revalidatePath(assignmentsPath())
-    revalidatePath(companyPath(slug, "/progress"))
-    revalidatePath("/employee/courses")
-    revalidateTag(companyCacheRootTag(companyId), "max")
-    revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect(assignmentsPath("?success=asignado_local"))
   }
 
-  try {
-    const syncedAt = new Date()
-    await bridgeEnrollCourses(
-      employee.wp_user_id,
-      validSelectedCourses.map((course) => course.wp_course_id)
-    )
+  if (bridgeErrors.length > 0) {
+    const details = bridgeErrors
+      .slice(0, 3)
+      .map((item) => `Empleado ${item.employeeId}: ${item.message}`)
+      .join(" | ")
 
-    const studentCourses = await bridgeGetStudentCourses(employee.wp_user_id)
-    const selectedIdsSet = new Set(validSelectedCourses.map((course) => course.wp_course_id))
-
-    const upsertOperations = studentCourses.courses
-      .filter((course) => hasValidWpCourseId(course) && selectedIdsSet.has(course.wp_course_id))
-      .map((course) => {
-        const startedAt = parseBridgeDate(course.started_at)
-        const completedAt = parseBridgeDate(course.completed_at)
-
-        return prisma.employeeCourse.upsert({
-          where: {
-            employee_id_wp_course_id: {
-              employee_id: employee.id,
-              wp_course_id: course.wp_course_id,
-            },
-          },
-          update: {
-            course_name: course.title,
-            progress_pct: course.progress_pct,
-            completed: course.completed,
-            course_start_date: startedAt,
-            completed_at: completedAt,
-            last_synced_at: syncedAt,
-          },
-          create: {
-            employee_id: employee.id,
-            wp_course_id: course.wp_course_id,
-            course_name: course.title,
-            progress_pct: course.progress_pct,
-            completed: course.completed,
-            course_start_date: startedAt,
-            completed_at: completedAt,
-            last_synced_at: syncedAt,
-          },
-        })
-      })
-
-    if (upsertOperations.length > 0) {
-      await prisma.$transaction(upsertOperations)
-    }
-  } catch {
-    await notifyUsuarioByEmail(employee.email, {
-      tipo: "CURSO_ASIGNADO",
-      titulo: "Nuevo curso asignado",
-      mensaje: courseAssignmentMessage,
-    })
-
-    const syncFailMensaje = `Falló la sincronización con WordPress al asignar cursos a ${employee.first_name} ${employee.last_name} (${company.name}).`
     await notifyCompanyRH(companyId, {
       tipo: "SYNC_FALLIDO",
       titulo: "Sincronización fallida",
-      mensaje: `Falló la sincronización con WordPress al asignar cursos a ${employee.first_name} ${employee.last_name}.`,
+      mensaje: `Falló la actualización de acceso de ${bridgeErrors.length} colaborador(es) al curso "${course.course_name}".`,
     })
     await notifySuperadmins({
       tipo: "SYNC_FALLIDO",
       titulo: "Sincronización fallida",
-      mensaje: syncFailMensaje,
+      mensaje: `Falló la sincronización con WordPress al asignar "${course.course_name}" en ${company.name}. ${details}`,
     })
-
-    revalidatePath(assignmentsPath())
-    revalidatePath("/employee/courses")
-    revalidateTag(companyCacheRootTag(companyId), "max")
-    revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect(assignmentsPath("?success=asignado_local&error=bridge_sync"))
   }
 
-  await notifyUsuarioByEmail(employee.email, {
-    tipo: "CURSO_ASIGNADO",
-    titulo: "Nuevo curso asignado",
-    mensaje: courseAssignmentMessage,
-  })
-
-  revalidatePath(assignmentsPath())
+  revalidatePath(assignmentsPath)
   revalidatePath(companyPath(slug, "/progress"))
   revalidatePath("/employee/courses")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect(assignmentsPath("?success=asignado_sync"))
+
+  if (bridgeErrors.length > 0) {
+    return {
+      ok: true,
+      message: `Se guardaron los cambios, pero falló la actualización de acceso para ${bridgeErrors.length} colaborador(es). Se reintentará en el siguiente sync.`,
+    }
+  }
+
+  const parts: string[] = []
+  if (addedEmployees.length > 0) parts.push(`se asignó a ${addedEmployees.length} colaborador(es)`)
+  if (removedCount > 0) parts.push(`se quitó a ${removedCount} colaborador(es)`)
+
+  return {
+    ok: true,
+    message: parts.length > 0 ? `Cambios guardados: ${parts.join(" y ")}.` : "Cambios guardados.",
+  }
 }

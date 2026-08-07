@@ -6,9 +6,12 @@ import KpiCard from "@/components/shared/KpiCard"
 import { getSuperadminReportsSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
+import { paginate } from "@/lib/pagination"
 import { getSession } from "@/lib/session"
 import { retryCompanySyncAction, triggerGlobalLearningSyncAction } from "./actions"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
+import { Pagination } from "@/components/shared/Pagination"
+import { SearchInput } from "@/components/shared/SearchInput"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Chip from "@mui/material/Chip"
@@ -83,6 +86,8 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
   const success = readSearchParam(params, "success")
   const error   = readSearchParam(params, "error")
   const detail  = readDecodedSearchParam(params, "detail")
+  const syncQ    = readSearchParam(params, "sync_q")?.toLowerCase() ?? ""
+  const syncPage = Math.max(1, Number(readSearchParam(params, "sync_page") ?? "1"))
 
   const { empresas: companies } = await getSuperadminReportsSnapshot()
   // eslint-disable-next-line react-hooks/purity
@@ -155,6 +160,24 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
   const syncOk      = companyStats.filter((i) => i.syncStatus === "OK").length
   const syncPartial = companyStats.filter((i) => i.syncStatus === "PARCIAL").length
   const syncError   = companyStats.filter((i) => i.syncStatus === "ERROR").length
+
+  const SYNC_PAGE_SIZE = 20
+  const filteredCompanyStats = syncQ
+    ? companyStats.filter((i) => i.company.name.toLowerCase().includes(syncQ))
+    : companyStats
+  const {
+    items: pagedCompanyStats,
+    currentPage: syncCurrentPage,
+    totalPages: syncTotalPages,
+  } = paginate(filteredCompanyStats, syncPage, SYNC_PAGE_SIZE)
+
+  function syncPageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (syncQ) qs.set("sync_q", syncQ)
+    if (p > 1) qs.set("sync_page", String(p))
+    const str = qs.toString()
+    return `/superadmin/reports${str ? `?${str}` : ""}`
+  }
 
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
@@ -295,13 +318,18 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
         </Paper>
 
         <Paper elevation={0} sx={{ overflow: "hidden", borderRadius: 2, border: "1px solid #e2e8f0", bgcolor: "background.paper" }}>
-          <Box sx={{ borderBottom: "1px solid #f1f5f9", px: 3, py: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>
-              Estado de sincronización WP/Tutor
-            </Typography>
-            <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
-              Semáforo operativo por empresa con reintento directo.
-            </Typography>
+          <Box sx={{ borderBottom: "1px solid #f1f5f9", px: 3, py: 2, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+            <Box>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>
+                Estado de sincronización WP/Tutor
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
+                Semáforo operativo por empresa con reintento directo.
+              </Typography>
+            </Box>
+            <Box component="form" method="GET" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+              <SearchInput name="sync_q" defaultValue={syncQ} placeholder="Buscar empresa…" width={180} />
+            </Box>
           </Box>
           <Box sx={{ p: 2.5, display: "grid", gap: 2 }}>
             <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1 }}>
@@ -324,6 +352,11 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
               ))}
             </Box>
 
+            {filteredCompanyStats.length === 0 ? (
+              <Box sx={{ borderRadius: 1.5, border: "1px dashed #e2e8f0", bgcolor: "#f8fafc", py: 4, textAlign: "center" }}>
+                <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>Sin resultados para ese filtro.</Typography>
+              </Box>
+            ) : (
             <Table size="small">
               <TableHead>
                 <TableRow>
@@ -336,7 +369,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                 </TableRow>
               </TableHead>
               <TableBody>
-                {companyStats.map((item) => {
+                {pagedCompanyStats.map((item) => {
                   const style = SYNC_CHIP_STYLES[item.syncStatus]
                   return (
                     <TableRow key={item.company.id} sx={{ height: 44 }}>
@@ -398,6 +431,13 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                 })}
               </TableBody>
             </Table>
+            )}
+            <Pagination
+              currentPage={syncCurrentPage}
+              totalPages={syncTotalPages}
+              totalResults={filteredCompanyStats.length}
+              buildPageUrl={syncPageUrl}
+            />
           </Box>
         </Paper>
       </Box>

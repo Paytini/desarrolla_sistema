@@ -109,7 +109,7 @@ export default function StatusNotice({ tone, message, title }: StatusNoticeProps
             color: "text.secondary",
           }}
         >
-          No se aplicaron cambios inseguros. Si el error menciona WordPress o Tutor LMS,
+          No se aplicaron cambios inseguros. Si el error persiste,
           revisa que el usuario o curso sigan existiendo y vuelve a intentar la acción.
         </Box>
       </DialogContent>

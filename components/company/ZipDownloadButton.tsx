@@ -3,14 +3,21 @@
 import { useState } from "react"
 import { Download, Loader2, AlertCircle } from "lucide-react"
 
-export function ZipDownloadButton({ count }: { count: number }) {
+type ZipDownloadButtonProps = {
+  count: number
+  filteredCount?: number
+  queryString?: string
+}
+
+export function ZipDownloadButton({ count, filteredCount, queryString }: ZipDownloadButtonProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle")
+  const isFiltered = filteredCount !== undefined && filteredCount !== count
 
   async function handleClick() {
     if (status === "loading") return
     setStatus("loading")
     try {
-      const res = await fetch("/api/certificates/zip")
+      const res = await fetch(`/api/certificates/zip${queryString ?? ""}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
@@ -53,6 +60,8 @@ export function ZipDownloadButton({ count }: { count: number }) {
         ? "Descargando…"
         : isError
         ? "Error — intenta de nuevo"
+        : isFiltered
+        ? `Descargar ZIP (${filteredCount} filtradas)`
         : `Descargar ZIP (${count})`}
     </button>
   )
