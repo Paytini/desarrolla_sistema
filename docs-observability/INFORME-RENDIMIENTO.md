@@ -188,6 +188,40 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Soluciones:**
 1. Reescribir KPIs con `prisma.$queryRaw` o `groupBy`/`count` (Postgres hace esto en milisegundos con los índices de M-2) y paginar en SQL (`take/skip` + `where` de búsqueda). Mantener `unstable_cache` encima.
 2. **(Recomendada)** Tabla de resumen (`empresa_stats`) actualizada por el cron existente cada 5 min — lectura O(1) por dashboard; acepta 5 min de staleness en KPIs.
+
+**Ejemplo:**
+```sql
+-- Crear tabla de resumen
+CREATE TABLE empresa_stats (
+  id_empresa UUID PRIMARY KEY,
+  avance_promedio DECIMAL(5,2),
+   cant_empleados INT,
+   constancias_emitidas INT
+ );
+ -- Insertar datos de ejemplo
+ INSERT INTO empresa_stats (id_empresa, avance_promedio, cant_empleados, constancias_emitidas)
+ VALUES ('6', 0.6, 200, 60);
+ empresas_stats
+{
+ idEmpresa:6
+ key:'avance_prom'
+ value:0.6
+ type:'percentage'
+},
+{
+ idEmpresa:6
+ key:'cant_empledos'
+ value:200
+ type:'int'
+},
+{
+ idEmpresa:6
+ key:'canr_const_emit'
+ value:60
+ type:int
+}
+ ```
+
 3. Vistas materializadas de Postgres refrescadas por cron — igual que 2 pero en la DB; menos código de app, más operación de DB.
 
 ---
