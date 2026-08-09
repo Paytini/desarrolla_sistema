@@ -60,8 +60,8 @@
   --color-brand: var(--brand);
   --color-brand-warm: var(--brand-warm);
   --color-brand-ink: var(--brand-ink);
-  --font-sans: "Outfit", system-ui, "Segoe UI", Arial, sans-serif;
-  --font-heading: "Outfit", sans-serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, "Segoe UI", Arial, sans-serif;
+  --font-heading: var(--font-inter), "Inter", sans-serif;
   --font-mono: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -101,6 +101,11 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+:root {
+  --font-outfit: var(--font-inter);
+  --font-plus-jakarta-sans: var(--font-inter);
+}
+
 body {
   font-family: var(--font-sans);
 }
@@ -119,9 +124,9 @@ body {
 }
 
 .portal-v4 {
-  --font-outfit: var(--font-urbanist);
-  --font-plus-jakarta-sans: var(--font-epilogue);
-  font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+  --font-outfit: var(--font-inter);
+  --font-plus-jakarta-sans: var(--font-inter);
+  font-family: var(--font-inter), system-ui, sans-serif;
 
   /* monochrome + single-accent palette (designV4) */
   --kpi-bg: #FEFEFE;

@@ -80,17 +80,6 @@ export default function CsvEmployeeImportForm() {
           <p className="mt-1.5 text-xs leading-5 text-slate-500">
             Un empleado por fila. Las columnas obligatorias deben venir llenas.
           </p>
-          <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-medium">
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF1FE] px-2.5 py-1 text-[#2A61D6]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#3579F5]" />
-              Obligatorio
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-              Opcional
-            </span>
-          </div>
-
           <button
             type="button"
             onClick={() => setShowExample((v) => !v)}
@@ -174,7 +163,7 @@ export default function CsvEmployeeImportForm() {
                 </span>
                 <p>
                   Si el CSV no incluye la columna <span className="font-semibold">password</span>,
-                  captura abajo un password temporal por defecto para todos los empleados de esa carga.
+                  captura abajo una contraseña temporal por defecto para todos los empleados de esa carga.
                 </p>
               </div>
             </div>
@@ -192,7 +181,7 @@ export default function CsvEmployeeImportForm() {
 
         <div className="grid gap-4 pl-8">
           <label className="grid gap-1.5 text-sm">
-            <span className="font-medium text-slate-700">Archivo CSV</span>
+            <span className="text-[14px] font-normal text-slate-700">Archivo CSV</span>
             <input
               name="archivo_csv"
               type="file"
@@ -203,12 +192,12 @@ export default function CsvEmployeeImportForm() {
           </label>
 
           <label className="grid gap-1.5 text-sm">
-            <span className="font-medium text-slate-700">Password temporal por defecto</span>
+            <span className="text-[14px] font-normal text-slate-700">Contraseña temporal por defecto</span>
             <input
               name="password_csv"
               type="text"
               minLength={8}
-              placeholder="Recomendado si tu CSV no incluye columna password"
+              placeholder="Recomendado si tu archivo no incluye la columna password"
               className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#3579F5]"
             />
           </label>
