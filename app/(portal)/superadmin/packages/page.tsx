@@ -29,7 +29,7 @@ const successMessages: Record<string, string> = {
   paquete_eliminado:"El paquete se eliminó del catálogo.",
   paquete_asignado: "El paquete activo de la empresa se actualizó correctamente.",
   paquete_actualizado: "El paquete se actualizó correctamente.",
-  sync_ok:          "Se sincronizaron los cursos con los empleados activos.",
+  sync_queued:      "Se encoló la sincronización de cursos con los empleados activos. Verás el progreso en unos minutos.",
 }
 
 const errorMessages: Record<string, string> = {
