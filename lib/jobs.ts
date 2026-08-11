@@ -93,21 +93,39 @@ async function processPackageEnrollmentSyncJob(jobId: number, payload: PackageEn
   })
 }
 
+const PROCESSING_STALE_MS = 10 * 60 * 1000
+
 export async function processPendingJobs(limit: number = JOBS_PER_CRON_TICK) {
-  const jobs = await prisma.job.findMany({
+  const staleThreshold = new Date(Date.now() - PROCESSING_STALE_MS)
+
+  await prisma.job.updateMany({
+    where: { status: "PROCESSING", started_at: { lt: staleThreshold } },
+    data: { status: "PENDING" },
+  })
+
+  const candidates = await prisma.job.findMany({
     where: { status: "PENDING" },
     orderBy: { created_at: "asc" },
     take: limit,
+    select: { id: true },
   })
 
   let processed = 0
   let errored = 0
+  let skipped = 0
 
-  for (const job of jobs) {
-    await prisma.job.update({
-      where: { id: job.id },
-      data: { status: "PROCESSING", started_at: job.started_at ?? new Date() },
+  for (const candidate of candidates) {
+    const claim = await prisma.job.updateMany({
+      where: { id: candidate.id, status: "PENDING" },
+      data: { status: "PROCESSING", started_at: new Date() },
     })
+
+    if (claim.count === 0) {
+      skipped += 1
+      continue
+    }
+
+    const job = await prisma.job.findUniqueOrThrow({ where: { id: candidate.id } })
 
     try {
       if (job.type === "PACKAGE_ENROLLMENT_SYNC") {
@@ -128,5 +146,5 @@ export async function processPendingJobs(limit: number = JOBS_PER_CRON_TICK) {
     }
   }
 
-  return { processed, errored, total: jobs.length }
+  return { processed, errored, skipped, total: candidates.length }
 }

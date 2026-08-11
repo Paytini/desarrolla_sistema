@@ -222,14 +222,15 @@ export async function syncSingleEmployeePackageEnrollment(
   courseIdSet: Set<number>,
   deliveryMode: string
 ): Promise<PackageEnrollmentSyncResult> {
-  await replaceEmployeePackageCourses(employee.id, packageCourses)
-
   const wpUserId = employee.wp_user_id
-  if (!wpUserId) {
-    return { employeeId: employee.id, wpUserId: 0, enrolledCount: 0, seededOnly: true }
-  }
 
   try {
+    await replaceEmployeePackageCourses(employee.id, packageCourses)
+
+    if (!wpUserId) {
+      return { employeeId: employee.id, wpUserId: 0, enrolledCount: 0, seededOnly: true }
+    }
+
     if (courseIds.length > 0) {
       const enrollment = await bridgeEnrollCourses(wpUserId, courseIds)
       assertEnrollmentSucceeded(enrollment, courseIds)
@@ -298,7 +299,7 @@ export async function syncSingleEmployeePackageEnrollment(
 
     await markEmployeeCourseAccessError(employee.id, courseIds, deliveryMode, message)
 
-    return { employeeId: employee.id, wpUserId, enrolledCount: 0, error: message }
+    return { employeeId: employee.id, wpUserId: wpUserId ?? 0, enrolledCount: 0, error: message }
   }
 }
 
