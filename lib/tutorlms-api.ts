@@ -63,6 +63,7 @@ async function tutorApiRequest<T>(path: string, init?: RequestInit): Promise<T> 
       ...(init?.headers ?? {}),
     },
     cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
   })
 
   if (!response.ok) {
