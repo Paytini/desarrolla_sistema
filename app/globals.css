@@ -124,8 +124,6 @@ body {
 }
 
 .portal-v4 {
-  --font-outfit: var(--font-inter);
-  --font-plus-jakarta-sans: var(--font-inter);
   font-family: var(--font-inter), system-ui, sans-serif;
 
   /* monochrome + single-accent palette (designV4) */
