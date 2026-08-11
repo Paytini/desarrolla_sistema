@@ -12,6 +12,9 @@ const pool =
   globalForPrisma.prismaPool ??
   new Pool({
     connectionString: process.env.DATABASE_URL,
+    max: 3,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
   })
 
 // Models that carry a direct company_id column. Any query against them, while an
@@ -78,7 +81,5 @@ const basePrisma =
 
 export const prisma = tenantGuardedClient(basePrisma) as unknown as PrismaClient
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = basePrisma
-  globalForPrisma.prismaPool = pool
-}
+globalForPrisma.prisma = basePrisma
+globalForPrisma.prismaPool = pool

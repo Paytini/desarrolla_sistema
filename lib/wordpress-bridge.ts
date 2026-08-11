@@ -289,22 +289,54 @@ export function isWordPressBridgeConfigured() {
   return Boolean(getBaseUrl() && (process.env.WP_BRIDGE_PORTAL_KEY || process.env.WP_BRIDGE_BASIC_USER))
 }
 
-async function bridgeRequest<T>(path: string, init?: RequestInit): Promise<T> {
+type BridgeRequestInit = RequestInit & { retryable?: boolean }
+
+const BRIDGE_TIMEOUT_MS = 15_000
+const BRIDGE_RETRY_BACKOFF_MS = [500, 2000]
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function bridgeRequest<T>(path: string, init?: BridgeRequestInit): Promise<T> {
   const baseUrl = getBaseUrl()
   if (!baseUrl) {
     throw new Error("WP bridge base URL is not configured")
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...init,
-    headers: {
-      ...getHeaders(),
-      ...(init?.headers ?? {}),
-    },
-    cache: "no-store",
-  })
+  const { retryable, ...fetchInit } = init ?? {}
+  const method = fetchInit.method ?? "GET"
+  const shouldRetry = retryable ?? method === "GET"
+  const maxAttempts = shouldRetry ? BRIDGE_RETRY_BACKOFF_MS.length + 1 : 1
 
-  if (!response.ok) {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    let response: Response
+
+    try {
+      response = await fetch(`${baseUrl}${path}`, {
+        ...fetchInit,
+        headers: {
+          ...getHeaders(),
+          ...(fetchInit.headers ?? {}),
+        },
+        cache: "no-store",
+        signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
+      })
+    } catch (error) {
+      lastError = error
+      if (attempt < maxAttempts - 1) {
+        await sleep(BRIDGE_RETRY_BACKOFF_MS[attempt])
+        continue
+      }
+      throw lastError
+    }
+
+    if (response.ok) {
+      return (await response.json()) as T
+    }
+
     let message = `Bridge request failed with status ${response.status}`
 
     try {
@@ -315,10 +347,19 @@ async function bridgeRequest<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
     }
 
-    throw new Error(message)
+    const httpError = new Error(message)
+    const isRetryableStatus = response.status >= 500 || response.status === 429
+
+    if (shouldRetry && isRetryableStatus && attempt < maxAttempts - 1) {
+      lastError = httpError
+      await sleep(BRIDGE_RETRY_BACKOFF_MS[attempt])
+      continue
+    }
+
+    throw httpError
   }
 
-  return (await response.json()) as T
+  throw lastError
 }
 
 export async function bridgeHealthCheck() {
@@ -328,6 +369,7 @@ export async function bridgeHealthCheck() {
 export async function bridgeUpsertEmployee(input: BridgeUpsertEmployeeInput) {
   return bridgeRequest<BridgeUpsertEmployeeResponse>("/employees/upsert", {
     method: "POST",
+    retryable: true,
     body: JSON.stringify({
       employee_id: input.employeeId,
       company: {

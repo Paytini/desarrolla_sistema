@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { verifyTurnstileToken } from "@/lib/turnstile"
 import { getCompanyAccessStatus } from "@/lib/company-status"
+import { authConfig } from "@/auth.config"
 
 class EmpresaBloqueadaError extends CredentialsSignin {
   constructor(reason: "suspendida" | "vencida") {
@@ -13,38 +14,12 @@ class EmpresaBloqueadaError extends CredentialsSignin {
   }
 }
 
-const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
-if (!authSecret) {
+if (!authConfig.secret) {
   throw new Error("AUTH_SECRET (o NEXTAUTH_SECRET) es requerida. Configura la variable de entorno antes de iniciar.")
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: { strategy: "jwt" },
-  secret: authSecret,
-  trustHost: true,
-  pages: { signIn: "/login" },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.rol = (user as { rol?: string }).rol
-        token.empresa_id = (user as { empresa_id?: number | null }).empresa_id
-        token.nombre = (user as { nombre?: string }).nombre
-        token.empresa = (user as { empresa?: string | null }).empresa
-        token.empresa_slug = (user as { empresa_slug?: string | null }).empresa_slug
-      }
-      return token
-    },
-    async session({ session, token }) {
-      session.user.id = token.id as string
-      session.user.rol = token.rol as string
-      session.user.empresa_id = token.empresa_id as number | null
-      session.user.nombre = token.nombre as string
-      session.user.empresa = token.empresa as string | undefined
-      session.user.empresa_slug = token.empresa_slug as string | undefined
-      return session
-    },
-  },
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
