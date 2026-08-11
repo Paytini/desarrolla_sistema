@@ -1,0 +1,16 @@
+config:
+  target: "http://localhost:3005"
+  processor: "./flows.js"
+  engines:
+    playwright: {}
+  phases:
+    - duration: 120
+      arrivalRate: 1
+      name: "superadmin"
+  ensure:
+    maxErrorRate: 5
+  plugins:
+    ensure: {}
+scenarios:
+  - engine: playwright
+    testFunction: "superadminJourney"

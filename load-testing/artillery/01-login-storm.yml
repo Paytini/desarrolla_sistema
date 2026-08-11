@@ -1,0 +1,55 @@
+config:
+  # Artillery's template engine does not support the `||` fallback expression
+  # (confirmed empirically: with LT_TARGET_URL unset this resolves to an empty
+  # string and fails "config.target is required"). Hardcoded per task-9 brief's
+  # documented fallback instruction. Only localhost:3005 is an approved target.
+  target: "http://localhost:3005"
+  processor: "./processor.js"
+  payload:
+    path: "../data/payloads/employee-credentials.csv"
+    fields: ["email", "password"]
+    skipHeader: true
+    order: random
+  phases:
+    - duration: 60
+      arrivalRate: 2
+      name: "warmup"
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 15
+      name: "ramp"
+    - duration: 60
+      arrivalRate: 30
+      name: "spike-logins"
+    - duration: 60
+      arrivalRate: 5
+      name: "recovery"
+  plugins:
+    ensure: {}
+    expect: {}
+  ensure:
+    thresholds:
+      - "http.response_time.p95": 2500
+      - "http.response_time.p99": 5000
+    maxErrorRate: 2
+scenarios:
+  - name: "login-completo"
+    flow:
+      - function: "setDummyToken"
+      - get:
+          url: "/api/auth/csrf"
+          capture:
+            - json: "$.csrfToken"
+              as: "csrfToken"
+      - post:
+          url: "/api/auth/callback/credentials"
+          form:
+            csrfToken: "{{ csrfToken }}"
+            email: "{{ email }}"
+            password: "{{ password }}"
+            turnstileToken: "{{ turnstileToken }}"
+      - get:
+          url: "/api/auth/session"
+          expect:
+            - statusCode: 200
+            - hasProperty: "user"

@@ -1,0 +1,22 @@
+config:
+  target: "http://localhost:3005"
+  processor: "./flows.js"
+  engines:
+    playwright: {}
+  payload:
+    path: "../data/payloads/rh-credentials.csv"
+    fields: ["email", "password", "slug"]
+    skipHeader: true
+    order: random
+  phases:
+    - duration: 180
+      arrivalRate: 1
+      rampTo: 3
+      name: "rh-normal"
+  ensure:
+    maxErrorRate: 5
+  plugins:
+    ensure: {}
+scenarios:
+  - engine: playwright
+    testFunction: "rhJourney"

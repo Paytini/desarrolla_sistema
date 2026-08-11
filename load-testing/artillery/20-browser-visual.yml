@@ -1,0 +1,58 @@
+config:
+  # Artillery's template engine does not support the `||` fallback expression
+  # (confirmed empirically in sibling scenario files: with LT_TARGET_URL unset
+  # this resolves to an empty string). Hardcoded. Only localhost:3005 is an
+  # approved target.
+  target: "http://localhost:3005"
+  processor: "./flows-visual.js"
+  engines:
+    playwright:
+      # scripts/run-browser.js overrides launchOptions.headless/slowMo (and
+      # config.phases below) at run time via `artillery run --overrides`,
+      # driven by config.sim.browser / LT_BROWSER_* env vars. The values here
+      # are just a safe standalone default if this file is invoked directly
+      # with `npx artillery run` instead of `npm run sim:browser`.
+      launchOptions:
+        headless: true
+        slowMo: 0
+        args: ["--disable-dev-shm-usage"]
+      contextOptions:
+        viewport: { width: 1366, height: 850 }
+      defaultNavigationTimeout: 20
+      defaultTimeout: 15
+  payload:
+    - path: "../data/payloads/employee-credentials.csv"
+      fields: ["email", "password"]
+      skipHeader: true
+      order: random
+    - path: "../data/payloads/rh-credentials.csv"
+      fields: ["rhEmail", "rhPassword", "rhSlug"]
+      skipHeader: true
+      order: random
+  phases:
+    # scripts/run-browser.js replaces this with a single phase:
+    # { duration: LT_BROWSER_DURATION_SEC, arrivalCount: LT_BROWSER_VUS }.
+    # Kept small here so a stray direct `artillery run` stays cheap.
+    - duration: 20
+      arrivalCount: 1
+      name: "watch (default — use npm run sim:browser instead)"
+  ensure:
+    # Lenient on purpose: this mode is for observing real UI flows with a
+    # handful of VUs, not for pass/fail capacity gating. A single flaky VU
+    # under headed/slowMo timing shouldn't turn the whole run red.
+    maxErrorRate: 50
+  plugins:
+    ensure: {}
+scenarios:
+  - name: "empleado (login UI real)"
+    engine: playwright
+    weight: 70
+    testFunction: "employeeVisualJourney"
+  - name: "rh (login UI real)"
+    engine: playwright
+    weight: 20
+    testFunction: "rhVisualJourney"
+  - name: "superadmin (login UI real)"
+    engine: playwright
+    weight: 10
+    testFunction: "superadminVisualJourney"

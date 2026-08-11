@@ -1,0 +1,152 @@
+config:
+  # Artillery's template engine does not support the `||` fallback expression
+  # (confirmed empirically in task 9: with LT_TARGET_URL unset this resolves to
+  # an empty string). Hardcoded. Only localhost:3005 is an approved target.
+  target: "http://localhost:3005"
+  processor: "./processor-http-session.js"
+  payload:
+    - path: "../data/payloads/employee-credentials.csv"
+      fields: ["email", "password"]
+      skipHeader: true
+      order: random
+    - path: "../data/payloads/rh-credentials.csv"
+      fields: ["rhEmail", "rhPassword", "slug"]
+      skipHeader: true
+      order: random
+  # Defaults for running this file directly (npx artillery run ...). The
+  # sim:http / sim:spike runner (scripts/run-http.js) replaces `phases` and
+  # `variables` wholesale via --overrides built from config.sim.http /
+  # config.sim.spike, so these numbers only matter for a bare manual run.
+  phases:
+    - duration: 180
+      arrivalRate: 3
+      name: "sesiones-http"
+  variables:
+    pagesPerSession: 12
+    thinkMinSec: 8
+    thinkMaxSec: 25
+  plugins:
+    ensure: {}
+    expect: {}
+  ensure:
+    thresholds:
+      - "http.response_time.p95": 3000
+      - "http.response_time.p99": 8000
+    maxErrorRate: 5
+
+# Realism fix: a real employee/RH user logs in ONCE, then browses for
+# 30-45 minutes. Login (csrf + credentials callback) happens a single time per
+# VU flow; everything after it is a `loop` of plain navigation requests, so
+# the login:page-request ratio in the results (1 : pagesPerSession) reflects
+# actual usage instead of "how many logins/sec can we do".
+#
+# Session persistence relies on Artillery's per-VU cookie jar (tough-cookie):
+# @artilleryio/int-core's engine_http.js turns on `context._enableCookieJar`
+# the first time a Set-Cookie header is seen (i.e. right after the login
+# POST) and attaches it to every subsequent request for that VU, including
+# ones inside `loop` — verified by reading engine_http.js/runner.js and by a
+# manual cookie-jar login+fetch script against the real running app (see
+# sim-http-report.md). Each looped page request also carries its own
+# `expect` so a broken session shows up as a hard failure instead of a
+# silent 200: the portal's middleware (proxy.ts) 307-redirects unauthenticated
+# requests to /login, and Artillery's HTTP engine follows redirects by
+# default, so a lost session would still return statusCode 200 — just for the
+# login page's HTML, not the authenticated one. matchesRegexp against a
+# marker string that only exists in the authenticated page's server-rendered
+# HTML (PageHeader `description`/`title` props, confirmed present in the raw
+# SSR response, no client JS needed) catches that case; the two JSON API
+# calls (refresh, notifications) independently 401 (not redirect) when the
+# session is invalid, which is itself a second, unrelated signal.
+scenarios:
+  - name: "empleado-http-session"
+    weight: 80
+    flow:
+      - get:
+          url: "/api/auth/csrf"
+          capture:
+            - json: "$.csrfToken"
+              as: "csrfToken"
+      - post:
+          url: "/api/auth/callback/credentials"
+          form:
+            csrfToken: "{{ csrfToken }}"
+            email: "{{ email }}"
+            password: "{{ password }}"
+            turnstileToken: "XXXX.DUMMY.TOKEN.XXXX"
+      - get:
+          url: "/api/auth/session"
+          expect:
+            - statusCode: 200
+            - hasProperty: "user"
+      - loop:
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/employee/courses"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Tu ruta de capacitaci.n activa"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - post:
+              url: "/api/employee/learning/refresh"
+              json:
+                force: false
+              expect:
+                - statusCode: 200
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/employee/certificates"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Mis constancias"
+          - get:
+              url: "/api/internal/notifications"
+              expect:
+                - statusCode: 200
+        count: "{{ pagesPerSession }}"
+
+  - name: "rh-http-session"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/auth/csrf"
+          capture:
+            - json: "$.csrfToken"
+              as: "csrfToken"
+      - post:
+          url: "/api/auth/callback/credentials"
+          form:
+            csrfToken: "{{ csrfToken }}"
+            email: "{{ rhEmail }}"
+            password: "{{ rhPassword }}"
+            turnstileToken: "XXXX.DUMMY.TOKEN.XXXX"
+      - get:
+          url: "/api/auth/session"
+          expect:
+            - statusCode: 200
+            - hasProperty: "user"
+      - loop:
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ slug }}/home"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Panel de operaci.n acad.mica"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ slug }}/employees"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Gesti.n de la plantilla de colaboradores"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ slug }}/certificates"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Constancias DC-3"
+        count: "{{ pagesPerSession }}"

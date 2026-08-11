@@ -1,0 +1,25 @@
+config:
+  # Artillery's template engine does not support the `||` fallback expression
+  # (confirmed empirically in sibling scenario files). Hardcoded. Only
+  # localhost:3005 is an approved target.
+  target: "http://localhost:3005"
+  processor: "./processor-gaps.js"
+  phases:
+    # A single custom `function` step owns the entire timeline (control window
+    # then storm window) — see the long comment above runCacheInvalidationStorm
+    # in processor-gaps.js for why this isn't expressed as two weighted
+    # scenarios. Tune via LT_STORM_POLLER_COUNT / LT_STORM_CONTROL_SEC /
+    # LT_STORM_DURATION_SEC / LT_STORM_POLL_INTERVAL_MS env vars.
+    - duration: 5
+      arrivalCount: 1
+      name: "cache-invalidation-storm (control -> storm en un solo run)"
+  ensure:
+    # No pass/fail gate — the deliverable is the reported control-vs-storm
+    # delta (docs-observability/INFORME-RENDIMIENTO.md G-4), not a threshold.
+    maxErrorRate: 100
+  plugins:
+    ensure: {}
+scenarios:
+  - name: "superadmin bajo poll storm de empleados"
+    flow:
+      - function: "runCacheInvalidationStorm"
