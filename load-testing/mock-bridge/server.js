@@ -27,6 +27,8 @@ async function readBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
+  req.on("error", () => {})
+  res.on("error", () => {})
   if (req.headers["x-d360-portal-key"] !== config.bridgeKey) return send(res, 401, { message: "bad key" })
   if (Math.random() < config.bridgeErrorRate) return send(res, 500, { message: "lt-mock injected error" })
   await delay()
