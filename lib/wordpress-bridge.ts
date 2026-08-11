@@ -312,8 +312,10 @@ async function bridgeRequest<T>(path: string, init?: BridgeRequestInit): Promise
   let lastError: unknown
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    let response: Response
+
     try {
-      const response = await fetch(`${baseUrl}${path}`, {
+      response = await fetch(`${baseUrl}${path}`, {
         ...fetchInit,
         headers: {
           ...getHeaders(),
@@ -322,29 +324,39 @@ async function bridgeRequest<T>(path: string, init?: BridgeRequestInit): Promise
         cache: "no-store",
         signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
       })
-
-      if (!response.ok) {
-        let message = `Bridge request failed with status ${response.status}`
-
-        try {
-          const errorBody = (await response.json()) as { message?: string }
-          if (errorBody.message) {
-            message = errorBody.message
-          }
-        } catch {
-        }
-
-        throw new Error(message)
-      }
-
-      return (await response.json()) as T
     } catch (error) {
       lastError = error
       if (attempt < maxAttempts - 1) {
         await sleep(BRIDGE_RETRY_BACKOFF_MS[attempt])
         continue
       }
+      throw lastError
     }
+
+    if (response.ok) {
+      return (await response.json()) as T
+    }
+
+    let message = `Bridge request failed with status ${response.status}`
+
+    try {
+      const errorBody = (await response.json()) as { message?: string }
+      if (errorBody.message) {
+        message = errorBody.message
+      }
+    } catch {
+    }
+
+    const httpError = new Error(message)
+    const isRetryableStatus = response.status >= 500 || response.status === 429
+
+    if (shouldRetry && isRetryableStatus && attempt < maxAttempts - 1) {
+      lastError = httpError
+      await sleep(BRIDGE_RETRY_BACKOFF_MS[attempt])
+      continue
+    }
+
+    throw httpError
   }
 
   throw lastError
