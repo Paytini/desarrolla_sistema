@@ -6,7 +6,7 @@ import { cancelConsultingRequestAction } from "./actions"
 import { CancelConsultingRequestButton } from "@/components/company/consulting/CancelConsultingRequestButton"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
-import StatusNotice from "@/components/shared/StatusNotice"
+import StatusToast from "@/components/shared/StatusToast"
 import { getCompanyBranding } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { getConsultingArea } from "@/lib/consulting-areas"
@@ -119,8 +119,8 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
         }
       />
 
-      {success ? <StatusNotice tone="success" message={successMessages[success] ?? success} /> : null}
-      {error ? <StatusNotice tone="error" message={errorMessages[error] ?? error} /> : null}
+      {success ? <StatusToast tone="success" message={successMessages[success] ?? success} /> : null}
+      {error ? <StatusToast tone="error" message={errorMessages[error] ?? error} /> : null}
 
       <div className="space-y-5">
         <section className="rounded-lg bg-white p-5">
