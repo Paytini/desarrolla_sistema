@@ -17,6 +17,7 @@ import { requireCompanySlug } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
+import { mapWithConcurrency } from "@/lib/concurrency"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
 import {
@@ -335,31 +336,6 @@ type NormalizedCsvEmployeeRow = {
 
 type CreatedCsvEmployee = NormalizedCsvEmployeeRow & {
   id: number
-}
-
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  concurrency: number,
-  mapper: (item: T, index: number) => Promise<R>
-) {
-  const results = new Array<R>(items.length)
-  let nextIndex = 0
-
-  async function worker() {
-    while (nextIndex < items.length) {
-      const currentIndex = nextIndex
-      nextIndex += 1
-      results[currentIndex] = await mapper(items[currentIndex], currentIndex)
-    }
-  }
-
-  const workers = Array.from(
-    { length: Math.min(Math.max(concurrency, 1), items.length) },
-    () => worker()
-  )
-
-  await Promise.all(workers)
-  return results
 }
 
 function normalizeCsvEmployees(
