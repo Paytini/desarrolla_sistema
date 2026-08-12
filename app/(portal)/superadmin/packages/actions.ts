@@ -7,7 +7,7 @@ import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { getCompanyBranding } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
-import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
+import { enqueuePackageEnrollmentSyncJob } from "@/lib/course-sync"
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import {
@@ -523,8 +523,11 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
     redirect("/superadmin/packages?error=sync")
   }
 
+  let employeeCount = 0
+
   try {
-    await syncCompanyPackageEnrollments(companyId)
+    const queued = await enqueuePackageEnrollmentSyncJob(companyId)
+    employeeCount = queued.employeeCount
   } catch (error) {
     await createAuditEvent({
       actor,
@@ -532,7 +535,7 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
       entityType: "EMPRESA",
       entityId: companyId,
       companyId,
-      resumen: `${actor.nombre} intento sincronizar paquete y hubo error.`,
+      resumen: `${actor.nombre} intento encolar sincronizacion de paquete y hubo error.`,
       metadata: {
         message: getSyncErrorMessage(error),
       },
@@ -543,11 +546,11 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
 
   await createAuditEvent({
     actor,
-    accion: "SYNC_PAQUETE_EMPRESA_OK",
+    accion: "SYNC_PAQUETE_EMPRESA_ENCOLADO",
     entityType: "EMPRESA",
     entityId: companyId,
     companyId,
-    resumen: `${actor.nombre} sincronizo paquete activo con empleados de la empresa.`,
+    resumen: `${actor.nombre} encolo sincronizacion de paquete activo para ${employeeCount} empleados.`,
   })
 
   const syncedCompanyBranding = await getCompanyBranding(companyId)
@@ -561,5 +564,5 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   revalidatePath("/employee/courses")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  redirect("/superadmin/packages?success=sync_ok")
+  redirect("/superadmin/packages?success=sync_queued")
 }

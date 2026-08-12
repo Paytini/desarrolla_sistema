@@ -427,3 +427,33 @@ model SeatHistory {
   @@index([created_at])
   @@map("seat_history")
 }
+
+// ─────────────────────────────────────────────────────────────
+//  JOB
+//  Generic async job queue. A Vercel Cron (see vercel.json) picks up
+//  PENDING jobs and processes them in bounded chunks so no single
+//  invocation runs unbounded (see G-2 in docs-observability/INFORME-RENDIMIENTO.md).
+// ─────────────────────────────────────────────────────────────
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  DONE
+  ERROR
+}
+
+model Job {
+  id           Int       @id @default(autoincrement())
+  type         String
+  status       JobStatus @default(PENDING)
+  payload      Json
+  result       Json?
+  error        String?   @db.Text
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  started_at   DateTime?
+  completed_at DateTime?
+
+  @@index([status, type])
+  @@map("jobs")
+}

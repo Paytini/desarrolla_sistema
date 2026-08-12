@@ -29,7 +29,7 @@ const STALE_SYNC_MS = 1000 * 60 * 60 * 24
 const successMessages: Record<string, string> = {
   sync_background_started:        "La sincronización global se envió a segundo plano.",
   sync_background_already_running:"Ya existe una sincronización global en proceso.",
-  sync_retry_ok:                  "Se ejecutó el reintento de sincronización de la empresa.",
+  sync_retry_ok:                  "Se encoló el reintento de sincronización de la empresa. Verás el progreso en unos minutos.",
   sync_retry_queue_busy:          "Se actualizó el acceso del paquete. El refresco ya estaba en cola.",
   sync_retry_partial:             "Se lanzó el reintento, pero hubo advertencias. Revisa el detalle.",
 }

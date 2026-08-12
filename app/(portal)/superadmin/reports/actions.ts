@@ -7,7 +7,7 @@ import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { getCompanyBranding } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
-import { syncCompanyPackageEnrollments } from "@/lib/course-sync"
+import { enqueuePackageEnrollmentSyncJob } from "@/lib/course-sync"
 import {
   scheduleCompanyEmployeeLearningBatch,
   scheduleStaleEmployeeLearningBatch,
@@ -72,7 +72,7 @@ export async function retryCompanySyncAction(formData: FormData) {
   let packageSyncError: string | null = null
 
   try {
-    await syncCompanyPackageEnrollments(companyId)
+    await enqueuePackageEnrollmentSyncJob(companyId)
   } catch (error) {
     packageSyncError = getSyncErrorMessage(error)
   }
