@@ -2,6 +2,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import sharp from "sharp"
 import { PDFDocument, PDFImage, StandardFonts, rgb } from "pdf-lib"
+import { put } from "@vercel/blob"
 import { prisma } from "@/lib/prisma"
 
 const POS = {
@@ -194,6 +195,44 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
   }
 
   return await pdf.save()
+}
+
+export async function getOrCreateDc3PdfBytes({ certificateId }: Dc3GenerateInput): Promise<Uint8Array> {
+  const cached = await prisma.certificate.findUnique({
+    where: { id: certificateId },
+    select: { dc3_pdf_url: true },
+  })
+
+  if (!cached) {
+    throw new Error(`Constancia ${certificateId} no encontrada`)
+  }
+
+  if (cached.dc3_pdf_url) {
+    try {
+      return await fetchImageBytes(cached.dc3_pdf_url)
+    } catch (err) {
+      console.warn(`[dc3] no se pudo leer el PDF cacheado de constancia ${certificateId}, regenerando:`, err)
+    }
+  }
+
+  const pdfBytes = await generateDc3Pdf({ certificateId })
+
+  try {
+    const blob = await put(`constancias/dc3-${certificateId}.pdf`, Buffer.from(pdfBytes), {
+      access: "private",
+      contentType: "application/pdf",
+      addRandomSuffix: false,
+    })
+
+    await prisma.certificate.update({
+      where: { id: certificateId },
+      data: { dc3_pdf_url: blob.url },
+    })
+  } catch (err) {
+    console.error(`[dc3] no se pudo subir a Blob el PDF de constancia ${certificateId}, se sirve sin cachear:`, err)
+  }
+
+  return pdfBytes
 }
 
 function sanitizeText(text: string): string {
