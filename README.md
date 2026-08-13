@@ -127,6 +127,34 @@ sync de aprendizaje a un intervalo mas corto, por ejemplo cada 15 min):
 }
 ```
 
+#### `GET|POST /api/cron/process-jobs` — motor de jobs asincronos (G-2)
+
+Procesa la tabla `jobs` en chunks (ver `lib/jobs.ts`): sincronizar el paquete
+activo con todos los empleados de una empresa se encola como job en vez de
+correr en la misma peticion, y este endpoint avanza el siguiente chunk cada
+vez que se le llama. Necesita ejecutarse **cada minuto** para que el trabajo
+encolado se procese en un tiempo razonable — el minimo diario de Hobby no
+sirve para este caso (los jobs quedarian en `PENDING` indefinidamente), asi
+que **no esta en `vercel.json`**, ni siquiera esperando a Pro.
+
+Mientras el proyecto siga en Hobby, dispara este endpoint desde un scheduler
+externo gratuito (ej. [cron-job.org](https://cron-job.org), Upstash QStash, o
+un workflow programado de GitHub Actions) apuntando a:
+
+```
+https://tu-dominio.com/api/cron/process-jobs
+Authorization: Bearer <CRON_SECRET>
+```
+
+cada 1 minuto. Al subir a Pro, puedes moverlo a `vercel.json` en su lugar:
+
+```json
+{
+  "path": "/api/cron/process-jobs",
+  "schedule": "* * * * *"
+}
+```
+
 La URL esperada del portal es:
 
 ```bash
