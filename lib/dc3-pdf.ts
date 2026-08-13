@@ -222,6 +222,7 @@ export async function getOrCreateDc3PdfBytes({ certificateId }: Dc3GenerateInput
       access: "private",
       contentType: "application/pdf",
       addRandomSuffix: false,
+      allowOverwrite: true,
     })
 
     await prisma.certificate.update({
