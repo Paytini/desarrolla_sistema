@@ -76,14 +76,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Sin constancias" }, { status: 404 })
   }
 
+  const zip = new JSZip()
+
   if (constancias.length > MAX_ZIP_CERTIFICATES) {
+    const requestedCount = constancias.length
     console.warn(
-      `[constancias/zip] ${constancias.length} constancias solicitadas, recortando a las primeras ${MAX_ZIP_CERTIFICATES}`
+      `[constancias/zip] ${requestedCount} constancias solicitadas, recortando a las primeras ${MAX_ZIP_CERTIFICATES}`
     )
     constancias = constancias.slice(0, MAX_ZIP_CERTIFICATES)
+    zip.file(
+      "LEEME.txt",
+      `Se solicitaron ${requestedCount} constancias, pero este ZIP incluye solo las primeras ${MAX_ZIP_CERTIFICATES} por un limite tecnico.\n` +
+        `Para descargar el resto, aplica un filtro (departamento o curso) que reduzca el total, o contacta a soporte.`
+    )
   }
-
-  const zip = new JSZip()
 
   for (const { id, folio } of constancias) {
     try {

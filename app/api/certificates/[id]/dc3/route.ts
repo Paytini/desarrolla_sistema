@@ -52,7 +52,7 @@ export async function GET(
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `${disposition}; filename="DC3-${constancia.reference_number}.pdf"`,
-        "Cache-Control": "private, max-age=31536000, immutable",
+        "Cache-Control": "private, max-age=300",
       },
     })
   } catch (err) {
