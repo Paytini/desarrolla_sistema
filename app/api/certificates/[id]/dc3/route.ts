@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { generateDc3Pdf, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
+import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
 
 export const runtime = "nodejs"
 
@@ -46,13 +46,13 @@ export async function GET(
   const download = request.nextUrl.searchParams.get("download") === "1"
 
   try {
-    const pdfBytes = await generateDc3Pdf({ certificateId: constanciaId })
+    const pdfBytes = await getOrCreateDc3PdfBytes({ certificateId: constanciaId })
     const disposition = download ? "attachment" : "inline"
     return new NextResponse(pdfBytes as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `${disposition}; filename="DC3-${constancia.reference_number}.pdf"`,
-        "Cache-Control": "no-store",
+        "Cache-Control": "private, max-age=31536000, immutable",
       },
     })
   } catch (err) {
