@@ -81,6 +81,11 @@ export async function saveDc3MetadataAction(
     },
   })
 
+  await prisma.certificate.updateMany({
+    where: { wp_course_id: wpCourseId },
+    data: { dc3_pdf_url: null },
+  })
+
   revalidateTag(SUPERADMIN_DC3_TAG, "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
@@ -165,6 +170,11 @@ export async function syncDc3MetadataAction(
         source: "WORDPRESS_BRIDGE",
         last_synced_at: new Date(),
       },
+    })
+
+    await prisma.certificate.updateMany({
+      where: { wp_course_id: wpCourseId },
+      data: { dc3_pdf_url: null },
     })
   } catch (error) {
     return {
