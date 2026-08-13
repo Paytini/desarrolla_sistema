@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import JSZip from "jszip"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { generateDc3Pdf, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
+import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
 import {
   buildIssuedCertificates,
   filterIssuedCertificates,
@@ -11,6 +11,10 @@ import {
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 
 export const runtime = "nodejs"
+
+export const maxDuration = 60
+
+const MAX_ZIP_CERTIFICATES = 100
 
 type CompanyEmployee = {
   id: number
@@ -72,11 +76,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Sin constancias" }, { status: 404 })
   }
 
+  if (constancias.length > MAX_ZIP_CERTIFICATES) {
+    console.warn(
+      `[constancias/zip] ${constancias.length} constancias solicitadas, recortando a las primeras ${MAX_ZIP_CERTIFICATES}`
+    )
+    constancias = constancias.slice(0, MAX_ZIP_CERTIFICATES)
+  }
+
   const zip = new JSZip()
 
   for (const { id, folio } of constancias) {
     try {
-      const pdfBytes = await generateDc3Pdf({ certificateId: id })
+      const pdfBytes = await getOrCreateDc3PdfBytes({ certificateId: id })
       zip.file(`${folio}.pdf`, pdfBytes)
     } catch (err) {
       if (err instanceof Dc3MissingFieldsError) {
