@@ -106,7 +106,9 @@ variable de entorno en el proyecto de Vercel — Vercel manda automaticamente
 `Authorization: Bearer $CRON_SECRET` en cada llamada.
 
 El plan **Hobby** de Vercel permite maximo 2 cron jobs por proyecto y minimo una
-ejecucion diaria por job, asi que hoy solo estos dos estan activos:
+ejecucion diaria por job, asi que hoy solo estos dos estan activos (una tercera
+entrada, `/api/cron/process-jobs`, esta en `vercel.json` pero Vercel la ignora
+en silencio en Hobby — ver su seccion mas abajo):
 
 | Ruta | Horario | Que hace |
 | --- | --- | --- |
@@ -126,6 +128,29 @@ sync de aprendizaje a un intervalo mas corto, por ejemplo cada 15 min):
   "schedule": "0 * * * *"
 }
 ```
+
+#### `GET|POST /api/cron/process-jobs` — motor de jobs asincronos (G-2)
+
+Procesa la tabla `jobs` en chunks (ver `lib/jobs.ts`): sincronizar el paquete
+activo con todos los empleados de una empresa se encola como job en vez de
+correr en la misma peticion, y `processPendingJobs()` avanza el siguiente
+chunk cada vez que se le llama. **Ya esta registrada en `vercel.json`** con
+`"schedule": "* * * * *"` — en Hobby, Vercel la ignora en silencio (no
+aparece en Project → Settings → Cron Jobs) porque excede el limite de 2 jobs
+diarios, pero **no hace falta tocar nada al subir a Pro**: la entrada ya
+esta ahi y se activa sola.
+
+Mientras el proyecto siga en Hobby, `drainPendingJobs()` (tambien en
+`lib/jobs.ts`) es el respaldo: llama a `processPendingJobs()` en loop hasta
+agotar la cola o un presupuesto de tiempo, y los 2 crons de arriba lo
+invocan despues de su propio trabajo (`check-expiring-packages` le da ~50s,
+`employee-learning` ~20s porque su propia sincronizacion ya puede tardar).
+Ambas rutas declaran `maxDuration = 60` (el techo de Hobby). Con eso, cada
+disparo diario drena varios chunks en vez de solo uno — sigue siendo mucho
+mas lento que "cada minuto" (~2 oportunidades al dia, ~3-4 chunks cada una),
+pero no requiere ningun servicio externo. Al subir a Pro y activarse el cron
+dedicado, este respaldo queda redundante pero inofensivo — se puede quitar
+en ese momento o dejar como red de seguridad adicional.
 
 La URL esperada del portal es:
 

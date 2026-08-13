@@ -148,3 +148,32 @@ export async function processPendingJobs(limit: number = JOBS_PER_CRON_TICK) {
 
   return { processed, errored, skipped, total: candidates.length }
 }
+
+const DEFAULT_DRAIN_BUDGET_MS = 50_000
+
+// Vercel Hobby only allows 2 cron jobs, minimum once a day each — far too
+// infrequent for this queue on its own. Existing crons call this after their
+// own work to drain as much of the queue as fits in one invocation, instead
+// of advancing a single chunk per cron fire. Bounded by budgetMs so a host
+// route with maxDuration=60 (Hobby's ceiling) never gets killed mid-chunk.
+export async function drainPendingJobs(budgetMs: number = DEFAULT_DRAIN_BUDGET_MS) {
+  const start = Date.now()
+  let ticks = 0
+  let processed = 0
+  let errored = 0
+  let skipped = 0
+
+  while (Date.now() - start < budgetMs) {
+    const tick = await processPendingJobs()
+    ticks += 1
+    processed += tick.processed
+    errored += tick.errored
+    skipped += tick.skipped
+
+    if (tick.total === 0) {
+      break
+    }
+  }
+
+  return { ticks, processed, errored, skipped }
+}
