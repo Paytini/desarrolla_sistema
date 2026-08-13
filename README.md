@@ -131,22 +131,25 @@ sync de aprendizaje a un intervalo mas corto, por ejemplo cada 15 min):
 
 Procesa la tabla `jobs` en chunks (ver `lib/jobs.ts`): sincronizar el paquete
 activo con todos los empleados de una empresa se encola como job en vez de
-correr en la misma peticion, y este endpoint avanza el siguiente chunk cada
-vez que se le llama. Necesita ejecutarse **cada minuto** para que el trabajo
-encolado se procese en un tiempo razonable — el minimo diario de Hobby no
-sirve para este caso (los jobs quedarian en `PENDING` indefinidamente), asi
-que **no esta en `vercel.json`**, ni siquiera esperando a Pro.
+correr en la misma peticion, y `processPendingJobs()` avanza el siguiente
+chunk cada vez que se le llama. Idealmente correria cada minuto, pero el
+minimo diario de Hobby no lo permite ni agregandolo como tercer cron (los 2
+slots ya estan ocupados) — asi que **no esta en `vercel.json`**.
 
-Mientras el proyecto siga en Hobby, dispara este endpoint desde un scheduler
-externo gratuito (ej. [cron-job.org](https://cron-job.org), Upstash QStash, o
-un workflow programado de GitHub Actions) apuntando a:
+En vez de un scheduler externo, `drainPendingJobs()` (tambien en `lib/jobs.ts`)
+llama a `processPendingJobs()` en loop hasta agotar la cola o un presupuesto
+de tiempo, y los dos crons de arriba lo invocan despues de su propio trabajo
+(`check-expiring-packages` le da ~50s, `employee-learning` ~20s porque su
+propia sincronizacion ya puede tardar). Ambas rutas declaran
+`maxDuration = 60` (el techo de Hobby). Con eso, cada disparo diario drena
+varios chunks en vez de solo uno — sigue siendo mucho mas lento que "cada
+minuto" (~2 oportunidades al dia, ~3-4 chunks cada una), pero no requiere
+ningun servicio externo ni esperar a Pro.
 
-```
-https://tu-dominio.com/api/cron/process-jobs
-Authorization: Bearer <CRON_SECRET>
-```
-
-cada 1 minuto. Al subir a Pro, puedes moverlo a `vercel.json` en su lugar:
+Si el volumen real de jobs supera lo que esto alcanza a drenar (empresas muy
+grandes, o muchas empresas sincronizando el mismo dia), la ruta
+`/api/cron/process-jobs` ya esta lista para registrarse directamente en
+`vercel.json` al subir a Pro:
 
 ```json
 {
