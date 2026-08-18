@@ -14,8 +14,8 @@ export type BridgeHealthResponse = {
 }
 
 export type BridgeUpsertEmployeeInput = {
-  employeeId: number
-  companyId: number
+  employeeId: string
+  companyId: string
   companyName: string
   email: string
   firstName: string
