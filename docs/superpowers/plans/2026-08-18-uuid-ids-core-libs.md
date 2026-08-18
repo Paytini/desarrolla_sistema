@@ -153,17 +153,22 @@ git commit -m "feat(uuid): convert tenant-context, cache-tags, and learning-type
 
 ---
 
-### Task 2: Session/JWT type augmentation — `types/next-auth.d.ts` + `auth.config.ts`
+### Task 2: Session/JWT type augmentation — `types/next-auth.d.ts` + `auth.config.ts` + `lib/company-status.ts`
 
-**Discovered mid-execution, not in the original research pass:** Task 1's edit to `lib/tenant-context.ts` immediately surfaced a real `tsc` error in `lib/auth-guards.ts(28,23)` (`enterCompanyContext(session.user.empresa_id)` — argument type `number` not assignable to `string`) that did not exist in the Plan 1 baseline and was not in this plan's original 8-task file list. Root cause: `types/next-auth.d.ts` declares `Session.user.empresa_id` and `JWT.empresa_id` as `number | null`, and `auth.config.ts`'s two callbacks cast values into/out of that field using `as number | null`. `auth.ts:75` already assigns `empresa_id: usuario.company_id` (already a `string` post-Plan-1, no change needed there), but the *type declarations* never caught up. This task fixes that. It was inserted here, after Task 1 and before the original Task 2 (now Task 3), because it's foundational session-typing infrastructure in the same vein as Task 1 and because `lib/auth-guards.ts` (used by every RH-scoped and SUPERADMIN-scoped route) depends on it.
+**Discovered mid-execution, not in the original research pass:** Task 1's edit to `lib/tenant-context.ts` immediately surfaced a real `tsc` error in `lib/auth-guards.ts(28,23)` (`enterCompanyContext(session.user.empresa_id)` — argument type `number` not assignable to `string`) that did not exist in the Plan 1 baseline and was not in this plan's original 8-task file list. Root cause: `types/next-auth.d.ts` declares `Session.user.empresa_id` and `JWT.empresa_id` as `number | null`, and `auth.config.ts`'s two callbacks cast values into/out of that field using `as number | null`. `auth.ts:75` already assigns `empresa_id: usuario.company_id` (already a `string` post-Plan-1, no change needed there), but the *type declarations* never caught up. This task fixes that.
+
+**A second finding surfaced live during this task's own dispatch, not caught when it was inserted:** `lib/auth-guards.ts` calls `getCompanyAccessStatus(session.user.empresa_id)` on the very next line after `enterCompanyContext(session.user.empresa_id)` (both at the same call site, same value). Fixing only the Session/JWT type still left `lib/auth-guards.ts` erroring — just on the other call. `getCompanyAccessStatus` was originally scoped to (old-numbering) Task 7, three tasks away. Since `lib/auth-guards.ts` genuinely cannot be made clean without both fixes landing together, `lib/company-status.ts`'s already-planned one-line signature change (`companyId: number` → `string`, identical to what was going to happen later) was pulled forward into this task instead of leaving `lib/auth-guards.ts` in a still-broken state until much later. **This is now reflected here and removed from the task that used to be numbered 7 (`lib/dashboard-cache.ts` + `lib/company-status.ts` + `lib/slug.ts` + `lib/company-branding.ts`, now Task 8) — see that task's updated file list.** This also means `auth.ts`'s one `tsc` error (which depends on `getCompanyAccessStatus`, not on anything Session/JWT-typed) resolves here too, three tasks earlier than originally planned.
+
+This task was inserted here, after Task 1 and before the original Task 2 (now Task 3), because it's foundational session-typing infrastructure in the same vein as Task 1 and because `lib/auth-guards.ts` (used by every RH-scoped and SUPERADMIN-scoped route) depends on it.
 
 **Files:**
 - Modify: `types/next-auth.d.ts`
 - Modify: `auth.config.ts`
+- Modify: `lib/company-status.ts`
 
 **Interfaces:**
 - Consumes: nothing from Task 1 directly (this task's files don't import `tenant-context.ts`), but its fix is what makes Task 1's `enterCompanyContext(companyId: string)` actually callable from `lib/auth-guards.ts` without a type error.
-- Produces: `Session.user.empresa_id: string | null`, `JWT.empresa_id: string | null` — consumed by `lib/auth-guards.ts` (verify only, do not edit — its `if (!session.user.empresa_id) { redirect(...) }` guard already narrows the type correctly via `next/navigation`'s `redirect()` having a `never` return type, so the rest of that function already treats `empresa_id` as non-null `string` once this task lands) and by every `app/` file that reads `session.user.empresa_id` (Plan 3's job to convert their own usages — this task only needs to make the *type* correct, not touch any `app/` file).
+- Produces: `Session.user.empresa_id: string | null`, `JWT.empresa_id: string | null`, `getCompanyAccessStatus(companyId: string)` — consumed by `lib/auth-guards.ts` (verify only, do not edit — its `if (!session.user.empresa_id) { redirect(...) }` guard already narrows the type correctly via `next/navigation`'s `redirect()` having a `never` return type, so the rest of that function already treats `empresa_id` as non-null `string` once this task lands, for both of its calls) and by `auth.ts` (verify only, do not edit — resolves automatically the same way it was originally going to via the old Task 7) and by every `app/` file that reads `session.user.empresa_id` or calls `getCompanyAccessStatus` (Plan 3's job to convert their own usages — this task only needs to make the *types* correct, not touch any `app/` file).
 
 - [ ] **Step 1: Edit `types/next-auth.d.ts`**
 
@@ -222,25 +227,32 @@ git commit -m "feat(uuid): convert tenant-context, cache-tags, and learning-type
      },
 ```
 
-- [ ] **Step 3: Verify, including `lib/auth-guards.ts`'s automatic resolution**
+- [ ] **Step 3: Edit `lib/company-status.ts`**
+
+```diff
+-export async function getCompanyAccessStatus(companyId: number): Promise<CompanyAccessStatus> {
++export async function getCompanyAccessStatus(companyId: string): Promise<CompanyAccessStatus> {
+```
+
+- [ ] **Step 4: Verify, including `lib/auth-guards.ts`'s and `auth.ts`'s automatic resolution**
 
 ```bash
-npx tsc --noEmit 2>&1 | grep -E "^(types/next-auth\.d\.ts|auth\.config\.ts|lib/auth-guards\.ts)"
+npx tsc --noEmit 2>&1 | grep -E "^(types/next-auth\.d\.ts|auth\.config\.ts|auth\.ts|lib/(auth-guards|company-status)\.ts)"
 ```
-Expected: no output — confirms both edited files stay clean AND `lib/auth-guards.ts`'s error is gone without having touched it.
+Expected: no output — confirms all three edited files stay clean AND both `lib/auth-guards.ts` and `auth.ts`'s errors are gone without having touched either.
 
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `90` (91 − 1 `auth-guards.ts` = 90). This grep scopes to `lib/` plus the two root-level auth infrastructure files plus `auth.ts` — the count that matters for this plan. From here on, every task's verification uses this same lib/-plus-auth-infra scoped count instead of the whole-repo total (see the note below).
+Expected: `87` (91 − 1 `auth-guards.ts` − 2 `company-status.ts` − 1 `auth.ts` = 87). This grep scopes to `lib/` plus the two root-level auth infrastructure files plus `auth.ts` — the count that matters for this plan. From here on, every task's verification uses this same lib/-plus-auth-infra scoped count instead of the whole-repo total (see the note below).
 
 **Why this task switches to a scoped count instead of the whole-repo total:** the original plan tracked the full `npx tsc --noEmit | grep -c "error TS"` count end to end, assuming it would only move by each task's own expected delta. Task 1 proved that assumption wrong in two ways: (1) tightening a shared type can surface *new* errors in an as-yet-unscoped file (this task itself exists because of exactly that), and (2) `app/` and `components/` files — entirely out of this plan's scope — have their own error counts shifting for reasons this plan doesn't control as `lib/` types change underneath them (confirmed: comparing the full list before/after Task 1, several `app/` files' counts moved by ±1-5 with no `lib/`-side explanation traceable to anything this plan touched). A whole-repo count conflates in-scope drift with out-of-scope noise; a `lib/`-plus-auth-infra-scoped count doesn't.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add types/next-auth.d.ts auth.config.ts
-git commit -m "feat(uuid): convert Session/JWT empresa_id type to string"
+git add types/next-auth.d.ts auth.config.ts lib/company-status.ts
+git commit -m "feat(uuid): convert Session/JWT and getCompanyAccessStatus empresa_id types to string"
 ```
 
 ---
@@ -360,7 +372,7 @@ Expected: no output.
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `72` (90 − 7 auditing − 11 access-control = 72). This is the lib/-plus-auth-infra-scoped count established in Task 2 — not the whole-repo count, which fluctuates for reasons outside this plan's scope (see Task 2's note).
+Expected: `69` (87 − 7 auditing − 11 access-control = 69). This is the lib/-plus-auth-infra-scoped count established in Task 2 — not the whole-repo count, which fluctuates for reasons outside this plan's scope (see Task 2's note).
 
 - [ ] **Step 4: Commit**
 
@@ -455,7 +467,7 @@ Expected: no output.
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `60` (72 − 12 = 60), using the same scoped count as Task 3.
+Expected: `57` (69 − 12 = 57), using the same scoped count as Task 3.
 
 - [ ] **Step 3: Commit**
 
@@ -593,7 +605,7 @@ Expected: no output.
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `34` (60 − 17 − 9 = 34), scoped count.
+Expected: `31` (57 − 17 − 9 = 31), scoped count.
 
 - [ ] **Step 4: Commit**
 
@@ -842,7 +854,7 @@ Expected: no output.
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `17` (34 − 17 = 17), scoped count.
+Expected: `14` (31 − 17 = 14), scoped count.
 
 - [ ] **Step 4: Manually confirm the folio redesign against the live database**
 
@@ -937,7 +949,7 @@ Expected: no output.
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `11` (17 − 5 − 1 = 11), scoped count.
+Expected: `8` (14 − 5 − 1 = 8), scoped count.
 
 - [ ] **Step 4: Commit**
 
@@ -948,21 +960,22 @@ git commit -m "feat(uuid): convert dc3-pdf and certificates to string IDs"
 
 ---
 
-### Task 8: `lib/dashboard-cache.ts` + `lib/company-status.ts` + `lib/slug.ts` + `lib/company-branding.ts`
+### Task 8: `lib/dashboard-cache.ts` + `lib/slug.ts` + `lib/company-branding.ts`
+
+**`lib/company-status.ts` was removed from this task's scope mid-execution:** it was pulled forward into Task 2, because `lib/auth-guards.ts` needed both `enterCompanyContext` (Task 1) and `getCompanyAccessStatus` (originally here) fixed together to become `tsc`-clean at all — see Task 2's note. Its diff and verification are no longer part of this task; do not attempt to re-apply it here, the file is already on `companyId: string`.
 
 **Files:**
 - Modify: `lib/dashboard-cache.ts`
-- Modify: `lib/company-status.ts`
 - Modify: `lib/slug.ts`
 - Modify: `lib/company-branding.ts`
 
 **Interfaces:**
 - Consumes: `companyCacheRootTag`/`companyEmployeesTag`/`companyAssignmentsTag` from Task 1 (`dashboard-cache.ts` calls these).
-- Produces: `getHrEmployeesSnapshot(companyId: string)`, `getHrAssignmentsSnapshot(companyId: string)`, `getCompanyAccessStatus(companyId: string)`, `ensureUniqueCompanySlug(name: string, excludeCompanyId?: string)`, `getCompanyBranding(companyId: string)`, `requireCompanySlug(companyId: string)` — all consumed by Plan 3's routes/actions/pages. `getCompanyAccessStatus` is also consumed by `auth.ts`, which needs **no edit of its own** — its one `tsc` error (`auth.ts(59,57)`, passing `usuario.company_id` — already `string` — into a `number`-typed parameter) resolves automatically once this task's `company-status.ts` edit lands; confirm this in Step 2 rather than touching `auth.ts`.
+- Produces: `getHrEmployeesSnapshot(companyId: string)`, `getHrAssignmentsSnapshot(companyId: string)`, `ensureUniqueCompanySlug(name: string, excludeCompanyId?: string)`, `getCompanyBranding(companyId: string)`, `requireCompanySlug(companyId: string)` — all consumed by Plan 3's routes/actions/pages.
 
-`dashboard-cache.ts` has 6 `tsc` errors as of this task's dispatch (2 in the `where: { id: companyId }` clauses this task already targets, plus 4 more that appeared once Task 1 tightened `companyCacheRootTag`/`companyEmployeesTag`/`companyAssignmentsTag` to expect `string` — the `tags: [companyCacheRootTag(companyId), ...]` calls at lines 341 and 384 now also error; confirmed by direct grep that no other function in this ~400-line file takes a `companyId` parameter, so this task's already-planned two-function-signature fix resolves all 6, not just the original 2). `company-status.ts` has 2, `slug.ts` has 1, `company-branding.ts` has 1 — all four files tsc-flagged, `auth.ts`'s error is a downstream consequence (via `company-status.ts`) counted separately.
+`dashboard-cache.ts` has 6 `tsc` errors as of this task's dispatch (2 in the `where: { id: companyId }` clauses this task already targets, plus 4 more that appeared once Task 1 tightened `companyCacheRootTag`/`companyEmployeesTag`/`companyAssignmentsTag` to expect `string` — the `tags: [companyCacheRootTag(companyId), ...]` calls at lines 341 and 384 now also error; confirmed by direct grep that no other function in this ~400-line file takes a `companyId` parameter, so this task's already-planned two-function-signature fix resolves all 6, not just the original 2). `slug.ts` has 1, `company-branding.ts` has 1 — all three remaining files tsc-flagged.
 
-- [ ] **Step 1: Edit all four files**
+- [ ] **Step 1: Edit all three files**
 
 `lib/dashboard-cache.ts`:
 ```diff
@@ -972,12 +985,6 @@ git commit -m "feat(uuid): convert dc3-pdf and certificates to string IDs"
 ```diff
 -export async function getHrAssignmentsSnapshot(companyId: number) {
 +export async function getHrAssignmentsSnapshot(companyId: string) {
-```
-
-`lib/company-status.ts`:
-```diff
--export async function getCompanyAccessStatus(companyId: number): Promise<CompanyAccessStatus> {
-+export async function getCompanyAccessStatus(companyId: string): Promise<CompanyAccessStatus> {
 ```
 
 `lib/slug.ts`:
@@ -1004,23 +1011,23 @@ git commit -m "feat(uuid): convert dc3-pdf and certificates to string IDs"
  }
 ```
 
-- [ ] **Step 2: Verify, including `auth.ts`'s downstream resolution**
+- [ ] **Step 2: Verify**
 
 ```bash
-npx tsc --noEmit 2>&1 | grep -E "^(lib/(dashboard-cache|company-status|slug|company-branding)\.ts|auth\.ts)"
+npx tsc --noEmit 2>&1 | grep -E "^lib/(dashboard-cache|slug|company-branding)\.ts"
 ```
-Expected: no output — this single check covers all four edited files AND confirms `auth.ts`'s error is gone without having touched it.
+Expected: no output.
 
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `0` (11 − 6 dashboard-cache − 2 company-status − 1 slug − 1 company-branding − 1 auth.ts-resolved-automatically = 0). This is the last task expected to move this scoped count — it should read zero from here through Task 9.
+Expected: `0` (8 − 6 dashboard-cache − 1 slug − 1 company-branding = 0). This is the last task expected to move this scoped count — it should read zero from here through Task 9.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add lib/dashboard-cache.ts lib/company-status.ts lib/slug.ts lib/company-branding.ts
-git commit -m "feat(uuid): convert dashboard-cache, company-status, slug, and company-branding to string company IDs"
+git add lib/dashboard-cache.ts lib/slug.ts lib/company-branding.ts
+git commit -m "feat(uuid): convert dashboard-cache, slug, and company-branding to string company IDs"
 ```
 
 ---
@@ -1097,5 +1104,5 @@ git commit -m "feat(uuid): convert wordpress-bridge employee/company payload fie
 - **Spec coverage:** §3 (wp_* untouched) → every task explicitly states which fields in its files are WordPress-domain and excluded; Task 9 in particular exists because `wordpress-bridge.ts` mixes both domains in one file. §5 (folio_sequence, decoupled from `id`) → Task 6 Step 2, using `nextval()` fetched before the `create()` rather than a placeholder-then-update. §8 (verification approach: `tsc`/lint, no test suite) → every task's Step "Verify" follows this, plus Task 6 Step 4 adds a targeted live-DB check for the one piece of genuinely new runtime logic (`$queryRaw` sequence call) that `tsc` can't validate.
 - **Placeholder scan:** none — every task has literal diffs or explicit "no change needed" callouts with the reasoning stated, not left implicit.
 - **Type consistency:** traced every producer/consumer pair across tasks explicitly in each task's "Interfaces" block — `getActiveCompanyId(): string | null` (Task 1) → `lib/prisma.ts`'s untyped guard (verified, not edited, Task 1 Step 4); `Session.user.empresa_id: string | null` (Task 2) → `lib/auth-guards.ts`'s `enterCompanyContext()` call (verified, not edited, Task 2 Step 3); `notifyEmployeeNewCertificates(employeeId: string, ...)` (Task 4) → called from Task 6's `employee-learning.ts`; `syncSingleEmployeePackageEnrollment(employee: {id: string, ...})` (Task 5) → called from `jobs.ts`'s `processPackageEnrollmentSyncJob` in the same task. No signature drift found between tasks.
-- **Expected error-count arithmetic** (scoped to `lib/` + `auth.ts` + `auth.config.ts` + `types/next-auth.d.ts`, not the whole repo — see Task 2's note): 91 (measured live after Task 1 landed — not the 86 originally estimated from the pre-Task-1 baseline, since Task 1's own edit surfaced errors in `dashboard-cache.ts` (+4) and previously-unscoped `lib/auth-guards.ts` (+1)) − 1 (Task 2) − 7 (Task 3, auditing) − 11 (Task 3, access-control) − 12 (Task 4, notifications) − 17 (Task 5, course-sync) − 9 (Task 5, jobs) − 17 (Task 6, employee-learning) − 5 (Task 7, dc3-pdf) − 1 (Task 7, certificates) − 6 (Task 8, dashboard-cache) − 2 (Task 8, company-status) − 1 (Task 8, slug) − 1 (Task 8, company-branding) − 1 (Task 8, auth.ts) = **0** remaining after Task 8, unchanged through Task 9. Running totals per task: 91 → 90 → 72 → 60 → 34 → 17 → 11 → 0 → 0, matching each task's Step "Verify". This plan's own Task 1 execution is the proof this check matters: its actual count (340 whole-repo / 91 scoped) diverged from the plan's original prediction (328 whole-repo, no scoped tracking existed yet), which is exactly what triggered finding `lib/auth-guards.ts` and the two auth-typing files before they could silently ship broken. If a future implementer's count diverges from a task's stated expectation, treat that the same way: stop and investigate before continuing, don't assume the plan's number was just approximate.
-- **Scope check:** this plan is appropriately sized as a single unit — 9 tasks covering the core-library and auth-typing infrastructure that the rest of the app (Plan 3) can't be touched correctly without first landing. It does not bleed into `app/`, `components/`, or `prisma/seed.ts`, which remain Plan 3 and Plan 4 respectively. Task 2 (Session/JWT typing) was not in this plan's original 8-task research pass — it was added mid-execution once Task 1's dispatch surfaced it live, and is recorded here rather than silently smoothed over so a future reader comparing this document against the ledger can see why.
+- **Expected error-count arithmetic** (scoped to `lib/` + `auth.ts` + `auth.config.ts` + `types/next-auth.d.ts`, not the whole repo — see Task 2's note): 91 (measured live after Task 1 landed — not the 86 originally estimated from the pre-Task-1 baseline, since Task 1's own edit surfaced errors in `dashboard-cache.ts` (+4) and previously-unscoped `lib/auth-guards.ts` (+1)) − 1 (Task 2, auth-guards.ts) − 2 (Task 2, company-status.ts — pulled forward from the original Task 7 mid-dispatch, see Task 2's note) − 1 (Task 2, auth.ts, resolved as a side effect of company-status.ts moving earlier) − 7 (Task 3, auditing) − 11 (Task 3, access-control) − 12 (Task 4, notifications) − 17 (Task 5, course-sync) − 9 (Task 5, jobs) − 17 (Task 6, employee-learning) − 5 (Task 7, dc3-pdf) − 1 (Task 7, certificates) − 6 (Task 8, dashboard-cache) − 1 (Task 8, slug) − 1 (Task 8, company-branding) = **0** remaining after Task 8, unchanged through Task 9. Running totals per task: 91 → 87 → 69 → 57 → 31 → 14 → 8 → 0 → 0, matching each task's Step "Verify". This plan's own execution is the proof this check matters, twice over: Task 1's actual count (340 whole-repo / 91 scoped) diverged from the plan's original prediction (328 whole-repo, no scoped tracking existed yet), which is what triggered finding `lib/auth-guards.ts` and the two auth-typing files; then Task 2's own dispatch produced 87 against a first-corrected prediction of 90, which is what caught that `lib/auth-guards.ts`'s *second* call (`getCompanyAccessStatus`) also needed a fix, pulling `lib/company-status.ts` forward from Task 8. If a future implementer's count diverges from a task's stated expectation, treat that the same way both times did: stop and investigate before continuing, don't assume the plan's number was just approximate.
+- **Scope check:** this plan is appropriately sized as a single unit — 9 tasks covering the core-library and auth-typing infrastructure that the rest of the app (Plan 3) can't be touched correctly without first landing. It does not bleed into `app/`, `components/`, or `prisma/seed.ts`, which remain Plan 3 and Plan 4 respectively. Task 2 (Session/JWT typing) was not in this plan's original 8-task research pass — it was added mid-execution once Task 1's dispatch surfaced it live. Task 8 subsequently shrank from four files to three when `lib/company-status.ts` was pulled forward into Task 2 for the same reason. Both changes are recorded here rather than silently smoothed over, so a future reader comparing this document against the ledger can see why.
