@@ -31,6 +31,7 @@ export function CompanyBrandingForm({
     try {
       const fd = new FormData()
       fd.append("file", file)
+      fd.append("companyId", String(companyId))
       const res = await fetch("/api/upload/company-logo", { method: "POST", body: fd })
       const data = await res.json()
       if (!res.ok) {

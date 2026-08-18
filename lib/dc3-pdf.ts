@@ -200,7 +200,11 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
 export async function getOrCreateDc3PdfBytes({ certificateId }: Dc3GenerateInput): Promise<Uint8Array> {
   const cached = await prisma.certificate.findUnique({
     where: { id: certificateId },
-    select: { dc3_pdf_url: true },
+    select: {
+      dc3_pdf_url: true,
+      employee_id: true,
+      employee: { select: { company_id: true } },
+    },
   })
 
   if (!cached) {
@@ -218,7 +222,8 @@ export async function getOrCreateDc3PdfBytes({ certificateId }: Dc3GenerateInput
   const pdfBytes = await generateDc3Pdf({ certificateId })
 
   try {
-    const blob = await put(`constancias/dc3-${certificateId}.pdf`, Buffer.from(pdfBytes), {
+    const pathname = `constancias/${cached.employee.company_id}/${cached.employee_id}/dc3-${certificateId}.pdf`
+    const blob = await put(pathname, Buffer.from(pdfBytes), {
       access: "private",
       contentType: "application/pdf",
       addRandomSuffix: false,
