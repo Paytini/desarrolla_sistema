@@ -32,7 +32,7 @@ function parseBridgeDate(value?: string | null) {
 }
 
 function buildPackageCourseUpsertOperation(
-  employeeId: number,
+  employeeId: string,
   packageCourse: PackageCourseInput,
   syncedAt: Date
 ) {
@@ -66,7 +66,7 @@ function buildPackageCourseUpsertOperation(
 }
 
 export async function upsertEmployeePackageCourses(
-  employeeId: number,
+  employeeId: string,
   packageCourses: PackageCourseInput[]
 ) {
   if (packageCourses.length === 0) {
@@ -82,7 +82,7 @@ export async function upsertEmployeePackageCourses(
 }
 
 export async function replaceEmployeePackageCourses(
-  employeeId: number,
+  employeeId: string,
   packageCourses: PackageCourseInput[]
 ) {
   const selectedCourseIds = packageCourses.map((course) => course.wp_course_id)
@@ -114,10 +114,10 @@ export async function replaceEmployeePackageCourses(
 }
 
 export async function setCourseAssignment(
-  companyId: number,
+  companyId: string,
   courseId: number,
   courseName: string,
-  employeeIds: number[],
+  employeeIds: string[],
   accessSource?: string | null
 ) {
   const currentRows = await prisma.employeeCourse.findMany({
@@ -155,7 +155,7 @@ export async function setCourseAssignment(
     select: { id: true, wp_user_id: true, email: true, first_name: true, last_name: true },
   })
 
-  const bridgeErrors: Array<{ employeeId: number; message: string }> = []
+  const bridgeErrors: Array<{ employeeId: string; message: string }> = []
 
   if (isWordPressBridgeConfigured()) {
     for (const employee of addedEmployees) {
@@ -208,7 +208,7 @@ export async function setCourseAssignment(
 }
 
 export type PackageEnrollmentSyncResult = {
-  employeeId: number
+  employeeId: string
   wpUserId: number
   enrolledCount: number
   seededOnly?: boolean
@@ -216,7 +216,7 @@ export type PackageEnrollmentSyncResult = {
 }
 
 export async function syncSingleEmployeePackageEnrollment(
-  employee: { id: number; wp_user_id: number | null },
+  employee: { id: string; wp_user_id: number | null },
   packageCourses: PackageCourseInput[],
   courseIds: number[],
   courseIdSet: Set<number>,
@@ -303,7 +303,7 @@ export async function syncSingleEmployeePackageEnrollment(
   }
 }
 
-export async function enqueuePackageEnrollmentSyncJob(companyId: number) {
+export async function enqueuePackageEnrollmentSyncJob(companyId: string) {
   const company = await prisma.company.findUnique({
     where: { id: companyId },
     include: {
@@ -355,7 +355,7 @@ export async function enqueuePackageEnrollmentSyncJob(companyId: number) {
 }
 
 export async function markEmployeeCourseAccessError(
-  employeeId: number,
+  employeeId: string,
   courseIds: number[],
   accessOrigin: string | null | undefined,
   message: string
