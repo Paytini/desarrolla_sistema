@@ -259,15 +259,18 @@ git commit -m "feat(uuid): convert Session/JWT and getCompanyAccessStatus empres
 
 ### Task 3: `lib/auditing.ts` + `lib/access-control.ts`
 
+**`lib/wordpress-bridge.ts` gains one surgical edit mid-execution:** `lib/access-control.ts`'s `deleteEmployeeRecord` calls `bridgeDeleteEmployee({ employeeId: employee.id, ... })`. Once `employeeId` is `string` (this task), that call needs `BridgeDeleteEmployeeInput.employeeId` to also be `string | null` — one of the two fields originally scoped to (old-numbering) Task 8, now Task 9. Only this one field moves here; `BridgeUpsertEmployeeInput.employeeId`/`companyId` stay in Task 9, since nothing in this task's two files constructs that type. **Task 9's file list and diff have been updated to drop this field — do not reapply it there.**
+
 **Files:**
 - Modify: `lib/auditing.ts`
 - Modify: `lib/access-control.ts`
+- Modify: `lib/wordpress-bridge.ts` (one field only — see above)
 
 **Interfaces:**
 - Consumes: nothing from Task 1 directly (these two files don't import `tenant-context`/`cache-tags`/`learning-types`).
-- Produces: `AuditActor.userId: string | null`, `getCompanySeatSnapshot(companyId: string)`, `createAuditEvent(input: { entityId?: string | null; companyId?: string | null; ... })`, `createSeatHistoryEntry(input: { companyId: string; ... })` — consumed by Plan 3's action files (confirmed by grep: no file in this plan's remaining tasks imports `lib/auditing.ts`). `deleteEmployeeRecord(options: { employeeId: string; companyId?: string; ... })`, `togglePortalUserStatus(userId: string, ...)`, `revokeUserPortalSessions(userId: string)`, `revokePortalSession(sessionId: string)` — consumed by Plan 3.
+- Produces: `AuditActor.userId: string | null`, `getCompanySeatSnapshot(companyId: string)`, `createAuditEvent(input: { entityId?: string | null; companyId?: string | null; ... })`, `createSeatHistoryEntry(input: { companyId: string; ... })` — consumed by Plan 3's action files (confirmed by grep: no file in this plan's remaining tasks imports `lib/auditing.ts`). `deleteEmployeeRecord(options: { employeeId: string; companyId?: string; ... })`, `togglePortalUserStatus(userId: string, ...)`, `revokeUserPortalSessions(userId: string)`, `revokePortalSession(sessionId: string)` — consumed by Plan 3. `BridgeDeleteEmployeeInput.employeeId: string | null` — consumed by `lib/access-control.ts`'s own `bridgeDeleteEmployee` call in this same task.
 
-`lib/auditing.ts` has 7 `tsc` errors today, `lib/access-control.ts` has 11 — both tsc-flagged.
+`lib/auditing.ts` has 7 `tsc` errors today, `lib/access-control.ts` has 11 — both tsc-flagged. `lib/wordpress-bridge.ts` was not tsc-flagged before this task (nothing called `bridgeDeleteEmployee` with a `string` yet) but would become flagged (+1) the moment `access-control.ts`'s edit lands without this accompanying fix.
 
 - [ ] **Step 1: Edit `lib/auditing.ts`**
 
@@ -362,22 +365,33 @@ git commit -m "feat(uuid): convert Session/JWT and getCompanyAccessStatus empres
 
 No other lines in `access-control.ts` need editing — every other `number`-typed-looking usage (`employee.id`, `employee.company_id`, etc.) is inferred from Prisma's generated types, which Plan 1 already made `string`; only the two explicit parameter type annotations above and the type alias needed a manual edit.
 
-- [ ] **Step 3: Verify**
+- [ ] **Step 3: Edit `lib/wordpress-bridge.ts` (one field)**
+
+```diff
+ export type BridgeDeleteEmployeeInput = {
+-  employeeId?: number | null
++  employeeId?: string | null
+   wpUserId?: number | null
+   email?: string | null
+ }
+```
+
+- [ ] **Step 4: Verify**
 
 ```bash
-npx tsc --noEmit 2>&1 | grep -E "^lib/(auditing|access-control)\.ts"
+npx tsc --noEmit 2>&1 | grep -E "^lib/(auditing|access-control|wordpress-bridge)\.ts"
 ```
 Expected: no output.
 
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `69` (87 − 7 auditing − 11 access-control = 69). This is the lib/-plus-auth-infra-scoped count established in Task 2 — not the whole-repo count, which fluctuates for reasons outside this plan's scope (see Task 2's note).
+Expected: `69` (87 − 7 auditing − 11 access-control = 69; `wordpress-bridge.ts`'s fix is what keeps this at exactly 69 instead of overshooting to 70 — without it, `access-control.ts`'s edit alone would introduce +1 new error there). This is the lib/-plus-auth-infra-scoped count established in Task 2 — not the whole-repo count, which fluctuates for reasons outside this plan's scope (see Task 2's note).
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add lib/auditing.ts lib/access-control.ts
+git add lib/auditing.ts lib/access-control.ts lib/wordpress-bridge.ts
 git commit -m "feat(uuid): convert auditing and access-control to string IDs"
 ```
 
@@ -1034,17 +1048,19 @@ git commit -m "feat(uuid): convert dashboard-cache, slug, and company-branding t
 
 ### Task 9: `lib/wordpress-bridge.ts` (surgical — portal IDs sent as bridge payload data only)
 
+**`BridgeDeleteEmployeeInput.employeeId` was pulled forward into Task 3**, not covered here: `lib/access-control.ts`'s `deleteEmployeeRecord` (Task 3) calls `bridgeDeleteEmployee({ employeeId: employee.id, ... })`, so that one field had to move with it or `lib/access-control.ts` couldn't have gone `tsc`-clean in Task 3. Only `BridgeUpsertEmployeeInput`'s two fields remain here.
+
 **Files:**
 - Modify: `lib/wordpress-bridge.ts`
 
 **Interfaces:**
-- Produces: `BridgeUpsertEmployeeInput.employeeId: string`, `BridgeUpsertEmployeeInput.companyId: string`, `BridgeDeleteEmployeeInput.employeeId?: string | null` — consumed by Plan 3's employee-creation/deletion action files (the ones that construct these input objects and call `bridgeUpsertEmployee`/`bridgeDeleteEmployee`).
+- Produces: `BridgeUpsertEmployeeInput.employeeId: string`, `BridgeUpsertEmployeeInput.companyId: string` — consumed by Plan 3's employee-creation action file (the one that constructs this input object and calls `bridgeUpsertEmployee`). `BridgeDeleteEmployeeInput.employeeId` is already `string | null` as of Task 3 — do not re-edit it here.
 
-**This file is NOT in `tsc`'s current error list at all** — confirmed by direct grep. It compiles cleanly today because nothing in the currently-compiled portion of the codebase constructs a `BridgeUpsertEmployeeInput`/`BridgeDeleteEmployeeInput` object literal yet with a mismatched type (the construction sites are in `app/` action files, all of which are already failing to compile for unrelated reasons before reaching this point — Plan 3's scope). This task exists so Plan 3's implementers find the correct target type already in place rather than having to make this judgment call themselves mid-task.
+**This file was NOT in `tsc`'s current error list at all** when this plan was authored — confirmed by direct grep. It compiled cleanly at the time because nothing in the currently-compiled portion of the codebase constructed a `BridgeUpsertEmployeeInput`/`BridgeDeleteEmployeeInput` object literal yet with a mismatched type. Task 3's dispatch already proved this assumption has a real edge: `access-control.ts` DID construct one (`BridgeDeleteEmployeeInput`), which is why that field moved. `BridgeUpsertEmployeeInput` is constructed only in `app/` action files (Plan 3's scope, still failing to compile for unrelated reasons before reaching this point) — as of this task's dispatch, re-confirm with a fresh grep that nothing new in `lib/` (not just `app/`) constructs it before trusting that this task still doesn't move the scoped count.
 
 **Everything else in this file stays `number`**: `BridgeUpsertEmployeeResponse.wp_user_id`, `BridgeDeleteEmployeeInput.wpUserId`, every function that takes a raw `userId`/`courseIds` parameter for enrollment/access/certificate calls (`bridgeEnrollCourses`, `bridgeEnsureStudentAccess`, `bridgeGetStudentCourses`, `bridgeGetStudentCertificates`, etc.) — these are all WordPress/Tutor LMS's own numeric IDs, confirmed by tracing their call sites in `lib/course-sync.ts` (Task 5), which always pass `employee.wp_user_id`, never the portal `employee.id`.
 
-- [ ] **Step 1: Edit the two input types**
+- [ ] **Step 1: Edit the one remaining input type**
 
 ```diff
  export type BridgeUpsertEmployeeInput = {
@@ -1062,16 +1078,7 @@ git commit -m "feat(uuid): convert dashboard-cache, slug, and company-branding t
  }
 ```
 
-```diff
- export type BridgeDeleteEmployeeInput = {
--  employeeId?: number | null
-+  employeeId?: string | null
-   wpUserId?: number | null
-   email?: string | null
- }
-```
-
-The three internal usages at (pre-edit) lines 374, 376, and 393 — `employee_id: input.employeeId`, `id: input.companyId`, `employee_id: input.employeeId ?? null` — build the outbound JSON payload sent to the WordPress plugin and need no code change, only the type change above; they already just forward the field as-is into the request body.
+The internal usages at (pre-edit) lines 374, 376 — `employee_id: input.employeeId`, `id: input.companyId` — build the outbound JSON payload sent to the WordPress plugin and need no code change, only the type change above; they already just forward the field as-is into the request body. Do not touch `BridgeDeleteEmployeeInput` — it was already converted in Task 3.
 
 - [ ] **Step 2: Verify**
 
@@ -1083,7 +1090,7 @@ Expected: no output (was already empty before this task; confirms the edit didn'
 ```bash
 npx tsc --noEmit 2>&1 | grep -E "^(lib/|auth\.ts|auth\.config\.ts|types/next-auth\.d\.ts)" | grep -c "error TS"
 ```
-Expected: `0` (unchanged from Task 8's end state — this task's file wasn't contributing to the scoped count, since it was already `tsc`-clean before this plan started).
+Expected: `0` (unchanged from Task 8's end state — this task's file wasn't contributing to the scoped count, since it was already `tsc`-clean before this plan started and its remaining field, `BridgeUpsertEmployeeInput`, still isn't constructed anywhere in `lib/`). If this is nonzero, stop and check — by this point in the plan, two prior tasks (1 and 3) each found a real gap exactly this way.
 
 ```bash
 npm run lint 2>&1 | tail -5
@@ -1105,4 +1112,4 @@ git commit -m "feat(uuid): convert wordpress-bridge employee/company payload fie
 - **Placeholder scan:** none — every task has literal diffs or explicit "no change needed" callouts with the reasoning stated, not left implicit.
 - **Type consistency:** traced every producer/consumer pair across tasks explicitly in each task's "Interfaces" block — `getActiveCompanyId(): string | null` (Task 1) → `lib/prisma.ts`'s untyped guard (verified, not edited, Task 1 Step 4); `Session.user.empresa_id: string | null` (Task 2) → `lib/auth-guards.ts`'s `enterCompanyContext()` call (verified, not edited, Task 2 Step 3); `notifyEmployeeNewCertificates(employeeId: string, ...)` (Task 4) → called from Task 6's `employee-learning.ts`; `syncSingleEmployeePackageEnrollment(employee: {id: string, ...})` (Task 5) → called from `jobs.ts`'s `processPackageEnrollmentSyncJob` in the same task. No signature drift found between tasks.
 - **Expected error-count arithmetic** (scoped to `lib/` + `auth.ts` + `auth.config.ts` + `types/next-auth.d.ts`, not the whole repo — see Task 2's note): 91 (measured live after Task 1 landed — not the 86 originally estimated from the pre-Task-1 baseline, since Task 1's own edit surfaced errors in `dashboard-cache.ts` (+4) and previously-unscoped `lib/auth-guards.ts` (+1)) − 1 (Task 2, auth-guards.ts) − 2 (Task 2, company-status.ts — pulled forward from the original Task 7 mid-dispatch, see Task 2's note) − 1 (Task 2, auth.ts, resolved as a side effect of company-status.ts moving earlier) − 7 (Task 3, auditing) − 11 (Task 3, access-control) − 12 (Task 4, notifications) − 17 (Task 5, course-sync) − 9 (Task 5, jobs) − 17 (Task 6, employee-learning) − 5 (Task 7, dc3-pdf) − 1 (Task 7, certificates) − 6 (Task 8, dashboard-cache) − 1 (Task 8, slug) − 1 (Task 8, company-branding) = **0** remaining after Task 8, unchanged through Task 9. Running totals per task: 91 → 87 → 69 → 57 → 31 → 14 → 8 → 0 → 0, matching each task's Step "Verify". This plan's own execution is the proof this check matters, twice over: Task 1's actual count (340 whole-repo / 91 scoped) diverged from the plan's original prediction (328 whole-repo, no scoped tracking existed yet), which is what triggered finding `lib/auth-guards.ts` and the two auth-typing files; then Task 2's own dispatch produced 87 against a first-corrected prediction of 90, which is what caught that `lib/auth-guards.ts`'s *second* call (`getCompanyAccessStatus`) also needed a fix, pulling `lib/company-status.ts` forward from Task 8. If a future implementer's count diverges from a task's stated expectation, treat that the same way both times did: stop and investigate before continuing, don't assume the plan's number was just approximate.
-- **Scope check:** this plan is appropriately sized as a single unit — 9 tasks covering the core-library and auth-typing infrastructure that the rest of the app (Plan 3) can't be touched correctly without first landing. It does not bleed into `app/`, `components/`, or `prisma/seed.ts`, which remain Plan 3 and Plan 4 respectively. Task 2 (Session/JWT typing) was not in this plan's original 8-task research pass — it was added mid-execution once Task 1's dispatch surfaced it live. Task 8 subsequently shrank from four files to three when `lib/company-status.ts` was pulled forward into Task 2 for the same reason. Both changes are recorded here rather than silently smoothed over, so a future reader comparing this document against the ledger can see why.
+- **Scope check:** this plan is appropriately sized as a single unit — 9 tasks covering the core-library and auth-typing infrastructure that the rest of the app (Plan 3) can't be touched correctly without first landing. It does not bleed into `app/`, `components/`, or `prisma/seed.ts`, which remain Plan 3 and Plan 4 respectively. Three corrections happened mid-execution, each recorded here rather than silently smoothed over: Task 2 (Session/JWT typing) was added once Task 1's dispatch surfaced it live; Task 8 shrank from four files to three when `lib/company-status.ts` was pulled forward into Task 2 for the same reason; and Task 9 shrank from two `lib/wordpress-bridge.ts` fields to one when `BridgeDeleteEmployeeInput.employeeId` was pulled forward into Task 3 (its caller, `lib/access-control.ts`'s `deleteEmployeeRecord`, is a Task 3 file). A future reader comparing this document against the ledger can see why the task boundaries moved.
