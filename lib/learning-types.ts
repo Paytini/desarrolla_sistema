@@ -1,6 +1,6 @@
 export type PortalCourseRecord = {
-  id: number
-  employee_id: number
+  id: string
+  employee_id: string
   wp_course_id: number
   course_name: string
   progress_pct: number
@@ -15,8 +15,8 @@ export type PortalCourseRecord = {
 }
 
 export type PortalCertificateRecord = {
-  id: number
-  employee_id: number
+  id: string
+  employee_id: string
   wp_course_id: number
   course_name: string
   reference_number: string
@@ -25,8 +25,8 @@ export type PortalCertificateRecord = {
 }
 
 export type PortalPackageCourseRecord = {
-  id?: number
-  package_id?: number
+  id?: string
+  package_id?: string
   wp_course_id: number
   course_name: string
   cover_url?: string | null
