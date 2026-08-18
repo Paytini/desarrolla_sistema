@@ -20,7 +20,7 @@ function getEmployeeSyncIntervalMs() {
 }
 
 const EMPLOYEE_SYNC_INTERVAL_MS = getEmployeeSyncIntervalMs()
-const backgroundSyncsInFlight = new Set<number>()
+const backgroundSyncsInFlight = new Set<string>()
 const backgroundBatchSyncsInFlight = new Set<string>()
 
 export type EmployeeLearningData = Awaited<ReturnType<typeof getEmployeeLearningData>>
@@ -35,13 +35,13 @@ function hasWpCourseId<T extends { wp_course_id?: number | null }>(
   return Number.isInteger(item.wp_course_id) && Number(item.wp_course_id) > 0
 }
 
-function buildCertificateFolio(employeeId: number, courseId: number, completedAt?: string | null) {
+function buildCertificateFolio(folioSequence: number, courseId: number, completedAt?: string | null) {
   const baseDate = parseBridgeDate(completedAt) ?? new Date()
   const year = baseDate.getUTCFullYear()
   const month = String(baseDate.getUTCMonth() + 1).padStart(2, "0")
   const day = String(baseDate.getUTCDate()).padStart(2, "0")
 
-  return `D360-${year}-${month}${day}-${employeeId}-${courseId}`
+  return `D360-${year}-${month}${day}-${folioSequence}-${courseId}`
 }
 
 function parseBridgeDate(value?: string | null) {
@@ -97,7 +97,7 @@ function mergeBridgeCertificates(
 }
 
 async function upsertEmployeeCoursesFromBridge(
-  employeeId: number,
+  employeeId: string,
   courses: BridgeStudentCourse[]
 ) {
   const now = new Date()
@@ -144,7 +144,7 @@ async function upsertEmployeeCoursesFromBridge(
 }
 
 async function upsertEmployeeCertificatesFromBridge(
-  employeeId: number,
+  employeeId: string,
   certificates: BridgeStudentCertificate[]
 ) {
   const syncedAt = new Date()
@@ -158,18 +158,19 @@ async function upsertEmployeeCertificatesFromBridge(
 
   const newCertificates: { courseName: string; certificateUrl: string }[] = []
 
-  const operations = certificates
-    .filter(hasWpCourseId)
-    .map((certificate) => {
-      const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
-      const certificateUrl = certificate.certificate_url?.trim() || null
-      const issuedAt =
-        parseBridgeDate(certificate.completed_at) ??
-        existingCertificate?.issued_at ??
-        syncedAt
+  const operations: Array<ReturnType<typeof prisma.certificate.update> | ReturnType<typeof prisma.certificate.create>> = []
 
-      if (existingCertificate) {
-        return prisma.certificate.update({
+  for (const certificate of certificates.filter(hasWpCourseId)) {
+    const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
+    const certificateUrl = certificate.certificate_url?.trim() || null
+    const issuedAt =
+      parseBridgeDate(certificate.completed_at) ??
+      existingCertificate?.issued_at ??
+      syncedAt
+
+    if (existingCertificate) {
+      operations.push(
+        prisma.certificate.update({
           where: { id: existingCertificate.id },
           data: {
             course_name: decodeHtmlEntities(certificate.title),
@@ -177,33 +178,40 @@ async function upsertEmployeeCertificatesFromBridge(
             issued_at: issuedAt,
           },
         })
-      }
+      )
+      continue
+    }
 
-      if (!certificateUrl) {
-        return null
-      }
+    if (!certificateUrl) {
+      continue
+    }
 
-      const courseName = decodeHtmlEntities(certificate.title)
-      newCertificates.push({ courseName, certificateUrl })
+    const courseName = decodeHtmlEntities(certificate.title)
+    newCertificates.push({ courseName, certificateUrl })
 
-      return prisma.certificate.create({
+    const [{ nextval }] = await prisma.$queryRaw<{ nextval: bigint }[]>`SELECT nextval('certificates_folio_sequence_seq') AS nextval`
+    const folioSequence = Number(nextval)
+
+    operations.push(
+      prisma.certificate.create({
         data: {
           employee_id: employeeId,
           wp_course_id: certificate.wp_course_id,
           course_name: courseName,
-          reference_number: buildCertificateFolio(employeeId, certificate.wp_course_id, issuedAt.toISOString()),
+          folio_sequence: folioSequence,
+          reference_number: buildCertificateFolio(folioSequence, certificate.wp_course_id, issuedAt.toISOString()),
           certificate_url: certificateUrl,
           issued_at: issuedAt,
         },
       })
-    })
-    .filter((operation) => operation !== null)
+    )
+  }
 
   if (operations.length > 0) {
     try {
       await prisma.$transaction(operations)
       if (newCertificates.length > 0) {
-        await notifyEmployeeNewCertificates(String(employeeId), newCertificates).catch(() => {})
+        await notifyEmployeeNewCertificates(employeeId, newCertificates).catch(() => {})
       }
     } catch (err) {
       if (
@@ -226,7 +234,7 @@ function normalizeBridgeSnapshotCertificates(snapshot: EmployeeLearningBridgeSna
 }
 
 async function resolveEmployeeIdForLearningSync(input: {
-  employeeId?: number | null
+  employeeId?: string | null
   wpUserId?: number | null
 }) {
   if (input.employeeId) {
@@ -246,7 +254,7 @@ async function resolveEmployeeIdForLearningSync(input: {
 }
 
 export async function syncEmployeeLearningFromBridgeSnapshot(input: {
-  employeeId?: number | null
+  employeeId?: string | null
   wpUserId?: number | null
   snapshot: EmployeeLearningBridgeSnapshot
 }) {
@@ -382,7 +390,7 @@ async function fetchEmployeeLearningRecord(email: string) {
   })
 }
 
-async function fetchEmployeeLearningRecordById(employeeId: number) {
+async function fetchEmployeeLearningRecordById(employeeId: string) {
   return prisma.employee.findUnique({
     where: { id: employeeId },
     include: {
@@ -407,7 +415,7 @@ async function fetchEmployeeLearningRecordById(employeeId: number) {
   })
 }
 
-async function syncEmployeeLearningRecord(employeeId: number) {
+async function syncEmployeeLearningRecord(employeeId: string) {
   const employee = await fetchEmployeeLearningRecordById(employeeId)
 
   if (!employee || !employee.wp_user_id || !isWordPressBridgeConfigured()) {
@@ -448,7 +456,7 @@ async function syncEmployeeLearningRecord(employeeId: number) {
   }
 }
 
-function scheduleEmployeeLearningSync(employeeId: number) {
+function scheduleEmployeeLearningSync(employeeId: string) {
   if (!employeeId || backgroundSyncsInFlight.has(employeeId)) {
     return false
   }
@@ -481,7 +489,7 @@ export async function syncStaleEmployeeLearningBatch(options?: {
 }
 
 export async function syncCompanyEmployeeLearningBatch(
-  companyId: number,
+  companyId: string,
   options?: {
     limit?: number
     staleOnly?: boolean
@@ -495,7 +503,7 @@ export async function syncCompanyEmployeeLearningBatch(
 }
 
 async function syncEmployeeLearningBatchInternal(options?: {
-  companyId?: number
+  companyId?: string
   limit?: number
   staleOnly?: boolean
 }) {
@@ -538,7 +546,7 @@ async function syncEmployeeLearningBatchInternal(options?: {
     .slice(0, limit)
 
   const results: Array<{
-    employeeId: number
+    employeeId: string
     status: "synced" | "failed"
     message?: string
   }> = []
@@ -580,7 +588,7 @@ export function scheduleStaleEmployeeLearningBatch(options?: {
 }
 
 export function scheduleCompanyEmployeeLearningBatch(
-  companyId: number,
+  companyId: string,
   options?: {
     limit?: number
     staleOnly?: boolean
