@@ -105,27 +105,30 @@ automaticamente al hacer deploy). Todos requieren `CRON_SECRET` configurado como
 variable de entorno en el proyecto de Vercel — Vercel manda automaticamente
 `Authorization: Bearer $CRON_SECRET` en cada llamada.
 
-El plan **Hobby** de Vercel permite maximo 2 cron jobs por proyecto y minimo una
-ejecucion diaria por job, asi que hoy solo estos dos estan activos:
+El proyecto esta en plan **Pro** de Vercel, asi que no hay limite practico de
+cron jobs ni de frecuencia minima. Los cuatro estan activos:
 
 | Ruta | Horario | Que hace |
 | --- | --- | --- |
 | `GET /api/cron/check-expiring-packages` | diario, 13:00 UTC | Notifica a superadmin y RH cuando un paquete de empresa esta por vencer (30 dias antes). |
-| `GET /api/internal/sync/employee-learning?limit=100` | diario, 13:30 UTC | Respaldo del webhook en tiempo real: sincroniza avances/certificados de hasta 100 alumnos con acceso desactualizado. |
+| `GET /api/internal/sync/employee-learning?limit=100` | cada 15 min | Respaldo del webhook en tiempo real: sincroniza avances/certificados de hasta 100 alumnos con acceso desactualizado. |
+| `GET|POST /api/cron/process-jobs` | cada minuto | Motor de jobs asincronos (G-2, ver mas abajo). |
+| `GET /api/cron/bridge-health` | cada hora | Revisa que el bridge de WordPress responda y que el webhook no lleve mas de 26h sin recibir eventos, notificando a superadmin con un enfriamiento de 6h entre avisos repetidos. |
 
-Hay una tercera ruta ya construida y probada, `GET /api/cron/bridge-health`
-(revisa que el bridge de WordPress responda y que el webhook no lleve mas de 26h
-sin recibir eventos, notificando a superadmin con un enfriamiento de 6h entre avisos
-repetidos), pero **no esta agregada a `vercel.json`** por el limite de 2 jobs de Hobby.
-Al subir a Pro, agrega este bloque a `crons` para activarla (y considera regresar el
-sync de aprendizaje a un intervalo mas corto, por ejemplo cada 15 min):
+Si el proyecto llegara a bajar a Hobby (maximo 2 cron jobs, minimo diario cada
+uno), habria que recortar esta lista a los dos mas criticos y considerar un
+mecanismo de respaldo para `process-jobs` (por ejemplo, que otro cron ya
+activo llame a `processPendingJobs()` de `lib/jobs.ts` en loop, despues de su
+propio trabajo) — no es el caso hoy, asi que no esta implementado.
 
-```json
-{
-  "path": "/api/cron/bridge-health",
-  "schedule": "0 * * * *"
-}
-```
+#### `GET|POST /api/cron/process-jobs` — motor de jobs asincronos (G-2)
+
+Procesa la tabla `jobs` en chunks (ver `lib/jobs.ts`): sincronizar el paquete
+activo con todos los empleados de una empresa se encola como job en vez de
+correr en la misma peticion, y `processPendingJobs()` avanza el siguiente
+chunk (20 empleados, concurrencia 5) cada vez que se le llama. Con el cron
+corriendo cada minuto, un job tarda `ceil(empleados / 20)` minutos en
+completarse — una empresa de 200 empleados termina en ~10 minutos.
 
 La URL esperada del portal es:
 
