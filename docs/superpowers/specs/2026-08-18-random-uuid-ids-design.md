@@ -50,8 +50,10 @@ Every `wp_*` column (`wp_user_id`, `wp_course_id`, `wp_bundle_id`) is an ID **ow
 **Standard UUID v4** via Postgres's native `gen_random_uuid()` (built into Postgres 13+, no extension needed — confirmed available on Supabase). Prisma:
 
 ```prisma
-id String @id @default(uuid()) @db.Uuid
+id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 ```
+
+Note: plain `@default(uuid())` was considered first but rejected — it's a **Prisma-Client-side** default (the client generates the UUID and sends it explicitly on every `INSERT`), not a database-level one. Confirmed via a real `prisma migrate diff` run against this schema: with `@default(uuid())` the generated SQL added every `id` column with no `DEFAULT` clause at all. That would silently break any insert path that doesn't go through Prisma Client — specifically the `load-testing/seeders/*.js` scripts, which insert via the raw `pg` driver. `@default(dbgenerated("gen_random_uuid()"))` pushes the default to Postgres itself, so it fires for every insert path uniformly. Confirmed working: the corrected diff includes `DEFAULT gen_random_uuid()` on all 16 `id` columns.
 
 Every FK column referencing a migrated model's `id` becomes `String @db.Uuid` to match. Rejected UUID v7 (time-ordered, better B-tree index locality on very large/high-insert tables) — the extra complexity (no native Postgres function for v7 on the current version; would need an app-level library) isn't justified at this project's scale, and the security property (unguessable) is identical between v4 and v7 given both carry well over 100 bits of randomness in the non-timestamp portion.
 
@@ -78,7 +80,7 @@ New folio format: `D360-YYYY-MMDD-{paddedFolioSequence}-{wp_course_id}` (e.g. `D
 **User confirmed:** current data is 100% disposable test/seed data — no real companies yet. This removes the need for a value-preserving migration (mapping every existing `Int` row to a fresh UUID while rewriting every FK reference in lockstep across 16 tables), which is by far the highest-risk, highest-effort part of a PK-type migration on a live system. Instead:
 
 1. Update `prisma/schema.prisma` fully (all 16 models' `id` + every FK column identified in §2, plus the new `folio_sequence` column).
-2. Migration truncates the affected tables and recreates the changed columns with their new types — this repo cannot use `prisma migrate dev` for *any* migration due to a pre-existing, unrelated bug (a May-2026 migration fails shadow-database replay even though the real database has zero drift; already documented and worked around twice in this repo's history — G-2's `Job` table and G-5's `dc3_pdf_url` column both used the same fix). The established safe pattern applies again: hand-author or `prisma migrate diff --from-url` the SQL, apply via `prisma migrate deploy`, never `migrate dev`.
+2. Migration truncates the affected tables and recreates the changed columns with their new types — this repo cannot use `prisma migrate dev` for *any* migration due to a pre-existing, unrelated bug (a May-2026 migration fails shadow-database replay even though the real database has zero drift; already documented and worked around twice in this repo's history — G-2's `Job` table and G-5's `dc3_pdf_url` column both used the same fix). The established safe pattern applies again: diff the live DB against the target schema, apply via `prisma migrate deploy`, never `migrate dev`. Note: Prisma 7 removed the `--from-url` flag used in earlier fixes this session — the current syntax is `prisma migrate diff --from-config-datasource --to-schema=prisma/schema.prisma --script` (confirmed working; `--from-config-datasource` reads `DIRECT_URL` from `prisma.config.ts`, same connection the old `--from-url "$DIRECT_URL"` pointed at).
 3. After the schema migration lands, re-seed with `prisma/seed.ts` (demo users) if desired; `load-testing/seeders/` needs review (§7) before it can seed again too.
 
 No maintenance-window coordination needed beyond "the app will 500 on any request touching a migrated table for the few seconds the migration runs" — acceptable per user, no real traffic today.
