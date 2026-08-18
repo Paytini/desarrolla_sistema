@@ -13,6 +13,9 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     ".agents/**",
+    // load-testing/ is an independently-managed CommonJS subproject with its
+    // own package.json — not meant to comply with the app's TS/ESM lint rules.
+    "load-testing/**",
   ]),
 ]);
 
