@@ -40,8 +40,9 @@ function buildCertificateFolio(folioSequence: number, courseId: number, complete
   const year = baseDate.getUTCFullYear()
   const month = String(baseDate.getUTCMonth() + 1).padStart(2, "0")
   const day = String(baseDate.getUTCDate()).padStart(2, "0")
+  const paddedFolioSequence = String(folioSequence).padStart(6, "0")
 
-  return `D360-${year}-${month}${day}-${folioSequence}-${courseId}`
+  return `D360-${year}-${month}${day}-${paddedFolioSequence}-${courseId}`
 }
 
 function parseBridgeDate(value?: string | null) {

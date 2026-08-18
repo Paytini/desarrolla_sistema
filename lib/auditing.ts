@@ -18,6 +18,8 @@ export type CompanySeatSnapshot = {
   empleados_suspendidos: number
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const SYSTEM_ACTOR: AuditActor = {
   userId: null,
   nombre: "Sistema",
@@ -28,7 +30,7 @@ const SYSTEM_ACTOR: AuditActor = {
 function parseSessionUserId(value: string | undefined | null) {
   if (!value) return null
 
-  return value
+  return UUID_RE.test(value) ? value : null
 }
 
 export function getAuditActorFromSession(session: Session | null | undefined): AuditActor {

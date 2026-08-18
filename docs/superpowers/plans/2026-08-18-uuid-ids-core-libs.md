@@ -137,7 +137,7 @@ Expected: no output (these files had zero errors before and after — this step 
 ```bash
 npx tsc --noEmit 2>&1 | grep -c "error TS"
 ```
-Expected: `328` (unchanged from Plan 1's baseline — these three files' fixes don't reduce today's error count by themselves, since nothing currently flags them; later tasks that consume `getActiveCompanyId()`/`cache-tags`/`learning-types` are what actually goes green).
+Expected: this step's own file-scoped check (above) should show no output regardless of the whole-repo count. The whole-repo count itself is NOT a reliable check at this point in the plan (see the Self-Review Notes at the bottom of this document for why) — historically it landed at 340 here, not the 328 originally predicted, which is exactly what led to Task 2 being added. Do not treat a divergence here as a problem on its own; treat it as a signal to check per-file, the way Task 2 was found.
 
 ```bash
 npm run lint 2>&1 | tail -5
