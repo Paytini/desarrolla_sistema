@@ -5,7 +5,7 @@ declare module "next-auth" {
     user: {
       id: string
       rol: string
-      empresa_id: number | null
+      empresa_id: string | null
       nombre: string
       empresa?: string
       empresa_slug?: string
@@ -17,7 +17,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string
     rol?: string
-    empresa_id?: number | null
+    empresa_id?: string | null
     nombre?: string
     empresa?: string | null
     empresa_slug?: string | null

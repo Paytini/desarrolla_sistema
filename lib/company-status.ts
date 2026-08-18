@@ -4,7 +4,7 @@ export type CompanyAccessStatus =
   | { blocked: false; reason: null }
   | { blocked: true; reason: "suspendida" | "vencida" }
 
-export async function getCompanyAccessStatus(companyId: number): Promise<CompanyAccessStatus> {
+export async function getCompanyAccessStatus(companyId: string): Promise<CompanyAccessStatus> {
   const company = await prisma.company.findUnique({
     where: { id: companyId },
     select: {
