@@ -8,10 +8,10 @@ type NotifyContent = {
   titulo: string
   mensaje: string
   entidadTipo?: string
-  entidadId?: number
+  entidadId?: string
 }
 
-async function createNotifications(usuarioIds: number[], content: NotifyContent) {
+async function createNotifications(usuarioIds: string[], content: NotifyContent) {
   if (usuarioIds.length === 0) return
 
   await prisma.notification.createMany({
@@ -27,7 +27,7 @@ async function createNotifications(usuarioIds: number[], content: NotifyContent)
 }
 
 export async function notifySuperadmins(
-  content: NotifyContent & { excludeUsuarioId?: number | null }
+  content: NotifyContent & { excludeUsuarioId?: string | null }
 ) {
   const superadmins = await prisma.user.findMany({
     where: {
@@ -40,7 +40,7 @@ export async function notifySuperadmins(
   await createNotifications(superadmins.map((u) => u.id), content)
 }
 
-export async function notifyCompanyRH(companyId: number, content: NotifyContent) {
+export async function notifyCompanyRH(companyId: string, content: NotifyContent) {
   const rhUsers = await prisma.user.findMany({
     where: { company_id: companyId, role: "RH", active: true },
     select: { id: true },
@@ -55,7 +55,7 @@ export async function notifyUsuarioByEmail(email: string, content: NotifyContent
 }
 
 export async function notifyEmployeeNewCertificates(
-  employeeId: number,
+  employeeId: string,
   certificates: { courseName: string; certificateUrl: string }[]
 ) {
   if (certificates.length === 0) return
@@ -165,7 +165,7 @@ export async function checkAndNotifyExpiringPackages() {
   }
 }
 
-export async function getRecentNotifications(userId: number, limit = 20) {
+export async function getRecentNotifications(userId: string, limit = 20) {
   return prisma.notification.findMany({
     where: { user_id: userId },
     orderBy: { created_at: "desc" },
@@ -173,13 +173,13 @@ export async function getRecentNotifications(userId: number, limit = 20) {
   })
 }
 
-export async function getUnreadNotificationCount(userId: number) {
+export async function getUnreadNotificationCount(userId: string) {
   return prisma.notification.count({
     where: { user_id: userId, read: false },
   })
 }
 
-export async function markAllNotificationsRead(userId: number) {
+export async function markAllNotificationsRead(userId: string) {
   await prisma.notification.updateMany({
     where: { user_id: userId, read: false },
     data: { read: true },

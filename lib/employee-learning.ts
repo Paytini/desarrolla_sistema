@@ -203,7 +203,7 @@ async function upsertEmployeeCertificatesFromBridge(
     try {
       await prisma.$transaction(operations)
       if (newCertificates.length > 0) {
-        await notifyEmployeeNewCertificates(employeeId, newCertificates).catch(() => {})
+        await notifyEmployeeNewCertificates(String(employeeId), newCertificates).catch(() => {})
       }
     } catch (err) {
       if (
