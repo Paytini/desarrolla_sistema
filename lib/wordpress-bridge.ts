@@ -33,7 +33,7 @@ export type BridgeUpsertEmployeeResponse = {
 }
 
 export type BridgeDeleteEmployeeInput = {
-  employeeId?: number | null
+  employeeId?: string | null
   wpUserId?: number | null
   email?: string | null
 }
