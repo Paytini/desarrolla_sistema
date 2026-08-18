@@ -160,6 +160,7 @@ function CourseEditorCard({
       const fd = new FormData()
       fd.append("file", file)
       fd.append("nombre", `instructor-${course.wpCourseId}`)
+      fd.append("wpCourseId", String(course.wpCourseId))
       const res  = await fetch("/api/upload/instructor-signature", { method: "POST", body: fd })
       const data = await res.json()
       if (!res.ok) { setUploadError(data.error ?? "Error subiendo la firma"); return }
