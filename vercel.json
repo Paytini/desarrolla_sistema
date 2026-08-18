@@ -6,11 +6,15 @@
     },
     {
       "path": "/api/internal/sync/employee-learning?limit=100",
-      "schedule": "30 13 * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/process-jobs",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/bridge-health",
+      "schedule": "0 * * * *"
     }
   ]
 }
