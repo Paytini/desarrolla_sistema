@@ -336,6 +336,7 @@ model Certificate {
   course_name       String
   reference_number  String    @unique // D360-YYYY-MMDD-NNN
   certificate_url   String? // URL of the PDF in WordPress
+  dc3_pdf_url       String? // URL of the portal-generated DC-3 PDF, cached in Vercel Blob
   issued_at         DateTime  @default(now())
 
   employee Employee @relation(fields: [employee_id], references: [id])
