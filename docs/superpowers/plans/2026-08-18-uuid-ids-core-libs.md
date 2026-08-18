@@ -632,6 +632,8 @@ git commit -m "feat(uuid): convert course-sync and jobs to string employee/compa
 
 ### Task 6: `lib/employee-learning.ts` (+ folio_sequence redesign)
 
+**One pre-existing wrapper to clean up, left by Task 4:** Task 4's dispatch found that `notifyEmployeeNewCertificates`'s now-`string` parameter broke the call at (pre-edit) line 206, `await notifyEmployeeNewCertificates(employeeId, newCertificates)`, since this file's `employeeId` was still `number`-typed at the time. Rather than converting this whole file early, Task 4 wrapped just that call site: `notifyEmployeeNewCertificates(String(employeeId), newCertificates)`. This is safe at runtime (the underlying value is already a real UUID string post-Plan-1; `String()` on a string is a no-op) but becomes redundant once this task converts `employeeId`'s own type to `string`. **As part of this task, remove the now-unnecessary `String(...)` wrapper** — change that line back to `notifyEmployeeNewCertificates(employeeId, newCertificates)` — once `employeeId` is properly `string`-typed by this task's own edits. This isn't in the diff blocks below (they don't touch that line at all); do it as a small additional edit and mention it in your report.
+
 **Files:**
 - Modify: `lib/employee-learning.ts`
 
