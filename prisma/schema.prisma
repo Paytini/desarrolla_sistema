@@ -62,22 +62,22 @@ enum ConsultingRequestStatus {
 // ─────────────────────────────────────────────────────────────
 
 model User {
-  id            Int       @id @default(autoincrement())
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email         String    @unique
   password_hash String
   role          Role
   name          String
-  company_id    Int? // null for SUPERADMIN
+  company_id    String?   @db.Uuid // null for SUPERADMIN
   wp_user_id    Int? // WordPress user ID (nullable)
   active        Boolean   @default(true)
   last_access   DateTime?
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 
-  company             Company?             @relation(fields: [company_id], references: [id])
-  sessions            PortalSession[]
-  notifications       Notification[]
-  consultingRequests  ConsultingRequest[]
+  company            Company?            @relation(fields: [company_id], references: [id])
+  sessions           PortalSession[]
+  notifications      Notification[]
+  consultingRequests ConsultingRequest[]
 
   @@index([company_id])
   @@map("users")
@@ -90,14 +90,14 @@ model User {
 // ─────────────────────────────────────────────────────────────
 
 model Notification {
-  id          Int      @id @default(autoincrement())
-  user_id     Int
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String   @db.Uuid
   type        String
   title       String
   message     String
   read        Boolean  @default(false)
   entity_type String?
-  entity_id   Int?
+  entity_id   String?  @db.Uuid
   created_at  DateTime @default(now())
 
   user User @relation(fields: [user_id], references: [id])
@@ -115,24 +115,24 @@ model Notification {
 // ─────────────────────────────────────────────────────────────
 
 model Company {
-  id                 Int      @id @default(autoincrement())
-  name               String
-  slug               String   @unique // used in portal URLs, e.g. /company/acme
-  logo_url           String? // company-branded logo shown in the portal
-  hr_email           String   @unique // HR contact's email
-  phone              String?
-  rfc                String? // Mexican tax ID
-  contracted_seats   Int // maximum employees allowed
-  used_seats         Int      @default(0)
-  active             Boolean  @default(true)
-  notes              String?  @db.Text // internal Desarrolla360 notes
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  slug             String   @unique // used in portal URLs, e.g. /company/acme
+  logo_url         String? // company-branded logo shown in the portal
+  hr_email         String   @unique // HR contact's email
+  phone            String?
+  rfc              String? // Mexican tax ID
+  contracted_seats Int // maximum employees allowed
+  used_seats       Int      @default(0)
+  active           Boolean  @default(true)
+  notes            String?  @db.Text // internal Desarrolla360 notes
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
-  users               User[]
-  employees           Employee[]
-  packages            CompanyPackage[]
-  consultingRequests  ConsultingRequest[]
+  users              User[]
+  employees          Employee[]
+  packages           CompanyPackage[]
+  consultingRequests ConsultingRequest[]
 
   @@map("companies")
 }
@@ -144,7 +144,7 @@ model Company {
 // ─────────────────────────────────────────────────────────────
 
 model Package {
-  id                Int      @id @default(autoincrement())
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name              String // "Basic CTPAT", "Supply Chain", etc.
   description       String?  @db.Text
   delivery_mode     String   @default("DIRECT_ENROLLMENT") // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
@@ -155,7 +155,7 @@ model Package {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
-  courses  PackageCourse[]
+  courses   PackageCourse[]
   companies CompanyPackage[]
 
   @@map("packages")
@@ -168,13 +168,13 @@ model Package {
 // ─────────────────────────────────────────────────────────────
 
 model PackageCourse {
-  id            Int     @id @default(autoincrement())
-  package_id    Int
-  wp_course_id  Int // course ID in Tutor LMS Pro
-  course_name   String // cached name so we don't always query WP
-  cover_url     String? // URL of the course's featured image in WordPress
-  description   String? @db.Text
-  lesson_count  Int?
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  package_id   String  @db.Uuid
+  wp_course_id Int // course ID in Tutor LMS Pro
+  course_name  String // cached name so we don't always query WP
+  cover_url    String? // URL of the course's featured image in WordPress
+  description  String? @db.Text
+  lesson_count Int?
 
   package Package @relation(fields: [package_id], references: [id])
 
@@ -191,20 +191,20 @@ model PackageCourse {
 // ─────────────────────────────────────────────────────────────
 
 model CourseDc3Metadata {
-  id                           Int       @id @default(autoincrement())
-  wp_course_id                 Int       @unique
-  course_name                  String?
-  duration_hours               Float?
-  subject_area_name            String?
-  subject_area_code            String?
-  training_agent_name          String?
-  training_agent_registration  String?
-  instructor_name              String?
-  instructor_signature_url     String?
-  source                       String    @default("MANUAL") // MANUAL | WORDPRESS_BRIDGE
-  last_synced_at               DateTime?
-  created_at                   DateTime  @default(now())
-  updated_at                   DateTime  @updatedAt
+  id                          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wp_course_id                Int       @unique
+  course_name                 String?
+  duration_hours              Float?
+  subject_area_name           String?
+  subject_area_code           String?
+  training_agent_name         String?
+  training_agent_registration String?
+  instructor_name             String?
+  instructor_signature_url    String?
+  source                      String    @default("MANUAL") // MANUAL | WORDPRESS_BRIDGE
+  last_synced_at              DateTime?
+  created_at                  DateTime  @default(now())
+  updated_at                  DateTime  @updatedAt
 
   @@index([wp_course_id])
   @@map("course_dc3_metadata")
@@ -217,13 +217,13 @@ model CourseDc3Metadata {
 // ─────────────────────────────────────────────────────────────
 
 model CompanyPackage {
-  id                Int       @id @default(autoincrement())
-  company_id        Int
-  package_id        Int
-  start_date        DateTime  @default(now())
-  expiration_date   DateTime? // null = no expiration
-  active            Boolean   @default(true)
-  created_at        DateTime  @default(now())
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_id      String    @db.Uuid
+  package_id      String    @db.Uuid
+  start_date      DateTime  @default(now())
+  expiration_date DateTime? // null = no expiration
+  active          Boolean   @default(true)
+  created_at      DateTime  @default(now())
 
   company Company @relation(fields: [company_id], references: [id])
   package Package @relation(fields: [package_id], references: [id])
@@ -240,18 +240,18 @@ model CompanyPackage {
 // ─────────────────────────────────────────────────────────────
 
 model ConsultingRequest {
-  id                    Int                      @id @default(autoincrement())
-  company_id            Int
-  requested_by_user_id  Int
-  area                  ConsultingArea
-  context               String                   @db.Text
-  preferred_date        DateTime                 @db.Date
-  preferred_time        String // "10:00", 24h, wall-clock time in `timezone`
-  timezone              String                   @default("America/Tijuana")
-  contact_phone         String
-  contact_method        ConsultingContactMethod
-  status                ConsultingRequestStatus  @default(PENDING)
-  created_at            DateTime                 @default(now())
+  id                   String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_id           String                  @db.Uuid
+  requested_by_user_id String                  @db.Uuid
+  area                 ConsultingArea
+  context              String                  @db.Text
+  preferred_date       DateTime                @db.Date
+  preferred_time       String // "10:00", 24h, wall-clock time in `timezone`
+  timezone             String                  @default("America/Tijuana")
+  contact_phone        String
+  contact_method       ConsultingContactMethod
+  status               ConsultingRequestStatus @default(PENDING)
+  created_at           DateTime                @default(now())
 
   company     Company @relation(fields: [company_id], references: [id])
   requestedBy User    @relation(fields: [requested_by_user_id], references: [id])
@@ -268,21 +268,21 @@ model ConsultingRequest {
 // ─────────────────────────────────────────────────────────────
 
 model Employee {
-  id                 Int      @id @default(autoincrement())
-  company_id         Int
-  wp_user_id         Int?     @unique // WordPress ID, unique once linked
-  first_name         String
-  last_name          String
-  second_last_name   String?
-  email              String   @unique
-  curp               String? // Mexican personal ID
-  department         String?
-  position           String?
-  occupation_code    String?
-  occupation_name    String?
-  active             Boolean  @default(true)
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_id       String   @db.Uuid
+  wp_user_id       Int?     @unique // WordPress ID, unique once linked
+  first_name       String
+  last_name        String
+  second_last_name String?
+  email            String   @unique
+  curp             String? // Mexican personal ID
+  department       String?
+  position         String?
+  occupation_code  String?
+  occupation_name  String?
+  active           Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
   company      Company          @relation(fields: [company_id], references: [id])
   courses      EmployeeCourse[]
@@ -301,19 +301,19 @@ model Employee {
 // ─────────────────────────────────────────────────────────────
 
 model EmployeeCourse {
-  id                     Int       @id @default(autoincrement())
-  employee_id            Int
-  wp_course_id           Int // course ID in Tutor LMS
-  course_name            String // cached from WP
-  progress_pct           Int       @default(0) // 0–100
-  completed              Boolean   @default(false)
-  access_status          String    @default("PENDING") // PENDING | ACTIVE | ERROR | REQUIRES_REVIEW
-  access_source          String? // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
-  access_error           String?   @db.Text
-  last_access_attempt    DateTime?
-  course_start_date      DateTime?
-  completed_at           DateTime?
-  last_synced_at         DateTime  @default(now())
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id         String    @db.Uuid
+  wp_course_id        Int // course ID in Tutor LMS
+  course_name         String // cached from WP
+  progress_pct        Int       @default(0) // 0–100
+  completed           Boolean   @default(false)
+  access_status       String    @default("PENDING") // PENDING | ACTIVE | ERROR | REQUIRES_REVIEW
+  access_source       String? // DIRECT_ENROLLMENT | PRIVATE_BUNDLE_REFERENCE
+  access_error        String?   @db.Text
+  last_access_attempt DateTime?
+  course_start_date   DateTime?
+  completed_at        DateTime?
+  last_synced_at      DateTime  @default(now())
 
   employee Employee @relation(fields: [employee_id], references: [id])
 
@@ -330,14 +330,15 @@ model EmployeeCourse {
 // ─────────────────────────────────────────────────────────────
 
 model Certificate {
-  id                Int       @id @default(autoincrement())
-  employee_id       Int
-  wp_course_id      Int
-  course_name       String
-  reference_number  String    @unique // D360-YYYY-MMDD-NNN
-  certificate_url   String? // URL of the PDF in WordPress
-  dc3_pdf_url       String? // URL of the portal-generated DC-3 PDF, cached in Vercel Blob
-  issued_at         DateTime  @default(now())
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id      String   @db.Uuid
+  wp_course_id     Int
+  course_name      String
+  reference_number String   @unique // D360-YYYY-MMDD-NNN
+  certificate_url  String? // URL of the PDF in WordPress
+  dc3_pdf_url      String? // URL of the portal-generated DC-3 PDF, cached in Vercel Blob
+  folio_sequence   Int      @default(autoincrement()) // short readable sequence for the official DC-3 folio, decoupled from id
+  issued_at        DateTime @default(now())
 
   employee Employee @relation(fields: [employee_id], references: [id])
 
@@ -346,7 +347,7 @@ model Certificate {
 }
 
 model IntegrationState {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   key        String   @unique
   payload    Json?
   created_at DateTime @default(now())
@@ -363,8 +364,8 @@ model IntegrationState {
 // ─────────────────────────────────────────────────────────────
 
 model PortalSession {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
   token      String   @unique @db.VarChar(512)
   expires_at DateTime
   ip_address String?
@@ -383,18 +384,18 @@ model PortalSession {
 // ─────────────────────────────────────────────────────────────
 
 model AuditEvent {
-  id             Int      @id @default(autoincrement())
-  actor_user_id  Int?
-  actor_name     String
-  actor_email    String?
-  actor_role     String
-  action         String
-  entity_type    String
-  entity_id      Int?
-  company_id     Int?
-  summary        String
-  metadata       Json?
-  created_at     DateTime @default(now())
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actor_user_id String?  @db.Uuid
+  actor_name    String
+  actor_email   String?
+  actor_role    String
+  action        String
+  entity_type   String
+  entity_id     String?  @db.Uuid
+  company_id    String?  @db.Uuid
+  summary       String
+  metadata      Json?
+  created_at    DateTime @default(now())
 
   @@index([created_at])
   @@index([company_id])
@@ -409,20 +410,20 @@ model AuditEvent {
 // ─────────────────────────────────────────────────────────────
 
 model SeatHistory {
-  id                           Int      @id @default(autoincrement())
-  company_id                   Int
-  actor_user_id                Int?
-  actor_name                   String
-  actor_email                  String?
-  actor_role                   String
-  reason                       String
-  detail                       String?  @db.Text
-  contracted_seats_before      Int
-  contracted_seats_after       Int
-  used_seats_before            Int
-  used_seats_after             Int
-  suspended_employees          Int      @default(0)
-  created_at                   DateTime @default(now())
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_id              String   @db.Uuid
+  actor_user_id           String?  @db.Uuid
+  actor_name              String
+  actor_email             String?
+  actor_role              String
+  reason                  String
+  detail                  String?  @db.Text
+  contracted_seats_before Int
+  contracted_seats_after  Int
+  used_seats_before       Int
+  used_seats_after        Int
+  suspended_employees     Int      @default(0)
+  created_at              DateTime @default(now())
 
   @@index([company_id])
   @@index([created_at])
@@ -444,7 +445,7 @@ enum JobStatus {
 }
 
 model Job {
-  id           Int       @id @default(autoincrement())
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   type         String
   status       JobStatus @default(PENDING)
   payload      Json
