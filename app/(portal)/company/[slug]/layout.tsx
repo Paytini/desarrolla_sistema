@@ -13,7 +13,7 @@ export default async function CompanyLayout({
   const { slug } = await params
   const session = await requireRhSession()
 
-  const branding = await getCompanyBranding(session.user.empresa_id as number)
+  const branding = await getCompanyBranding(session.user.empresa_id as string)
   if (!branding) notFound()
 
   // The URL slug is cosmetic, not a security boundary — data access is scoped by

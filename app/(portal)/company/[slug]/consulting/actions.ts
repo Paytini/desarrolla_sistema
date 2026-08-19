@@ -67,14 +67,14 @@ export async function createConsultingRequestAction(
     return { error: "datos" }
   }
 
-  const companyId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as string
   const branding = await getCompanyBranding(companyId)
   if (!branding) return { error: "datos" }
 
   const request = await prisma.consultingRequest.create({
     data: {
       company_id: companyId,
-      requested_by_user_id: Number.parseInt(session.user.id, 10),
+      requested_by_user_id: session.user.id,
       area: areaOption.id as ConsultingArea,
       context,
       preferred_date: new Date(`${preferredDate}T12:00:00.000Z`),
@@ -120,10 +120,10 @@ export async function createConsultingRequestAction(
 
 export async function cancelConsultingRequestAction(formData: FormData) {
   const session = await requireRhSession()
-  const companyId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
-  const requestId = Number.parseInt(getString(formData, "request_id"), 10)
+  const requestId = getString(formData, "request_id")
 
   if (!requestId) {
     redirect(withStatus(returnTo, "error", "solicitud"))

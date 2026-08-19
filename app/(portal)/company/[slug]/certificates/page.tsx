@@ -24,7 +24,7 @@ import { redirect } from "next/navigation"
 import { companyPath } from "@/lib/company-routes"
 
 type CompanyEmployee = {
-  id: number
+  id: string
   first_name: string
   last_name: string
   email: string
