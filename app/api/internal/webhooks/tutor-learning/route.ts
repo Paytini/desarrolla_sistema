@@ -15,8 +15,8 @@ type TutorLearningWebhookPayload = {
   event_type?: string
   occurred_at?: string
   student_wp_user_id?: number
-  employee_id?: number | null
-  company_id?: number | null
+  employee_id?: string | null
+  company_id?: string | null
   source_hash?: string | null
   courses?: EmployeeLearningBridgeSnapshot["courses"]
   certificates?: EmployeeLearningBridgeSnapshot["certificates"]

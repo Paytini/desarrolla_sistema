@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const usuarioId = Number.parseInt(String(session.user.id), 10)
+  const usuarioId = session.user.id
 
   const [items, unreadCount] = await Promise.all([
     getRecentNotifications(usuarioId),
@@ -28,7 +28,7 @@ export async function PATCH() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const usuarioId = Number.parseInt(String(session.user.id), 10)
+  const usuarioId = session.user.id
   await markAllNotificationsRead(usuarioId)
 
   return NextResponse.json({ ok: true })
