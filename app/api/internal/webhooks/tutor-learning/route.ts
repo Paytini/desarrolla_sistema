@@ -12,6 +12,8 @@ import {
 import { recordTutorLearningWebhookEvent } from "@/lib/webhook-monitor"
 import { isUuid } from "@/lib/uuid"
 
+export const maxDuration = 60
+
 type TutorLearningWebhookPayload = {
   event_type?: string
   occurred_at?: string

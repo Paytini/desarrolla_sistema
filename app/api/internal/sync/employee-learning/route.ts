@@ -3,6 +3,8 @@ import { hasValidCronSecret } from "@/lib/cron-auth"
 import { syncStaleEmployeeLearningBatch } from "@/lib/employee-learning"
 import { NextResponse } from "next/server"
 
+export const maxDuration = 300
+
 async function runSync(request: Request) {
   const session = await auth()
   const hasSecret = hasValidCronSecret(request)

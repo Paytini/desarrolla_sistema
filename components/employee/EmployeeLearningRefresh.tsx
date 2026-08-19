@@ -8,9 +8,12 @@ type EmployeeLearningRefreshProps = {
   pollIntervalMs?: number
 }
 
+const MIN_POLL_INTERVAL_MS = 15_000
+const POLL_JITTER_RATIO = 0.2
+
 export default function EmployeeLearningRefresh({
   autoRefresh = false,
-  pollIntervalMs = 15_000,
+  pollIntervalMs = 60_000,
 }: EmployeeLearningRefreshProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -71,19 +74,32 @@ export default function EmployeeLearningRefresh({
   }, [autoRefresh, refreshLearning])
 
   useEffect(() => {
-    if (!pollIntervalMs || pollIntervalMs < 15_000) {
+    if (!pollIntervalMs || pollIntervalMs < MIN_POLL_INTERVAL_MS) {
       return
     }
 
-    const intervalId = window.setInterval(() => {
-      if (document.visibilityState !== "visible" || requestInFlight.current || isPending) {
-        return
-      }
+    let timeoutId: number
+    let cancelled = false
 
-      void refreshLearning(false)
-    }, pollIntervalMs)
+    function scheduleNext() {
+      const jitter = pollIntervalMs! * POLL_JITTER_RATIO * (Math.random() * 2 - 1)
+      timeoutId = window.setTimeout(() => {
+        if (cancelled) return
 
-    return () => window.clearInterval(intervalId)
+        if (document.visibilityState === "visible" && !requestInFlight.current && !isPending) {
+          void refreshLearning(false)
+        }
+
+        scheduleNext()
+      }, pollIntervalMs! + jitter)
+    }
+
+    scheduleNext()
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+    }
   }, [isPending, pollIntervalMs, refreshLearning])
 
   return null

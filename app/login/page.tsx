@@ -129,15 +129,7 @@ export default function LoginPage() {
       return
     }
 
-    const res     = await fetch("/api/auth/session")
-    const session = await res.json()
-    const rol     = session?.user?.rol
-    const empresaSlug = session?.user?.empresa_slug
-
-    if      (rol === "SUPERADMIN") router.push("/superadmin/companies")
-    else if (rol === "RH" && empresaSlug) router.push(`/company/${empresaSlug}/home`)
-    else if (rol === "EMPLEADO")   router.push("/employee/courses")
-    else                           setError("Rol no reconocido")
+    router.push("/")
   }
 
   const quote = QUOTES[activeIdx]

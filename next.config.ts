@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  serverExternalPackages: ["pg", "@prisma/adapter-pg", "bcryptjs"],
+  serverExternalPackages: ["pg", "@prisma/adapter-pg", "bcrypt", "sharp"],
   images: {
     remotePatterns: [
       {

@@ -29,6 +29,8 @@ import {
   triggerCompanyLearningSyncAction,
 } from "./actions";
 
+export const maxDuration = 300;
+
 const successMessages: Record<string, string> = {
   empleado_creado:
     "El empleado se creo correctamente y ya puede entrar al portal con sus credenciales.",

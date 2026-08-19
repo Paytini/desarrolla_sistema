@@ -167,7 +167,7 @@ export default async function EmployeeCourses() {
         </Paper>
       </Box>
 
-      <EmployeeLearningRefresh autoRefresh pollIntervalMs={15_000} />
+      <EmployeeLearningRefresh autoRefresh pollIntervalMs={60_000} />
 
       {learningData?.syncError ? (
         <Alert severity="warning" sx={{ borderRadius: 2, border: "1px solid #fde68a", bgcolor: "#fffbeb", color: "#78350f" }}>

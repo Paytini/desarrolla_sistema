@@ -1,6 +1,6 @@
 "use server"
 
-import bcrypt from "bcryptjs"
+import bcrypt from "bcrypt"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import {
