@@ -16,6 +16,7 @@ const DOMAIN = "yopmail.com"
 
 const rhEmail = (slug) => `rh-${slug}@${DOMAIN}`
 
+// 3-digit padding: 03-seed-employees.js sorts by email for deterministic seeding under UUID PKs, which requires n <= 999
 const employeeEmail = (slug, n) => `emp${String(n).padStart(3, "0")}-${slug}@${DOMAIN}`
 
 const importEmail = (runId, n) => `imp-lt-import-${runId}-${n}@${DOMAIN}`
