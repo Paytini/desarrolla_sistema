@@ -56,7 +56,7 @@ function withStatus(path: string, key: "success" | "error", value: string) {
 }
 
 type CompanyProvisioningContext = {
-  id: number
+  id: string
   name: string
   contracted_seats: number
   packages: Array<{
@@ -71,7 +71,7 @@ type CompanyProvisioningContext = {
 }
 
 type EmployeeProvisioningInput = {
-  companyId: number
+  companyId: string
   nombre: string
   apellido: string
   apellidoMaterno?: string | null
@@ -86,7 +86,7 @@ type EmployeeProvisioningInput = {
   actor: AuditActor
 }
 
-async function loadCompanyProvisioningContext(companyId: number) {
+async function loadCompanyProvisioningContext(companyId: string) {
   return prisma.company.findUnique({
     where: { id: companyId },
     select: {
@@ -335,7 +335,7 @@ type NormalizedCsvEmployeeRow = {
 }
 
 type CreatedCsvEmployee = NormalizedCsvEmployeeRow & {
-  id: number
+  id: string
 }
 
 function normalizeCsvEmployees(
@@ -484,7 +484,7 @@ export async function createEmployeeAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
   const nombre = getString(formData, "nombre")
   const apellido = getString(formData, "apellido")
@@ -551,7 +551,7 @@ export async function createEmployeeAction(formData: FormData) {
 export async function importEmployeesCsvAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
-  const companyId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
   const fallbackPassword = getString(formData, "password_csv")
   const file = formData.get("archivo_csv")
@@ -764,9 +764,9 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
-  const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
+  const employeeId = getString(formData, "empleado_id")
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
 
   if (!employeeId) {
@@ -856,9 +856,9 @@ export async function deleteEmployeeAction(formData: FormData) {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
-  const employeeId = Number.parseInt(String(formData.get("empleado_id") ?? "0"), 10)
+  const employeeId = getString(formData, "empleado_id")
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
 
   if (!employeeId) {
@@ -894,7 +894,7 @@ export async function deleteEmployeeAction(formData: FormData) {
 export async function triggerCompanyLearningSyncAction() {
   const session = await requireRhSession()
   const actor = getAuditActorFromSession(session)
-  const companyId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
 
   const queued = scheduleCompanyEmployeeLearningBatch(companyId, {
