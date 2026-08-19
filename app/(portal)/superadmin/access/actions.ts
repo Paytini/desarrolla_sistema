@@ -13,7 +13,7 @@ import {
 } from "@/lib/access-control"
 
 function getInt(formData: FormData, key: string) {
-  return Number.parseInt(String(formData.get(key) ?? "0"), 10)
+  return String(formData.get(key) ?? "").trim()
 }
 
 export async function toggleRhUserStatusAction(formData: FormData) {

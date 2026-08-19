@@ -63,7 +63,7 @@ export async function triggerGlobalLearningSyncAction() {
 export async function retryCompanySyncAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
-  const companyId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
+  const companyId = String(formData.get("empresa_id") ?? "").trim()
 
   if (!companyId) {
     redirect("/superadmin/reports?error=sync_retry")

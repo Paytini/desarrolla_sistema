@@ -8,7 +8,7 @@ import { SectionCard } from "@/components/shared/SectionCard"
 
 type Renewal = {
   company: {
-    id: number
+    id: string
     name: string
     packages: Array<{
       package: { name: string }

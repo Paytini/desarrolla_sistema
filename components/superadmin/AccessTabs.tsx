@@ -27,7 +27,7 @@ import { getInitials } from "@/components/layout/nav-config"
 import { deleteEmployeeAsSuperAdminAction, toggleRhUserStatusAction } from "@/app/(portal)/superadmin/access/actions"
 
 export type HrAccessRow = {
-  id: number
+  id: string
   name: string
   email: string
   active: boolean
@@ -39,7 +39,7 @@ export type HrAccessRow = {
 }
 
 export type EmployeeAccessRow = {
-  id: number
+  id: string
   name: string
   lastName: string
   email: string

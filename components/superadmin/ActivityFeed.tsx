@@ -3,7 +3,7 @@ import { formatDateTime } from "@/lib/format"
 import { SectionCard } from "@/components/shared/SectionCard"
 
 export type ActivityItem = {
-  id: number
+  id: string
   actor_name: string
   actor_role: string
   action: string

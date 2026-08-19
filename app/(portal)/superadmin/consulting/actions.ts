@@ -10,7 +10,7 @@ import { notifyCompanyRH } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 
 function getRequestId(formData: FormData) {
-  return Number.parseInt(String(formData.get("request_id") ?? "0"), 10)
+  return String(formData.get("request_id") ?? "").trim()
 }
 
 export async function confirmConsultingRequestAction(formData: FormData) {
