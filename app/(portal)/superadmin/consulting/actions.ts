@@ -8,9 +8,10 @@ import { getConsultingArea } from "@/lib/consulting-areas"
 import { formatConsultingDateTime, isBusinessDayString, isTimeSlotValid } from "@/lib/consulting-schedule"
 import { notifyCompanyRH } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
+import { isUuid } from "@/lib/uuid"
 
 function getRequestId(formData: FormData) {
-  return Number.parseInt(String(formData.get("request_id") ?? "0"), 10)
+  return String(formData.get("request_id") ?? "").trim()
 }
 
 export async function confirmConsultingRequestAction(formData: FormData) {
@@ -20,7 +21,7 @@ export async function confirmConsultingRequestAction(formData: FormData) {
   const preferredDate = String(formData.get("preferred_date") ?? "").trim()
   const preferredTime = String(formData.get("preferred_time") ?? "").trim()
 
-  if (!requestId || !isBusinessDayString(preferredDate) || !isTimeSlotValid(preferredTime)) {
+  if (!requestId || !isUuid(requestId) || !isBusinessDayString(preferredDate) || !isTimeSlotValid(preferredTime)) {
     redirect("/superadmin/consulting?error=solicitud")
   }
 
@@ -74,7 +75,7 @@ export async function cancelConsultingRequestAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
   const requestId = getRequestId(formData)
 
-  if (!requestId) redirect("/superadmin/consulting?error=solicitud")
+  if (!requestId || !isUuid(requestId)) redirect("/superadmin/consulting?error=solicitud")
 
   const request = await prisma.consultingRequest.findFirst({
     where: { id: requestId, status: "PENDING" },

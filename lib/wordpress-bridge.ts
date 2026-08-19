@@ -14,8 +14,8 @@ export type BridgeHealthResponse = {
 }
 
 export type BridgeUpsertEmployeeInput = {
-  employeeId: number
-  companyId: number
+  employeeId: string
+  companyId: string
   companyName: string
   email: string
   firstName: string
@@ -33,7 +33,7 @@ export type BridgeUpsertEmployeeResponse = {
 }
 
 export type BridgeDeleteEmployeeInput = {
-  employeeId?: number | null
+  employeeId?: string | null
   wpUserId?: number | null
   email?: string | null
 }

@@ -10,7 +10,7 @@ import DialogTitle from "@mui/material/DialogTitle"
 import { toggleCompanyStatusAction } from "@/app/(portal)/superadmin/companies/actions"
 
 interface SuspendCompanyButtonProps {
-  companyId: number
+  companyId: string
   active: boolean
   name: string
 }

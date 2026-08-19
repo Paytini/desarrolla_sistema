@@ -14,7 +14,7 @@ import { cancelConsultingRequestAction, confirmConsultingRequestAction } from "@
 import { CONSULTING_TIME_SLOTS } from "@/lib/consulting-schedule"
 
 type ConsultingRequestActionsProps = {
-  requestId: number
+  requestId: string
   areaLabel: string
   companyName: string
   preferredDate: string

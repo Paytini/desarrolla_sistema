@@ -6,7 +6,7 @@ type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue | unde
 type InputJsonValue = string | number | boolean | JsonValue[] | { [key: string]: JsonValue | undefined }
 
 export type AuditActor = {
-  userId: number | null
+  userId: string | null
   nombre: string
   email: string | null
   rol: string
@@ -18,6 +18,8 @@ export type CompanySeatSnapshot = {
   empleados_suspendidos: number
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const SYSTEM_ACTOR: AuditActor = {
   userId: null,
   nombre: "Sistema",
@@ -28,8 +30,7 @@ const SYSTEM_ACTOR: AuditActor = {
 function parseSessionUserId(value: string | undefined | null) {
   if (!value) return null
 
-  const parsed = Number.parseInt(value, 10)
-  return Number.isInteger(parsed) ? parsed : null
+  return UUID_RE.test(value) ? value : null
 }
 
 export function getAuditActorFromSession(session: Session | null | undefined): AuditActor {
@@ -45,7 +46,7 @@ export function getAuditActorFromSession(session: Session | null | undefined): A
   }
 }
 
-export async function getCompanySeatSnapshot(companyId: number) {
+export async function getCompanySeatSnapshot(companyId: string) {
   const [company, suspendedEmployees] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
@@ -77,8 +78,8 @@ export async function createAuditEvent(input: {
   actor: AuditActor
   accion: string
   entityType: string
-  entityId?: number | null
-  companyId?: number | null
+  entityId?: string | null
+  companyId?: string | null
   resumen: string
   metadata?: InputJsonValue
 }) {
@@ -108,7 +109,7 @@ export async function createAuditEvent(input: {
 
 export async function createSeatHistoryEntry(input: {
   actor: AuditActor
-  companyId: number
+  companyId: string
   motivo: string
   detalle?: string | null
   before: CompanySeatSnapshot

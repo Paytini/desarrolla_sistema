@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 
 type CompanyEmployee = {
-  id: number
+  id: string
   first_name: string
   last_name: string
   email: string
@@ -26,7 +26,7 @@ export type PendingCertificate = {
   completedAt: Date | null
 }
 
-export async function getCompanyCertificatesRecord(companyId: number) {
+export async function getCompanyCertificatesRecord(companyId: string) {
   return prisma.company.findUnique({
     where: { id: companyId },
     include: {

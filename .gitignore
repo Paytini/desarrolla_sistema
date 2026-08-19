@@ -41,3 +41,5 @@ skills/
 
 .superpowers/
 docs/
+# local git worktrees (superpowers)
+.worktrees/

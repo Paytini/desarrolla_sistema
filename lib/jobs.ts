@@ -7,12 +7,12 @@ const JOB_CONCURRENCY = 5
 const JOBS_PER_CRON_TICK = 5
 
 type PackageEnrollmentSyncPayload = {
-  companyId: number
-  employeeIds: number[]
-  processedEmployeeIds: number[]
+  companyId: string
+  employeeIds: string[]
+  processedEmployeeIds: string[]
 }
 
-async function processPackageEnrollmentSyncJob(jobId: number, payload: PackageEnrollmentSyncPayload) {
+async function processPackageEnrollmentSyncJob(jobId: string, payload: PackageEnrollmentSyncPayload) {
   const processedIds = new Set(payload.processedEmployeeIds)
   const remainingIds = payload.employeeIds.filter((id) => !processedIds.has(id))
 

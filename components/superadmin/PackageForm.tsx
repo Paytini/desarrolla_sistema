@@ -22,7 +22,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 export type PackageFormInitialValues = {
-  id: number
+  id: string
   name: string
   description: string
   deliveryMode: string

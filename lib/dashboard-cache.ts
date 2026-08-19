@@ -307,7 +307,7 @@ export async function getSuperadminAccessSnapshot(employeeQuery: string, employe
   return { rhUsers, ...employeesData }
 }
 
-export async function getHrEmployeesSnapshot(companyId: number) {
+export async function getHrEmployeesSnapshot(companyId: string) {
   const snapshot = unstable_cache(
     async () =>
       prisma.company.findUnique({
@@ -345,7 +345,7 @@ export async function getHrEmployeesSnapshot(companyId: number) {
   return snapshot()
 }
 
-export async function getHrAssignmentsSnapshot(companyId: number) {
+export async function getHrAssignmentsSnapshot(companyId: string) {
   const snapshot = unstable_cache(
     async () =>
       prisma.company.findUnique({

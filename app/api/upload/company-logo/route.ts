@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import sharp from "sharp"
 import { put } from "@vercel/blob"
 import { getSession } from "@/lib/session"
+import { isUuid } from "@/lib/uuid"
 
 export const runtime = "nodejs"
 
@@ -16,13 +17,13 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData()
   const file = formData.get("file") as File | null
-  const companyId = Number(formData.get("companyId"))
+  const companyId = String(formData.get("companyId") ?? "").trim()
 
   if (!file || file.size === 0) {
     return NextResponse.json({ error: "No se recibió ningún archivo" }, { status: 400 })
   }
 
-  if (!Number.isInteger(companyId) || companyId <= 0) {
+  if (!isUuid(companyId)) {
     return NextResponse.json({ error: "ID de empresa inválido" }, { status: 400 })
   }
 

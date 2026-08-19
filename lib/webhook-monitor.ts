@@ -7,8 +7,8 @@ type StoredWebhookStatusPayload = {
   event_type?: string | null
   occurred_at?: string | null
   received_at?: string | null
-  employee_id?: number | null
-  company_id?: number | null
+  employee_id?: string | null
+  company_id?: string | null
   student_wp_user_id?: number | null
   source_hash?: string | null
   courses_updated?: number | null

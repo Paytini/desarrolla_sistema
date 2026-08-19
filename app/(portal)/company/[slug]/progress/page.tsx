@@ -38,7 +38,7 @@ function getLastSevenDayKeys(): { key: string; label: string }[] {
   return days
 }
 
-async function getWeeklyLearningActivity(companyId: number) {
+async function getWeeklyLearningActivity(companyId: string) {
   const weekDays = getLastSevenDayKeys()
   const currentWeekStart = new Date(`${weekDays[0].key}T00:00:00.000Z`)
   const previousWeekStart = new Date(currentWeekStart)
