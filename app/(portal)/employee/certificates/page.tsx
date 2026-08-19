@@ -39,7 +39,7 @@ export default async function EmployeeCertificatesPage() {
         <KpiCard label="Pendientes" value={String(pendingCertificates.length)} sub="Cursos sin constancia aún" icon={Clock}  borderColor="amber" />
       </Box>
 
-      <EmployeeLearningRefresh autoRefresh pollIntervalMs={15_000} />
+      <EmployeeLearningRefresh autoRefresh pollIntervalMs={60_000} />
 
       {learningData?.syncError ? (
         <Alert severity="warning" sx={{ borderRadius: 2, border: "1px solid #fde68a", bgcolor: "#fffbeb", color: "#78350f" }}>

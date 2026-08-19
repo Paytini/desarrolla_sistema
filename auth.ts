@@ -1,7 +1,8 @@
 import NextAuth from "next-auth"
 import { CredentialsSignin } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import bcrypt from "bcryptjs"
+import { after } from "next/server"
+import bcrypt from "bcrypt"
 import { prisma } from "@/lib/prisma"
 import { verifyTurnstileToken } from "@/lib/turnstile"
 import { getCompanyAccessStatus } from "@/lib/company-status"
@@ -62,10 +63,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
           }
 
-          await prisma.user.update({
-            where: { id: usuario.id },
-            data:  { last_access: new Date() },
-          })
+          try {
+            after(() =>
+              prisma.user.update({
+                where: { id: usuario.id },
+                data:  { last_access: new Date() },
+              }).catch((error) => {
+                console.error("Failed to update last_access", {
+                  userId: usuario.id,
+                  message: error instanceof Error ? error.message : String(error),
+                })
+              })
+            )
+          } catch (error) {
+            console.error("Failed to schedule last_access update via after()", {
+              userId: usuario.id,
+              message: error instanceof Error ? error.message : String(error),
+            })
+          }
 
           return {
             id: String(usuario.id),

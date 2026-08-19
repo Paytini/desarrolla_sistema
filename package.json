@@ -21,7 +21,7 @@
     "@tailwindcss/postcss": "^4.2.2",
     "@vercel/blob": "^2.4.0",
     "@vercel/speed-insights": "^2.0.0",
-    "bcryptjs": "^3.0.3",
+    "bcrypt": "^6.0.0",
     "clsx": "^2.1.1",
     "jszip": "^3.10.1",
     "lucide-react": "^1.17.0",
@@ -33,11 +33,12 @@
     "react-dom": "^19.2.5",
     "recharts": "^3.10.1",
     "remixicon": "^4.9.1",
+    "sharp": "^0.35.3",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
+    "@types/bcrypt": "^6.0.0",
     "@types/node": "^25.6.0",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
