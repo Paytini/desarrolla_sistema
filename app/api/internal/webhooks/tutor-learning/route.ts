@@ -10,6 +10,7 @@ import {
   type EmployeeLearningBridgeSnapshot,
 } from "@/lib/employee-learning"
 import { recordTutorLearningWebhookEvent } from "@/lib/webhook-monitor"
+import { isUuid } from "@/lib/uuid"
 
 type TutorLearningWebhookPayload = {
   event_type?: string
@@ -92,6 +93,13 @@ export async function POST(request: Request) {
       { ok: false, message: "El webhook no contiene JSON valido." },
       { status: 400 }
     )
+  }
+
+  if (payload.employee_id && !isUuid(payload.employee_id)) {
+    payload.employee_id = null
+  }
+  if (payload.company_id && !isUuid(payload.company_id)) {
+    payload.company_id = null
   }
 
   if (!isValidPayload(payload)) {

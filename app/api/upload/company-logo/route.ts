@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import sharp from "sharp"
 import { put } from "@vercel/blob"
 import { getSession } from "@/lib/session"
+import { isUuid } from "@/lib/uuid"
 
 export const runtime = "nodejs"
 
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No se recibió ningún archivo" }, { status: 400 })
   }
 
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) {
+  if (!isUuid(companyId)) {
     return NextResponse.json({ error: "ID de empresa inválido" }, { status: 400 })
   }
 

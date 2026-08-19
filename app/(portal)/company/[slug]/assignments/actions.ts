@@ -16,7 +16,7 @@ export type CourseAssignmentResult = {
 }
 
 function parseEmployeeIds(values: string[]) {
-  return [...new Set(values.filter((id) => id.trim().length > 0))]
+  return [...new Set(values.map((id) => id.trim()).filter((id) => id.length > 0))]
 }
 
 export async function setCourseAssignmentsAction(

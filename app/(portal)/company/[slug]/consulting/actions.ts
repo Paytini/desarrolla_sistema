@@ -12,6 +12,7 @@ import { buildConsultingRequestEmail } from "@/lib/email-templates/consulting-re
 import { notifySuperadmins } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { sendEmail } from "@/lib/ses"
+import { isUuid } from "@/lib/uuid"
 
 export type ConsultingActionState = { error: string } | { success: true } | null
 
@@ -125,7 +126,7 @@ export async function cancelConsultingRequestAction(formData: FormData) {
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
   const requestId = getString(formData, "request_id")
 
-  if (!requestId) {
+  if (!requestId || !isUuid(requestId)) {
     redirect(withStatus(returnTo, "error", "solicitud"))
   }
 

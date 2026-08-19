@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
+import { isUuid } from "@/lib/uuid"
 
 export const runtime = "nodejs"
 
@@ -16,7 +17,7 @@ export async function GET(
 
   const { id } = await params
   const constanciaId = id
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(constanciaId)) {
+  if (!isUuid(constanciaId)) {
     return NextResponse.json({ error: "ID de constancia invalido" }, { status: 400 })
   }
 

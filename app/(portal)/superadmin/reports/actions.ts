@@ -12,6 +12,7 @@ import {
   scheduleCompanyEmployeeLearningBatch,
   scheduleStaleEmployeeLearningBatch,
 } from "@/lib/employee-learning"
+import { isUuid } from "@/lib/uuid"
 
 function getSyncErrorMessage(error: unknown) {
   const rawMessage =
@@ -65,7 +66,7 @@ export async function retryCompanySyncAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
   const companyId = String(formData.get("empresa_id") ?? "").trim()
 
-  if (!companyId) {
+  if (!companyId || !isUuid(companyId)) {
     redirect("/superadmin/reports?error=sync_retry")
   }
 

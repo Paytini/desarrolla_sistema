@@ -17,6 +17,7 @@ import { prisma } from "@/lib/prisma"
 import { ensureUniqueCompanySlug, slugify } from "@/lib/slug"
 import { sendEmail } from "@/lib/ses"
 import { buildCredentialsEmail } from "@/lib/email-templates/credentials"
+import { isUuid } from "@/lib/uuid"
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -45,6 +46,10 @@ export async function createCompanyAction(
   const expirationDateRaw     = getString(formData, "fecha_vencimiento")
 
   if (!nombre || !emailRh || !nombreRh || !passwordRh || contractedSeats < 1) {
+    return { error: "datos" }
+  }
+
+  if (packageIdRaw && !isUuid(packageIdRaw)) {
     return { error: "datos" }
   }
 
@@ -200,7 +205,7 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
 
   const companyId = String(formData.get("empresa_id") ?? "").trim()
-  if (!companyId) {
+  if (!companyId || !isUuid(companyId)) {
     redirect("/superadmin/companies?error=empresa")
   }
 
@@ -251,7 +256,7 @@ export async function updateCompanyBrandingAction(formData: FormData) {
   const slug = slugify(getString(formData, "slug"))
   const logoUrl = getString(formData, "logo_url")
 
-  if (!companyId) {
+  if (!companyId || !isUuid(companyId)) {
     redirect("/superadmin/companies?error=empresa")
   }
   if (!slug) {

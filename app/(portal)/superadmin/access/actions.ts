@@ -11,6 +11,7 @@ import {
   deleteEmployeeRecord,
   togglePortalUserStatus,
 } from "@/lib/access-control"
+import { isUuid } from "@/lib/uuid"
 
 function getInt(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -53,7 +54,7 @@ export async function deleteEmployeeAsSuperAdminAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
 
   const employeeId = getInt(formData, "empleado_id")
-  if (!employeeId) {
+  if (!employeeId || !isUuid(employeeId)) {
     redirect("/superadmin/access?error=empleado")
   }
 

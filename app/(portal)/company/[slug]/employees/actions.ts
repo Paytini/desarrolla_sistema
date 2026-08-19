@@ -20,6 +20,7 @@ import { parseCsvText } from "@/lib/csv"
 import { mapWithConcurrency } from "@/lib/concurrency"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
+import { isUuid } from "@/lib/uuid"
 import {
   bridgeUpsertEmployee,
   isWordPressBridgeConfigured,
@@ -769,7 +770,7 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   const employeeId = getString(formData, "empleado_id")
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
 
-  if (!employeeId) {
+  if (!employeeId || !isUuid(employeeId)) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
@@ -861,7 +862,7 @@ export async function deleteEmployeeAction(formData: FormData) {
   const employeeId = getString(formData, "empleado_id")
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
 
-  if (!employeeId) {
+  if (!employeeId || !isUuid(employeeId)) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 

@@ -10,6 +10,7 @@ import { companyPath } from "@/lib/company-routes"
 import { enqueuePackageEnrollmentSyncJob } from "@/lib/course-sync"
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { isUuid } from "@/lib/uuid"
 import {
   bridgeCreateBundle,
   bridgeUpdateBundle,
@@ -199,7 +200,7 @@ export async function updatePackageAction(formData: FormData) {
   const notasOperativas = getString(formData, "notas_operativas")
   const selectedCoursesRaw = getString(formData, "selected_courses_json")
 
-  if (!packageId) {
+  if (!packageId || !isUuid(packageId)) {
     redirect("/superadmin/packages?error=paquete")
   }
 
@@ -374,7 +375,7 @@ export async function deletePackageAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
   const packageId = getString(formData, "paquete_id")
 
-  if (!packageId) {
+  if (!packageId || !isUuid(packageId)) {
     redirect("/superadmin/packages?error=paquete")
   }
 
@@ -441,7 +442,7 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   const packageId = getString(formData, "paquete_id")
   const expirationDateRaw = getString(formData, "fecha_vencimiento")
 
-  if (!companyId || !packageId) {
+  if (!companyId || !packageId || !isUuid(companyId) || !isUuid(packageId)) {
     redirect("/superadmin/packages?error=asignacion")
   }
 
@@ -513,7 +514,7 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
 
   const companyId = getString(formData, "empresa_id")
-  if (!companyId) {
+  if (!companyId || !isUuid(companyId)) {
     redirect("/superadmin/packages?error=sync")
   }
 

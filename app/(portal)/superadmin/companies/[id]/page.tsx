@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { readSearchParam } from "@/lib/search-params"
 import { paginate } from "@/lib/pagination"
+import { isUuid } from "@/lib/uuid"
 import { ArrowLeft, Calendar, Mail, Phone, User, X } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
@@ -93,7 +94,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
 
   const { id }    = await params
   const companyId = id
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) notFound()
+  if (!isUuid(companyId)) notFound()
 
   const query   = await searchParams
   const success = readSearchParam(query, "success")
