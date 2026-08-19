@@ -16,7 +16,7 @@ import { formatDate } from "@/lib/format"
 const DC3_PAGE_SIZE = 20
 
 type CourseMetadata = {
-  id: number
+  id: string
   course_name: string | null
   duration_hours: number | null
   subject_area_name: string | null
