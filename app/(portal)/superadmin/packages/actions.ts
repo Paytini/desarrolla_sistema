@@ -20,12 +20,6 @@ function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
 }
 
-function getInteger(value: string) {
-  const parsed = Number.parseInt(value, 10)
-  return Number.isInteger(parsed) ? parsed : NaN
-}
-
-
 function getSyncErrorMessage(error: unknown) {
   const rawMessage =
     error instanceof Error
@@ -196,7 +190,7 @@ export async function updatePackageAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const packageId = getInteger(getString(formData, "package_id"))
+  const packageId = getString(formData, "package_id")
   const nombre = getString(formData, "nombre")
   const descripcion = getString(formData, "descripcion")
   const modoEntrega = getString(formData, "modo_entrega") || "DIRECT_ENROLLMENT"
@@ -378,7 +372,7 @@ export async function updatePackageAction(formData: FormData) {
 export async function deletePackageAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
-  const packageId = getInteger(getString(formData, "paquete_id"))
+  const packageId = getString(formData, "paquete_id")
 
   if (!packageId) {
     redirect("/superadmin/packages?error=paquete")
@@ -443,8 +437,8 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = getInteger(getString(formData, "empresa_id"))
-  const packageId = getInteger(getString(formData, "paquete_id"))
+  const companyId = getString(formData, "empresa_id")
+  const packageId = getString(formData, "paquete_id")
   const expirationDateRaw = getString(formData, "fecha_vencimiento")
 
   if (!companyId || !packageId) {
@@ -518,7 +512,7 @@ export async function syncPackageToCompanyEmployeesAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = getInteger(getString(formData, "empresa_id"))
+  const companyId = getString(formData, "empresa_id")
   if (!companyId) {
     redirect("/superadmin/packages?error=sync")
   }

@@ -27,8 +27,8 @@ export default async function EditPackagePage({ params, searchParams }: PageProp
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
   const { id } = await params
-  const packageId = Number.parseInt(id, 10)
-  if (!Number.isInteger(packageId)) notFound()
+  const packageId = id
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(packageId)) notFound()
 
   const pkg = await prisma.package.findUnique({
     where: { id: packageId },
