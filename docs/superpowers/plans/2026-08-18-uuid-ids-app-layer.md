@@ -811,10 +811,66 @@ git commit -m "feat(uuid): convert certificate/notification/webhook API routes t
 
 ---
 
+---
+
+### Task 8: `app/api/upload/company-logo/route.ts` (discovered mid-execution — a class of bug `tsc` cannot catch)
+
+**Discovered during Task 1's dispatch, not in the original research pass:** while fixing `components/superadmin/CompanyBrandingForm.tsx` (itself an addition Task 1 had to make beyond its original file list — see that task's report), the implementer found `app/api/upload/company-logo/route.ts` reads `companyId` out of raw `FormData` with `Number(formData.get("companyId"))` and validates it with `Number.isInteger(companyId) || companyId <= 0`. Once `CompanyBrandingForm.tsx` sends a real UUID as the `companyId` field (which it always did — the upload call site was never wrong, only this route's parsing of it), `Number("8b506748-...")` is `NaN`, the validity check fails, and every company logo upload returns a 400 "ID de empresa inválido" — a silent, total feature break with zero `tsc` signal, because `FormData` values are untyped strings all the way through; there is no Prisma-typed boundary for the compiler to catch a mismatch against.
+
+**This is a distinct risk category from everything else in this plan**, worth flagging explicitly for whoever picks up Plan 4 or does the manual smoke test: any code that parses an ID out of `FormData`/`URLSearchParams`/a raw request body with `Number(...)` is invisible to `tsc` no matter how thorough the type conversion elsewhere is. A repo-wide grep for this exact pattern (`Number(formData.get(...))` / `Number.parseInt(...formData.get...)` / the equivalent for `searchParams`) was run after this was found, across the entire `app/` tree — confirmed this is the **only** occurrence outside what this plan's other 7 tasks already cover (the other matches are either already-planned portal-ID fixes or genuinely WordPress-domain `wp_course_id`/`wpCourseId` fields that correctly stay `number`, e.g. `app/(portal)/superadmin/dc3/actions.ts` and `app/api/upload/instructor-signature/route.ts` — neither needs any change).
+
+**Files:**
+- Modify: `app/api/upload/company-logo/route.ts`
+
+**Interfaces:**
+- Consumes: nothing from this plan's other tasks (the FormData contract with `CompanyBrandingForm.tsx`, fixed in Task 1, was always correct on the sending side — only this route's parsing was wrong).
+- Produces: nothing consumed elsewhere.
+
+- [ ] **Step 1: Edit `app/api/upload/company-logo/route.ts`**
+
+```diff
+   const formData = await request.formData()
+   const file = formData.get("file") as File | null
+-  const companyId = Number(formData.get("companyId"))
++  const companyId = String(formData.get("companyId") ?? "").trim()
+
+   if (!file || file.size === 0) {
+     return NextResponse.json({ error: "No se recibió ningún archivo" }, { status: 400 })
+   }
+
+-  if (!Number.isInteger(companyId) || companyId <= 0) {
++  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) {
+     return NextResponse.json({ error: "ID de empresa inválido" }, { status: 400 })
+   }
+```
+
+No other line needs editing — `` `logos/${companyId}/${Date.now()}.png` `` already just interpolates the value into a string, works identically whether `companyId` is a number or a string.
+
+- [ ] **Step 2: Verify**
+
+```bash
+npm run lint 2>&1 | tail -5
+```
+Expected: 0 errors, 1 pre-existing unrelated warning (this file was never `tsc`-flagged, so there's no scoped grep to run — `npx tsc --noEmit` on the whole repo should simply show no *new* errors introduced, which lint alone won't catch; also run a quick sanity read of the diff to confirm no stray syntax issue).
+
+```bash
+npx tsc --noEmit 2>&1 | grep "^app/api/upload/company-logo/route.ts"
+```
+Expected: no output.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/api/upload/company-logo/route.ts
+git commit -m "fix(uuid): parse company-logo upload's companyId as UUID string, not integer"
+```
+
+---
+
 ## Self-Review Notes (completed during authoring, not a step for the executor)
 
 - **Spec coverage:** §3 (wp_* untouched) → every task's diffs explicitly leave `wp_course_id`/`wp_user_id`/`wp_bundle_id`/`courseId`/`wpUserId` as `number`, confirmed per file during research (not assumed from naming alone — several files were read in full specifically to trace which numeric-looking field was WordPress-domain vs portal-domain). §7 (route params, form fields) → the two named bug patterns (`Number(id)` + `Number.isInteger` guard; `Number.parseInt(formData.get(...))`) are called out once in Global Constraints and then applied identically everywhere they occur, rather than re-derived per task.
 - **Placeholder scan:** none — every task has literal diffs; the two "no change needed, shown for context" call-outs (Task 5's `selectedCourseId` line, Task 1's `getPositiveInt`) explicitly say so rather than leaving it ambiguous whether they were forgotten.
 - **Type consistency:** traced every "this file isn't tsc-flagged today but will break" pairing explicitly in each task's Interfaces block, and confirmed via direct `grep`/read that the pairing is real (client component genuinely imports the action being converted, or a page genuinely constructs the object literal the component's prop type describes) — 12 such files found across this plan (`SuspendCompanyButton.tsx`, `CompanyRow.tsx` auto-resolve, `PackageForm.tsx`, `DeletePackageButton.tsx`, `PackageRow.tsx` auto-resolves, `ConsultingRequestActions.tsx`, `AccessTabs.tsx`, `access/page.tsx` auto-resolves, `ActivityFeed.tsx`/`RenewalsTable.tsx`/`OccupancyCard.tsx`, `superadmin/page.tsx` auto-resolves, `DeleteEmployeeButton.tsx`, `employees/page.tsx` auto-resolves, `AssignmentBoard.tsx`, `CancelConsultingRequestButton.tsx`, `consulting/page.tsx` auto-resolves). This was the single biggest lesson carried forward from Plan 2's mid-execution discoveries — this plan's authoring went looking for the pattern proactively (`grep -rl '"use client"' ... | grep actions`) instead of waiting for each one to surface as a scoped-count mismatch during execution.
-- **Scope check:** 7 tasks, 37 files total (25 from the original `tsc` error list + 12 found via call-graph tracing). Grouped by feature area/directory as the spec's §10 suggested, sized so no single task exceeds what Plan 2's largest tasks handled (Task 4 here, at 2 files/59 errors, is comparable to Plan 2's Task 6). Does not touch `prisma/seed.ts` or `load-testing/`, which remain Plan 4.
+- **Scope check:** 8 tasks, 39 files total (25 from the original `tsc` error list + 13 found via call-graph tracing and, for Task 8, a FormData-parsing sweep that `tsc` cannot see at all). Grouped by feature area/directory as the spec's §10 suggested, sized so no single task exceeds what Plan 2's largest tasks handled (Task 4 here, at 2 files/59 errors, is comparable to Plan 2's Task 6). Task 8 was added mid-execution once Task 1's dispatch surfaced `app/api/upload/company-logo/route.ts` — a bug class (raw `FormData`/`URLSearchParams` values parsed with `Number(...)`) that has zero `tsc` signature, so it could not have been found by this plan's original error-list-driven or call-graph-driven research passes; it was only caught by a human/agent noticing the pattern while fixing something adjacent, then a repo-wide grep confirming it was the only instance. Does not touch `prisma/seed.ts` or `load-testing/`, which remain Plan 4.
 - **Known residual, not this plan's job to fix:** Task 7's `webhooks/tutor-learning/route.ts` note about the WordPress plugin's `absint()` corruption is repeated from Plan 2's final review — this plan's type fix is necessary but not sufficient for that route to work correctly against real WordPress traffic. Confirmed non-blocking for this plan (a type-only concern) and already flagged to the user separately.
