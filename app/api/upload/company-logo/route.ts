@@ -16,13 +16,13 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData()
   const file = formData.get("file") as File | null
-  const companyId = Number(formData.get("companyId"))
+  const companyId = String(formData.get("companyId") ?? "").trim()
 
   if (!file || file.size === 0) {
     return NextResponse.json({ error: "No se recibió ningún archivo" }, { status: 400 })
   }
 
-  if (!Number.isInteger(companyId) || companyId <= 0) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) {
     return NextResponse.json({ error: "ID de empresa inválido" }, { status: 400 })
   }
 
