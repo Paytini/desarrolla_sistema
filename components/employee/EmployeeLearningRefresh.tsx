@@ -82,7 +82,7 @@ export default function EmployeeLearningRefresh({
     let cancelled = false
 
     function scheduleNext() {
-      const jitter = pollIntervalMs! * POLL_JITTER_RATIO * (Math.random() * 2 - 1)
+      const jitter = pollIntervalMs * POLL_JITTER_RATIO * (Math.random() * 2 - 1)
       timeoutId = window.setTimeout(() => {
         if (cancelled) return
 
@@ -91,7 +91,7 @@ export default function EmployeeLearningRefresh({
         }
 
         scheduleNext()
-      }, pollIntervalMs! + jitter)
+      }, pollIntervalMs + jitter)
     }
 
     scheduleNext()

@@ -1,9 +1,9 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { TurnstileWidget } from "@/components/login/TurnstileWidget"
 
 function EyeIcon({ open }: { open: boolean }) {
@@ -77,14 +77,27 @@ const QUOTES = [
 const BLOCKED_MESSAGES: Record<string, string> = {
   empresa_suspendida: "Tu empresa fue suspendida. Contacta a Desarrolla360 para reactivar tu acceso.",
   empresa_vencida: "El acceso de tu empresa venció. Contacta a Desarrolla360 para renovarlo.",
+  rol_no_reconocido: "Tu cuenta no tiene un rol reconocido. Contacta a Desarrolla360.",
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail]               = useState("")
   const [password, setPassword]         = useState("")
   const [showPw, setShowPw]             = useState(false)
-  const [error, setError]               = useState("")
+  const [error, setError]               = useState(() => {
+    const errorCode = searchParams.get("error")
+    return errorCode && BLOCKED_MESSAGES[errorCode] ? BLOCKED_MESSAGES[errorCode] : ""
+  })
   const [loading, setLoading]           = useState(false)
   const [activeIdx, setActiveIdx]       = useState(0)
   const [quoteVisible, setQuoteVisible] = useState(true)

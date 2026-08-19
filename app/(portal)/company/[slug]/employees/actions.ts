@@ -27,7 +27,9 @@ import {
 } from "@/lib/wordpress-bridge"
 
 const CSV_IMPORT_LIMIT = 200
-const CSV_HASH_CONCURRENCY = 8
+// native bcrypt runs on libuv's threadpool (4 threads by default); higher
+// concurrency here just queues without adding real parallelism.
+const CSV_HASH_CONCURRENCY = 4
 const CSV_BRIDGE_CONCURRENCY = 5
 
 function getString(formData: FormData, key: string) {

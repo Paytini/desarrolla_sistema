@@ -63,17 +63,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }
           }
 
-          after(() =>
-            prisma.user.update({
-              where: { id: usuario.id },
-              data:  { last_access: new Date() },
-            }).catch((error) => {
-              console.error("Failed to update last_access", {
-                userId: usuario.id,
-                message: error instanceof Error ? error.message : String(error),
+          try {
+            after(() =>
+              prisma.user.update({
+                where: { id: usuario.id },
+                data:  { last_access: new Date() },
+              }).catch((error) => {
+                console.error("Failed to update last_access", {
+                  userId: usuario.id,
+                  message: error instanceof Error ? error.message : String(error),
+                })
               })
+            )
+          } catch (error) {
+            console.error("Failed to schedule last_access update via after()", {
+              userId: usuario.id,
+              message: error instanceof Error ? error.message : String(error),
             })
-          )
+          }
 
           return {
             id: String(usuario.id),

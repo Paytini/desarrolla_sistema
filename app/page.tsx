@@ -9,5 +9,6 @@ export default async function Home() {
   if      (rol === "SUPERADMIN") redirect("/superadmin/companies")
   else if (rol === "RH" && empresaSlug) redirect(`/company/${empresaSlug}/home`)
   else if (rol === "EMPLEADO")   redirect("/employee/courses")
+  else if (rol)                  redirect("/login?error=rol_no_reconocido")
   else                           redirect("/login")
 }
