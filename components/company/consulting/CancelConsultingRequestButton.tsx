@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography"
 
 type CancelConsultingRequestButtonProps = {
   action: (formData: FormData) => void | Promise<void>
-  requestId: number
+  requestId: string
   areaLabel: string
   returnTo?: string
 }

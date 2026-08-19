@@ -17,7 +17,7 @@ export const maxDuration = 60
 const MAX_ZIP_CERTIFICATES = 100
 
 type CompanyEmployee = {
-  id: number
+  id: string
   first_name: string
   last_name: string
   email: string
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   }
 
-  type ConstanciaRef = { id: number; folio: string }
+  type ConstanciaRef = { id: string; folio: string }
   let constancias: ConstanciaRef[] = []
 
   if (rol === "EMPLEADO") {

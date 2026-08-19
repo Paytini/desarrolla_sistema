@@ -11,7 +11,7 @@ export function slugify(input: string): string {
 }
 
 // Appends -2, -3, etc. until it finds a slug not already used by another company.
-export async function ensureUniqueCompanySlug(name: string, excludeCompanyId?: number): Promise<string> {
+export async function ensureUniqueCompanySlug(name: string, excludeCompanyId?: string): Promise<string> {
   const base = slugify(name) || "empresa"
 
   const taken = await prisma.company.findMany({

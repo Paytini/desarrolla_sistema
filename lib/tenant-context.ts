@@ -2,13 +2,13 @@ import { AsyncLocalStorage } from "node:async_hooks"
 
 // Holds the active RH user's company_id for the lifetime of a request/action,
 // so the Prisma tenant guard (see lib/prisma.ts) can scope queries automatically.
-const companyContext = new AsyncLocalStorage<number>()
+const companyContext = new AsyncLocalStorage<string>()
 
-export function enterCompanyContext(companyId: number): void {
+export function enterCompanyContext(companyId: string): void {
   companyContext.enterWith(companyId)
 }
 
-export function getActiveCompanyId(): number | null {
+export function getActiveCompanyId(): string | null {
   return companyContext.getStore() ?? null
 }
 

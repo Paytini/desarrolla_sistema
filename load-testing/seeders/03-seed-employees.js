@@ -42,7 +42,7 @@ async function main() {
         "ON CONFLICT (email) DO NOTHING"
       )
     }
-    const ids = await query(`SELECT id, email, wp_user_id FROM employees WHERE company_id = $1 AND email LIKE $2 ORDER BY id`, [company.id, `emp%-${company.slug}@${emails.DOMAIN}`])
+    const ids = await query(`SELECT id, email, wp_user_id FROM employees WHERE company_id = $1 AND email LIKE $2 ORDER BY email`, [company.id, `emp%-${company.slug}@${emails.DOMAIN}`])
     const courseRows = []
     const certRows = []
     ids.rows.forEach((emp, idx) => {

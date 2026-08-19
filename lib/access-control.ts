@@ -8,8 +8,8 @@ import {
 import { bridgeDeleteEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
 
 type DeleteEmployeeOptions = {
-  employeeId: number
-  companyId?: number
+  employeeId: string
+  companyId?: string
   actor?: AuditActor
   source?: "RH" | "SUPERADMIN" | "SYSTEM"
 }
@@ -137,7 +137,7 @@ export async function deleteEmployeeRecord({
 }
 
 export async function togglePortalUserStatus(
-  userId: number,
+  userId: string,
   callerRole: "SUPERADMIN" | "RH" | "SYSTEM" = "SYSTEM"
 ) {
   const user = await prisma.user.findUnique({
@@ -165,13 +165,13 @@ export async function togglePortalUserStatus(
   return user
 }
 
-export async function revokeUserPortalSessions(userId: number) {
+export async function revokeUserPortalSessions(userId: string) {
   return prisma.portalSession.deleteMany({
     where: { user_id: userId },
   })
 }
 
-export async function revokePortalSession(sessionId: number) {
+export async function revokePortalSession(sessionId: string) {
   return prisma.portalSession.deleteMany({
     where: { id: sessionId },
   })

@@ -3,7 +3,7 @@ import { SectionCard } from "@/components/shared/SectionCard"
 
 interface OccupancyCardProps {
   occupancyPct: number
-  companies: Array<{ id: number; name: string; used_seats: number; contracted_seats: number }>
+  companies: Array<{ id: string; name: string; used_seats: number; contracted_seats: number }>
 }
 
 function HorizontalBar({ name, used, total }: { name: string; used: number; total: number }) {

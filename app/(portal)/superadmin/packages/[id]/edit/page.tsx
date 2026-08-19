@@ -9,6 +9,7 @@ import { PackageForm } from "@/components/superadmin/PackageForm"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
+import { isUuid } from "@/lib/uuid"
 import { updatePackageAction } from "../../actions"
 
 const errorMessages: Record<string, string> = {
@@ -27,8 +28,8 @@ export default async function EditPackagePage({ params, searchParams }: PageProp
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
   const { id } = await params
-  const packageId = Number.parseInt(id, 10)
-  if (!Number.isInteger(packageId)) notFound()
+  const packageId = id
+  if (!isUuid(packageId)) notFound()
 
   const pkg = await prisma.package.findUnique({
     where: { id: packageId },

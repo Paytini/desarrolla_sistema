@@ -50,7 +50,7 @@ export class Dc3MissingFieldsError extends Error {
 }
 
 export type Dc3GenerateInput = {
-  certificateId: number
+  certificateId: string
 }
 
 export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promise<Uint8Array> {

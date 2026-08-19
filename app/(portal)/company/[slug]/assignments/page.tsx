@@ -10,7 +10,7 @@ import { companyPath } from "@/lib/company-routes"
 import AssignmentBoard from "./AssignmentBoard"
 
 type AssignmentEmployee = {
-  id: number
+  id: string
   first_name: string
   last_name: string
   email: string
@@ -53,7 +53,7 @@ export default async function CompanyAssignmentsPage() {
     initials: getInitials(`${employee.first_name} ${employee.last_name}`),
   }))
 
-  const initialAssignments: Record<number, number[]> = {}
+  const initialAssignments: Record<number, string[]> = {}
   for (const course of packageCourses) {
     initialAssignments[course.wp_course_id] = allEmployees
       .filter((employee) => employee.courses.some((c) => c.wp_course_id === course.wp_course_id))

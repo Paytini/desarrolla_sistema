@@ -12,6 +12,7 @@ import {
   scheduleCompanyEmployeeLearningBatch,
   scheduleStaleEmployeeLearningBatch,
 } from "@/lib/employee-learning"
+import { isUuid } from "@/lib/uuid"
 
 function getSyncErrorMessage(error: unknown) {
   const rawMessage =
@@ -63,9 +64,9 @@ export async function triggerGlobalLearningSyncAction() {
 export async function retryCompanySyncAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
-  const companyId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
+  const companyId = String(formData.get("empresa_id") ?? "").trim()
 
-  if (!companyId) {
+  if (!companyId || !isUuid(companyId)) {
     redirect("/superadmin/reports?error=sync_retry")
   }
 

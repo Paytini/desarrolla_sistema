@@ -12,7 +12,7 @@ import Typography from "@mui/material/Typography"
 
 type DeletePackageButtonProps = {
   action: (formData: FormData) => void | Promise<void>
-  packageId: number
+  packageId: string
   packageName: string
   assignedCompaniesCount: number
 }

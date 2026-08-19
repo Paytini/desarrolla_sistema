@@ -17,19 +17,19 @@ export const SUPERADMIN_DASHBOARD_TAGS = [
   SUPERADMIN_DC3_TAG,
 ] as const
 
-export function companyCacheRootTag(companyId: number) {
+export function companyCacheRootTag(companyId: string) {
   return `${COMPANY_CACHE_PREFIX}:${companyId}`
 }
 
-export function companyEmployeesTag(companyId: number) {
+export function companyEmployeesTag(companyId: string) {
   return `${companyCacheRootTag(companyId)}:empleados`
 }
 
-export function companyAssignmentsTag(companyId: number) {
+export function companyAssignmentsTag(companyId: string) {
   return `${companyCacheRootTag(companyId)}:asignaciones`
 }
 
-export function getCompanyDashboardTags(companyId: number) {
+export function getCompanyDashboardTags(companyId: string) {
   return [
     companyCacheRootTag(companyId),
     companyEmployeesTag(companyId),

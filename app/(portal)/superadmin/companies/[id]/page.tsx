@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { readSearchParam } from "@/lib/search-params"
 import { paginate } from "@/lib/pagination"
+import { isUuid } from "@/lib/uuid"
 import { ArrowLeft, Calendar, Mail, Phone, User, X } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
@@ -92,8 +93,8 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
   const { id }    = await params
-  const companyId = Number(id)
-  if (!Number.isInteger(companyId) || companyId <= 0) notFound()
+  const companyId = id
+  if (!isUuid(companyId)) notFound()
 
   const query   = await searchParams
   const success = readSearchParam(query, "success")

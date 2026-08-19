@@ -17,6 +17,7 @@ import { prisma } from "@/lib/prisma"
 import { ensureUniqueCompanySlug, slugify } from "@/lib/slug"
 import { sendEmail } from "@/lib/ses"
 import { buildCredentialsEmail } from "@/lib/email-templates/credentials"
+import { isUuid } from "@/lib/uuid"
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -48,6 +49,10 @@ export async function createCompanyAction(
     return { error: "datos" }
   }
 
+  if (packageIdRaw && !isUuid(packageIdRaw)) {
+    return { error: "datos" }
+  }
+
   const existingCompany = await prisma.company.findUnique({
     where: { hr_email: emailRh },
     select: { id: true },
@@ -61,7 +66,7 @@ export async function createCompanyAction(
   if (existingUser) return { error: "usuario_rh" }
 
   const passwordHash  = await bcrypt.hash(passwordRh, 12)
-  const packageId     = packageIdRaw ? Number.parseInt(packageIdRaw, 10) : NaN
+  const packageId     = packageIdRaw || null
   const expirationDate = (() => {
     if (!expirationDateRaw) return null
     const d = new Date(expirationDateRaw)
@@ -92,8 +97,8 @@ export async function createCompanyAction(
       },
     })
 
-    let assignedPackageId: number | null = null
-    if (Number.isInteger(packageId)) {
+    let assignedPackageId: string | null = null
+    if (packageId) {
       await tx.companyPackage.create({
         data: {
           company_id:       company.id,
@@ -199,8 +204,8 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
-  if (!companyId) {
+  const companyId = String(formData.get("empresa_id") ?? "").trim()
+  if (!companyId || !isUuid(companyId)) {
     redirect("/superadmin/companies?error=empresa")
   }
 
@@ -247,11 +252,11 @@ export async function updateCompanyBrandingAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
+  const companyId = String(formData.get("empresa_id") ?? "").trim()
   const slug = slugify(getString(formData, "slug"))
   const logoUrl = getString(formData, "logo_url")
 
-  if (!companyId) {
+  if (!companyId || !isUuid(companyId)) {
     redirect("/superadmin/companies?error=empresa")
   }
   if (!slug) {

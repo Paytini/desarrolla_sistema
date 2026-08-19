@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography"
 
 type DeleteEmployeeButtonProps = {
   action: (formData: FormData) => void | Promise<void>
-  employeeId: number
+  employeeId: string
   employeeName: string
   returnTo?: string
 }

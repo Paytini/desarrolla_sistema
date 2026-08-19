@@ -15,7 +15,7 @@ type CourseInfo = {
 }
 
 type EmployeeInfo = {
-  id: number
+  id: string
   name: string
   email: string
   department: string | null
@@ -26,15 +26,15 @@ type EmployeeInfo = {
 type AssignmentBoardProps = {
   courses: CourseInfo[]
   employees: EmployeeInfo[]
-  initialAssignments: Record<number, number[]>
+  initialAssignments: Record<number, string[]>
 }
 
 const COLOR_ROTATION: KpiColorKey[] = [
   "primary", "emerald", "amber", "orange", "violet", "pink", "rose", "charcoal",
 ]
 
-function cloneAssignments(source: Record<number, number[]>): Record<number, Set<number>> {
-  const result: Record<number, Set<number>> = {}
+function cloneAssignments(source: Record<number, string[]>): Record<number, Set<string>> {
+  const result: Record<number, Set<string>> = {}
   for (const [courseId, ids] of Object.entries(source)) {
     result[Number(courseId)] = new Set(ids)
   }
@@ -95,8 +95,8 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
     totalResults: employeeTotalResults,
   } = paginate(filteredEmployees, employeePage, EMPLOYEES_PAGE_SIZE)
 
-  const workingSet = selectedCourseId != null ? workingAssignments[selectedCourseId] ?? new Set<number>() : new Set<number>()
-  const savedSet = selectedCourseId != null ? savedAssignments[selectedCourseId] ?? new Set<number>() : new Set<number>()
+  const workingSet = selectedCourseId != null ? workingAssignments[selectedCourseId] ?? new Set<string>() : new Set<string>()
+  const savedSet = selectedCourseId != null ? savedAssignments[selectedCourseId] ?? new Set<string>() : new Set<string>()
   const isDirty = workingSet.size !== savedSet.size || [...workingSet].some((id) => !savedSet.has(id))
   const pendingChangeCount =
     [...workingSet].filter((id) => !savedSet.has(id)).length + [...savedSet].filter((id) => !workingSet.has(id)).length
@@ -106,7 +106,7 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
     setFeedback(null)
   }
 
-  function toggleEmployee(employeeId: number) {
+  function toggleEmployee(employeeId: string) {
     if (selectedCourseId == null) return
     setWorkingAssignments((prev) => {
       const next = { ...prev }
