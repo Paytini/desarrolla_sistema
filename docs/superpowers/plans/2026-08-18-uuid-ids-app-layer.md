@@ -867,10 +867,62 @@ git commit -m "fix(uuid): parse company-logo upload's companyId as UUID string, 
 
 ---
 
+---
+
+### Task 9: `components/company/Dc3EditorList.tsx` (a genuine plan-authoring miss, found during Task 7)
+
+**Discovered during Task 7's dispatch — this one is a mistake in this plan's own research, not a new class of bug:** `app/(portal)/superadmin/dc3/page.tsx` was in this plan's original 25-file `tsc` error list (1 error) from the very start. When this plan's author read the file in full during authoring, the conclusion reached was "no changes needed" because the visible code only builds `courses` from `wp_course_id`-keyed data — but the actual error is at the `metadata` field, not anything wp-course-related, and was missed on that read. `components/company/Dc3EditorList.tsx`'s exported `CourseEntry` type has a nested `CourseMetadata.id: number` field — this is `CourseDc3Metadata.id`, a portal-native UUID primary key (Plan 1), not `wp_course_id` (which correctly stays `number` in the same type, one field over). The two look similar at a glance in a type block, which is exactly how this got missed.
+
+**Files:**
+- Modify: `components/company/Dc3EditorList.tsx`
+
+**Interfaces:**
+- Consumes: nothing from this plan's other tasks.
+- Produces: `CourseEntry.metadata: CourseMetadata | null` with `CourseMetadata.id: string` — consumed by `app/(portal)/superadmin/dc3/page.tsx`, which needs **no edit of its own** — it builds `metadata: metadataMap.get(course.wp_course_id) ?? null` from Prisma-inferred data (already `string`), so its 1 current error resolves automatically once this task lands.
+
+`Dc3EditorList.tsx` is not `tsc`-flagged itself today (the mismatch surfaces at the consuming page's assignment, not inside this file, since nothing here explicitly annotates a variable against `CourseEntry` internally). `metadata.id` is never actually read anywhere in this ~800-line component beyond being part of the type shape — confirmed by grep — so this is a type-only fix with no behavioral change.
+
+- [ ] **Step 1: Edit `components/company/Dc3EditorList.tsx`**
+
+```diff
+ type CourseMetadata = {
+-  id: number
++  id: string
+   course_name: string | null
+   duration_hours: number | null
+   subject_area_name: string | null
+   subject_area_code: string | null
+   training_agent_name: string | null
+   training_agent_registration: string | null
+   instructor_name: string | null
+   instructor_signature_url: string | null
+   source: string
+   last_synced_at: Date | null
+ }
+```
+
+`CourseEntry.wpCourseId: number` (the sibling field, one level up) stays untouched — it's WordPress's own ID.
+
+- [ ] **Step 2: Verify**
+
+```bash
+npx tsc --noEmit 2>&1 | grep -F -e "components/company/Dc3EditorList.tsx" -e "app/(portal)/superadmin/dc3/page.tsx"
+```
+Expected: no output — confirms both this file and `dc3/page.tsx`'s pre-existing error are clean.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add components/company/Dc3EditorList.tsx
+git commit -m "fix(uuid): convert Dc3EditorList's CourseMetadata.id to string, resolving superadmin dc3 page's original tsc error"
+```
+
+---
+
 ## Self-Review Notes (completed during authoring, not a step for the executor)
 
 - **Spec coverage:** §3 (wp_* untouched) → every task's diffs explicitly leave `wp_course_id`/`wp_user_id`/`wp_bundle_id`/`courseId`/`wpUserId` as `number`, confirmed per file during research (not assumed from naming alone — several files were read in full specifically to trace which numeric-looking field was WordPress-domain vs portal-domain). §7 (route params, form fields) → the two named bug patterns (`Number(id)` + `Number.isInteger` guard; `Number.parseInt(formData.get(...))`) are called out once in Global Constraints and then applied identically everywhere they occur, rather than re-derived per task.
 - **Placeholder scan:** none — every task has literal diffs; the two "no change needed, shown for context" call-outs (Task 5's `selectedCourseId` line, Task 1's `getPositiveInt`) explicitly say so rather than leaving it ambiguous whether they were forgotten.
 - **Type consistency:** traced every "this file isn't tsc-flagged today but will break" pairing explicitly in each task's Interfaces block, and confirmed via direct `grep`/read that the pairing is real (client component genuinely imports the action being converted, or a page genuinely constructs the object literal the component's prop type describes) — 12 such files found across this plan (`SuspendCompanyButton.tsx`, `CompanyRow.tsx` auto-resolve, `PackageForm.tsx`, `DeletePackageButton.tsx`, `PackageRow.tsx` auto-resolves, `ConsultingRequestActions.tsx`, `AccessTabs.tsx`, `access/page.tsx` auto-resolves, `ActivityFeed.tsx`/`RenewalsTable.tsx`/`OccupancyCard.tsx`, `superadmin/page.tsx` auto-resolves, `DeleteEmployeeButton.tsx`, `employees/page.tsx` auto-resolves, `AssignmentBoard.tsx`, `CancelConsultingRequestButton.tsx`, `consulting/page.tsx` auto-resolves). This was the single biggest lesson carried forward from Plan 2's mid-execution discoveries — this plan's authoring went looking for the pattern proactively (`grep -rl '"use client"' ... | grep actions`) instead of waiting for each one to surface as a scoped-count mismatch during execution.
-- **Scope check:** 8 tasks, 39 files total (25 from the original `tsc` error list + 13 found via call-graph tracing and, for Task 8, a FormData-parsing sweep that `tsc` cannot see at all). Grouped by feature area/directory as the spec's §10 suggested, sized so no single task exceeds what Plan 2's largest tasks handled (Task 4 here, at 2 files/59 errors, is comparable to Plan 2's Task 6). Task 8 was added mid-execution once Task 1's dispatch surfaced `app/api/upload/company-logo/route.ts` — a bug class (raw `FormData`/`URLSearchParams` values parsed with `Number(...)`) that has zero `tsc` signature, so it could not have been found by this plan's original error-list-driven or call-graph-driven research passes; it was only caught by a human/agent noticing the pattern while fixing something adjacent, then a repo-wide grep confirming it was the only instance. Does not touch `prisma/seed.ts` or `load-testing/`, which remain Plan 4.
+- **Scope check:** 9 tasks, 40 files total (25 from the original `tsc` error list + 13 found via call-graph tracing + 2 mid-execution corrections). Grouped by feature area/directory as the spec's §10 suggested, sized so no single task exceeds what Plan 2's largest tasks handled (Task 4 here, at 2 files/59 errors, is comparable to Plan 2's Task 6). Task 8 was added mid-execution once Task 1's dispatch surfaced `app/api/upload/company-logo/route.ts` — a bug class (raw `FormData`/`URLSearchParams` values parsed with `Number(...)`) that has zero `tsc` signature, so it could not have been found by this plan's original error-list-driven or call-graph-driven research passes; it was only caught by a human/agent noticing the pattern while fixing something adjacent, then a repo-wide grep confirming it was the only instance. Task 9 was added once Task 7's dispatch surfaced `components/company/Dc3EditorList.tsx` — this one is a genuine authoring mistake, not a new bug class: `app/(portal)/superadmin/dc3/page.tsx` was in the original 25-file error list from the start, but this plan's author read the file, concluded (wrongly) that no change was needed, and missed the nested `CourseMetadata.id` field one level down in a sibling component's type. Both corrections are recorded here rather than silently smoothed over. Does not touch `prisma/seed.ts` or `load-testing/`, which remain Plan 4.
 - **Known residual, not this plan's job to fix:** Task 7's `webhooks/tutor-learning/route.ts` note about the WordPress plugin's `absint()` corruption is repeated from Plan 2's final review — this plan's type fix is necessary but not sufficient for that route to work correctly against real WordPress traffic. Confirmed non-blocking for this plan (a type-only concern) and already flagged to the user separately.
