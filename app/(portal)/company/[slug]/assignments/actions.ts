@@ -15,16 +15,16 @@ export type CourseAssignmentResult = {
   message: string
 }
 
-function parseEmployeeIds(values: number[]) {
-  return [...new Set(values.filter((id) => Number.isInteger(id) && id > 0))]
+function parseEmployeeIds(values: string[]) {
+  return [...new Set(values.filter((id) => id.trim().length > 0))]
 }
 
 export async function setCourseAssignmentsAction(
   courseId: number,
-  employeeIds: number[]
+  employeeIds: string[]
 ): Promise<CourseAssignmentResult> {
   const session = await requireRhSession()
-  const companyId = session.user.empresa_id as number
+  const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
   const assignmentsPath = companyPath(slug, "/assignments")
 
