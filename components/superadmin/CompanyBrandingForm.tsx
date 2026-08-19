@@ -13,7 +13,7 @@ export function CompanyBrandingForm({
   currentLogoUrl,
   action,
 }: {
-  companyId: number
+  companyId: string
   currentSlug: string
   currentLogoUrl: string | null
   action: (formData: FormData) => void

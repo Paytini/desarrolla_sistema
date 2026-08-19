@@ -92,8 +92,8 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
   if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
 
   const { id }    = await params
-  const companyId = Number(id)
-  if (!Number.isInteger(companyId) || companyId <= 0) notFound()
+  const companyId = id
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) notFound()
 
   const query   = await searchParams
   const success = readSearchParam(query, "success")

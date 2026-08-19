@@ -61,7 +61,7 @@ export async function createCompanyAction(
   if (existingUser) return { error: "usuario_rh" }
 
   const passwordHash  = await bcrypt.hash(passwordRh, 12)
-  const packageId     = packageIdRaw ? Number.parseInt(packageIdRaw, 10) : NaN
+  const packageId     = packageIdRaw || null
   const expirationDate = (() => {
     if (!expirationDateRaw) return null
     const d = new Date(expirationDateRaw)
@@ -92,8 +92,8 @@ export async function createCompanyAction(
       },
     })
 
-    let assignedPackageId: number | null = null
-    if (Number.isInteger(packageId)) {
+    let assignedPackageId: string | null = null
+    if (packageId) {
       await tx.companyPackage.create({
         data: {
           company_id:       company.id,
@@ -199,7 +199,7 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
+  const companyId = String(formData.get("empresa_id") ?? "").trim()
   if (!companyId) {
     redirect("/superadmin/companies?error=empresa")
   }
@@ -247,7 +247,7 @@ export async function updateCompanyBrandingAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const companyId = Number.parseInt(String(formData.get("empresa_id") ?? "0"), 10)
+  const companyId = String(formData.get("empresa_id") ?? "").trim()
   const slug = slugify(getString(formData, "slug"))
   const logoUrl = getString(formData, "logo_url")
 
