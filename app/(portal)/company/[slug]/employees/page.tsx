@@ -33,9 +33,9 @@ export const maxDuration = 300;
 
 const successMessages: Record<string, string> = {
   empleado_creado:
-    "El empleado se creo correctamente y ya puede entrar al portal con sus credenciales.",
+    "El empleado se creo correctamente. Le enviamos un correo para que active su cuenta.",
   empleado_creado_sync:
-    "El empleado se creo y su acceso ya quedo activo. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
+    "El empleado se creo y su acceso ya quedo activo. Le enviamos un correo para que active su cuenta. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
   empleado_suspendido:
     "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
@@ -62,8 +62,6 @@ const errorMessages: Record<string, string> = {
     "El archivo CSV no contiene filas suficientes para importar empleados.",
   csv_limit:
     "El archivo CSV excede el limite permitido de 200 filas por carga.",
-  csv_password_required:
-    "Define una contraseña temporal por defecto o incluye la columna password en el archivo para poder entregar las claves de acceso a tus empleados.",
   bridge_delete:
     "No fue posible eliminar el acceso del empleado a los cursos. El registro del portal se mantuvo intacto para evitar inconsistencias.",
 };
@@ -84,7 +82,7 @@ function getSuccessMessage(
     const syncNote = queued
       ? "El acceso a cursos se esta activando en segundo plano."
       : "";
-    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. ${syncNote}`.trim();
+    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado recibira un correo para activar su cuenta. ${syncNote}`.trim();
   }
   return successMessages[success] ?? success;
 }
@@ -160,20 +158,11 @@ function ManualEmployeeForm() {
             className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
           />
         </label>
-        <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Contraseña
-          </span>
-          <input
-            name="password"
-            type="password"
-            minLength={8}
-            required
-            autoComplete="new-password"
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
-          />
-        </label>
       </div>
+
+      <p className="text-xs text-slate-500">
+        El empleado recibirá un correo para crear su propia contraseña y activar su cuenta.
+      </p>
 
       <div className="rounded-lg bg-gray-50 p-3">
         <p className="mb-2 text-xs text-slate-500">

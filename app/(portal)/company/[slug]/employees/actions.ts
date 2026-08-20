@@ -1,6 +1,5 @@
 "use server"
 
-import bcrypt from "bcrypt"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { deleteEmployeeRecord } from "@/lib/access-control"
@@ -17,9 +16,10 @@ import { requireCompanySlug } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
-import { mapWithConcurrency } from "@/lib/concurrency"
+import { buildActivationEmail } from "@/lib/email-templates/activation"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
-import { enqueueCsvEmployeeBridgeSyncJob } from "@/lib/jobs"
+import { enqueueCsvEmployeeBridgeSyncJob, enqueueEmailSendJob } from "@/lib/jobs"
+import { buildActivationUrl, buildPendingActivationFields } from "@/lib/onboarding"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
 import {
@@ -28,9 +28,6 @@ import {
 } from "@/lib/wordpress-bridge"
 
 const CSV_IMPORT_LIMIT = 200
-// native bcrypt runs on libuv's threadpool (4 threads by default); higher
-// concurrency here just queues without adding real parallelism.
-const CSV_HASH_CONCURRENCY = 4
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -84,7 +81,6 @@ type EmployeeProvisioningInput = {
   puesto?: string | null
   ocupacionEspecificaClave?: string | null
   ocupacionEspecifica?: string | null
-  password: string
   companyContext?: CompanyProvisioningContext
   actor: AuditActor
 }
@@ -162,7 +158,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
     }
   }
 
-  const passwordHash = await bcrypt.hash(input.password, 12)
+  const pendingActivation = await buildPendingActivationFields()
   const activePackage = companyContext.packages[0]
   const hasActivePackage = Boolean(activePackage)
 
@@ -195,7 +191,9 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       await tx.user.create({
         data: {
           email,
-          password_hash: passwordHash,
+          password_hash: pendingActivation.passwordHash,
+          activation_token: pendingActivation.activationToken,
+          activation_token_expires_at: pendingActivation.activationTokenExpiresAt,
           name: `${input.nombre} ${input.apellido}`.trim(),
           role: "EMPLEADO",
           company_id: input.companyId,
@@ -215,6 +213,20 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       return { ok: false as const, code: "cupos" }
     }
     throw err
+  }
+
+  try {
+    const { subject, html, text } = buildActivationEmail({
+      nombreEmpleado: input.nombre,
+      nombreEmpresa: companyContext.name,
+      activationUrl: buildActivationUrl(pendingActivation.activationToken),
+    })
+    await enqueueEmailSendJob({ to: email, subject, html, text })
+  } catch (error) {
+    console.error("No se pudo encolar el correo de activación", {
+      employeeId: createdEmployee.id,
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(input.companyId)
@@ -256,7 +268,6 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
         email,
         firstName: input.nombre,
         lastName: input.apellido,
-        password: input.password,
         department: input.departamento ?? null,
         position: input.puesto ?? null,
       })
@@ -334,18 +345,12 @@ type NormalizedCsvEmployeeRow = {
   puesto: string | null
   ocupacionEspecificaClave: string | null
   ocupacionEspecifica: string | null
-  password: string
 }
 
-function normalizeCsvEmployees(
-  dataRows: string[][],
-  headers: string[],
-  fallbackPassword: string
-) {
+function normalizeCsvEmployees(dataRows: string[][], headers: string[]) {
   const employees: NormalizedCsvEmployeeRow[] = []
   const seenEmails = new Set<string>()
   let skipped = 0
-  let missingPassword = false
 
   for (const dataRow of dataRows) {
     const row = Object.fromEntries(
@@ -367,17 +372,9 @@ function normalizeCsvEmployees(
       ]) || null
     const ocupacionEspecifica =
       csvField(row, ["ocupacion_especifica", "ocupacion", "ocupacion_cno"]) || null
-    const password =
-      csvField(row, ["password", "contrasena", "contrasena_temporal"]) ||
-      fallbackPassword
 
     if (!nombre || !apellido || !email) {
       skipped += 1
-      continue
-    }
-
-    if (!password) {
-      missingPassword = true
       continue
     }
 
@@ -397,14 +394,12 @@ function normalizeCsvEmployees(
       puesto,
       ocupacionEspecificaClave,
       ocupacionEspecifica,
-      password,
     })
   }
 
   return {
     employees,
     skipped,
-    missingPassword,
   }
 }
 
@@ -423,9 +418,8 @@ export async function createEmployeeAction(formData: FormData) {
   const puesto = getString(formData, "puesto")
   const ocupacionEspecificaClave = getString(formData, "ocupacion_especifica_clave")
   const ocupacionEspecifica = getString(formData, "ocupacion_especifica")
-  const password = getString(formData, "password")
 
-  if (!nombre || !apellido || !email || !password) {
+  if (!nombre || !apellido || !email) {
     redirect(employeesPath(slug, "?error=datos"))
   }
 
@@ -440,7 +434,6 @@ export async function createEmployeeAction(formData: FormData) {
     puesto: puesto || null,
     ocupacionEspecificaClave: ocupacionEspecificaClave || null,
     ocupacionEspecifica: ocupacionEspecifica || null,
-    password,
     actor,
   })
 
@@ -481,7 +474,6 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
   const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
-  const fallbackPassword = getString(formData, "password_csv")
   const file = formData.get("archivo_csv")
 
   if (!(file instanceof File) || file.size === 0) {
@@ -505,11 +497,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
 
   const [headerRow, ...dataRows] = rows
   const headers = headerRow.map((header) => normalizeCsvHeader(header))
-  const normalizedCsv = normalizeCsvEmployees(dataRows, headers, fallbackPassword)
-
-  if (normalizedCsv.missingPassword) {
-    redirect(employeesPath(slug, "?error=csv_password_required"))
-  }
+  const normalizedCsv = normalizeCsvEmployees(dataRows, headers)
 
   if (normalizedCsv.employees.length === 0) {
     redirect(employeesPath(slug, "?error=csv_empty"))
@@ -571,10 +559,8 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const employeesToCreate = availableEmployees.slice(0, availableSeats)
   skipped += Math.max(availableEmployees.length - employeesToCreate.length, 0)
 
-  const passwordHashes = await mapWithConcurrency(
-    employeesToCreate,
-    CSV_HASH_CONCURRENCY,
-    (employee) => bcrypt.hash(employee.password, 12)
+  const activationByEmail = new Map(
+    employeesToCreate.map((employee) => [employee.email, buildPendingActivationFields()])
   )
 
   const createdEmployees = employeesToCreate.length > 0
@@ -595,14 +581,19 @@ export async function importEmployeesCsvAction(formData: FormData) {
         })
 
         await tx.user.createMany({
-          data: employeesToCreate.map((employee, index) => ({
-            email: employee.email,
-            password_hash: passwordHashes[index],
-            name: `${employee.nombre} ${employee.apellido}`.trim(),
-            role: "EMPLEADO",
-            company_id: companyId,
-            active: true,
-          })),
+          data: employeesToCreate.map((employee) => {
+            const activation = activationByEmail.get(employee.email)!
+            return {
+              email: employee.email,
+              password_hash: activation.passwordHash,
+              activation_token: activation.activationToken,
+              activation_token_expires_at: activation.activationTokenExpiresAt,
+              name: `${employee.nombre} ${employee.apellido}`.trim(),
+              role: "EMPLEADO" as const,
+              company_id: companyId,
+              active: true,
+            }
+          }),
         })
 
         await tx.company.update({
@@ -654,7 +645,6 @@ export async function importEmployeesCsvAction(formData: FormData) {
           email: employee.email,
           firstName: employee.nombre,
           lastName: employee.apellido,
-          password: employee.password,
           department: employee.departamento,
           position: employee.puesto,
         })),
@@ -663,6 +653,25 @@ export async function importEmployeesCsvAction(formData: FormData) {
     } catch (error) {
       console.error("No se pudo encolar la sincronización de empleados importados con WordPress", {
         companyId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  for (const employee of createdEmployees) {
+    const activation = activationByEmail.get(employee.email)
+    if (!activation) continue
+
+    try {
+      const { subject, html, text } = buildActivationEmail({
+        nombreEmpleado: employee.nombre,
+        nombreEmpresa: companyContext.name,
+        activationUrl: buildActivationUrl(activation.activationToken),
+      })
+      await enqueueEmailSendJob({ to: employee.email, subject, html, text })
+    } catch (error) {
+      console.error("No se pudo encolar el correo de activación", {
+        employeeId: employee.id,
         error: error instanceof Error ? error.message : String(error),
       })
     }

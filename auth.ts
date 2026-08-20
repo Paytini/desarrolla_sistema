@@ -15,6 +15,13 @@ class EmpresaBloqueadaError extends CredentialsSignin {
   }
 }
 
+class CuentaPendienteActivacionError extends CredentialsSignin {
+  constructor() {
+    super()
+    this.code = "cuenta_pendiente_activacion"
+  }
+}
+
 if (!authConfig.secret) {
   throw new Error("AUTH_SECRET (o NEXTAUTH_SECRET) es requerida. Configura la variable de entorno antes de iniciar.")
 }
@@ -49,6 +56,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           })
 
           if (!usuario || !usuario.active) return null
+
+          if (usuario.activation_token) {
+            throw new CuentaPendienteActivacionError()
+          }
 
           const valida = await bcrypt.compare(
             credentials.password as string,
@@ -92,7 +103,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             empresa_slug: usuario.company?.slug ?? null,
           }
         } catch (error) {
-          if (error instanceof EmpresaBloqueadaError) throw error
+          if (error instanceof EmpresaBloqueadaError || error instanceof CuentaPendienteActivacionError) throw error
 
           console.error("Credentials login failed while reading database", {
             message: error instanceof Error ? error.message : String(error),

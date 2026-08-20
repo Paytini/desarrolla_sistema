@@ -12,7 +12,6 @@ const COLUMNS = [
   { key: "puesto", label: "puesto", required: true },
   { key: "ocupacion_especifica_clave", label: "ocupacion_especifica_clave", required: true },
   { key: "ocupacion_especifica", label: "ocupacion_especifica", required: true },
-  { key: "password", label: "password", required: false },
 ]
 
 const SAMPLE_ROWS = [
@@ -25,7 +24,6 @@ const SAMPLE_ROWS = [
     puesto: "Supervisor",
     ocupacion_especifica_clave: "03.4",
     ocupacion_especifica: "Instalacion y mantenimiento",
-    password: "Temporal123",
   },
   {
     nombre: "Luis",
@@ -36,7 +34,6 @@ const SAMPLE_ROWS = [
     puesto: "Supervisor",
     ocupacion_especifica_clave: "07.2",
     ocupacion_especifica: "Supervision de seguridad",
-    password: "Temporal123",
   },
 ]
 
@@ -162,8 +159,7 @@ export default function CsvEmployeeImportForm() {
                   Nota
                 </span>
                 <p>
-                  Si el CSV no incluye la columna <span className="font-semibold">password</span>,
-                  captura abajo una contraseña temporal por defecto para todos los empleados de esa carga.
+                  Cada empleado recibirá un correo para crear su propia contraseña y activar su cuenta.
                 </p>
               </div>
             </div>
@@ -188,17 +184,6 @@ export default function CsvEmployeeImportForm() {
               accept=".csv,text/csv"
               required
               className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none transition file:mr-3 file:rounded-full file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700"
-            />
-          </label>
-
-          <label className="grid gap-1.5 text-sm">
-            <span className="text-[14px] font-normal text-slate-700">Contraseña temporal por defecto</span>
-            <input
-              name="password_csv"
-              type="text"
-              minLength={8}
-              placeholder="Recomendado si tu archivo no incluye la columna password"
-              className="rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-[#3579F5]"
             />
           </label>
 

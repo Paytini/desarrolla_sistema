@@ -42,7 +42,6 @@ type CsvBridgeSyncEmployee = {
   email: string
   firstName: string
   lastName: string
-  password: string
   department: string | null
   position: string | null
 }
@@ -138,10 +137,7 @@ export async function enqueueCsvEmployeeBridgeSyncJob(input: {
       payload: {
         companyId: input.companyId,
         companyName: input.companyName,
-        pending: input.employees.map((employee) => ({
-          ...employee,
-          password: encryptJobPayloadSecret(employee.password),
-        })),
+        pending: input.employees,
         syncedCount: 0,
         warningCount: 0,
       },
@@ -164,7 +160,6 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
         email: employee.email,
         firstName: employee.firstName,
         lastName: employee.lastName,
-        password: decryptJobPayloadSecret(employee.password),
         department: employee.department,
         position: employee.position,
       })
