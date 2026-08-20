@@ -18,15 +18,19 @@ import { isUuid } from "@/lib/uuid"
 
 export const maxDuration = 60
 
-type TutorLearningWebhookPayload = {
-  event_type?: string
-  occurred_at?: string
+type TutorLearningWebhookEvent = {
   student_wp_user_id?: number
   employee_id?: string | null
   company_id?: string | null
   source_hash?: string | null
   courses?: EmployeeLearningBridgeSnapshot["courses"]
   certificates?: EmployeeLearningBridgeSnapshot["certificates"]
+}
+
+type TutorLearningWebhookPayload = TutorLearningWebhookEvent & {
+  event_type?: string
+  occurred_at?: string
+  events?: TutorLearningWebhookEvent[]
 }
 
 function getWebhookSecret() {
@@ -67,8 +71,75 @@ function isFreshTimestamp(timestamp: string) {
   return Math.abs(now - parsedTimestamp) <= 60 * 10
 }
 
-function isValidPayload(payload: TutorLearningWebhookPayload) {
-  return Number.isInteger(payload.student_wp_user_id) && Array.isArray(payload.courses)
+function isValidEvent(event: TutorLearningWebhookEvent) {
+  return Number.isInteger(event.student_wp_user_id) && Array.isArray(event.courses)
+}
+
+async function processLearningWebhookEvent(event: TutorLearningWebhookEvent, eventType: string, occurredAt: string | null) {
+  if (event.employee_id && !isUuid(event.employee_id)) {
+    event.employee_id = null
+  }
+  if (event.company_id && !isUuid(event.company_id)) {
+    event.company_id = null
+  }
+
+  if (!isValidEvent(event)) {
+    return { student_wp_user_id: event.student_wp_user_id ?? null, ok: false as const, message: "El evento viene incompleto." }
+  }
+
+  const wpUserId = event.student_wp_user_id as number
+  const sourceHash = event.source_hash ?? null
+
+  if (await isDuplicateTutorLearningWebhook(wpUserId, sourceHash)) {
+    return { student_wp_user_id: wpUserId, ok: true as const, duplicate: true, source_hash: sourceHash }
+  }
+
+  try {
+    const result = await syncEmployeeLearningFromBridgeSnapshot({
+      employeeId: event.employee_id ?? null,
+      wpUserId,
+      snapshot: {
+        courses: event.courses ?? [],
+        certificates: event.certificates ?? [],
+      },
+    })
+
+    await Promise.all([
+      recordTutorLearningWebhookEvent({
+        event_type: eventType,
+        occurred_at: occurredAt,
+        received_at: new Date().toISOString(),
+        employee_id: event.employee_id ?? null,
+        company_id: event.company_id ?? null,
+        student_wp_user_id: wpUserId,
+        source_hash: sourceHash,
+        courses_updated: result.coursesUpdated,
+        certificates_updated: result.certificatesUpdated,
+      }),
+      recordTutorLearningWebhookProcessed(wpUserId, sourceHash),
+    ])
+
+    revalidatePath("/employee/courses")
+    revalidatePath("/employee/certificates")
+
+    if (event.company_id) {
+      const branding = await getCompanyBranding(event.company_id)
+      if (branding) {
+        revalidatePath(companyPath(branding.slug, "/home"))
+        revalidatePath(companyPath(branding.slug, "/progress"))
+        revalidatePath(companyPath(branding.slug, "/certificates"))
+      }
+      revalidateTag(companyCacheRootTag(event.company_id), "max")
+    }
+
+    return { student_wp_user_id: wpUserId, ok: true as const, source_hash: sourceHash, ...result }
+  } catch (error) {
+    return {
+      student_wp_user_id: wpUserId,
+      ok: false as const,
+      message: error instanceof Error ? error.message : "No fue posible aplicar el webhook academico al portal.",
+    }
+  }
 }
 
 export async function POST(request: Request) {
@@ -101,88 +172,30 @@ export async function POST(request: Request) {
     )
   }
 
-  if (payload.employee_id && !isUuid(payload.employee_id)) {
-    payload.employee_id = null
-  }
-  if (payload.company_id && !isUuid(payload.company_id)) {
-    payload.company_id = null
-  }
+  const eventType = payload.event_type ?? "student_learning_changed"
+  const occurredAt = payload.occurred_at ?? null
 
-  if (!isValidPayload(payload)) {
-    return NextResponse.json(
-      { ok: false, message: "El payload del webhook viene incompleto." },
-      { status: 400 }
-    )
-  }
-
-  const wpUserId = payload.student_wp_user_id as number
-  const sourceHash = payload.source_hash ?? null
-
-  if (await isDuplicateTutorLearningWebhook(wpUserId, sourceHash)) {
-    return NextResponse.json({
-      ok: true,
-      duplicate: true,
-      event_type: payload.event_type ?? "student_learning_changed",
-      occurred_at: payload.occurred_at ?? null,
-      source_hash: sourceHash,
-    })
-  }
-
-  try {
-    const result = await syncEmployeeLearningFromBridgeSnapshot({
-      employeeId: payload.employee_id ?? null,
-      wpUserId: payload.student_wp_user_id,
-      snapshot: {
-        courses: payload.courses ?? [],
-        certificates: payload.certificates ?? [],
-      },
-    })
-
-    await Promise.all([
-      recordTutorLearningWebhookEvent({
-        event_type: payload.event_type ?? "student_learning_changed",
-        occurred_at: payload.occurred_at ?? null,
-        received_at: new Date().toISOString(),
-        employee_id: payload.employee_id ?? null,
-        company_id: payload.company_id ?? null,
-        student_wp_user_id: wpUserId,
-        source_hash: sourceHash,
-        courses_updated: result.coursesUpdated,
-        certificates_updated: result.certificatesUpdated,
-      }),
-      recordTutorLearningWebhookProcessed(wpUserId, sourceHash),
-    ])
-
-    revalidatePath("/employee/courses")
-    revalidatePath("/employee/certificates")
-
-    if (payload.company_id) {
-      const branding = await getCompanyBranding(payload.company_id)
-      if (branding) {
-        revalidatePath(companyPath(branding.slug, "/home"))
-        revalidatePath(companyPath(branding.slug, "/progress"))
-        revalidatePath(companyPath(branding.slug, "/certificates"))
-      }
-      revalidateTag(companyCacheRootTag(payload.company_id), "max")
+  if (Array.isArray(payload.events)) {
+    if (payload.events.length === 0) {
+      return NextResponse.json(
+        { ok: false, message: "El lote del webhook no contiene eventos." },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json({
-      ok: true,
-      event_type: payload.event_type ?? "student_learning_changed",
-      occurred_at: payload.occurred_at ?? null,
-      source_hash: sourceHash,
-      ...result,
-    })
-  } catch (error) {
-    return NextResponse.json(
-      {
-        ok: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "No fue posible aplicar el webhook academico al portal.",
-      },
-      { status: 500 }
-    )
+    const results = []
+    for (const event of payload.events) {
+      results.push(await processLearningWebhookEvent(event, eventType, occurredAt))
+    }
+
+    return NextResponse.json({ ok: true, event_type: eventType, occurred_at: occurredAt, results })
   }
+
+  const result = await processLearningWebhookEvent(payload, eventType, occurredAt)
+  if (!result.ok) {
+    const status = result.message === "El evento viene incompleto." ? 400 : 500
+    return NextResponse.json({ ok: false, message: result.message }, { status })
+  }
+
+  return NextResponse.json({ event_type: eventType, occurred_at: occurredAt, ...result })
 }
