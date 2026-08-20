@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { sendEmail } from "@/lib/ses"
+import { enqueueEmailSendJob } from "@/lib/jobs"
 import { buildCertificateReadyEmail } from "@/lib/email-templates/certificate-ready"
 import { buildPackageExpiringEmail } from "@/lib/email-templates/package-expiring"
 
@@ -81,7 +81,7 @@ export async function notifyEmployeeNewCertificates(
       employeeName: `${employee.first_name} ${employee.last_name}`.trim(),
       certificates,
     })
-    await sendEmail({ to: employee.email, subject, html, text })
+    await enqueueEmailSendJob({ to: employee.email, subject, html, text })
   } catch (error) {
     console.error("No se pudo enviar el correo de constancia lista", {
       employeeId,
@@ -153,7 +153,7 @@ export async function checkAndNotifyExpiringPackages() {
           nombreEmpresa: ep.company.name,
           daysLabel,
         })
-        await sendEmail({ to: rhUser.email, subject, html, text })
+        await enqueueEmailSendJob({ to: rhUser.email, subject, html, text })
       } catch (error) {
         console.error("No se pudo enviar el correo de paquete por vencer", {
           companyPackageId: ep.id,

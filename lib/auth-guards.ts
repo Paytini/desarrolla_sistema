@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation"
-import { auth } from "@/auth"
+import { getSession } from "@/lib/session"
 import { getCompanyAccessStatus } from "@/lib/company-status"
 import { enterCompanyContext } from "@/lib/tenant-context"
 
 export async function requireSuperAdminSession() {
-  const session = await auth()
+  const session = await getSession()
   if (!session || session.user.rol !== "SUPERADMIN") {
     redirect("/login")
   }
@@ -13,7 +13,7 @@ export async function requireSuperAdminSession() {
 }
 
 export async function requireRhSession() {
-  const session = await auth()
+  const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
     redirect("/login")
   }

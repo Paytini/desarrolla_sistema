@@ -285,6 +285,7 @@ model Employee {
   occupation_code  String?
   occupation_name  String?
   active           Boolean  @default(true)
+  sync_lock_until  DateTime?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
@@ -323,6 +324,7 @@ model EmployeeCourse {
 
   @@unique([employee_id, wp_course_id])
   @@index([employee_id, last_synced_at])
+  @@index([last_synced_at])
   @@index([access_status])
   @@index([completed])
   @@map("employee_courses")
@@ -452,16 +454,17 @@ enum JobStatus {
 }
 
 model Job {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type         String
-  status       JobStatus @default(PENDING)
-  payload      Json
-  result       Json?
-  error        String?   @db.Text
-  created_at   DateTime  @default(now())
-  updated_at   DateTime  @updatedAt
-  started_at   DateTime?
-  completed_at DateTime?
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type            String
+  status          JobStatus @default(PENDING)
+  payload         Json
+  result          Json?
+  error           String?   @db.Text
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  started_at      DateTime?
+  completed_at    DateTime?
+  next_attempt_at DateTime?
 
   @@index([status, type])
   @@map("jobs")

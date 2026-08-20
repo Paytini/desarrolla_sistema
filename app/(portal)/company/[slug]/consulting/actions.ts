@@ -10,8 +10,8 @@ import { CONSULTING_AREAS } from "@/lib/consulting-areas"
 import { formatConsultingDateTime, isDateSelectable, isTimeSlotValid } from "@/lib/consulting-schedule"
 import { buildConsultingRequestEmail } from "@/lib/email-templates/consulting-request"
 import { notifySuperadmins } from "@/lib/notifications"
+import { enqueueEmailSendJob } from "@/lib/jobs"
 import { prisma } from "@/lib/prisma"
-import { sendEmail } from "@/lib/ses"
 import { isUuid } from "@/lib/uuid"
 
 export type ConsultingActionState = { error: string } | { success: true } | null
@@ -98,7 +98,7 @@ export async function createConsultingRequestAction(
         contactPhone,
         contactMethod: contactMethod as ConsultingContactMethod,
       })
-      await sendEmail({ to: notifyTo, subject, html, text })
+      await enqueueEmailSendJob({ to: notifyTo, subject, html, text })
     }
   } catch (error) {
     console.error("No se pudo enviar el correo de solicitud de consultoría", error)

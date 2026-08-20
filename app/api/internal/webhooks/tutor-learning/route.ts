@@ -2,14 +2,18 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
 
-import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { companyCacheRootTag } from "@/lib/cache-tags"
 import { getCompanyBranding } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import {
   syncEmployeeLearningFromBridgeSnapshot,
   type EmployeeLearningBridgeSnapshot,
 } from "@/lib/employee-learning"
-import { recordTutorLearningWebhookEvent } from "@/lib/webhook-monitor"
+import {
+  isDuplicateTutorLearningWebhook,
+  recordTutorLearningWebhookEvent,
+  recordTutorLearningWebhookProcessed,
+} from "@/lib/webhook-monitor"
 import { isUuid } from "@/lib/uuid"
 
 export const maxDuration = 60
@@ -111,6 +115,19 @@ export async function POST(request: Request) {
     )
   }
 
+  const wpUserId = payload.student_wp_user_id as number
+  const sourceHash = payload.source_hash ?? null
+
+  if (await isDuplicateTutorLearningWebhook(wpUserId, sourceHash)) {
+    return NextResponse.json({
+      ok: true,
+      duplicate: true,
+      event_type: payload.event_type ?? "student_learning_changed",
+      occurred_at: payload.occurred_at ?? null,
+      source_hash: sourceHash,
+    })
+  }
+
   try {
     const result = await syncEmployeeLearningFromBridgeSnapshot({
       employeeId: payload.employee_id ?? null,
@@ -121,17 +138,20 @@ export async function POST(request: Request) {
       },
     })
 
-    await recordTutorLearningWebhookEvent({
-      event_type: payload.event_type ?? "student_learning_changed",
-      occurred_at: payload.occurred_at ?? null,
-      received_at: new Date().toISOString(),
-      employee_id: payload.employee_id ?? null,
-      company_id: payload.company_id ?? null,
-      student_wp_user_id: payload.student_wp_user_id ?? null,
-      source_hash: payload.source_hash ?? null,
-      courses_updated: result.coursesUpdated,
-      certificates_updated: result.certificatesUpdated,
-    })
+    await Promise.all([
+      recordTutorLearningWebhookEvent({
+        event_type: payload.event_type ?? "student_learning_changed",
+        occurred_at: payload.occurred_at ?? null,
+        received_at: new Date().toISOString(),
+        employee_id: payload.employee_id ?? null,
+        company_id: payload.company_id ?? null,
+        student_wp_user_id: wpUserId,
+        source_hash: sourceHash,
+        courses_updated: result.coursesUpdated,
+        certificates_updated: result.certificatesUpdated,
+      }),
+      recordTutorLearningWebhookProcessed(wpUserId, sourceHash),
+    ])
 
     revalidatePath("/employee/courses")
     revalidatePath("/employee/certificates")
@@ -144,14 +164,13 @@ export async function POST(request: Request) {
         revalidatePath(companyPath(branding.slug, "/certificates"))
       }
       revalidateTag(companyCacheRootTag(payload.company_id), "max")
-      revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     }
 
     return NextResponse.json({
       ok: true,
       event_type: payload.event_type ?? "student_learning_changed",
       occurred_at: payload.occurred_at ?? null,
-      source_hash: payload.source_hash ?? null,
+      source_hash: sourceHash,
       ...result,
     })
   } catch (error) {
