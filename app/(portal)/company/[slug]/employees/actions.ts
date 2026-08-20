@@ -215,6 +215,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
     throw err
   }
 
+  let activationEmailQueued = false
   try {
     const { subject, html, text } = buildActivationEmail({
       nombreEmpleado: input.nombre,
@@ -222,6 +223,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       activationUrl: buildActivationUrl(pendingActivation.activationToken),
     })
     await enqueueEmailSendJob({ to: email, subject, html, text })
+    activationEmailQueued = true
   } catch (error) {
     console.error("No se pudo encolar el correo de activación", {
       employeeId: createdEmployee.id,
@@ -256,6 +258,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       ocupacion_especifica_clave: input.ocupacionEspecificaClave ?? null,
       ocupacion_especifica: input.ocupacionEspecifica ?? null,
       tiene_paquete_activo: hasActivePackage,
+      correo_activacion_encolado: activationEmailQueued,
     },
   })
 
@@ -741,8 +744,8 @@ export async function resendActivationAction(formData: FormData) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: employee.email },
+  const user = await prisma.user.findFirst({
+    where: { email: employee.email, company_id: companyId },
     select: { id: true, activation_token: true },
   })
 
@@ -756,13 +759,6 @@ export async function resendActivationAction(formData: FormData) {
   }
 
   const pendingActivation = buildPendingActivationFields()
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      activation_token: pendingActivation.activationToken,
-      activation_token_expires_at: pendingActivation.activationTokenExpiresAt,
-    },
-  })
 
   try {
     const { subject, html, text } = buildActivationEmail({
@@ -778,6 +774,14 @@ export async function resendActivationAction(formData: FormData) {
     })
     redirect(withStatus(returnTo, "error", "activation_email"))
   }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      activation_token: pendingActivation.activationToken,
+      activation_token_expires_at: pendingActivation.activationTokenExpiresAt,
+    },
+  })
 
   redirect(withStatus(returnTo, "success", "activacion_reenviada"))
 }
