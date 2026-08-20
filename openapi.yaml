@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Desarrolla360 Portal API
+  title: Desarrolla360 Empresas API
   version: "1.0.0"
   description: >
     Internal API surface for the Desarrolla360 B2B training portal. Every route here
@@ -21,6 +21,11 @@ tags:
   - name: WordPress Bridge
   - name: Cron
   - name: Webhooks
+  - name: WordPress Bridge Plugin
+    description: >
+      Custom REST routes registered by the `desarrolla360-bridge` WordPress plugin
+      (source in `wordpress-plugin/`), running on the client's WordPress site —
+      not on this portal. Called by `lib/wordpress-bridge.ts`.
 
 components:
   securitySchemes:
@@ -46,6 +51,14 @@ components:
         HMAC-SHA256 of `{timestamp}.{rawBody}` using `BRIDGE_WEBHOOK_SECRET`,
         hex-encoded. Sent alongside `x-d360-webhook-timestamp` (Unix seconds,
         must be within 10 minutes of the server clock).
+    portalKey:
+      type: apiKey
+      in: header
+      name: X-D360-Portal-Key
+      description: >
+        Shared secret configured in the plugin's settings page (`WP_BRIDGE_PORTAL_KEY`
+        on the portal side). `Authorization: Bearer <key>` with the same value also
+        works. A logged-in WordPress admin (`manage_options`) is accepted too.
 
   schemas:
     Error:
@@ -115,6 +128,61 @@ components:
         tutor_course_payload:
           type: object
           nullable: true
+
+    BridgeStudentCourse:
+      type: object
+      properties:
+        wp_course_id: { type: integer }
+        title: { type: string }
+        progress_pct: { type: number }
+        completed: { type: boolean }
+        started_at: { type: string, format: date-time, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+        certificate_url: { type: string, nullable: true }
+        raw:
+          type: object
+          nullable: true
+
+    BridgeStudentCertificate:
+      type: object
+      properties:
+        wp_course_id: { type: integer }
+        title: { type: string }
+        certificate_url: { type: string, nullable: true }
+        completed_at: { type: string, format: date-time, nullable: true }
+
+    BridgeEnsureAccessResponse:
+      type: object
+      properties:
+        student_id: { type: integer }
+        completed_course_ids:
+          type: array
+          items: { type: integer }
+        already_active_ids:
+          type: array
+          items: { type: integer }
+        failed_course_ids:
+          type: array
+          items:
+            type: object
+            properties:
+              course_id: { type: integer }
+              message: { type: string }
+
+    BridgeBundle:
+      type: object
+      properties:
+        bundle_id: { type: integer }
+        title: { type: string }
+        post_type: { type: string }
+        status: { type: string }
+        visibility: { type: string, enum: [private, public] }
+        permalink: { type: string }
+        course_ids:
+          type: array
+          items: { type: integer }
+        warning: { type: string, description: "Present when the write partially failed but recovered." }
+        recovered: { type: boolean }
 
   parameters:
     q:
@@ -931,3 +999,461 @@ paths:
           description: Missing/expired timestamp or invalid HMAC signature.
         "503":
           description: Webhook secret not configured on the portal.
+
+  /wp-json/desarrolla360/v1/health:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    get:
+      tags: [WordPress Bridge Plugin]
+      summary: Plugin health check
+      security: [{ portalKey: [] }]
+      responses:
+        "200":
+          description: Plugin status.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [true] }
+                  plugin_version: { type: string }
+                  site_url: { type: string }
+                  wordpress_version: { type: string }
+                  tutor_rest_available: { type: boolean }
+                  service_user_configured: { type: boolean }
+                  tutor_api_configured: { type: boolean }
+                  learning_webhook_configured: { type: boolean }
+        "401":
+          description: Missing/invalid portal key.
+
+  /wp-json/desarrolla360/v1/employees/upsert:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    post:
+      tags: [WordPress Bridge Plugin]
+      summary: Create or update the WordPress user for an employee
+      description: Creates a `subscriber` WP user if none exists for the email, otherwise updates it.
+      security: [{ portalKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, first_name, last_name]
+              properties:
+                email: { type: string, format: email }
+                first_name: { type: string }
+                last_name: { type: string }
+                password: { type: string, description: "Optional — a random one is generated when creating a new user without it." }
+                employee_id: { type: string, format: uuid, description: "Portal's Employee id, stored as user meta." }
+                department: { type: string }
+                position: { type: string }
+                company:
+                  type: object
+                  properties:
+                    id: { type: string, format: uuid }
+                    name: { type: string }
+      responses:
+        "200":
+          description: The resolved WordPress user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wp_user_id: { type: integer }
+                  email: { type: string }
+                  created: { type: boolean }
+                  generated_password: { type: string, nullable: true }
+        "400":
+          description: Missing email, first_name, or last_name.
+        "401":
+          description: Missing/invalid portal key.
+
+  /wp-json/desarrolla360/v1/employees/delete:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    post:
+      tags: [WordPress Bridge Plugin]
+      summary: Delete an employee's WordPress user
+      description: Also deletes their Tutor LMS enrollment posts. Refuses to delete WordPress admins.
+      security: [{ portalKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "At least one of wp_user_id, email, or employee_id must resolve to a user."
+              properties:
+                wp_user_id: { type: integer }
+                email: { type: string, format: email }
+                employee_id: { type: string, format: uuid }
+      responses:
+        "200":
+          description: "Deletion result (`found: false` if no matching user existed — not an error)."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  found: { type: boolean }
+                  deleted: { type: boolean }
+                  wp_user_id: { type: integer, nullable: true }
+                  email: { type: string, nullable: true }
+                  enrollment_posts_deleted: { type: integer }
+        "401":
+          description: Missing/invalid portal key.
+        "409":
+          description: Target user is a WordPress administrator — deletion refused.
+
+  /wp-json/desarrolla360/v1/courses:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    get:
+      tags: [WordPress Bridge Plugin]
+      summary: List the Tutor LMS course catalog
+      description: Up to 200 published courses.
+      security: [{ portalKey: [] }]
+      responses:
+        "200":
+          description: Course catalog.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items: { $ref: "#/components/schemas/BridgeCourseOption" }
+                  total: { type: integer }
+        "401":
+          description: Missing/invalid portal key.
+        "500":
+          description: The Tutor LMS course post type isn't registered.
+
+  /wp-json/desarrolla360/v1/courses/{course_id}:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    get:
+      tags: [WordPress Bridge Plugin]
+      summary: Get one course's DC-3-relevant details
+      security: [{ portalKey: [] }]
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Course detail.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BridgeCourseDetails" }
+        "400":
+          description: Invalid course_id.
+        "401":
+          description: Missing/invalid portal key.
+
+  /wp-json/desarrolla360/v1/bundles:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    post:
+      tags: [WordPress Bridge Plugin]
+      summary: Create a private Tutor LMS course bundle
+      description: Used when a Package is configured with `PRIVATE_BUNDLE_REFERENCE` delivery mode.
+      security: [{ portalKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, course_ids]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                visibility: { type: string, enum: [private, public], default: private }
+                course_ids:
+                  type: array
+                  items: { type: integer }
+      responses:
+        "200":
+          description: The created bundle (or a recovered/pre-existing one on a retried write).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BridgeBundle" }
+        "400":
+          description: Missing title or course_ids, or an invalid course_id.
+        "401":
+          description: Missing/invalid portal key.
+        "500":
+          description: Unrecoverable failure creating the bundle.
+
+  /wp-json/desarrolla360/v1/bundles/{bundle_id}:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    put:
+      tags: [WordPress Bridge Plugin]
+      summary: Update a bundle's course list, title, or description
+      description: "Method also accepts PATCH. Only bundles the plugin created itself (`d360_managed_bundle` meta) can be updated."
+      security: [{ portalKey: [] }]
+      parameters:
+        - name: bundle_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [course_ids]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                course_ids:
+                  type: array
+                  items: { type: integer }
+      responses:
+        "200":
+          description: The updated bundle.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BridgeBundle" }
+        "400":
+          description: Missing/invalid course_ids.
+        "401":
+          description: Missing/invalid portal key.
+        "403":
+          description: This bundle wasn't created by the portal — refused.
+        "404":
+          description: Bundle not found.
+
+  /wp-json/desarrolla360/v1/bundles/{bundle_id}/diagnostics:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    get:
+      tags: [WordPress Bridge Plugin]
+      summary: Inspect a bundle's raw meta for troubleshooting
+      security: [{ portalKey: [] }]
+      parameters:
+        - name: bundle_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Bundle, matching template bundle (if any), detected course ids, and its raw postmeta snapshot.
+          content:
+            application/json:
+              schema: { type: object }
+        "400":
+          description: Invalid bundle_id.
+        "401":
+          description: Missing/invalid portal key.
+        "404":
+          description: Bundle not found.
+
+  /wp-json/desarrolla360/v1/enrollments/batch:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    post:
+      tags: [WordPress Bridge Plugin]
+      summary: Enroll one student into multiple courses
+      description: Tries direct course access first, falls back to the Tutor LMS REST enrollment endpoint per course.
+      security: [{ portalKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, course_ids]
+              properties:
+                user_id: { type: integer }
+                course_ids:
+                  type: array
+                  items: { type: integer }
+      responses:
+        "200":
+          description: Per-course enrollment outcome.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id: { type: integer }
+                  enrolled_course_ids:
+                    type: array
+                    items: { type: integer }
+                  failed_course_ids:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        course_id: { type: integer }
+                        message: { type: string }
+        "400":
+          description: Missing user_id or course_ids.
+        "401":
+          description: Missing/invalid portal key.
+
+  /wp-json/desarrolla360/v1/students/{student_id}/courses:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    get:
+      tags: [WordPress Bridge Plugin]
+      summary: Get a student's enrolled courses with progress
+      description: Falls back to direct-enrollment data if the Tutor LMS REST API call fails.
+      security: [{ portalKey: [] }]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Student's courses.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id: { type: integer }
+                  courses:
+                    type: array
+                    items: { $ref: "#/components/schemas/BridgeStudentCourse" }
+                  raw: { type: object }
+        "401":
+          description: Missing/invalid portal key.
+
+  /wp-json/desarrolla360/v1/students/{student_id}/dashboard:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    get:
+      tags: [WordPress Bridge Plugin]
+      summary: Proxy Tutor LMS's student dashboard endpoint
+      security: [{ portalKey: [] }]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Raw Tutor LMS dashboard payload.
+          content:
+            application/json:
+              schema: { type: object }
+        "401":
+          description: Missing/invalid portal key.
+        "500":
+          description: The Tutor LMS REST call failed.
+
+  /wp-json/desarrolla360/v1/students/{student_id}/certificates:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    get:
+      tags: [WordPress Bridge Plugin]
+      summary: Get a student's issued certificates
+      description: Derived from completed courses that have a resolvable certificate URL.
+      security: [{ portalKey: [] }]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Student's certificates.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id: { type: integer }
+                  certificates:
+                    type: array
+                    items: { $ref: "#/components/schemas/BridgeStudentCertificate" }
+        "401":
+          description: Missing/invalid portal key.
+
+  /wp-json/desarrolla360/v1/students/{student_id}/diagnostics:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    get:
+      tags: [WordPress Bridge Plugin]
+      summary: Debug a student's enrollment/progress/certificate resolution
+      description: Used by the portal's `/superadmin/integration` and WordPress diagnostics tooling.
+      security: [{ portalKey: [] }]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: course_id
+          in: query
+          schema: { type: integer }
+          description: Limit the diagnostic detail to one course.
+      responses:
+        "200":
+          description: Diagnostic snapshot comparing the REST API, direct-enrollment, and calculated views.
+          content:
+            application/json:
+              schema: { type: object }
+        "401":
+          description: Missing/invalid portal key.
+
+  /wp-json/desarrolla360/v1/students/{student_id}/access/ensure:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    post:
+      tags: [WordPress Bridge Plugin]
+      summary: Ensure a student has direct access to a set of courses
+      description: >
+        Grants direct Tutor LMS course access, bypassing the enrollment flow — used
+        to guarantee visibility right after enrollment.
+      security: [{ portalKey: [] }]
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [course_ids]
+              properties:
+                course_ids:
+                  type: array
+                  items: { type: integer }
+      responses:
+        "200":
+          description: Per-course access result.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BridgeEnsureAccessResponse" }
+        "400":
+          description: Missing student_id or course_ids.
+        "401":
+          description: Missing/invalid portal key.
