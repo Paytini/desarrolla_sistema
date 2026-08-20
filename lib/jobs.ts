@@ -11,9 +11,9 @@ const JOB_CONCURRENCY = 5
 const JOBS_PER_CRON_TICK = 25
 
 function getJobPayloadCipherKey() {
-  const secret = process.env.NEXTAUTH_SECRET
+  const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
   if (!secret) {
-    throw new Error("NEXTAUTH_SECRET no está configurado")
+    throw new Error("AUTH_SECRET/NEXTAUTH_SECRET no está configurado")
   }
   return Buffer.from(hkdfSync("sha256", secret, "", "job-payload-cipher", 32))
 }
@@ -42,7 +42,6 @@ type CsvBridgeSyncEmployee = {
   email: string
   firstName: string
   lastName: string
-  password: string
   department: string | null
   position: string | null
 }
@@ -65,7 +64,9 @@ type EmailSendPayload = {
   attempts: number
 }
 
-export async function enqueueEmailSendJob(input: { to: string; subject: string; html: string; text: string }) {
+type EmailSendInput = { to: string; subject: string; html: string; text: string }
+
+export async function enqueueEmailSendJob(input: EmailSendInput) {
   const job = await prisma.job.create({
     data: {
       type: "EMAIL_SEND",
@@ -80,6 +81,23 @@ export async function enqueueEmailSendJob(input: { to: string; subject: string; 
   })
 
   return job.id
+}
+
+export async function enqueueEmailSendJobs(inputs: EmailSendInput[]) {
+  if (inputs.length === 0) return
+
+  await prisma.job.createMany({
+    data: inputs.map((input) => ({
+      type: "EMAIL_SEND",
+      payload: {
+        to: input.to,
+        subject: input.subject,
+        html: encryptJobPayloadSecret(input.html),
+        text: encryptJobPayloadSecret(input.text),
+        attempts: 0,
+      },
+    })),
+  })
 }
 
 const EMAIL_SEND_BACKOFF_BASE_MS = 60_000
@@ -138,10 +156,7 @@ export async function enqueueCsvEmployeeBridgeSyncJob(input: {
       payload: {
         companyId: input.companyId,
         companyName: input.companyName,
-        pending: input.employees.map((employee) => ({
-          ...employee,
-          password: encryptJobPayloadSecret(employee.password),
-        })),
+        pending: input.employees,
         syncedCount: 0,
         warningCount: 0,
       },
@@ -164,7 +179,6 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
         email: employee.email,
         firstName: employee.firstName,
         lastName: employee.lastName,
-        password: decryptJobPayloadSecret(employee.password),
         department: employee.department,
         position: employee.position,
       })

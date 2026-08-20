@@ -260,20 +260,18 @@ async function resolveEmployeeIdForLearningSync(input: {
   employeeId?: string | null
   wpUserId?: number | null
 }) {
-  if (input.employeeId) {
-    return input.employeeId
+  if (input.wpUserId) {
+    const employee = await prisma.employee.findUnique({
+      where: { wp_user_id: input.wpUserId },
+      select: { id: true },
+    })
+
+    if (employee) {
+      return employee.id
+    }
   }
 
-  if (!input.wpUserId) {
-    return null
-  }
-
-  const employee = await prisma.employee.findUnique({
-    where: { wp_user_id: input.wpUserId },
-    select: { id: true },
-  })
-
-  return employee?.id ?? null
+  return input.employeeId ?? null
 }
 
 export async function syncEmployeeLearningFromBridgeSnapshot(input: {

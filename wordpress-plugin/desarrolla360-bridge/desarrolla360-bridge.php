@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.2.4
+ * Version: 0.3.0
  * Author: Desarrolla360
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.2.4' );
+define( 'D360_BRIDGE_VERSION', '0.3.0' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
 define( 'D360_BRIDGE_WEBHOOK_CRON_HOOK', 'd360_bridge_learning_webhook_tick' );
 define( 'D360_BRIDGE_WEBHOOK_CURSOR_OPTION', 'd360_bridge_learning_webhook_cursor' );
@@ -654,11 +654,11 @@ function d360_bridge_upsert_employee( WP_REST_Request $request ) {
 	}
 
 	if ( isset( $params['employee_id'] ) ) {
-		update_user_meta( $user->ID, 'd360_employee_id', absint( $params['employee_id'] ) );
+		update_user_meta( $user->ID, 'd360_employee_id', sanitize_text_field( (string) $params['employee_id'] ) );
 	}
 
 	if ( isset( $params['company']['id'] ) ) {
-		update_user_meta( $user->ID, 'd360_company_id', absint( $params['company']['id'] ) );
+		update_user_meta( $user->ID, 'd360_company_id', sanitize_text_field( (string) $params['company']['id'] ) );
 	}
 
 	if ( isset( $params['company']['name'] ) ) {
@@ -754,17 +754,18 @@ function d360_bridge_resolve_employee_user( $params ) {
 		}
 	}
 
-	$employee_id = isset( $params['employee_id'] ) ? absint( $params['employee_id'] ) : 0;
-	if ( ! $employee_id ) {
+	$employee_id = isset( $params['employee_id'] ) ? sanitize_text_field( (string) $params['employee_id'] ) : '';
+	if ( ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $employee_id ) ) {
 		return null;
 	}
 
 	$users = get_users(
 		array(
-			'number'     => 1,
+			'number'      => 1,
 			'count_total' => false,
-			'meta_key'   => 'd360_employee_id',
-			'meta_value' => $employee_id,
+			'orderby'     => 'ID',
+			'meta_key'    => 'd360_employee_id',
+			'meta_value'  => $employee_id,
 		)
 	);
 
@@ -3916,7 +3917,7 @@ function d360_bridge_get_tracked_student_ids( $after_user_id, $limit ) {
 	return array_map( 'absint', is_array( $results ) ? $results : array() );
 }
 
-function d360_bridge_send_learning_webhook( $payload ) {
+function d360_bridge_send_learning_webhook_batch( $events, $event_type, $occurred_at ) {
 	$webhook_url    = d360_bridge_get_portal_webhook_url();
 	$webhook_secret = d360_bridge_get_portal_webhook_secret();
 
@@ -3928,6 +3929,12 @@ function d360_bridge_send_learning_webhook( $payload ) {
 		);
 	}
 
+	$payload = array(
+		'event_type'  => $event_type,
+		'occurred_at' => $occurred_at,
+		'events'      => $events,
+	);
+
 	$timestamp = (string) time();
 	$body      = wp_json_encode( $payload );
 	$signature = hash_hmac( 'sha256', $timestamp . '.' . $body, $webhook_secret );
@@ -3935,13 +3942,13 @@ function d360_bridge_send_learning_webhook( $payload ) {
 	$response = wp_remote_post(
 		$webhook_url,
 		array(
-			'timeout' => 12,
+			'timeout' => 75,
 			'headers' => array(
 				'Content-Type'             => 'application/json',
 				'Accept'                   => 'application/json',
 				'X-D360-Webhook-Timestamp' => $timestamp,
 				'X-D360-Webhook-Signature' => $signature,
-				'X-D360-Webhook-Event'     => 'student_learning_changed',
+				'X-D360-Webhook-Event'     => $event_type,
 			),
 			'body'    => $body,
 		)
@@ -3955,7 +3962,7 @@ function d360_bridge_send_learning_webhook( $payload ) {
 	if ( $status_code < 200 || $status_code >= 300 ) {
 		return new WP_Error(
 			'd360_bridge_webhook_http_error',
-			sprintf( 'El portal respondio con status %d al webhook academico.', (int) $status_code ),
+			sprintf( 'El portal respondio con status %d al webhook academico por lote.', (int) $status_code ),
 			array(
 				'status' => $status_code,
 				'body'   => wp_remote_retrieve_body( $response ),
@@ -3963,7 +3970,16 @@ function d360_bridge_send_learning_webhook( $payload ) {
 		);
 	}
 
-	return true;
+	$decoded = json_decode( wp_remote_retrieve_body( $response ), true );
+	if ( ! is_array( $decoded ) || ! isset( $decoded['results'] ) || ! is_array( $decoded['results'] ) ) {
+		return new WP_Error(
+			'd360_bridge_webhook_bad_response',
+			'El portal respondio sin la lista de resultados esperada para el lote.',
+			array( 'status' => 502 )
+		);
+	}
+
+	return $decoded['results'];
 }
 
 function d360_bridge_process_learning_webhook_tick() {
@@ -3982,13 +3998,17 @@ function d360_bridge_process_learning_webhook_tick() {
 		return;
 	}
 
+	$events        = array();
+	$source_hashes = array();
+
 	foreach ( $user_ids as $user_id ) {
-		$employee_id = absint( get_user_meta( $user_id, 'd360_employee_id', true ) );
-		$company_id  = absint( get_user_meta( $user_id, 'd360_company_id', true ) );
+		$employee_id = (string) get_user_meta( $user_id, 'd360_employee_id', true );
+		$company_id  = (string) get_user_meta( $user_id, 'd360_company_id', true );
 		$snapshot    = d360_bridge_build_student_learning_snapshot( $user_id );
 
+		update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
+
 		if ( empty( $snapshot['courses'] ) && empty( $snapshot['certificates'] ) ) {
-			update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
 			continue;
 		}
 
@@ -4000,13 +4020,10 @@ function d360_bridge_process_learning_webhook_tick() {
 		$last_hash   = (string) get_user_meta( $user_id, 'd360_learning_snapshot_hash', true );
 
 		if ( $source_hash === $last_hash ) {
-			update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
 			continue;
 		}
 
-		$payload = array(
-			'event_type'         => 'student_learning_changed',
-			'occurred_at'        => gmdate( 'c' ),
+		$events[] = array(
 			'student_wp_user_id' => $user_id,
 			'employee_id'        => $employee_id ? $employee_id : null,
 			'company_id'         => $company_id ? $company_id : null,
@@ -4014,22 +4031,48 @@ function d360_bridge_process_learning_webhook_tick() {
 			'courses'            => $snapshot['courses'],
 			'certificates'       => $snapshot['certificates'],
 		);
+		$source_hashes[ $user_id ] = $source_hash;
+	}
 
-		$sent = d360_bridge_send_learning_webhook( $payload );
-		if ( true === $sent ) {
-			update_user_meta( $user_id, 'd360_learning_snapshot_hash', $source_hash );
-			update_user_meta( $user_id, 'd360_learning_snapshot_sent_at', gmdate( 'c' ) );
-		} else {
+	if ( empty( $events ) ) {
+		return;
+	}
+
+	$results = d360_bridge_send_learning_webhook_batch( $events, 'student_learning_changed', gmdate( 'c' ) );
+
+	if ( is_wp_error( $results ) ) {
+		error_log(
+			sprintf(
+				'[Desarrolla360 Bridge] Learning webhook batch failed for %d student(s): %s',
+				count( $events ),
+				$results->get_error_message()
+			)
+		);
+		return;
+	}
+
+	foreach ( $results as $result ) {
+		if ( empty( $result['student_wp_user_id'] ) ) {
+			continue;
+		}
+
+		$user_id = absint( $result['student_wp_user_id'] );
+
+		if ( empty( $result['ok'] ) ) {
 			error_log(
 				sprintf(
 					'[Desarrolla360 Bridge] Learning webhook failed for user %d: %s',
 					$user_id,
-					is_wp_error( $sent ) ? $sent->get_error_message() : 'Unknown webhook error'
+					isset( $result['message'] ) ? $result['message'] : 'Unknown webhook error'
 				)
 			);
+			continue;
 		}
 
-		update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
+		if ( isset( $source_hashes[ $user_id ] ) ) {
+			update_user_meta( $user_id, 'd360_learning_snapshot_hash', $source_hashes[ $user_id ] );
+			update_user_meta( $user_id, 'd360_learning_snapshot_sent_at', gmdate( 'c' ) );
+		}
 	}
 }
 

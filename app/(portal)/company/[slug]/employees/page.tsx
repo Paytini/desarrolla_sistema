@@ -25,6 +25,7 @@ import { Pagination } from "@/components/shared/Pagination";
 import {
   createEmployeeAction,
   deleteEmployeeAction,
+  resendActivationAction,
   toggleEmployeeStatusAction,
   triggerCompanyLearningSyncAction,
 } from "./actions";
@@ -33,9 +34,9 @@ export const maxDuration = 300;
 
 const successMessages: Record<string, string> = {
   empleado_creado:
-    "El empleado se creo correctamente y ya puede entrar al portal con sus credenciales.",
+    "El empleado se creo correctamente. Le enviamos un correo para que active su cuenta.",
   empleado_creado_sync:
-    "El empleado se creo y su acceso ya quedo activo. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
+    "El empleado se creo y su acceso ya quedo activo. Le enviamos un correo para que active su cuenta. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
   empleado_suspendido:
     "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
@@ -45,6 +46,7 @@ const successMessages: Record<string, string> = {
     "Estamos actualizando los cursos, avances y constancias de tu equipo. Puedes seguir usando el portal mientras terminamos.",
   sync_background_already_running:
     "Ya hay una actualización en curso. En unos minutos verás la información más reciente.",
+  activacion_reenviada: "Se reenvió el correo de activación al empleado.",
 };
 
 const errorMessages: Record<string, string> = {
@@ -53,6 +55,8 @@ const errorMessages: Record<string, string> = {
   cupos: "La empresa ya alcanzo el limite de empleados contratados.",
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
+  ya_activado: "Este empleado ya activó su cuenta.",
+  activation_email: "No se pudo reenviar el correo de activación. Intenta de nuevo.",
   bridge_sync:
     "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
   asignacion_manual:
@@ -62,8 +66,6 @@ const errorMessages: Record<string, string> = {
     "El archivo CSV no contiene filas suficientes para importar empleados.",
   csv_limit:
     "El archivo CSV excede el limite permitido de 200 filas por carga.",
-  csv_password_required:
-    "Define una contraseña temporal por defecto o incluye la columna password en el archivo para poder entregar las claves de acceso a tus empleados.",
   bridge_delete:
     "No fue posible eliminar el acceso del empleado a los cursos. El registro del portal se mantuvo intacto para evitar inconsistencias.",
 };
@@ -84,7 +86,7 @@ function getSuccessMessage(
     const syncNote = queued
       ? "El acceso a cursos se esta activando en segundo plano."
       : "";
-    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. ${syncNote}`.trim();
+    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado recibira un correo para activar su cuenta. ${syncNote}`.trim();
   }
   return successMessages[success] ?? success;
 }
@@ -147,33 +149,22 @@ function ManualEmployeeForm() {
         />
       </label>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Correo electrónico
-          </span>
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="off"
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
-          />
-        </label>
-        <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Contraseña
-          </span>
-          <input
-            name="password"
-            type="password"
-            minLength={8}
-            required
-            autoComplete="new-password"
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
-          />
-        </label>
-      </div>
+      <label className="grid gap-1 text-sm">
+        <span className="text-[14px] font-normal text-slate-700">
+          Correo electrónico
+        </span>
+        <input
+          name="email"
+          type="email"
+          required
+          autoComplete="off"
+          className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
+        />
+      </label>
+
+      <p className="text-xs text-slate-500">
+        El empleado recibirá un correo para crear su propia contraseña y activar su cuenta.
+      </p>
 
       <div className="rounded-lg bg-gray-50 p-3">
         <p className="mb-2 text-xs text-slate-500">
@@ -457,6 +448,24 @@ export default async function CompanyEmployeesPage({
                 </div>
 
                 <div className="flex shrink-0 gap-1.5">
+                  <form action={resendActivationAction}>
+                    <input
+                      type="hidden"
+                      name="empleado_id"
+                      value={employee.id}
+                    />
+                    <input
+                      type="hidden"
+                      name="return_to"
+                      value={currentListPath}
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-gray-200"
+                    >
+                      Reenviar activación
+                    </button>
+                  </form>
                   <form action={toggleEmployeeStatusAction}>
                     <input
                       type="hidden"
