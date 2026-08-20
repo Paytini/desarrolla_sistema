@@ -15,7 +15,7 @@ import { companyPath } from "@/lib/company-routes"
 import { notifySuperadmins } from "@/lib/notifications"
 import { enqueueEmailSendJob } from "@/lib/jobs"
 import { prisma } from "@/lib/prisma"
-import { ensureUniqueCompanySlug, slugify } from "@/lib/slug"
+import { ensureUniqueCompanySlug } from "@/lib/slug"
 import { buildCredentialsEmail } from "@/lib/email-templates/credentials"
 import { isUuid } from "@/lib/uuid"
 
@@ -253,28 +253,16 @@ export async function updateCompanyBrandingAction(formData: FormData) {
   const actor = getAuditActorFromSession(session)
 
   const companyId = String(formData.get("empresa_id") ?? "").trim()
-  const slug = slugify(getString(formData, "slug"))
   const logoUrl = getString(formData, "logo_url")
 
   if (!companyId || !isUuid(companyId)) {
     redirect("/superadmin/companies?error=empresa")
   }
-  if (!slug) {
-    redirect(`/superadmin/companies/${companyId}?error=slug`)
-  }
-
-  const slugTaken = await prisma.company.findFirst({
-    where: { slug, id: { not: companyId } },
-    select: { id: true },
-  })
-  if (slugTaken) {
-    redirect(`/superadmin/companies/${companyId}?error=slug_en_uso`)
-  }
 
   const company = await prisma.company.update({
     where: { id: companyId },
-    data: { slug, logo_url: logoUrl || null },
-    select: { name: true },
+    data: { logo_url: logoUrl || null },
+    select: { name: true, slug: true },
   })
 
   await createAuditEvent({
@@ -283,13 +271,13 @@ export async function updateCompanyBrandingAction(formData: FormData) {
     entityType: "EMPRESA",
     entityId: companyId,
     companyId,
-    resumen: `${actor.nombre} actualizo el slug/logo de la empresa ${company.name}.`,
-    metadata: { slug, tiene_logo: Boolean(logoUrl) },
+    resumen: `${actor.nombre} actualizo el logo de la empresa ${company.name}.`,
+    metadata: { tiene_logo: Boolean(logoUrl) },
   })
 
   revalidatePath(`/superadmin/companies/${companyId}`)
   revalidatePath("/superadmin/companies")
-  revalidatePath(companyPath(slug, "/home"))
+  revalidatePath(companyPath(company.slug, "/home"))
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(companyCacheRootTag(companyId), "max")
   redirect(`/superadmin/companies/${companyId}?success=marca_actualizada`)

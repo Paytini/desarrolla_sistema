@@ -103,12 +103,11 @@ export function CompanyBrandingForm({
       </Box>
 
       <TextField
-        name="slug"
         label="Slug de la URL"
-        defaultValue={currentSlug}
+        value={currentSlug}
         size="small"
-        helperText="Se usa en /company/<slug>/... Solo minúsculas, números y guiones."
-        slotProps={{ htmlInput: { pattern: "[a-z0-9-]+" } }}
+        disabled
+        helperText="Se usa en /company/<slug>/... Se asigna al crear la empresa y no se puede cambiar, para que los enlaces ya compartidos nunca dejen de funcionar."
       />
 
       <Button

@@ -25,11 +25,7 @@ import TableRow from "@mui/material/TableRow"
 import Typography from "@mui/material/Typography"
 
 const brandingSuccessMessages: Record<string, string> = {
-  marca_actualizada: "Slug y logo actualizados correctamente.",
-}
-const brandingErrorMessages: Record<string, string> = {
-  slug: "El slug no puede estar vacío.",
-  slug_en_uso: "Ese slug ya lo usa otra empresa.",
+  marca_actualizada: "Logo actualizado correctamente.",
 }
 
 function DonutChart({ pct, size = 160 }: { pct: number; size?: number }) {
@@ -98,7 +94,6 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
 
   const query   = await searchParams
   const success = readSearchParam(query, "success")
-  const error   = readSearchParam(query, "error")
   const q       = readSearchParam(query, "q")?.toLowerCase() ?? ""
   const page    = Math.max(1, Number(readSearchParam(query, "page") ?? "1"))
 
@@ -196,11 +191,6 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
       {success && (
         <DismissibleAlert severity="success">
           {brandingSuccessMessages[success] ?? success}
-        </DismissibleAlert>
-      )}
-      {error && (
-        <DismissibleAlert severity="error">
-          {brandingErrorMessages[error] ?? error}
         </DismissibleAlert>
       )}
 
