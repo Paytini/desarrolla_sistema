@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarClock,
   ClipboardList,
+  Code2,
   FileText,
   LayoutDashboard,
   Package,
@@ -58,6 +59,7 @@ export const navSuperAdminSections: NavSection[] = [
     accent: "var(--sidebar-accent-3)",
     items: [
       { label: "Integración WP", href: "/superadmin/integration", icon: Share2, color: "pink" },
+      { label: "Documentación API", href: "/superadmin/api-docs", icon: Code2, color: "violet" },
     ],
   },
 ]

@@ -1,0 +1,808 @@
+openapi: 3.0.3
+info:
+  title: Desarrolla360 Portal API
+  version: "1.0.0"
+  description: >
+    Internal API surface for the Desarrolla360 B2B training portal. Every route here
+    is consumed either by the portal's own frontend, by Vercel Cron, or by the
+    Tutor LMS / WordPress bridge plugin — none of it is a public product API.
+servers:
+  - url: https://empresas.desarrolla360.com
+    description: Production
+tags:
+  - name: Health
+  - name: Internal Search
+  - name: Notifications
+  - name: Certificates
+  - name: Company
+  - name: Employee
+  - name: Uploads
+  - name: WordPress Bridge
+  - name: Cron
+  - name: Webhooks
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: authjs.session-token
+      description: >
+        NextAuth v5 session cookie, set on login. The endpoint additionally
+        requires the session's role to match what's listed below.
+    cronSecret:
+      type: http
+      scheme: bearer
+      description: >
+        `Authorization: Bearer <CRON_SECRET>`. Accepts `CRON_SECRET`,
+        `BACKGROUND_SYNC_SECRET`, or `SYNC_JOBS_SECRET`. An `x-sync-secret`
+        header with the same value also works.
+    webhookSignature:
+      type: apiKey
+      in: header
+      name: x-d360-webhook-signature
+      description: >
+        HMAC-SHA256 of `{timestamp}.{rawBody}` using `BRIDGE_WEBHOOK_SECRET`,
+        hex-encoded. Sent alongside `x-d360-webhook-timestamp` (Unix seconds,
+        must be within 10 minutes of the server clock).
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
+        type: { type: string }
+        title: { type: string }
+        message: { type: string }
+        read: { type: boolean }
+        entity_type: { type: string, nullable: true }
+        entity_id: { type: string, format: uuid, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    BridgeCourseOption:
+      type: object
+      properties:
+        wp_course_id: { type: integer }
+        title: { type: string }
+        status: { type: string, nullable: true }
+        post_type: { type: string, nullable: true }
+        course_url: { type: string, nullable: true }
+        thumbnail_url: { type: string, nullable: true }
+
+    BridgeCourseDetails:
+      type: object
+      properties:
+        wp_course_id: { type: integer }
+        title: { type: string }
+        status: { type: string, nullable: true }
+        post_type: { type: string, nullable: true }
+        course_url: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        instructor_name: { type: string, nullable: true }
+        instructor_signature_url: { type: string, nullable: true }
+        training_agent_name: { type: string, nullable: true }
+        training_agent_registry: { type: string, nullable: true }
+        duration_hours: { type: number, nullable: true }
+        duration_label: { type: string, nullable: true }
+        thematic_area_name: { type: string, nullable: true }
+        thematic_area_code: { type: string, nullable: true }
+        category_names:
+          type: array
+          items: { type: string }
+        tutor_course_payload:
+          type: object
+          nullable: true
+
+  parameters:
+    q:
+      name: q
+      in: query
+      schema: { type: string }
+      description: Search text. Results are empty for queries shorter than 2 characters.
+
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Deployment health check
+      description: Verifies that required environment variables are present. No auth required.
+      security: []
+      responses:
+        "200":
+          description: All required environment variables are set.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [true] }
+        "503":
+          description: One or more required environment variables are missing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [false] }
+                  missing:
+                    type: array
+                    items: { type: string }
+
+  /api/internal/superadmin-search:
+    get:
+      tags: [Internal Search]
+      summary: Global search (companies, employees, packages)
+      security: [{ sessionCookie: [SUPERADMIN] }]
+      parameters:
+        - $ref: "#/components/parameters/q"
+      responses:
+        "200":
+          description: Matching records, up to 5 companies, 5 employees, 3 packages.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  companies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        name: { type: string }
+                        active: { type: boolean }
+                  employees:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        first_name: { type: string }
+                        last_name: { type: string }
+                        email: { type: string }
+                        company:
+                          type: object
+                          properties:
+                            name: { type: string }
+                  packages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        name: { type: string }
+                        active: { type: boolean }
+        "401":
+          description: Not authenticated, or not a SUPERADMIN.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/internal/hr-search:
+    get:
+      tags: [Internal Search]
+      summary: Search within the caller's company (employees, courses)
+      security: [{ sessionCookie: [HR] }]
+      parameters:
+        - $ref: "#/components/parameters/q"
+      responses:
+        "200":
+          description: Matching employees (up to 5) and package courses (up to 4) for the caller's company.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  employees:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        first_name: { type: string }
+                        last_name: { type: string }
+                        email: { type: string }
+                        department: { type: string, nullable: true }
+                  courses:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        wp_course_id: { type: integer }
+                        course_name: { type: string }
+        "401":
+          description: Not authenticated, not HR, or no company on the session.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/internal/employee-search:
+    get:
+      tags: [Internal Search]
+      summary: Search the caller's own courses and certificates
+      security: [{ sessionCookie: [EMPLOYEE] }]
+      parameters:
+        - $ref: "#/components/parameters/q"
+      responses:
+        "200":
+          description: Matching courses (up to 5) and certificates (up to 3) belonging to the caller.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        course_name: { type: string }
+                        progress_pct: { type: number }
+                        completed: { type: boolean }
+                  certificates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        course_name: { type: string }
+                        reference_number: { type: string }
+        "401":
+          description: Not authenticated or not an EMPLOYEE.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/internal/notifications:
+    get:
+      tags: [Notifications]
+      summary: Recent notifications for the caller
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: Up to 20 most recent notifications, plus the unread count.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Notification" }
+                  unreadCount: { type: integer }
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    patch:
+      tags: [Notifications]
+      summary: Mark all of the caller's notifications as read
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: All unread notifications for the caller were marked read.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [true] }
+        "401":
+          description: Not authenticated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/certificates/{id}/dc3:
+    get:
+      tags: [Certificates]
+      summary: Download a certificate's official DC-3 PDF
+      description: >
+        Generates (or reuses a cached) DC-3 PDF for one certificate. Accessible to the
+        certificate's own employee, the HR of the owning company, or a SUPERADMIN.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: download
+          in: query
+          schema: { type: string, enum: ["1"] }
+          description: "Set to `1` to force `Content-Disposition: attachment` instead of `inline`."
+      responses:
+        "200":
+          description: The DC-3 PDF.
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        "400":
+          description: Invalid certificate id.
+        "401":
+          description: Not authenticated.
+        "403":
+          description: Authenticated, but not the certificate owner, their HR, or a SUPERADMIN.
+        "404":
+          description: Certificate not found.
+        "422":
+          description: The course is missing DC-3 metadata (duration, thematic area, instructor, etc).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  missing:
+                    type: array
+                    items: { type: string }
+
+  /api/certificates/zip:
+    get:
+      tags: [Certificates]
+      summary: Download certificates as a ZIP
+      description: >
+        For an EMPLOYEE, zips all of their own certificates. For HR, zips the
+        company's issued certificates, optionally filtered by `q`, `dept`, `course`.
+        Not available to SUPERADMIN. Capped at 100 certificates per request.
+      security: [{ sessionCookie: [HR, EMPLOYEE] }]
+      parameters:
+        - $ref: "#/components/parameters/q"
+        - name: dept
+          in: query
+          schema: { type: string }
+          description: HR only — filter by department.
+        - name: course
+          in: query
+          schema: { type: string }
+          description: HR only — filter by course name.
+      responses:
+        "200":
+          description: A ZIP of DC-3 PDFs, named `<folio>.pdf` each.
+          content:
+            application/zip:
+              schema: { type: string, format: binary }
+        "401":
+          description: Not authenticated.
+        "403":
+          description: Caller is a SUPERADMIN, which has no certificates of its own.
+        "404":
+          description: No certificates matched.
+        "500":
+          description: No PDF could be generated for any matched certificate.
+
+  /api/company/empleados/export:
+    get:
+      tags: [Company]
+      summary: Export the company's employees as CSV
+      security: [{ sessionCookie: [HR] }]
+      parameters:
+        - $ref: "#/components/parameters/q"
+        - name: status
+          in: query
+          schema: { type: string }
+          description: Employee status filter (active/suspended).
+      responses:
+        "200":
+          description: UTF-8 CSV with a BOM, one row per matching employee.
+          content:
+            text/csv:
+              schema: { type: string }
+        "401":
+          description: Not authenticated, not HR, or no company on the session.
+        "404":
+          description: Company not found.
+
+  /api/employee/learning/refresh:
+    post:
+      tags: [Employee]
+      summary: Force-refresh the caller's course progress from Tutor LMS
+      security: [{ sessionCookie: [EMPLOYEE] }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force:
+                  type: boolean
+                  description: Bypasses the normal staleness check. Still cooled down to one force-sync per 30s.
+      responses:
+        "200":
+          description: Sync outcome.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  synced: { type: boolean }
+                  skipped: { type: boolean }
+                  employeeId: { type: string, format: uuid, nullable: true }
+                  companyId: { type: string, format: uuid, nullable: true }
+                  coursesUpdated: { type: integer }
+                  certificatesUpdated: { type: integer }
+                  latestSyncAt: { type: string, format: date-time, nullable: true }
+                  message: { type: string }
+        "401":
+          description: Not authenticated or not an EMPLOYEE.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/templates/employees-csv:
+    get:
+      tags: [Company]
+      summary: Download the CSV template for bulk employee upload
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: A sample CSV with the expected columns and two example rows.
+          content:
+            text/csv:
+              schema: { type: string }
+        "401":
+          description: Not authenticated.
+
+  /api/upload/company-logo:
+    post:
+      tags: [Uploads]
+      summary: Upload a company's logo
+      description: Resizes to 256x256 PNG and stores it in Vercel Blob.
+      security: [{ sessionCookie: [SUPERADMIN] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, companyId]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PNG, JPEG, or WebP, up to 2 MB.
+                companyId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Logo stored.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+        "400":
+          description: Missing/invalid file, invalid companyId, wrong format, or file too large.
+        "401":
+          description: Not authenticated or not a SUPERADMIN.
+
+  /api/upload/instructor-signature:
+    post:
+      tags: [Uploads]
+      summary: Upload an instructor's signature image
+      description: Flattens to a white background PNG and stores it in Vercel Blob.
+      security: [{ sessionCookie: [SUPERADMIN] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, wpCourseId]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PNG, JPEG, or WebP, up to 2 MB.
+                wpCourseId:
+                  type: integer
+                nombre:
+                  type: string
+                  description: Optional display name used to derive the stored filename.
+      responses:
+        "200":
+          description: Signature stored.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string }
+        "400":
+          description: Missing/invalid file, invalid wpCourseId, wrong format, or file too large.
+        "401":
+          description: Not authenticated or not a SUPERADMIN.
+
+  /api/upload/signature-proxy:
+    get:
+      tags: [Uploads]
+      summary: Proxy a private Vercel Blob image through an authenticated request
+      description: Only accepts URLs on the `vercel-storage.com` domain.
+      security: [{ sessionCookie: [] }]
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The proxied image bytes.
+          content:
+            image/*:
+              schema: { type: string, format: binary }
+        "400":
+          description: Missing or invalid (non-Vercel-Blob) URL.
+        "401":
+          description: Not authenticated.
+        "500":
+          description: Blob token not configured, or upstream fetch failed.
+
+  /api/wordpress/courses:
+    get:
+      tags: [WordPress Bridge]
+      summary: List the Tutor LMS course catalog
+      description: Proxies the WordPress bridge plugin's course list, cached 10 minutes.
+      security: [{ sessionCookie: [SUPERADMIN] }]
+      responses:
+        "200":
+          description: Course catalog.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  courses:
+                    type: array
+                    items: { $ref: "#/components/schemas/BridgeCourseOption" }
+                  total: { type: integer }
+        "400":
+          description: WordPress bridge not configured.
+        "401":
+          description: Not authenticated or not a SUPERADMIN.
+        "500":
+          description: The bridge request failed.
+
+  /api/wordpress/courses/{courseId}:
+    get:
+      tags: [WordPress Bridge]
+      summary: Get one Tutor LMS course's details
+      security: [{ sessionCookie: [SUPERADMIN, HR] }]
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Course detail.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BridgeCourseDetails" }
+        "400":
+          description: Invalid courseId, or WordPress bridge not configured.
+        "401":
+          description: Not authenticated, or not SUPERADMIN/HR.
+        "500":
+          description: The bridge request failed.
+
+  /api/wordpress/diagnostics:
+    get:
+      tags: [WordPress Bridge]
+      summary: Get a student's Tutor LMS enrollment/progress diagnostics
+      description: >
+        HR callers may only query students (`wp_user_id`) that belong to their own
+        company; the endpoint checks that server-side.
+      security: [{ sessionCookie: [SUPERADMIN, HR] }]
+      parameters:
+        - name: studentId
+          in: query
+          required: true
+          schema: { type: integer }
+        - name: courseId
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Diagnostics payload as returned by the bridge plugin.
+          content:
+            application/json:
+              schema: { type: object }
+        "400":
+          description: Missing studentId, or WordPress bridge not configured.
+        "401":
+          description: Not authenticated, or not SUPERADMIN/HR.
+        "403":
+          description: HR caller querying a student outside their company.
+        "500":
+          description: The bridge request failed.
+
+  /api/cron/process-jobs:
+    get:
+      tags: [Cron]
+      summary: Process a batch of pending background jobs
+      description: Vercel Cron calls this via GET every minute; POST is kept for manual/external schedulers.
+      security: [{ cronSecret: [] }]
+      responses:
+        "200":
+          description: Batch result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [true] }
+                  processed: { type: integer }
+                  errored: { type: integer }
+                  skipped: { type: integer }
+                  total: { type: integer }
+        "401":
+          description: Missing or invalid cron secret.
+    post:
+      tags: [Cron]
+      summary: Process a batch of pending background jobs (manual trigger)
+      security: [{ cronSecret: [] }]
+      responses:
+        "200":
+          description: Same shape as GET.
+        "401":
+          description: Missing or invalid cron secret.
+
+  /api/cron/check-expiring-packages:
+    get:
+      tags: [Cron]
+      summary: Notify companies whose package is about to expire
+      security: [{ cronSecret: [] }]
+      responses:
+        "200":
+          description: Notifications sent (if any were due).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [true] }
+        "401":
+          description: Missing or invalid cron secret.
+
+  /api/cron/bridge-health:
+    get:
+      tags: [Cron]
+      summary: Check WordPress bridge health and alert superadmins if degraded
+      description: Alerts are cooled down to once every 6 hours per issue.
+      security: [{ cronSecret: [] }]
+      responses:
+        "200":
+          description: Health check result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  healthy: { type: boolean }
+                  skipped: { type: string }
+                  alert_skipped: { type: string }
+                  problems:
+                    type: array
+                    items: { type: string }
+        "401":
+          description: Missing or invalid cron secret.
+
+  /api/internal/sync/employee-learning:
+    get:
+      tags: [Cron]
+      summary: Sync a batch of stale employees' learning data from Tutor LMS
+      description: >
+        Accepts either a cron secret or a SUPERADMIN session. Vercel Cron calls this
+        via GET every 15 minutes; POST is kept for manual/external schedulers.
+      security:
+        - cronSecret: []
+        - sessionCookie: [SUPERADMIN]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 25 }
+      responses:
+        "200":
+          description: Batch sync result.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [true] }
+                  sync_interval_ms: { type: integer }
+                  scanned: { type: integer }
+                  queued: { type: integer }
+                  results:
+                    type: array
+                    items: { type: object }
+        "401":
+          description: Missing/invalid cron secret and not a SUPERADMIN session.
+    post:
+      tags: [Cron]
+      summary: Sync a batch of stale employees' learning data (manual trigger)
+      security:
+        - cronSecret: []
+        - sessionCookie: [SUPERADMIN]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 25 }
+      responses:
+        "200":
+          description: Same shape as GET.
+        "401":
+          description: Missing/invalid cron secret and not a SUPERADMIN session.
+
+  /api/internal/webhooks/tutor-learning:
+    post:
+      tags: [Webhooks]
+      summary: Receive a learning-progress snapshot pushed by the WordPress bridge plugin
+      description: >
+        Accepts either a single event or a batch (`events: [...]`). Deduplicates by
+        `(student_wp_user_id, source_hash)`. Revalidates the affected employee and
+        company pages on success.
+      security: [{ webhookSignature: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_type: { type: string, default: student_learning_changed }
+                occurred_at: { type: string, format: date-time, nullable: true }
+                student_wp_user_id: { type: integer }
+                employee_id: { type: string, format: uuid, nullable: true }
+                company_id: { type: string, format: uuid, nullable: true }
+                source_hash: { type: string, nullable: true }
+                courses:
+                  type: array
+                  items: { type: object }
+                certificates:
+                  type: array
+                  items: { type: object }
+                events:
+                  type: array
+                  description: Present for batch delivery — each item shaped like the single-event fields above.
+                  items: { type: object }
+      responses:
+        "200":
+          description: Processed (single event, or a batch with per-event results).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean, enum: [true] }
+                  event_type: { type: string }
+                  occurred_at: { type: string, nullable: true }
+                  student_wp_user_id: { type: integer }
+                  duplicate: { type: boolean }
+                  coursesUpdated: { type: integer }
+                  certificatesUpdated: { type: integer }
+                  results:
+                    type: array
+                    description: Present for batch delivery.
+                    items: { type: object }
+        "400":
+          description: Malformed JSON, or an empty `events` batch.
+        "401":
+          description: Missing/expired timestamp or invalid HMAC signature.
+        "503":
+          description: Webhook secret not configured on the portal.
