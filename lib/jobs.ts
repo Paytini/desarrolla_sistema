@@ -8,7 +8,7 @@ import { sendEmail } from "@/lib/ses"
 
 const JOB_CHUNK_SIZE = 20
 const JOB_CONCURRENCY = 5
-const JOBS_PER_CRON_TICK = 5
+const JOBS_PER_CRON_TICK = 25
 
 function getJobPayloadCipherKey() {
   const secret = process.env.NEXTAUTH_SECRET
@@ -82,6 +82,9 @@ export async function enqueueEmailSendJob(input: { to: string; subject: string; 
   return job.id
 }
 
+const EMAIL_SEND_BACKOFF_BASE_MS = 60_000
+const EMAIL_SEND_BACKOFF_MAX_MS = 30 * 60_000
+
 async function processEmailSendJob(jobId: string, payload: EmailSendPayload) {
   try {
     await sendEmail({
@@ -92,12 +95,18 @@ async function processEmailSendJob(jobId: string, payload: EmailSendPayload) {
     })
     await prisma.job.update({
       where: { id: jobId },
-      data: { status: "DONE", completed_at: new Date(), result: { to: payload.to } },
+      data: {
+        payload: { to: payload.to, subject: payload.subject, html: "", text: "", attempts: payload.attempts },
+        status: "DONE",
+        completed_at: new Date(),
+        result: { to: payload.to },
+      },
     })
   } catch (error) {
     const attempts = payload.attempts + 1
     const message = error instanceof Error ? error.message.slice(0, 500) : "Error desconocido enviando el correo."
     const exhausted = attempts >= EMAIL_SEND_MAX_ATTEMPTS
+    const backoffMs = Math.min(EMAIL_SEND_BACKOFF_BASE_MS * 2 ** (attempts - 1), EMAIL_SEND_BACKOFF_MAX_MS)
 
     if (exhausted) {
       console.error("EMAIL_SEND: agotados los reintentos, correo no enviado", { to: payload.to, attempts, message })
@@ -108,8 +117,9 @@ async function processEmailSendJob(jobId: string, payload: EmailSendPayload) {
       data: {
         payload: { ...payload, attempts },
         status: exhausted ? "ERROR" : "PENDING",
-        error: exhausted ? message : null,
+        error: message,
         completed_at: exhausted ? new Date() : null,
+        next_attempt_at: exhausted ? null : new Date(Date.now() + backoffMs),
       },
     })
   }
@@ -331,7 +341,10 @@ export async function processPendingJobs(limit: number = JOBS_PER_CRON_TICK) {
   })
 
   const candidates = await prisma.job.findMany({
-    where: { status: "PENDING" },
+    where: {
+      status: "PENDING",
+      OR: [{ next_attempt_at: null }, { next_attempt_at: { lte: new Date() } }],
+    },
     orderBy: { created_at: "asc" },
     take: limit,
     select: { id: true },

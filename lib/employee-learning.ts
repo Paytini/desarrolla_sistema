@@ -20,25 +20,27 @@ function getEmployeeSyncIntervalMs() {
 }
 
 const EMPLOYEE_SYNC_INTERVAL_MS = getEmployeeSyncIntervalMs()
-const SYNC_LOCK_DURATION_MS = 60_000
+const SYNC_LOCK_DURATION_MS = 120_000
 const backgroundBatchSyncsInFlight = new Set<string>()
 
 async function claimEmployeeSyncLock(employeeId: string) {
   const now = new Date()
+  const lockUntil = new Date(now.getTime() + SYNC_LOCK_DURATION_MS)
+
   const claim = await prisma.employee.updateMany({
     where: {
       id: employeeId,
       OR: [{ sync_lock_until: null }, { sync_lock_until: { lt: now } }],
     },
-    data: { sync_lock_until: new Date(now.getTime() + SYNC_LOCK_DURATION_MS) },
+    data: { sync_lock_until: lockUntil },
   })
 
-  return claim.count > 0
+  return claim.count > 0 ? lockUntil : null
 }
 
-async function releaseEmployeeSyncLock(employeeId: string) {
+async function releaseEmployeeSyncLock(employeeId: string, lockUntil: Date) {
   await prisma.employee.updateMany({
-    where: { id: employeeId },
+    where: { id: employeeId, sync_lock_until: lockUntil },
     data: { sync_lock_until: null },
   })
 }
@@ -482,8 +484,8 @@ async function scheduleEmployeeLearningSync(employeeId: string) {
     return false
   }
 
-  const claimed = await claimEmployeeSyncLock(employeeId)
-  if (!claimed) {
+  const lockUntil = await claimEmployeeSyncLock(employeeId)
+  if (!lockUntil) {
     return false
   }
 
@@ -496,7 +498,7 @@ async function scheduleEmployeeLearningSync(employeeId: string) {
         error: error instanceof Error ? error.message : String(error),
       })
     } finally {
-      await releaseEmployeeSyncLock(employeeId)
+      await releaseEmployeeSyncLock(employeeId, lockUntil)
     }
   })
 
@@ -571,11 +573,17 @@ async function syncEmployeeLearningBatchInternal(options?: {
 
   const results: Array<{
     employeeId: string
-    status: "synced" | "failed"
+    status: "synced" | "failed" | "skipped"
     message?: string
   }> = []
 
   for (const employee of selectedEmployees) {
+    const lockUntil = await claimEmployeeSyncLock(employee.id)
+    if (!lockUntil) {
+      results.push({ employeeId: employee.id, status: "skipped", message: "Sincronización en curso" })
+      continue
+    }
+
     try {
       await syncEmployeeLearningRecord(employee.id)
       results.push({
@@ -588,6 +596,8 @@ async function syncEmployeeLearningBatchInternal(options?: {
         status: "failed",
         message: error instanceof Error ? error.message.slice(0, 240) : "Unknown sync error",
       })
+    } finally {
+      await releaseEmployeeSyncLock(employee.id, lockUntil)
     }
   }
 
