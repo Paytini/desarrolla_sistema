@@ -755,16 +755,17 @@ function d360_bridge_resolve_employee_user( $params ) {
 	}
 
 	$employee_id = isset( $params['employee_id'] ) ? sanitize_text_field( (string) $params['employee_id'] ) : '';
-	if ( '' === $employee_id ) {
+	if ( ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $employee_id ) ) {
 		return null;
 	}
 
 	$users = get_users(
 		array(
-			'number'     => 1,
+			'number'      => 1,
 			'count_total' => false,
-			'meta_key'   => 'd360_employee_id',
-			'meta_value' => $employee_id,
+			'orderby'     => 'ID',
+			'meta_key'    => 'd360_employee_id',
+			'meta_value'  => $employee_id,
 		)
 	);
 
