@@ -25,6 +25,7 @@ import { Pagination } from "@/components/shared/Pagination";
 import {
   createEmployeeAction,
   deleteEmployeeAction,
+  resendActivationAction,
   toggleEmployeeStatusAction,
   triggerCompanyLearningSyncAction,
 } from "./actions";
@@ -45,6 +46,7 @@ const successMessages: Record<string, string> = {
     "Estamos actualizando los cursos, avances y constancias de tu equipo. Puedes seguir usando el portal mientras terminamos.",
   sync_background_already_running:
     "Ya hay una actualización en curso. En unos minutos verás la información más reciente.",
+  activacion_reenviada: "Se reenvió el correo de activación al empleado.",
 };
 
 const errorMessages: Record<string, string> = {
@@ -53,6 +55,8 @@ const errorMessages: Record<string, string> = {
   cupos: "La empresa ya alcanzo el limite de empleados contratados.",
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
+  ya_activado: "Este empleado ya activó su cuenta.",
+  activation_email: "No se pudo reenviar el correo de activación. Intenta de nuevo.",
   bridge_sync:
     "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
   asignacion_manual:
@@ -145,20 +149,18 @@ function ManualEmployeeForm() {
         />
       </label>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Correo electrónico
-          </span>
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="off"
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
-          />
-        </label>
-      </div>
+      <label className="grid gap-1 text-sm">
+        <span className="text-[14px] font-normal text-slate-700">
+          Correo electrónico
+        </span>
+        <input
+          name="email"
+          type="email"
+          required
+          autoComplete="off"
+          className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
+        />
+      </label>
 
       <p className="text-xs text-slate-500">
         El empleado recibirá un correo para crear su propia contraseña y activar su cuenta.
@@ -446,6 +448,24 @@ export default async function CompanyEmployeesPage({
                 </div>
 
                 <div className="flex shrink-0 gap-1.5">
+                  <form action={resendActivationAction}>
+                    <input
+                      type="hidden"
+                      name="empleado_id"
+                      value={employee.id}
+                    />
+                    <input
+                      type="hidden"
+                      name="return_to"
+                      value={currentListPath}
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-gray-200"
+                    >
+                      Reenviar activación
+                    </button>
+                  </form>
                   <form action={toggleEmployeeStatusAction}>
                     <input
                       type="hidden"

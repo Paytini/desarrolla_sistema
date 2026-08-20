@@ -18,7 +18,7 @@ import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
 import { buildActivationEmail } from "@/lib/email-templates/activation"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
-import { enqueueCsvEmployeeBridgeSyncJob, enqueueEmailSendJob } from "@/lib/jobs"
+import { enqueueCsvEmployeeBridgeSyncJob, enqueueEmailSendJob, enqueueEmailSendJobs } from "@/lib/jobs"
 import { buildActivationUrl, buildPendingActivationFields } from "@/lib/onboarding"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
@@ -158,7 +158,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
     }
   }
 
-  const pendingActivation = await buildPendingActivationFields()
+  const pendingActivation = buildPendingActivationFields()
   const activePackage = companyContext.packages[0]
   const hasActivePackage = Boolean(activePackage)
 
@@ -658,23 +658,27 @@ export async function importEmployeesCsvAction(formData: FormData) {
     }
   }
 
-  for (const employee of createdEmployees) {
-    const activation = activationByEmail.get(employee.email)
-    if (!activation) continue
+  let activationEmailsQueued = false
+  try {
+    const activationEmails = createdEmployees.flatMap((employee) => {
+      const activation = activationByEmail.get(employee.email)
+      if (!activation) return []
 
-    try {
       const { subject, html, text } = buildActivationEmail({
         nombreEmpleado: employee.nombre,
         nombreEmpresa: companyContext.name,
         activationUrl: buildActivationUrl(activation.activationToken),
       })
-      await enqueueEmailSendJob({ to: employee.email, subject, html, text })
-    } catch (error) {
-      console.error("No se pudo encolar el correo de activación", {
-        employeeId: employee.id,
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
+      return [{ to: employee.email, subject, html, text }]
+    })
+
+    await enqueueEmailSendJobs(activationEmails)
+    activationEmailsQueued = activationEmails.length > 0
+  } catch (error) {
+    console.error("No se pudo encolar los correos de activación del import CSV", {
+      companyId,
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(companyId)
@@ -699,6 +703,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
     metadata: {
       creados: created,
       sincronizacion_wp_encolada: queuedSync,
+      correos_activacion_encolados: activationEmailsQueued,
       omitidos: skipped,
     },
   })
@@ -714,6 +719,67 @@ export async function importEmployeesCsvAction(formData: FormData) {
   redirect(
     employeesPath(slug, `?success=csv_imported&created=${created}&queued=${queuedSync ? 1 : 0}&skipped=${skipped}`)
   )
+}
+
+export async function resendActivationAction(formData: FormData) {
+  const session = await requireRhSession()
+  const companyId = session.user.empresa_id as string
+  const slug = await requireCompanySlug(companyId)
+  const employeeId = getString(formData, "empleado_id")
+  const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
+
+  if (!employeeId || !isUuid(employeeId)) {
+    redirect(withStatus(returnTo, "error", "empleado"))
+  }
+
+  const employee = await prisma.employee.findFirst({
+    where: { id: employeeId, company_id: companyId },
+    select: { id: true, email: true, first_name: true },
+  })
+
+  if (!employee) {
+    redirect(withStatus(returnTo, "error", "empleado"))
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: employee.email },
+    select: { id: true, activation_token: true },
+  })
+
+  if (!user || !user.activation_token) {
+    redirect(withStatus(returnTo, "error", "ya_activado"))
+  }
+
+  const companyContext = await loadCompanyProvisioningContext(companyId)
+  if (!companyContext) {
+    redirect(withStatus(returnTo, "error", "empresa"))
+  }
+
+  const pendingActivation = buildPendingActivationFields()
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      activation_token: pendingActivation.activationToken,
+      activation_token_expires_at: pendingActivation.activationTokenExpiresAt,
+    },
+  })
+
+  try {
+    const { subject, html, text } = buildActivationEmail({
+      nombreEmpleado: employee.first_name,
+      nombreEmpresa: companyContext.name,
+      activationUrl: buildActivationUrl(pendingActivation.activationToken),
+    })
+    await enqueueEmailSendJob({ to: employee.email, subject, html, text })
+  } catch (error) {
+    console.error("No se pudo reenviar el correo de activación", {
+      employeeId: employee.id,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    redirect(withStatus(returnTo, "error", "activation_email"))
+  }
+
+  redirect(withStatus(returnTo, "success", "activacion_reenviada"))
 }
 export async function toggleEmployeeStatusAction(formData: FormData) {
   const session = await requireRhSession()

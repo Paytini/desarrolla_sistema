@@ -24,7 +24,10 @@ export async function activateAccountAction(token: string, formData: FormData) {
     redirect(activationPath(token, "?error=no_coincide"))
   }
 
-  await completeActivation(user.id, password)
+  const activated = await completeActivation(user.id, token, password)
+  if (!activated) {
+    redirect("/login?error=activation_invalid")
+  }
 
   redirect("/login?success=activated")
 }
