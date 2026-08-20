@@ -139,10 +139,15 @@ https://tu-dominio.com/api/internal/webhooks/tutor-learning
 El bridge revisa alumnos vinculados por lotes pequenos cada minuto y solo envia al portal
 los snapshots que realmente cambiaron, para no degradar WordPress ni saturar el portal.
 
-4. Ejecuta Prisma:
+`npm install` genera el cliente de Prisma automaticamente (hook `postinstall`). Si mas
+adelante cambias `prisma/schema.prisma`, vuelve a generarlo con `npm run prisma:generate`.
+
+4. (Opcional) Carga datos de prueba — crea un SuperAdmin, una empresa demo con su
+   usuario HR y un empleado demo, todos con contrasena conocida (ver
+   `prisma/seed.ts` para los detalles):
 
 ```bash
-npm run prisma:generate
+npm run prisma:seed
 ```
 
 5. Corre el portal:
@@ -150,6 +155,21 @@ npm run prisma:generate
 ```bash
 npm run dev
 ```
+
+## Scripts disponibles
+
+| Script                  | Que hace                                              |
+| ------------------------ | ------------------------------------------------------ |
+| `npm run dev`            | Levanta el servidor de desarrollo.                     |
+| `npm run build`          | Genera el cliente de Prisma y compila para produccion. |
+| `npm run start`          | Sirve el build de produccion.                          |
+| `npm run lint`           | Corre ESLint.                                          |
+| `npm run format`         | Formatea el codigo con Prettier.                       |
+| `npm run format:check`   | Verifica el formato sin modificar archivos.            |
+| `npx tsc --noEmit`       | Typecheck.                                             |
+| `npm run prisma:generate`| Regenera el cliente de Prisma.                         |
+| `npm run prisma:migrate` | Crea y aplica una migracion en desarrollo.             |
+| `npm run prisma:seed`    | Carga los datos de prueba de `prisma/seed.ts`.         |
 
 ## Notas importantes
 
