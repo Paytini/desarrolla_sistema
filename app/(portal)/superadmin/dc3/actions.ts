@@ -29,7 +29,7 @@ export async function saveDc3MetadataAction(
   formData: FormData
 ): Promise<{ ok: boolean; error?: string }> {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") {
+  if (!session || session.user.role !== "SUPERADMIN") {
     return { ok: false, error: "No autorizado" }
   }
 
@@ -96,7 +96,7 @@ export async function syncDc3MetadataAction(
   formData: FormData
 ): Promise<{ ok: boolean; error?: string }> {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") {
+  if (!session || session.user.role !== "SUPERADMIN") {
     return { ok: false, error: "No autorizado" }
   }
 

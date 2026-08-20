@@ -29,7 +29,7 @@ function getInitials(name: string) {
 
 export default async function CompanyAssignmentsPage() {
   const session = await auth()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
   const company = await getHrAssignmentsSnapshot(session.user.empresa_id)
   if (!company) redirect("/login")

@@ -6,7 +6,7 @@ import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { getConsultingArea } from "@/lib/consulting-areas"
 import { formatConsultingDateTime, isBusinessDayString, isTimeSlotValid } from "@/lib/consulting-schedule"
-import { notifyCompanyRH } from "@/lib/notifications"
+import { notifyCompanyHr } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
 
@@ -56,7 +56,7 @@ export async function confirmConsultingRequestAction(formData: FormData) {
       : `${actor.nombre} confirmó la consultoría de ${areaLabel}.`,
   })
 
-  await notifyCompanyRH(request.company_id, {
+  await notifyCompanyHr(request.company_id, {
     tipo: "CONSULTORIA_CONFIRMADA",
     titulo: wasRescheduled ? "Tu consultoría fue reagendada y confirmada" : "Tu consultoría fue confirmada",
     mensaje: wasRescheduled
@@ -98,7 +98,7 @@ export async function cancelConsultingRequestAction(formData: FormData) {
     resumen: `${actor.nombre} canceló la consultoría de ${areaLabel}.`,
   })
 
-  await notifyCompanyRH(request.company_id, {
+  await notifyCompanyHr(request.company_id, {
     tipo: "CONSULTORIA_CANCELADA",
     titulo: "Tu consultoría fue cancelada",
     mensaje: `Tu sesión de ${areaLabel} fue cancelada por nuestro equipo.`,

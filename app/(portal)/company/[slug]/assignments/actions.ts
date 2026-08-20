@@ -1,12 +1,12 @@
 "use server"
 
 import { revalidatePath, revalidateTag } from "next/cache"
-import { requireRhSession } from "@/lib/auth-guards"
+import { requireHrSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { requireCompanySlug } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { setCourseAssignment } from "@/lib/course-sync"
-import { notifyCompanyRH, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
+import { notifyCompanyHr, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
 
@@ -23,7 +23,7 @@ export async function setCourseAssignmentsAction(
   courseId: number,
   employeeIds: string[]
 ): Promise<CourseAssignmentResult> {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
   const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
   const assignmentsPath = companyPath(slug, "/assignments")
@@ -85,7 +85,7 @@ export async function setCourseAssignmentsAction(
       .map((item) => `Empleado ${item.employeeId}: ${item.message}`)
       .join(" | ")
 
-    await notifyCompanyRH(companyId, {
+    await notifyCompanyHr(companyId, {
       tipo: "SYNC_FALLIDO",
       titulo: "Sincronización fallida",
       mensaje: `Falló la actualización de acceso de ${bridgeErrors.length} colaborador(es) al curso "${course.course_name}".`,

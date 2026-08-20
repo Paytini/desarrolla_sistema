@@ -6,19 +6,19 @@ const { auth } = NextAuth(authConfig)
 
 export default auth((req) => {
   const { pathname } = req.nextUrl
-  const rol = req.auth?.user?.rol
+  const role = req.auth?.user?.role
 
   if (!req.auth && pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
-  if (pathname.startsWith("/superadmin") && rol !== "SUPERADMIN") {
+  if (pathname.startsWith("/superadmin") && role !== "SUPERADMIN") {
     return NextResponse.redirect(new URL("/login", req.url))
   }
-  if (pathname.startsWith("/company") && rol !== "RH") {
+  if (pathname.startsWith("/company") && role !== "HR") {
     return NextResponse.redirect(new URL("/login", req.url))
   }
-  if (pathname.startsWith("/employee") && rol !== "EMPLEADO") {
+  if (pathname.startsWith("/employee") && role !== "EMPLOYEE") {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 

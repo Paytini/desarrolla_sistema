@@ -19,14 +19,14 @@ import Typography from "@mui/material/Typography"
 import { SearchInput } from "@/components/shared/SearchInput"
 
 const successMessages: Record<string, string> = {
-  empresa_creada:     "Empresa creada correctamente con su usuario RH inicial.",
+  empresa_creada:     "Empresa creada correctamente con su usuario HR inicial.",
   empresa_suspendida: "Empresa suspendida.",
   empresa_activada:   "Empresa reactivada correctamente.",
 }
 const errorMessages: Record<string, string> = {
   datos:      "Faltan datos obligatorios.",
-  email_rh:   "Ese correo RH ya está ligado a una empresa.",
-  usuario_rh: "Ese correo ya existe como usuario del portal.",
+  email_hr:   "Ese correo HR ya está ligado a una empresa.",
+  usuario_hr: "Ese correo ya existe como usuario del portal.",
   empresa:    "No se encontró la empresa.",
 }
 

@@ -9,7 +9,7 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.rol = (user as { rol?: string }).rol
+        token.role = (user as { role?: string }).role
         token.empresa_id = (user as { empresa_id?: string | null }).empresa_id
         token.nombre = (user as { nombre?: string }).nombre
         token.empresa = (user as { empresa?: string | null }).empresa
@@ -19,7 +19,7 @@ export const authConfig: NextAuthConfig = {
     },
     async session({ session, token }) {
       session.user.id = token.id as string
-      session.user.rol = token.rol as string
+      session.user.role = token.role as string
       session.user.empresa_id = token.empresa_id as string | null
       session.user.nombre = token.nombre as string
       session.user.empresa = token.empresa as string | undefined

@@ -66,7 +66,7 @@ export function SuspendCompanyButton({ companyId, active, name }: SuspendCompany
         <DialogContent>
           <DialogContentText>
             {active
-              ? `Esto suspenderá "${name}". Todos sus empleados y el usuario RH perderán acceso al portal de inmediato.`
+              ? `Esto suspenderá "${name}". Todos sus empleados y el usuario HR perderán acceso al portal de inmediato.`
               : `Esto reactivará "${name}". Sus empleados recuperarán acceso al portal.`}
           </DialogContentText>
         </DialogContent>

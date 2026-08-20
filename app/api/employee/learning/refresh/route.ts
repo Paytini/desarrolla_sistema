@@ -12,7 +12,7 @@ const FORCE_SYNC_COOLDOWN_MS = 30_000
 
 export async function POST(request: Request) {
   const session = await auth()
-  if (!session || session.user.rol !== "EMPLEADO" || !session.user.email) {
+  if (!session || session.user.role !== "EMPLOYEE" || !session.user.email) {
     return NextResponse.json(
       {
         ok: false,

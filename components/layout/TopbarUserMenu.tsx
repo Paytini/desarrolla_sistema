@@ -11,14 +11,14 @@ import Paper from "@mui/material/Paper"
 import Popper from "@mui/material/Popper"
 import Typography from "@mui/material/Typography"
 
-import { avatarColor, getInitials, roleLabel, type Rol } from "@/components/layout/nav-config"
+import { avatarColor, getInitials, roleLabel, type Role } from "@/components/layout/nav-config"
 
 interface TopbarUserMenuProps {
   name: string
-  rol: Rol
+  role: Role
 }
 
-export function TopbarUserMenu({ name, rol }: TopbarUserMenuProps) {
+export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
   const [open, setOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
   const color    = avatarColor(name)
@@ -78,7 +78,7 @@ export function TopbarUserMenu({ name, rol }: TopbarUserMenuProps) {
               mt: "2px",
             }}
           >
-            {roleLabel[rol]}
+            {roleLabel[role]}
           </Typography>
         </Box>
         <Box
@@ -145,7 +145,7 @@ export function TopbarUserMenu({ name, rol }: TopbarUserMenuProps) {
                     {name}
                   </Typography>
                   <Typography sx={{ fontSize: "0.75rem", color: "text.secondary", mt: "2px" }}>
-                    {roleLabel[rol]}
+                    {roleLabel[role]}
                   </Typography>
                 </Box>
               </Box>

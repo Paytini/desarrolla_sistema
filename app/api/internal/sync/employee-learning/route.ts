@@ -9,7 +9,7 @@ async function runSync(request: Request) {
   const session = await auth()
   const hasSecret = hasValidCronSecret(request)
 
-  if (!hasSecret && session?.user.rol !== "SUPERADMIN") {
+  if (!hasSecret && session?.user.role !== "SUPERADMIN") {
     return NextResponse.json(
       {
         ok: false,

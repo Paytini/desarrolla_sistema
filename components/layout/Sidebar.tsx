@@ -16,10 +16,10 @@ import {
   homeHrefForRole,
   isActive,
   navEmployee,
-  navRH,
+  navHr,
   navSuperAdminSections,
   type NavItem,
-  type Rol,
+  type Role,
 } from "@/components/layout/nav-config"
 import { kpiColorMap } from "@/lib/kpi-colors"
 import { blobProxyUrl } from "@/lib/blob-proxy"
@@ -114,18 +114,18 @@ function NavItemRow({
 }
 
 export default function Sidebar({
-  rol,
+  role,
   companySlug,
   companyName,
   companyLogoUrl,
 }: {
-  rol: Rol
+  role: Role
   companySlug?: string
   companyName?: string
   companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
-  const homeHref  = homeHrefForRole(rol, companySlug)
+  const homeHref  = homeHrefForRole(role, companySlug)
 
   return (
     <Box
@@ -180,7 +180,7 @@ export default function Sidebar({
           }}
         >
           <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            {(rol === "RH" || rol === "EMPLEADO") && companyLogoUrl ? (
+            {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
               <img
                 src={blobProxyUrl(companyLogoUrl)}
@@ -200,7 +200,7 @@ export default function Sidebar({
         </Box>
 
         <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>
-          {rol === "SUPERADMIN" ? (
+          {role === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
               <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2.5, mt: si > 0 ? 2 : 0.5, mb: 0.75 }}>
@@ -227,14 +227,14 @@ export default function Sidebar({
             ))
           ) : (
             <List disablePadding>
-              {(rol === "RH" ? navRH(companySlug ?? "") : navEmployee).map((item) => (
+              {(role === "HR" ? navHr(companySlug ?? "") : navEmployee).map((item) => (
                 <NavItemRow key={item.href} item={item} pathname={pathname} />
               ))}
             </List>
           )}
         </Box>
 
-        {rol === "SUPERADMIN" && (
+        {role === "SUPERADMIN" && (
           <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
             <Link href="/superadmin/integration" style={{ textDecoration: "none" }}>
               <Box
@@ -264,7 +264,7 @@ export default function Sidebar({
           </Box>
         )}
 
-        {rol === "RH" && (
+        {role === "HR" && (
           <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
             <Link href={companyPath(companySlug ?? "", "/consulting")} style={{ textDecoration: "none" }}>
               <Box

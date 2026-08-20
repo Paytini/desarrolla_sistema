@@ -10,7 +10,7 @@ import { getSession } from "@/lib/session"
 
 export default async function NewCompanyPage() {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   const { paquetes: packages } = await getSuperadminCompaniesSnapshot()
 
@@ -39,7 +39,7 @@ export default async function NewCompanyPage() {
           Nueva empresa
         </Typography>
         <Typography sx={{ mt: 0.5, fontSize: "13px", color: "text.secondary" }}>
-          Completa los tres pasos para registrar la empresa y su acceso RH inicial.
+          Completa los tres pasos para registrar la empresa y su acceso HR inicial.
         </Typography>
       </Box>
 

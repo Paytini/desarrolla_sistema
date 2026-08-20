@@ -24,7 +24,7 @@ import { ConfirmIconButton } from "@/components/shared/ConfirmIconButton"
 import { SearchInput } from "@/components/shared/SearchInput"
 import { Pagination } from "@/components/shared/Pagination"
 import { getInitials } from "@/components/layout/nav-config"
-import { deleteEmployeeAsSuperAdminAction, toggleRhUserStatusAction } from "@/app/(portal)/superadmin/access/actions"
+import { deleteEmployeeAsSuperAdminAction, toggleHrUserStatusAction } from "@/app/(portal)/superadmin/access/actions"
 
 export type HrAccessRow = {
   id: string
@@ -181,27 +181,27 @@ type EmployeePagination = {
 }
 
 type AccessTabsProps = {
-  rhUsers: HrAccessRow[]
+  hrUsers: HrAccessRow[]
   employees: EmployeeAccessRow[]
-  defaultTab?: "rh" | "employees"
+  defaultTab?: "hr" | "employees"
   employeeSearch: string
   employeesGrandTotal: number
   employeePagination: EmployeePagination
 }
 
 export function AccessTabs({
-  rhUsers,
+  hrUsers,
   employees,
-  defaultTab = "rh",
+  defaultTab = "hr",
   employeeSearch,
   employeesGrandTotal,
   employeePagination,
 }: AccessTabsProps) {
   const router = useRouter()
-  const [tab, setTab]         = useState<"rh" | "employees">(defaultTab)
-  const [rhSearch, setRhSearch]   = useState("")
+  const [tab, setTab]         = useState<"hr" | "employees">(defaultTab)
+  const [hrSearch, setHrSearch]   = useState("")
 
-  function handleTabChange(value: "rh" | "employees") {
+  function handleTabChange(value: "hr" | "employees") {
     setTab(value)
     router.replace(value === "employees" ? "/superadmin/access?tab=employees" : "/superadmin/access", { scroll: false })
   }
@@ -214,42 +214,42 @@ export function AccessTabs({
     return `/superadmin/access?${qs.toString()}`
   }
 
-  const filteredRh = rhSearch.trim()
-    ? rhUsers.filter((u) => {
-        const q = rhSearch.toLowerCase()
+  const filteredHr = hrSearch.trim()
+    ? hrUsers.filter((u) => {
+        const q = hrSearch.toLowerCase()
         return (
           u.name.toLowerCase().includes(q) ||
           u.email.toLowerCase().includes(q) ||
           u.companyName.toLowerCase().includes(q)
         )
       })
-    : rhUsers
+    : hrUsers
 
   return (
     <Paper elevation={0} sx={{ borderRadius: '8px', backgroundColor: '#FFFFFF' }}>
-      <Tabs value={tab} onChange={(_, value: "rh" | "employees") => handleTabChange(value)} sx={{ px: 2.5, pt: 1, borderBottom: '1px solid #E5E7EB' }}>
-        <Tab value="rh" label={`Usuarios RH (${rhUsers.length})`} />
+      <Tabs value={tab} onChange={(_, value: "hr" | "employees") => handleTabChange(value)} sx={{ px: 2.5, pt: 1, borderBottom: '1px solid #E5E7EB' }}>
+        <Tab value="hr" label={`Usuarios HR (${hrUsers.length})`} />
         <Tab value="employees" label={`Empleados (${employeesGrandTotal})`} />
       </Tabs>
 
-      {tab === "rh" && (
+      {tab === "hr" && (
         <Stack spacing={2} sx={{ p: 2.5 }}>
           <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
             <SectionHeader
-              title="Usuarios RH por empresa"
+              title="Usuarios HR por empresa"
               description="Pausa o reactiva accesos sin necesidad de eliminar la cuenta."
             />
             <SearchInput
-              value={rhSearch}
-              onChange={setRhSearch}
+              value={hrSearch}
+              onChange={setHrSearch}
               placeholder="Buscar por nombre, email o empresa…"
               width={280}
             />
           </Box>
-          {rhUsers.length === 0 ? (
-            <EmptyState icon={Users} label="Aún no hay usuarios RH registrados." />
-          ) : filteredRh.length === 0 ? (
-            <EmptyState icon={Users} label={`Sin resultados para "${rhSearch}".`} />
+          {hrUsers.length === 0 ? (
+            <EmptyState icon={Users} label="Aún no hay usuarios HR registrados." />
+          ) : filteredHr.length === 0 ? (
+            <EmptyState icon={Users} label={`Sin resultados para "${hrSearch}".`} />
           ) : (
             <Table>
               <TableHead>
@@ -264,7 +264,7 @@ export function AccessTabs({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredRh.map((user) => (
+                {filteredHr.map((user) => (
                   <TableRow key={user.id} hover>
                     <TableCell sx={cellSx}>
                       <RowIdentity name={user.name} email={user.email} avatarLabel={user.name} />
@@ -301,7 +301,7 @@ export function AccessTabs({
                             : "El usuario recuperará acceso al portal de inmediato."
                         }
                         confirmLabel={user.active ? "Sí, suspender" : "Sí, reactivar"}
-                        action={toggleRhUserStatusAction}
+                        action={toggleHrUserStatusAction}
                         hiddenFields={{ user_id: user.id }}
                       />
                     </TableCell>

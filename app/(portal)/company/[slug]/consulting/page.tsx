@@ -45,7 +45,7 @@ function toDateKey(date: Date): string {
 
 export default async function CompanyConsultingDashboardPage({ searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
   const branding = await getCompanyBranding(session.user.empresa_id)
   if (!branding) redirect("/login")

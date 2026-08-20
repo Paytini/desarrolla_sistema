@@ -17,12 +17,12 @@ import type { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
 
 type Package = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["paquetes"][number]
 
-const STEPS = ["Info empresa", "Admin RH", "Plan"]
+const STEPS = ["Info empresa", "Admin HR", "Plan"]
 
 const ERROR_MESSAGES: Record<string, string> = {
   datos:      "Faltan datos obligatorios.",
-  email_rh:   "Ese correo ya está ligado a otra empresa.",
-  usuario_rh: "Ese correo ya existe como usuario del portal.",
+  email_hr:   "Ese correo ya está ligado a otra empresa.",
+  usuario_hr: "Ese correo ya existe como usuario del portal.",
 }
 
 const LABEL_SX = {
@@ -39,9 +39,9 @@ type FormValues = {
   nombre: string
   rfc: string
   telefono: string
-  email_rh: string
-  nombre_rh: string
-  password_rh: string
+  email_hr: string
+  nombre_hr: string
+  password_hr: string
   asientos_contratados: string
   paquete_id: string
   fecha_vencimiento: string
@@ -57,9 +57,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
     nombre:               "",
     rfc:                  "",
     telefono:             "",
-    email_rh:             "",
-    nombre_rh:            "",
-    password_rh:          "",
+    email_hr:             "",
+    nombre_hr:            "",
+    password_hr:          "",
     asientos_contratados: "25",
     paquete_id:           "",
     fecha_vencimiento:    "",
@@ -74,7 +74,7 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
     if (!formRef.current) return true
     const requiredByStep: Record<number, string[]> = {
       0: ["nombre"],
-      1: ["email_rh", "nombre_rh", "password_rh"],
+      1: ["email_hr", "nombre_hr", "password_hr"],
     }
     for (const name of requiredByStep[step] ?? []) {
       const el = formRef.current.elements.namedItem(name) as HTMLInputElement | null
@@ -93,11 +93,11 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
   const [handledState, setHandledState] = useState(state)
   if (state !== handledState) {
     setHandledState(state)
-    if (state?.error === "email_rh" || state?.error === "usuario_rh") setStep(1)
+    if (state?.error === "email_hr" || state?.error === "usuario_hr") setStep(1)
     if (state?.error === "datos") setStep(0)
   }
 
-  const isRhError = state?.error === "email_rh" || state?.error === "usuario_rh"
+  const isHrError = state?.error === "email_hr" || state?.error === "usuario_hr"
 
   return (
     <Box sx={{ maxWidth: 720, mx: "auto" }}>
@@ -134,9 +134,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
         )}
         {step !== 1 && (
           <>
-            <input type="hidden" name="email_rh"   value={values.email_rh}   />
-            <input type="hidden" name="nombre_rh"  value={values.nombre_rh}  />
-            <input type="hidden" name="password_rh" value={values.password_rh} />
+            <input type="hidden" name="email_hr"   value={values.email_hr}   />
+            <input type="hidden" name="nombre_hr"  value={values.nombre_hr}  />
+            <input type="hidden" name="password_hr" value={values.password_hr} />
           </>
         )}
         {step !== 2 && (
@@ -199,44 +199,44 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
           <Box sx={{ display: "grid", gap: 2.5 }}>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
               <Box>
-                <Typography component="label" htmlFor="email_rh" sx={LABEL_SX}>Correo RH *</Typography>
+                <Typography component="label" htmlFor="email_hr" sx={LABEL_SX}>Correo HR *</Typography>
                 <TextField
-                  id="email_rh"
-                  name="email_rh"
+                  id="email_hr"
+                  name="email_hr"
                   type="email"
                   required
-                  placeholder="rh@empresa.com"
+                  placeholder="hr@empresa.com"
                   size="small"
                   fullWidth
-                  error={isRhError}
-                  helperText={isRhError ? ERROR_MESSAGES[state!.error] : undefined}
-                  value={values.email_rh}
-                  onChange={(e) => set("email_rh", e.target.value)}
+                  error={isHrError}
+                  helperText={isHrError ? ERROR_MESSAGES[state!.error] : undefined}
+                  value={values.email_hr}
+                  onChange={(e) => set("email_hr", e.target.value)}
                 />
               </Box>
               <Box>
-                <Typography component="label" htmlFor="nombre_rh" sx={LABEL_SX}>Nombre completo *</Typography>
+                <Typography component="label" htmlFor="nombre_hr" sx={LABEL_SX}>Nombre completo *</Typography>
                 <TextField
-                  id="nombre_rh"
-                  name="nombre_rh"
+                  id="nombre_hr"
+                  name="nombre_hr"
                   required
                   placeholder="María González"
                   size="small"
                   fullWidth
-                  value={values.nombre_rh}
-                  onChange={(e) => set("nombre_rh", e.target.value)}
+                  value={values.nombre_hr}
+                  onChange={(e) => set("nombre_hr", e.target.value)}
                 />
               </Box>
             </Box>
             <Box sx={{ maxWidth: 320 }}>
-              <Typography component="label" htmlFor="password_rh" sx={LABEL_SX}>Contraseña temporal *</Typography>
+              <Typography component="label" htmlFor="password_hr" sx={LABEL_SX}>Contraseña temporal *</Typography>
               <PasswordToggleInput
-                name="password_rh"
+                name="password_hr"
                 minLength={8}
                 required
                 placeholder="Mín. 8 caracteres"
-                value={values.password_rh}
-                onChange={(e) => set("password_rh", e.target.value)}
+                value={values.password_hr}
+                onChange={(e) => set("password_hr", e.target.value)}
               />
             </Box>
           </Box>
@@ -339,8 +339,8 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
                   { label: "Empresa",  key: "nombre"    },
                   { label: "RFC",      key: "rfc"       },
                   { label: "Teléfono", key: "telefono"  },
-                  { label: "Email RH", key: "email_rh"  },
-                  { label: "Admin RH", key: "nombre_rh" },
+                  { label: "Email HR", key: "email_hr"  },
+                  { label: "Admin HR", key: "nombre_hr" },
                 ] as { label: string; key: keyof FormValues }[]
               ).map(({ label, key }) => (
                 <Box key={key} sx={{ mb: 1.5 }}>

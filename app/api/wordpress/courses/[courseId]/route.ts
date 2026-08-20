@@ -14,7 +14,7 @@ function parseCourseId(value: string) {
 export async function GET(_request: Request, context: RouteContext) {
   const session = await auth()
 
-  if (!session || (session.user.rol !== "SUPERADMIN" && session.user.rol !== "RH")) {
+  if (!session || (session.user.role !== "SUPERADMIN" && session.user.role !== "HR")) {
     return NextResponse.json({ message: "No autorizado" }, { status: 401 })
   }
 

@@ -9,8 +9,8 @@ import { AccessTabs, type EmployeeAccessRow, type HrAccessRow } from "@/componen
 import { PageHeader } from "@/components/shared/PageHeader"
 
 const successMessages: Record<string, string> = {
-  rh_suspendido: "Usuario RH suspendido.",
-  rh_activado: "Usuario RH reactivado.",
+  hr_suspendido: "Usuario HR suspendido.",
+  hr_activado: "Usuario HR reactivado.",
   empleado_eliminado: "Empleado eliminado del portal.",
 }
 const errorMessages: Record<string, string> = {
@@ -24,23 +24,23 @@ type PageProps = {
 
 export default async function SuperAdminAccessPage({ searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   const params = await searchParams
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
-  const tab = readSearchParam(params, "tab") === "employees" ? "employees" : "rh"
+  const tab = readSearchParam(params, "tab") === "employees" ? "employees" : "hr"
   const q = readSearchParam(params, "q")?.toLowerCase() ?? ""
   const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { rhUsers, employeeUsers, employees, total: employeesTotal, grandTotal: employeesGrandTotal } =
+  const { hrUsers, employeeUsers, employees, total: employeesTotal, grandTotal: employeesGrandTotal } =
     await getSuperadminAccessSnapshot(q, page)
   const employeesTotalPages = Math.max(1, Math.ceil(employeesTotal / EMPLOYEES_ACCESS_PAGE_SIZE))
   const employeesCurrentPage = Math.min(page, employeesTotalPages)
 
   const employeeUserByEmail = new Map(employeeUsers.map((u) => [u.email.toLowerCase(), u]))
 
-  const rhRows: HrAccessRow[] = rhUsers.map((user) => ({
+  const hrRows: HrAccessRow[] = hrUsers.map((user) => ({
     id: user.id,
     name: user.name,
     email: user.email,
@@ -72,7 +72,7 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
     <Stack spacing={3}>
       <PageHeader
         title="Control de accesos"
-        description="Administra usuarios RH, empleados activos y suspensiones."
+        description="Administra usuarios HR, empleados activos y suspensiones."
       />
 
       {success && (
@@ -87,7 +87,7 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
       )}
 
       <AccessTabs
-        rhUsers={rhRows}
+        hrUsers={hrRows}
         employees={employeeRows}
         defaultTab={tab}
         employeeSearch={q}

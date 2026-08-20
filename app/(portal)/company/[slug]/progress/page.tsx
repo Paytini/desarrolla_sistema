@@ -85,7 +85,7 @@ type PageProps = {
 
 export default async function CompanyProgressPage({ searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
   const params = await searchParams
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()

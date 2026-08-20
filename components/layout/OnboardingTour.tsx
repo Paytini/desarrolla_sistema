@@ -14,10 +14,10 @@ type Step = {
   body: string
 }
 
-const RH_STEPS: Step[] = [
+const HR_STEPS: Step[] = [
   {
     icon: <GraduationCap size={26} />,
-    title: "Bienvenido al portal RH",
+    title: "Bienvenido al portal HR",
     body: "Desde aquí administras la capacitación de toda tu empresa: alta de colaboradores, asignación de cursos, seguimiento de avance y generación de constancias DC-3 para cumplimiento STPS.",
   },
   {
@@ -42,7 +42,7 @@ const RH_STEPS: Step[] = [
   },
 ]
 
-const EMPLEADO_STEPS: Step[] = [
+const EMPLOYEE_STEPS: Step[] = [
   {
     icon: <GraduationCap size={26} />,
     title: "Bienvenido a tu portal",
@@ -61,14 +61,14 @@ const EMPLEADO_STEPS: Step[] = [
 ]
 
 export function OnboardingTour({
-  rol,
+  role,
   userId,
 }: {
-  rol: "RH" | "EMPLEADO"
+  role: "HR" | "EMPLOYEE"
   userId: string
 }) {
-  const storageKey = `d360_onboarding_v1_${rol}_${userId}`
-  const steps = rol === "RH" ? RH_STEPS : EMPLEADO_STEPS
+  const storageKey = `d360_onboarding_v1_${role}_${userId}`
+  const steps = role === "HR" ? HR_STEPS : EMPLOYEE_STEPS
 
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)

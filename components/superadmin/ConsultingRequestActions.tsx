@@ -67,7 +67,7 @@ export function ConsultingRequestActions({
         <DialogContent>
           <DialogContentText sx={{ mb: 2.5 }}>
             Revisa la fecha y hora antes de confirmar la sesión de {areaLabel} de {companyName} — si el horario que
-            pidieron no funciona, ajústalo aquí. Le avisaremos al RH de la empresa con el horario final.
+            pidieron no funciona, ajústalo aquí. Le avisaremos al HR de la empresa con el horario final.
           </DialogContentText>
           <Box sx={{ display: "flex", gap: 1.5 }}>
             <TextField
@@ -125,7 +125,7 @@ export function ConsultingRequestActions({
         <DialogTitle>¿Cancelar esta consultoría?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Se marcará la sesión de {areaLabel} de {companyName} como cancelada, y le avisaremos al RH de la
+            Se marcará la sesión de {areaLabel} de {companyName} como cancelada, y le avisaremos al HR de la
             empresa.
           </DialogContentText>
         </DialogContent>

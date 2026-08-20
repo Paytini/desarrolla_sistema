@@ -10,7 +10,7 @@ const periodConfig = {
   evening:   { label: "Buenas noches", icon: Moon },
 } as const
 
-export function PortalGreeting({ name }: { name: string; rol: string }) {
+export function PortalGreeting({ name }: { name: string; role: string }) {
   const hour     = new Date().getHours()
   const period   = hour < 12 ? "morning" : hour < 19 ? "afternoon" : "evening"
   const { label: greeting, icon: Icon } = periodConfig[period]

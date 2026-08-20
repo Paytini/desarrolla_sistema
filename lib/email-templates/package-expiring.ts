@@ -1,11 +1,11 @@
 import { escapeHtml, getLogoUrl, getPortalLoginUrl } from "./shared"
 
 export function buildPackageExpiringEmail({
-  nombreRh,
+  nombreHr,
   nombreEmpresa,
   daysLabel,
 }: {
-  nombreRh: string
+  nombreHr: string
   nombreEmpresa: string
   daysLabel: string
 }) {
@@ -13,7 +13,7 @@ export function buildPackageExpiringEmail({
   const subject = `Tu paquete vence en ${daysLabel} — ${nombreEmpresa}`
 
   const text = [
-    `Hola ${nombreRh},`,
+    `Hola ${nombreHr},`,
     ``,
     `El paquete de capacitación de ${nombreEmpresa} vence en ${daysLabel}.`,
     ``,
@@ -27,7 +27,7 @@ export function buildPackageExpiringEmail({
       <div style="text-align: center; margin-bottom: 24px;">
         <img src="${getLogoUrl()}" alt="Desarrolla360" width="160" style="width: 160px; height: auto;" />
       </div>
-      <p>Hola ${escapeHtml(nombreRh)},</p>
+      <p>Hola ${escapeHtml(nombreHr)},</p>
       <p>
         El paquete de capacitación de <strong>${escapeHtml(nombreEmpresa)}</strong> vence en
         <strong style="color: #d97706;">${escapeHtml(daysLabel)}</strong>.

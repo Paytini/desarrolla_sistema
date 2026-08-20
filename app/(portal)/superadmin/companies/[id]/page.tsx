@@ -86,7 +86,7 @@ type PageProps = {
 
 export default async function CompanyDetailPage({ params, searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   const { id }    = await params
   const companyId = id
@@ -116,7 +116,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
         orderBy: { created_at: "desc" },
       },
       users: {
-        where: { role: "RH" },
+        where: { role: "HR" },
         select: { name: true, email: true },
         take: 1,
       },

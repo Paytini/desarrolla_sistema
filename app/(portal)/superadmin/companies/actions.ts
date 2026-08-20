@@ -35,17 +35,17 @@ export async function createCompanyAction(
   const actor = getAuditActorFromSession(session)
 
   const nombre                = getString(formData, "nombre")
-  const emailRh               = getString(formData, "email_rh").toLowerCase()
+  const emailHr               = getString(formData, "email_hr").toLowerCase()
   const telefono              = getString(formData, "telefono")
   const rfc                   = getString(formData, "rfc")
   const contractedSeats       = getPositiveInt(formData, "asientos_contratados")
-  const nombreRh              = getString(formData, "nombre_rh")
-  const passwordRh            = getString(formData, "password_rh")
+  const nombreHr              = getString(formData, "nombre_hr")
+  const passwordHr            = getString(formData, "password_hr")
   const notas                 = getString(formData, "notas")
   const packageIdRaw          = getString(formData, "paquete_id")
   const expirationDateRaw     = getString(formData, "fecha_vencimiento")
 
-  if (!nombre || !emailRh || !nombreRh || !passwordRh || contractedSeats < 1) {
+  if (!nombre || !emailHr || !nombreHr || !passwordHr || contractedSeats < 1) {
     return { error: "datos" }
   }
 
@@ -54,18 +54,18 @@ export async function createCompanyAction(
   }
 
   const existingCompany = await prisma.company.findUnique({
-    where: { hr_email: emailRh },
+    where: { hr_email: emailHr },
     select: { id: true },
   })
-  if (existingCompany) return { error: "email_rh" }
+  if (existingCompany) return { error: "email_hr" }
 
   const existingUser = await prisma.user.findUnique({
-    where: { email: emailRh },
+    where: { email: emailHr },
     select: { id: true },
   })
-  if (existingUser) return { error: "usuario_rh" }
+  if (existingUser) return { error: "usuario_hr" }
 
-  const passwordHash  = await bcrypt.hash(passwordRh, 12)
+  const passwordHash  = await bcrypt.hash(passwordHr, 12)
   const packageId     = packageIdRaw || null
   const expirationDate = (() => {
     if (!expirationDateRaw) return null
@@ -79,7 +79,7 @@ export async function createCompanyAction(
       data: {
         name:              nombre,
         slug,
-        hr_email:          emailRh,
+        hr_email:          emailHr,
         phone:             telefono || null,
         rfc:               rfc || null,
         contracted_seats:  contractedSeats,
@@ -89,10 +89,10 @@ export async function createCompanyAction(
 
     await tx.user.create({
       data: {
-        email:         emailRh,
+        email:         emailHr,
         password_hash: passwordHash,
-        name:          nombreRh,
-        role:          "RH",
+        name:          nombreHr,
+        role:          "HR",
         company_id:    company.id,
       },
     })
@@ -131,9 +131,9 @@ export async function createCompanyAction(
     entityType: "EMPRESA",
     entityId:  createdResult.companyId,
     companyId: createdResult.companyId,
-    resumen:   `Se creo la empresa ${nombre} y su acceso RH inicial.`,
+    resumen:   `Se creo la empresa ${nombre} y su acceso HR inicial.`,
     metadata: {
-      email_rh:              emailRh,
+      email_hr:              emailHr,
       asientos_contratados:  contractedSeats,
       paquete_inicial_id:    createdResult.assignedPackageId,
     },
@@ -141,19 +141,19 @@ export async function createCompanyAction(
 
   try {
     const { subject, html, text } = buildCredentialsEmail({
-      nombreRh,
+      nombreHr,
       nombreEmpresa: nombre,
-      email: emailRh,
-      password: passwordRh,
+      email: emailHr,
+      password: passwordHr,
     })
-    await enqueueEmailSendJob({ to: emailRh, subject, html, text })
+    await enqueueEmailSendJob({ to: emailHr, subject, html, text })
     await createAuditEvent({
       actor,
       accion:    "EMAIL_CREDENCIALES_ENCOLADO",
       entityType: "EMPRESA",
       entityId:  createdResult.companyId,
       companyId: createdResult.companyId,
-      resumen:   `Se encolo el correo de credenciales para ${emailRh}.`,
+      resumen:   `Se encolo el correo de credenciales para ${emailHr}.`,
     })
   } catch (error) {
     await createAuditEvent({
@@ -162,7 +162,7 @@ export async function createCompanyAction(
       entityType: "EMPRESA",
       entityId:  createdResult.companyId,
       companyId: createdResult.companyId,
-      resumen:   `No se pudo encolar el correo de credenciales para ${emailRh}.`,
+      resumen:   `No se pudo encolar el correo de credenciales para ${emailHr}.`,
       metadata: {
         error: error instanceof Error ? error.message : String(error),
       },

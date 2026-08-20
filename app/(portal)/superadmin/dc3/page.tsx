@@ -17,7 +17,7 @@ type PageProps = {
 
 export default async function SuperadminDc3Page({ searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   const params     = await searchParams
   const openParam  = readSearchParam(params, "open")

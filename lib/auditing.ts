@@ -9,7 +9,7 @@ export type AuditActor = {
   userId: string | null
   nombre: string
   email: string | null
-  rol: string
+  role: string
 }
 
 export type CompanySeatSnapshot = {
@@ -24,7 +24,7 @@ const SYSTEM_ACTOR: AuditActor = {
   userId: null,
   nombre: "Sistema",
   email: null,
-  rol: "SYSTEM",
+  role: "SYSTEM",
 }
 
 function parseSessionUserId(value: string | undefined | null) {
@@ -42,7 +42,7 @@ export function getAuditActorFromSession(session: Session | null | undefined): A
     userId: parseSessionUserId(session.user.id),
     nombre: session.user.nombre || session.user.email || "Usuario",
     email: session.user.email ?? null,
-    rol: session.user.rol || "UNKNOWN",
+    role: session.user.role || "UNKNOWN",
   }
 }
 
@@ -89,7 +89,7 @@ export async function createAuditEvent(input: {
         actor_user_id: input.actor.userId,
         actor_name: input.actor.nombre,
         actor_email: input.actor.email,
-        actor_role: input.actor.rol,
+        actor_role: input.actor.role,
         action: input.accion,
         entity_type: input.entityType,
         entity_id: input.entityId ?? null,
@@ -122,7 +122,7 @@ export async function createSeatHistoryEntry(input: {
         actor_user_id: input.actor.userId,
         actor_name: input.actor.nombre,
         actor_email: input.actor.email,
-        actor_role: input.actor.rol,
+        actor_role: input.actor.role,
         reason: input.motivo,
         detail: input.detalle ?? null,
         contracted_seats_before: input.before.asientos_contratados,

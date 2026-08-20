@@ -10,7 +10,7 @@ const MAX_SIZE_BYTES = 2 * 1024 * 1024
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
-  if (!session?.user || session.user.rol !== "SUPERADMIN") {
+  if (!session?.user || session.user.role !== "SUPERADMIN") {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 

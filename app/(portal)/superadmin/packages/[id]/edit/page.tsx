@@ -25,7 +25,7 @@ type PageProps = {
 
 export default async function EditPackagePage({ params, searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   const { id } = await params
   const packageId = id

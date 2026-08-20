@@ -37,7 +37,7 @@ function getCourseUrl(
 
 export default async function EmployeeCourses() {
   const session = await getSession()
-  if (!session || session.user.rol !== "EMPLEADO" || !session.user.empresa_id) {
+  if (!session || session.user.role !== "EMPLOYEE" || !session.user.empresa_id) {
     redirect("/login")
   }
 

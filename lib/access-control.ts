@@ -11,7 +11,7 @@ type DeleteEmployeeOptions = {
   employeeId: string
   companyId?: string
   actor?: AuditActor
-  source?: "RH" | "SUPERADMIN" | "SYSTEM"
+  source?: "HR" | "SUPERADMIN" | "SYSTEM"
 }
 
 export async function deleteEmployeeRecord({
@@ -43,7 +43,7 @@ export async function deleteEmployeeRecord({
     userId: null,
     nombre: "Sistema",
     email: null,
-    rol: source,
+    role: source,
   }
   const beforeSeatSnapshot = await getCompanySeatSnapshot(employee.company_id)
   const company = await prisma.company.findUnique({
@@ -68,7 +68,7 @@ export async function deleteEmployeeRecord({
       where: {
         email: employee.email,
         company_id: employee.company_id,
-        role: "EMPLEADO",
+        role: "EMPLOYEE",
       },
       select: { id: true },
     })
@@ -138,7 +138,7 @@ export async function deleteEmployeeRecord({
 
 export async function togglePortalUserStatus(
   userId: string,
-  callerRole: "SUPERADMIN" | "RH" | "SYSTEM" = "SYSTEM"
+  callerRole: "SUPERADMIN" | "HR" | "SYSTEM" = "SYSTEM"
 ) {
   const user = await prisma.user.findUnique({
     where: { id: userId },

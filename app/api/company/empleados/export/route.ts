@@ -10,7 +10,7 @@ import { toCsvText } from "@/lib/csv"
 
 export async function GET(request: Request) {
   const session = await auth()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id) {
     return new Response("No autorizado", { status: 401 })
   }
 

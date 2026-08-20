@@ -36,7 +36,7 @@ const successMessages: Record<string, string> = {
   empleado_creado:
     "El empleado se creo correctamente. Le enviamos un correo para que active su cuenta.",
   empleado_creado_sync:
-    "El empleado se creo y su acceso ya quedo activo. Le enviamos un correo para que active su cuenta. El siguiente paso es asignarle cursos desde RH > Asignaciones.",
+    "El empleado se creo y su acceso ya quedo activo. Le enviamos un correo para que active su cuenta. El siguiente paso es asignarle cursos desde HR > Asignaciones.",
   empleado_suspendido:
     "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
@@ -60,7 +60,7 @@ const errorMessages: Record<string, string> = {
   bridge_sync:
     "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
   asignacion_manual:
-    "El empleado se creo, pero aun no tiene cursos asignados. Asignalo desde RH > Asignaciones segun su area.",
+    "El empleado se creo, pero aun no tiene cursos asignados. Asignalo desde HR > Asignaciones segun su area.",
   csv_file: "Selecciona un archivo CSV valido para importar empleados.",
   csv_empty:
     "El archivo CSV no contiene filas suficientes para importar empleados.",
@@ -230,7 +230,7 @@ export default async function CompanyEmployeesPage({
   searchParams,
 }: PageProps) {
   const session = await getSession();
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id)
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id)
     redirect("/login");
 
   const params = await searchParams;

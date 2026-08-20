@@ -18,8 +18,8 @@ datasource db {
 
 enum Role {
   SUPERADMIN // Desarrolla360 — full access
-  RH // Company HR admin — manages their own employees
-  EMPLEADO // Worker — sees their own courses
+  HR // Company HR admin — manages their own employees
+  EMPLOYEE // Worker — sees their own courses
 }
 
 enum ConsultingArea {
@@ -57,7 +57,7 @@ enum ConsultingRequestStatus {
 // ─────────────────────────────────────────────────────────────
 //  USER
 //  Handles portal login for all three roles.
-//  Employees also have a user record here (role EMPLEADO).
+//  Employees also have a user record here (role EMPLOYEE).
 //  wp_user_id links to WordPress when applicable.
 // ─────────────────────────────────────────────────────────────
 
@@ -240,7 +240,7 @@ model CompanyPackage {
 
 // ─────────────────────────────────────────────────────────────
 //  CONSULTING_REQUEST
-//  A live consulting session an RH user booked from the portal.
+//  A live consulting session an HR user booked from the portal.
 //  Reviewed manually by the consulting team — status starts PENDING
 //  and is updated outside the portal for now (no UI to change it yet).
 // ─────────────────────────────────────────────────────────────

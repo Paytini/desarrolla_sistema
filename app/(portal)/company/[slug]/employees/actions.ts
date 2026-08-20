@@ -10,7 +10,7 @@ import {
   getCompanySeatSnapshot,
   type AuditActor,
 } from "@/lib/auditing"
-import { requireRhSession } from "@/lib/auth-guards"
+import { requireHrSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { requireCompanySlug } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
@@ -195,7 +195,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
           activation_token: pendingActivation.activationToken,
           activation_token_expires_at: pendingActivation.activationTokenExpiresAt,
           name: `${input.nombre} ${input.apellido}`.trim(),
-          role: "EMPLEADO",
+          role: "EMPLOYEE",
           company_id: input.companyId,
           active: true,
         },
@@ -407,7 +407,7 @@ function normalizeCsvEmployees(dataRows: string[][], headers: string[]) {
 }
 
 export async function createEmployeeAction(formData: FormData) {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
   const actor = getAuditActorFromSession(session)
 
   const companyId = session.user.empresa_id as string
@@ -473,7 +473,7 @@ export async function createEmployeeAction(formData: FormData) {
 }
 
 export async function importEmployeesCsvAction(formData: FormData) {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
   const actor = getAuditActorFromSession(session)
   const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
@@ -592,7 +592,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
               activation_token: activation.activationToken,
               activation_token_expires_at: activation.activationTokenExpiresAt,
               name: `${employee.nombre} ${employee.apellido}`.trim(),
-              role: "EMPLEADO" as const,
+              role: "EMPLOYEE" as const,
               company_id: companyId,
               active: true,
             }
@@ -725,7 +725,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
 }
 
 export async function resendActivationAction(formData: FormData) {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
   const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
   const employeeId = getString(formData, "empleado_id")
@@ -786,7 +786,7 @@ export async function resendActivationAction(formData: FormData) {
   redirect(withStatus(returnTo, "success", "activacion_reenviada"))
 }
 export async function toggleEmployeeStatusAction(formData: FormData) {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
   const actor = getAuditActorFromSession(session)
 
   const companyId = session.user.empresa_id as string
@@ -878,7 +878,7 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
 }
 
 export async function deleteEmployeeAction(formData: FormData) {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
   const actor = getAuditActorFromSession(session)
 
   const companyId = session.user.empresa_id as string
@@ -895,7 +895,7 @@ export async function deleteEmployeeAction(formData: FormData) {
       employeeId,
       companyId,
       actor,
-      source: "RH",
+      source: "HR",
     })
   } catch (error) {
     const errorCode =
@@ -917,7 +917,7 @@ export async function deleteEmployeeAction(formData: FormData) {
 }
 
 export async function triggerCompanyLearningSyncAction() {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
   const actor = getAuditActorFromSession(session)
   const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)

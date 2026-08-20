@@ -15,7 +15,7 @@ import {
 import type { KpiColorKey } from "@/lib/kpi-colors"
 import { companyPath } from "@/lib/company-routes"
 
-export type Rol = "SUPERADMIN" | "RH" | "EMPLEADO"
+export type Role = "SUPERADMIN" | "HR" | "EMPLOYEE"
 export type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean; color: KpiColorKey }
 export type NavSection = { heading: string; accent: string; items: NavItem[] }
 
@@ -50,7 +50,7 @@ export const navSuperAdminSections: NavSection[] = [
   },
 ]
 
-export function navRH(companySlug: string): NavItem[] {
+export function navHr(companySlug: string): NavItem[] {
   return [
     { label: "Inicio",        href: companyPath(companySlug, "/home"),         icon: LayoutDashboard, exact: true, color: "primary" },
     { label: "Empleados",     href: companyPath(companySlug, "/employees"),    icon: Users,                        color: "violet" },
@@ -66,15 +66,15 @@ export const navEmployee: NavItem[] = [
   { label: "Mis constancias", href: "/employee/certificates", icon: Award,    color: "orange" },
 ]
 
-export const roleLabel: Record<Rol, string> = {
+export const roleLabel: Record<Role, string> = {
   SUPERADMIN: "SuperAdmin",
-  RH:         "RH / Empresa",
-  EMPLEADO:   "Empleado",
+  HR:         "HR / Empresa",
+  EMPLOYEE:   "Employee",
 }
 
-export function homeHrefForRole(rol: Rol, companySlug?: string) {
-  return rol === "SUPERADMIN" ? "/superadmin"
-    : rol === "RH"            ? companyPath(companySlug ?? "", "/home")
+export function homeHrefForRole(role: Role, companySlug?: string) {
+  return role === "SUPERADMIN" ? "/superadmin"
+    : role === "HR"            ? companyPath(companySlug ?? "", "/home")
     :                           "/employee/courses"
 }
 

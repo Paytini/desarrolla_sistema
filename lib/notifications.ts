@@ -40,12 +40,12 @@ export async function notifySuperadmins(
   await createNotifications(superadmins.map((u) => u.id), content)
 }
 
-export async function notifyCompanyRH(companyId: string, content: NotifyContent) {
-  const rhUsers = await prisma.user.findMany({
-    where: { company_id: companyId, role: "RH", active: true },
+export async function notifyCompanyHr(companyId: string, content: NotifyContent) {
+  const hrUsers = await prisma.user.findMany({
+    where: { company_id: companyId, role: "HR", active: true },
     select: { id: true },
   })
-  await createNotifications(rhUsers.map((u) => u.id), content)
+  await createNotifications(hrUsers.map((u) => u.id), content)
 }
 
 export async function notifyUsuarioByEmail(email: string, content: NotifyContent) {
@@ -109,7 +109,7 @@ export async function checkAndNotifyExpiringPackages() {
           id: true,
           name: true,
           users: {
-            where: { role: "RH", active: true },
+            where: { role: "HR", active: true },
             select: { name: true, email: true },
           },
         },
@@ -138,7 +138,7 @@ export async function checkAndNotifyExpiringPackages() {
       entidadId: ep.id,
     })
 
-    await notifyCompanyRH(ep.company.id, {
+    await notifyCompanyHr(ep.company.id, {
       tipo: "PAQUETE_POR_VENCER",
       titulo: "Tu paquete está por vencer",
       mensaje: `Tu paquete vence en ${daysLabel}. Contacta a soporte para renovarlo.`,
@@ -146,18 +146,18 @@ export async function checkAndNotifyExpiringPackages() {
       entidadId: ep.id,
     })
 
-    for (const rhUser of ep.company.users) {
+    for (const hrUser of ep.company.users) {
       try {
         const { subject, html, text } = buildPackageExpiringEmail({
-          nombreRh: rhUser.name,
+          nombreHr: hrUser.name,
           nombreEmpresa: ep.company.name,
           daysLabel,
         })
-        await enqueueEmailSendJob({ to: rhUser.email, subject, html, text })
+        await enqueueEmailSendJob({ to: hrUser.email, subject, html, text })
       } catch (error) {
         console.error("No se pudo enviar el correo de paquete por vencer", {
           companyPackageId: ep.id,
-          rhEmail: rhUser.email,
+          hrEmail: hrUser.email,
           message: error instanceof Error ? error.message : String(error),
         })
       }

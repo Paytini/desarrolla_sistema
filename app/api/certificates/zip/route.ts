@@ -35,16 +35,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const { rol, email, empresa_id } = session.user
+  const { role, email, empresa_id } = session.user
 
-  if (rol === "SUPERADMIN") {
+  if (role === "SUPERADMIN") {
     return NextResponse.json({ error: "Sin permisos" }, { status: 403 })
   }
 
   type ConstanciaRef = { id: string; folio: string }
   let constancias: ConstanciaRef[] = []
 
-  if (rol === "EMPLEADO") {
+  if (role === "EMPLOYEE") {
     if (!email) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       },
     })
     constancias = empleado?.certificates.map((c) => ({ id: c.id, folio: c.reference_number })) ?? []
-  } else if (rol === "RH") {
+  } else if (role === "HR") {
     if (!empresa_id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }

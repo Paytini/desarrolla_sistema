@@ -24,11 +24,11 @@ import {
   homeHrefForRole,
   isActive,
   navEmployee,
-  navRH,
+  navHr,
   navSuperAdminSections,
   roleLabel,
   type NavItem,
-  type Rol,
+  type Role,
 } from "@/components/layout/nav-config"
 import { blobProxyUrl } from "@/lib/blob-proxy"
 
@@ -111,13 +111,13 @@ function MobileNavLink({
 }
 
 export function MobileNav({
-  rol,
+  role,
   name,
   company,
   companySlug,
   companyLogoUrl,
 }: {
-  rol: Rol
+  role: Role
   name: string
   company?: string
   companySlug?: string
@@ -126,7 +126,7 @@ export function MobileNav({
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const initials = getInitials(name)
-  const homeHref = homeHrefForRole(rol, companySlug)
+  const homeHref = homeHrefForRole(role, companySlug)
 
   return (
     <>
@@ -170,7 +170,7 @@ export function MobileNav({
           }}
         >
           <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }} onClick={() => setOpen(false)}>
-            {(rol === "RH" || rol === "EMPLEADO") && companyLogoUrl ? (
+            {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
               <img
                 src={blobProxyUrl(companyLogoUrl)}
@@ -189,7 +189,7 @@ export function MobileNav({
           </Link>
         </Box>
 
-        {company && rol !== "SUPERADMIN" && (
+        {company && role !== "SUPERADMIN" && (
           <Box
             sx={{
               mx: 1.5,
@@ -213,7 +213,7 @@ export function MobileNav({
         )}
 
         <Box sx={{ flex: 1, overflowY: "auto", py: 1.5 }}>
-          {rol === "SUPERADMIN" ? (
+          {role === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
               <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
                 <Typography
@@ -247,7 +247,7 @@ export function MobileNav({
             ))
           ) : (
             <List disablePadding>
-              {(rol === "RH" ? navRH(companySlug ?? "") : navEmployee).map((item) => (
+              {(role === "HR" ? navHr(companySlug ?? "") : navEmployee).map((item) => (
                 <MobileNavLink
                   key={item.href}
                   item={item}
@@ -299,7 +299,7 @@ export function MobileNav({
               {name}
             </Typography>
             <Typography sx={{ fontSize: "0.6875rem", color: "text.secondary" }}>
-              {roleLabel[rol]}
+              {roleLabel[role]}
             </Typography>
           </Box>
         </Box>

@@ -24,21 +24,21 @@ export default async function PortalLayout({
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const rol = session.user.rol as "SUPERADMIN" | "RH" | "EMPLEADO";
+  const role = session.user.role as "SUPERADMIN" | "HR" | "EMPLOYEE";
   const name = session.user.nombre as string;
   const email = session.user.email ?? name;
   const company = session.user.empresa as string | undefined;
-  const isSuperAdmin = rol === "SUPERADMIN";
+  const isSuperAdmin = role === "SUPERADMIN";
 
   const branding =
-    (rol === "RH" || rol === "EMPLEADO") && session.user.empresa_id
+    (role === "HR" || role === "EMPLOYEE") && session.user.empresa_id
       ? await getCompanyBranding(session.user.empresa_id)
       : null;
 
   const content = (
     <div className={cn("flex h-screen overflow-hidden", "portal-v4")}>
       <Sidebar
-        rol={rol}
+        role={role}
         companySlug={branding?.slug}
         companyName={company}
         companyLogoUrl={branding?.logo_url}
@@ -46,7 +46,7 @@ export default async function PortalLayout({
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="relative flex h-16 shrink-0 items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 md:px-6">
           <MobileNav
-            rol={rol}
+            role={role}
             name={name}
             company={company}
             companySlug={branding?.slug}
@@ -58,19 +58,19 @@ export default async function PortalLayout({
               <SuperadminSearchBar />
             </div>
           ) : (
-            <PortalGreeting name={name} rol={rol} />
+            <PortalGreeting name={name} role={role} />
           )}
 
           <div className="flex-1" />
 
           <div className="flex shrink-0 items-center gap-2">
-            {rol === "RH" && branding?.slug && (
+            {role === "HR" && branding?.slug && (
               <HrSearchBar companySlug={branding.slug} />
             )}
-            {rol === "EMPLEADO" && <EmployeeSearchBar />}
+            {role === "EMPLOYEE" && <EmployeeSearchBar />}
             <NotificationBell />
             <FullscreenToggle />
-            <TopbarUserMenu name={name} rol={rol} />
+            <TopbarUserMenu name={name} role={role} />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-[#F8F9FC] px-8 py-7">
@@ -78,8 +78,8 @@ export default async function PortalLayout({
         </main>
       </div>
 
-      {(rol === "RH" || rol === "EMPLEADO") && (
-        <OnboardingTour rol={rol} userId={email} />
+      {(role === "HR" || role === "EMPLOYEE") && (
+        <OnboardingTour role={role} userId={email} />
       )}
     </div>
   );

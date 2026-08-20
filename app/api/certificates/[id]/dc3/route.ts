@@ -30,15 +30,15 @@ export async function GET(
     return NextResponse.json({ error: "Constancia no encontrada" }, { status: 404 })
   }
 
-  const rol = session.user.rol
+  const role = session.user.role
   const sessionEmpresaId = session.user.empresa_id ?? null
   const sessionEmail = session.user.email ?? null
 
   const isOwner =
-    rol === "EMPLEADO" && sessionEmail != null && constancia.employee.email === sessionEmail
+    role === "EMPLOYEE" && sessionEmail != null && constancia.employee.email === sessionEmail
   const isCompanyHr =
-    rol === "RH" && sessionEmpresaId != null && constancia.employee.company_id === sessionEmpresaId
-  const isSuperAdmin = rol === "SUPERADMIN"
+    role === "HR" && sessionEmpresaId != null && constancia.employee.company_id === sessionEmpresaId
+  const isSuperAdmin = role === "SUPERADMIN"
 
   if (!isOwner && !isCompanyHr && !isSuperAdmin) {
     return NextResponse.json({ error: "Sin permisos para esta constancia" }, { status: 403 })

@@ -14,7 +14,7 @@ const prisma = new PrismaClient({ adapter })
 
 async function main() {
   const hash = await bcrypt.hash("admin123", 12)
-  const rhHash = await bcrypt.hash("rh123456", 12)
+  const hrHash = await bcrypt.hash("rh123456", 12)
   const employeeHash = await bcrypt.hash("empleado123", 12)
 
   await prisma.user.upsert({
@@ -55,9 +55,9 @@ async function main() {
     },
     create: {
       email: "rh@empresa-demo.com",
-      password_hash: rhHash,
+      password_hash: hrHash,
       name: "Responsable RH",
-      role: "RH",
+      role: "HR",
       company_id: company.id,
       active: true,
     },
@@ -72,7 +72,7 @@ async function main() {
       email: "empleado@empresa-demo.com",
       password_hash: employeeHash,
       name: "Empleado Demo",
-      role: "EMPLEADO",
+      role: "EMPLOYEE",
       company_id: company.id,
       active: true,
     },

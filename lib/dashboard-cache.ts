@@ -170,7 +170,7 @@ const getSuperadminCompaniesSnapshotCached = unstable_cache(
         orderBy: { created_at: "desc" },
         include: {
           users: {
-            where: { role: "RH" },
+            where: { role: "HR" },
             select: { name: true, email: true, active: true },
             take: 1,
           },
@@ -305,10 +305,10 @@ export async function getSuperadminDc3Snapshot() {
   return getSuperadminDc3SnapshotCached()
 }
 
-const getSuperadminAccessRhSnapshotCached = unstable_cache(
+const getSuperadminAccessHrSnapshotCached = unstable_cache(
   async () => {
     return prisma.user.findMany({
-      where: { role: "RH" },
+      where: { role: "HR" },
       orderBy: [{ active: "desc" }, { created_at: "desc" }],
       select: {
         id: true,
@@ -329,7 +329,7 @@ const getSuperadminAccessRhSnapshotCached = unstable_cache(
       },
     })
   },
-  ["dashboard-snapshot", "superadmin", "accesos", "rh"],
+  ["dashboard-snapshot", "superadmin", "accesos", "hr"],
   {
     revalidate: 45,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_ACCESS_TAG],
@@ -378,7 +378,7 @@ const getSuperadminAccessEmployeesSnapshotCached = unstable_cache(
     ])
 
     const employeeUsers = await prisma.user.findMany({
-      where: { role: "EMPLEADO", email: { in: employees.map((e) => e.email) } },
+      where: { role: "EMPLOYEE", email: { in: employees.map((e) => e.email) } },
       select: {
         id: true,
         email: true,
@@ -397,11 +397,11 @@ const getSuperadminAccessEmployeesSnapshotCached = unstable_cache(
 )
 
 export async function getSuperadminAccessSnapshot(employeeQuery: string, employeePage: number) {
-  const [rhUsers, employeesData] = await Promise.all([
-    getSuperadminAccessRhSnapshotCached(),
+  const [hrUsers, employeesData] = await Promise.all([
+    getSuperadminAccessHrSnapshotCached(),
     getSuperadminAccessEmployeesSnapshotCached(employeeQuery, employeePage),
   ])
-  return { rhUsers, ...employeesData }
+  return { hrUsers, ...employeesData }
 }
 
 export async function getHrEmployeesSnapshot(companyId: string) {

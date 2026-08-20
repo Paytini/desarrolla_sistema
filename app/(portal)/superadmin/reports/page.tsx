@@ -79,7 +79,7 @@ const TD_SX = {
 
 export default async function SuperAdminReportsPage({ searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   const params  = await searchParams
   const success = readSearchParam(params, "success")

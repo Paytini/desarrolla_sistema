@@ -1,12 +1,12 @@
 import { escapeHtml, getLogoUrl, getPortalLoginUrl } from "./shared"
 
 export function buildCredentialsEmail({
-  nombreRh,
+  nombreHr,
   nombreEmpresa,
   email,
   password,
 }: {
-  nombreRh: string
+  nombreHr: string
   nombreEmpresa: string
   email: string
   password: string
@@ -22,11 +22,11 @@ export function buildCredentialsEmail({
   ]
 
   const text = [
-    `Hola ${nombreRh},`,
+    `Hola ${nombreHr},`,
     ``,
     `¡Bienvenido a Desarrolla360! Ya activamos el portal para ${nombreEmpresa}, listo para que empieces a capacitar a tu equipo.`,
     ``,
-    `Desde tu panel de RH vas a poder:`,
+    `Desde tu panel de HR vas a poder:`,
     ...features.map((f) => `  • ${f}`),
     ``,
     `Estas son tus credenciales de acceso:`,
@@ -43,9 +43,9 @@ export function buildCredentialsEmail({
       <div style="text-align: center; margin-bottom: 24px;">
         <img src="${getLogoUrl()}" alt="Desarrolla360" width="160" style="width: 160px; height: auto;" />
       </div>
-      <p>Hola ${escapeHtml(nombreRh)},</p>
+      <p>Hola ${escapeHtml(nombreHr)},</p>
       <p>¡Bienvenido a Desarrolla360! Ya activamos el portal para <strong>${escapeHtml(nombreEmpresa)}</strong>, listo para que empieces a capacitar a tu equipo.</p>
-      <p style="margin-bottom: 4px;">Desde tu panel de RH vas a poder:</p>
+      <p style="margin-bottom: 4px;">Desde tu panel de HR vas a poder:</p>
       <ul style="margin: 0 0 16px; padding-left: 20px; color: #334155;">
         ${features.map((f) => `<li style="margin-bottom: 4px;">${escapeHtml(f)}</li>`).join("\n        ")}
       </ul>

@@ -17,7 +17,7 @@ function getInt(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
 }
 
-export async function toggleRhUserStatusAction(formData: FormData) {
+export async function toggleHrUserStatusAction(formData: FormData) {
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
@@ -31,19 +31,19 @@ export async function toggleRhUserStatusAction(formData: FormData) {
 
     await createAuditEvent({
       actor,
-      accion: user.active ? "RH_SUSPENDIDO" : "RH_REACTIVADO",
+      accion: user.active ? "HR_SUSPENDIDO" : "HR_REACTIVADO",
       entityType: "USUARIO",
       entityId: user.id,
-      resumen: `${actor.nombre} ${user.active ? "suspendio" : "reactivo"} un usuario RH.`,
+      resumen: `${actor.nombre} ${user.active ? "suspendio" : "reactivo"} un usuario HR.`,
       metadata: {
-        rol: user.role,
+        role: user.role,
       },
     })
 
     revalidatePath("/superadmin/access")
     revalidatePath("/superadmin/reports")
     revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-    redirect(`/superadmin/access?success=${user.active ? "rh_suspendido" : "rh_activado"}`)
+    redirect(`/superadmin/access?success=${user.active ? "hr_suspendido" : "hr_activado"}`)
   } catch {
     redirect("/superadmin/access?error=usuario")
   }

@@ -8,7 +8,7 @@ export default async function EmployeeLayout({
   children: React.ReactNode
 }) {
   const session = await getSession()
-  if (!session || session.user.rol !== "EMPLEADO" || !session.user.empresa_id) redirect("/login")
+  if (!session || session.user.role !== "EMPLOYEE" || !session.user.empresa_id) redirect("/login")
 
   const status = await getCompanyAccessStatus(session.user.empresa_id)
   if (status.blocked) redirect(`/account-suspended?reason=${status.reason}`)

@@ -3,7 +3,7 @@
 import type { ConsultingArea, ConsultingContactMethod } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { requireRhSession } from "@/lib/auth-guards"
+import { requireHrSession } from "@/lib/auth-guards"
 import { getCompanyBranding, requireCompanySlug } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { CONSULTING_AREAS } from "@/lib/consulting-areas"
@@ -42,7 +42,7 @@ export async function createConsultingRequestAction(
   _prevState: ConsultingActionState,
   formData: FormData,
 ): Promise<ConsultingActionState> {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
 
   const areaId = getString(formData, "area")
   const context = getString(formData, "context")
@@ -120,7 +120,7 @@ export async function createConsultingRequestAction(
 }
 
 export async function cancelConsultingRequestAction(formData: FormData) {
-  const session = await requireRhSession()
+  const session = await requireHrSession()
   const companyId = session.user.empresa_id as string
   const slug = await requireCompanySlug(companyId)
   const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)

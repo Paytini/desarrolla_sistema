@@ -5,16 +5,16 @@ import { enterCompanyContext } from "@/lib/tenant-context"
 
 export async function requireSuperAdminSession() {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") {
+  if (!session || session.user.role !== "SUPERADMIN") {
     redirect("/login")
   }
 
   return session
 }
 
-export async function requireRhSession() {
+export async function requireHrSession() {
   const session = await getSession()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) {
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id) {
     redirect("/login")
   }
 

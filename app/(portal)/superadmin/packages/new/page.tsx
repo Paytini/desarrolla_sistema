@@ -22,7 +22,7 @@ type PageProps = {
 
 export default async function NewPackagePage({ searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   const params = await searchParams
   const error  = readSearchParam(params, "error")

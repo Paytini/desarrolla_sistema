@@ -114,7 +114,7 @@ function CompanyProgressKpi({
 
 export default async function SuperadminDashboardPage() {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()

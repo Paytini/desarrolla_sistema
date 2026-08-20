@@ -7,7 +7,7 @@ import { getSession } from "@/lib/session"
 
 export default async function CompanyNewConsultingRequestPage() {
   const session = await getSession()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
   const branding = await getCompanyBranding(session.user.empresa_id)
   if (!branding) redirect("/login")

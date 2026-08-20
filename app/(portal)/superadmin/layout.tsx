@@ -7,7 +7,7 @@ export default async function SuperAdminLayout({
   children: React.ReactNode
 }) {
   const session = await getSession()
-  if (!session || session.user.rol !== "SUPERADMIN") redirect("/login")
+  if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
   return <>{children}</>
 }

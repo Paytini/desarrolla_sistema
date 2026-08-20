@@ -77,7 +77,7 @@ const QUOTES = [
 const BLOCKED_MESSAGES: Record<string, string> = {
   empresa_suspendida: "Tu empresa fue suspendida. Contacta a Desarrolla360 para reactivar tu acceso.",
   empresa_vencida: "El acceso de tu empresa venció. Contacta a Desarrolla360 para renovarlo.",
-  rol_no_reconocido: "Tu cuenta no tiene un rol reconocido. Contacta a Desarrolla360.",
+  role_no_reconocido: "Tu cuenta no tiene un rol reconocido. Contacta a Desarrolla360.",
   cuenta_pendiente_activacion: "Tu cuenta todavía no está activada. Revisa tu correo y sigue el enlace de activación.",
   activation_invalid: "El enlace de activación ya venció o ya fue utilizado.",
 }

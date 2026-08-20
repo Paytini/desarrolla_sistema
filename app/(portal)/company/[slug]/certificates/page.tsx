@@ -41,7 +41,7 @@ const CERTIFICATES_PAGE_SIZE = 20
 
 export default async function CompanyCertificatesPage({ searchParams }: PageProps) {
   const session = await getSession()
-  if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
   const company = await getCompanyCertificatesRecord(session.user.empresa_id)
   if (!company) redirect("/login")
