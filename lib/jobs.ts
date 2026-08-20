@@ -1,14 +1,40 @@
+import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:crypto"
 import { prisma } from "@/lib/prisma"
 import { mapWithConcurrency } from "@/lib/concurrency"
 import { syncSingleEmployeePackageEnrollment, type PackageEnrollmentSyncResult } from "@/lib/course-sync"
 import { bridgeUpsertEmployee } from "@/lib/wordpress-bridge"
+import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 
 const JOB_CHUNK_SIZE = 20
 const JOB_CONCURRENCY = 5
 const JOBS_PER_CRON_TICK = 5
 
-const CSV_BRIDGE_CHUNK_SIZE = 20
-const CSV_BRIDGE_CONCURRENCY = 5
+function getJobPayloadCipherKey() {
+  const secret = process.env.NEXTAUTH_SECRET
+  if (!secret) {
+    throw new Error("NEXTAUTH_SECRET no está configurado")
+  }
+  return Buffer.from(hkdfSync("sha256", secret, "", "job-payload-cipher", 32))
+}
+
+function encryptJobPayloadSecret(plaintext: string) {
+  const key = getJobPayloadCipherKey()
+  const iv = randomBytes(12)
+  const cipher = createCipheriv("aes-256-gcm", key, iv)
+  const ciphertext = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()])
+  return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]).toString("base64")
+}
+
+function decryptJobPayloadSecret(encoded: string) {
+  const key = getJobPayloadCipherKey()
+  const raw = Buffer.from(encoded, "base64")
+  const iv = raw.subarray(0, 12)
+  const authTag = raw.subarray(12, 28)
+  const ciphertext = raw.subarray(28)
+  const decipher = createDecipheriv("aes-256-gcm", key, iv)
+  decipher.setAuthTag(authTag)
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString("utf8")
+}
 
 type CsvBridgeSyncEmployee = {
   employeeId: string
@@ -23,10 +49,6 @@ type CsvBridgeSyncEmployee = {
 type CsvEmployeeBridgeSyncPayload = {
   companyId: string
   companyName: string
-  // Employees not yet synced to WordPress. Each entry (including its
-  // plaintext password, required by the bridge's upsert endpoint) is
-  // dropped from this list the moment it's processed, so a job's payload
-  // never retains a password past the tick that consumed it.
   pending: CsvBridgeSyncEmployee[]
   syncedCount: number
   warningCount: number
@@ -45,7 +67,10 @@ export async function enqueueCsvEmployeeBridgeSyncJob(input: {
       payload: {
         companyId: input.companyId,
         companyName: input.companyName,
-        pending: input.employees,
+        pending: input.employees.map((employee) => ({
+          ...employee,
+          password: encryptJobPayloadSecret(employee.password),
+        })),
         syncedCount: 0,
         warningCount: 0,
       },
@@ -56,10 +81,10 @@ export async function enqueueCsvEmployeeBridgeSyncJob(input: {
 }
 
 async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmployeeBridgeSyncPayload) {
-  const chunk = payload.pending.slice(0, CSV_BRIDGE_CHUNK_SIZE)
-  const remaining = payload.pending.slice(CSV_BRIDGE_CHUNK_SIZE)
+  const chunk = payload.pending.slice(0, JOB_CHUNK_SIZE)
+  const remaining = payload.pending.slice(JOB_CHUNK_SIZE)
 
-  const results = await mapWithConcurrency(chunk, CSV_BRIDGE_CONCURRENCY, async (employee) => {
+  const results = await mapWithConcurrency(chunk, JOB_CONCURRENCY, async (employee) => {
     try {
       const bridgeEmployee = await bridgeUpsertEmployee({
         employeeId: employee.employeeId,
@@ -68,7 +93,7 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
         email: employee.email,
         firstName: employee.firstName,
         lastName: employee.lastName,
-        password: employee.password,
+        password: decryptJobPayloadSecret(employee.password),
         department: employee.department,
         position: employee.position,
       })
@@ -78,7 +103,12 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
         wpUserId: bridgeEmployee.wp_user_id as number | null,
         ok: true as const,
       }
-    } catch {
+    } catch (error) {
+      console.error("CSV_EMPLOYEE_BRIDGE_SYNC: fallo al sincronizar empleado con WordPress", {
+        employeeId: employee.employeeId,
+        email: employee.email,
+        error: error instanceof Error ? error.message : String(error),
+      })
       return { employeeId: employee.employeeId, email: employee.email, wpUserId: null, ok: false as const }
     }
   })
@@ -87,7 +117,7 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
   if (synced.length > 0) {
     await prisma.$transaction(
       synced.flatMap((result) => [
-        prisma.employee.update({ where: { id: result.employeeId }, data: { wp_user_id: result.wpUserId } }),
+        prisma.employee.updateMany({ where: { id: result.employeeId }, data: { wp_user_id: result.wpUserId } }),
         prisma.user.updateMany({
           where: { email: result.email, company_id: payload.companyId },
           data: { wp_user_id: result.wpUserId },
@@ -100,21 +130,46 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
   const warningCount = payload.warningCount + (results.length - synced.length)
   const isDone = remaining.length === 0
 
-  await prisma.job.update({
-    where: { id: jobId },
-    data: {
-      payload: {
-        companyId: payload.companyId,
-        companyName: payload.companyName,
-        pending: remaining,
-        syncedCount,
-        warningCount,
+  try {
+    await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        payload: {
+          companyId: payload.companyId,
+          companyName: payload.companyName,
+          pending: remaining,
+          syncedCount,
+          warningCount,
+        },
+        status: isDone ? "DONE" : "PENDING",
+        completed_at: isDone ? new Date() : null,
+        result: isDone ? { synced: syncedCount, warnings: warningCount } : undefined,
       },
-      status: isDone ? "DONE" : "PENDING",
-      completed_at: isDone ? new Date() : null,
-      result: isDone ? { synced: syncedCount, warnings: warningCount } : undefined,
-    },
-  })
+    })
+  } catch (error) {
+    await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        payload: { companyId: payload.companyId, companyName: payload.companyName, pending: [], syncedCount, warningCount },
+        status: "ERROR",
+        completed_at: new Date(),
+        error: error instanceof Error ? error.message.slice(0, 500) : "Error desconocido guardando el progreso del job.",
+      },
+    })
+    throw error
+  }
+
+  if (isDone) {
+    await createAuditEvent({
+      actor: getAuditActorFromSession(null),
+      accion: "EMPLEADOS_CSV_SINCRONIZACION_WP_COMPLETADA",
+      entityType: "EMPRESA",
+      entityId: payload.companyId,
+      companyId: payload.companyId,
+      resumen: `Sincronización de empleados importados por CSV con WordPress completada para ${payload.companyName}.`,
+      metadata: { sincronizados: syncedCount, advertencias: warningCount },
+    })
+  }
 }
 
 type PackageEnrollmentSyncPayload = {

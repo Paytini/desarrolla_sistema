@@ -645,20 +645,27 @@ export async function importEmployeesCsvAction(formData: FormData) {
   let queuedSync = false
 
   if (isWordPressBridgeConfigured() && createdEmployees.length > 0) {
-    const jobId = await enqueueCsvEmployeeBridgeSyncJob({
-      companyId,
-      companyName: companyContext.name,
-      employees: createdEmployees.map((employee) => ({
-        employeeId: employee.id,
-        email: employee.email,
-        firstName: employee.nombre,
-        lastName: employee.apellido,
-        password: employee.password,
-        department: employee.departamento,
-        position: employee.puesto,
-      })),
-    })
-    queuedSync = jobId !== null
+    try {
+      const jobId = await enqueueCsvEmployeeBridgeSyncJob({
+        companyId,
+        companyName: companyContext.name,
+        employees: createdEmployees.map((employee) => ({
+          employeeId: employee.id,
+          email: employee.email,
+          firstName: employee.nombre,
+          lastName: employee.apellido,
+          password: employee.password,
+          department: employee.departamento,
+          position: employee.puesto,
+        })),
+      })
+      queuedSync = jobId !== null
+    } catch (error) {
+      console.error("No se pudo encolar la sincronización de empleados importados con WordPress", {
+        companyId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(companyId)

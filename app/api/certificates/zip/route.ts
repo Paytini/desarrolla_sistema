@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No se pudo generar ningún PDF" }, { status: 500 })
   }
 
-  const nodeStream = zip.generateNodeStream({ type: "nodebuffer", streamFiles: true })
+  const nodeStream = zip.generateNodeStream({ type: "nodebuffer" })
   const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>
 
   return new NextResponse(webStream, {
