@@ -84,7 +84,12 @@ async function processLearningWebhookEvent(event: TutorLearningWebhookEvent, eve
   }
 
   if (!isValidEvent(event)) {
-    return { student_wp_user_id: event.student_wp_user_id ?? null, ok: false as const, message: "El evento viene incompleto." }
+    return {
+      student_wp_user_id: event.student_wp_user_id ?? null,
+      ok: false as const,
+      code: "invalid_event" as const,
+      message: "El payload del webhook viene incompleto.",
+    }
   }
 
   const wpUserId = event.student_wp_user_id as number
@@ -137,6 +142,7 @@ async function processLearningWebhookEvent(event: TutorLearningWebhookEvent, eve
     return {
       student_wp_user_id: wpUserId,
       ok: false as const,
+      code: "sync_failed" as const,
       message: error instanceof Error ? error.message : "No fue posible aplicar el webhook academico al portal.",
     }
   }
@@ -183,9 +189,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const results = []
+    const results: Array<{ student_wp_user_id: number | null; ok: boolean; [key: string]: unknown }> = []
     for (const event of payload.events) {
-      results.push(await processLearningWebhookEvent(event, eventType, occurredAt))
+      try {
+        results.push(await processLearningWebhookEvent(event, eventType, occurredAt))
+      } catch (error) {
+        results.push({
+          student_wp_user_id: event?.student_wp_user_id ?? null,
+          ok: false,
+          code: "sync_failed",
+          message: error instanceof Error ? error.message : "Error inesperado al procesar el evento.",
+        })
+      }
     }
 
     return NextResponse.json({ ok: true, event_type: eventType, occurred_at: occurredAt, results })
@@ -193,7 +208,7 @@ export async function POST(request: Request) {
 
   const result = await processLearningWebhookEvent(payload, eventType, occurredAt)
   if (!result.ok) {
-    const status = result.message === "El evento viene incompleto." ? 400 : 500
+    const status = result.code === "invalid_event" ? 400 : 500
     return NextResponse.json({ ok: false, message: result.message }, { status })
   }
 

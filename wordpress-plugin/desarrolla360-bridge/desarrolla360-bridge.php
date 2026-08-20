@@ -3941,7 +3941,7 @@ function d360_bridge_send_learning_webhook_batch( $events, $event_type, $occurre
 	$response = wp_remote_post(
 		$webhook_url,
 		array(
-			'timeout' => 20,
+			'timeout' => 55,
 			'headers' => array(
 				'Content-Type'             => 'application/json',
 				'Accept'                   => 'application/json',
