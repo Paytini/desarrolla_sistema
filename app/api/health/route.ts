@@ -9,10 +9,7 @@ const REQUIRED_VARS = [
   "BLOB_READ_WRITE_TOKEN",
 ] as const
 
-const SECRET_VARS = [
-  "AUTH_SECRET",
-  "NEXTAUTH_SECRET",
-] as const
+const SECRET_VARS = ["AUTH_SECRET", "NEXTAUTH_SECRET"] as const
 
 export async function GET() {
   const missing: string[] = []
@@ -25,10 +22,7 @@ export async function GET() {
   if (!hasAuthSecret) missing.push("AUTH_SECRET")
 
   if (missing.length > 0) {
-    return NextResponse.json(
-      { ok: false, missing },
-      { status: 503 }
-    )
+    return NextResponse.json({ ok: false, missing }, { status: 503 })
   }
 
   return NextResponse.json({ ok: true })

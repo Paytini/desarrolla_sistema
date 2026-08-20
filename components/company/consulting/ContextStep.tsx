@@ -20,7 +20,16 @@ export function ContextStep({ value, onChange, onBack, onNext }: ContextStepProp
 
   return (
     <Box>
-      <Typography sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#3579F5", mb: 1 }}>
+      <Typography
+        sx={{
+          fontSize: 11,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: "#3579F5",
+          mb: 1,
+        }}
+      >
         Paso 2 · Contexto
       </Typography>
       <Typography sx={{ fontSize: 26, fontWeight: 800, color: "text.primary", mb: 0.5 }}>
@@ -41,7 +50,16 @@ export function ContextStep({ value, onChange, onBack, onNext }: ContextStepProp
         slotProps={{ formHelperText: { sx: { textAlign: "right" } } }}
       />
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          mt: 4,
+          pt: 3,
+          borderTop: "1px solid",
+          borderColor: "divider",
+        }}
+      >
         <Button type="button" variant="outlined" onClick={onBack}>
           ← Atrás
         </Button>

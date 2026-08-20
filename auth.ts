@@ -23,7 +23,9 @@ class CuentaPendienteActivacionError extends CredentialsSignin {
 }
 
 if (!authConfig.secret) {
-  throw new Error("AUTH_SECRET (o NEXTAUTH_SECRET) es requerida. Configura la variable de entorno antes de iniciar.")
+  throw new Error(
+    "AUTH_SECRET (o NEXTAUTH_SECRET) es requerida. Configura la variable de entorno antes de iniciar.",
+  )
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -31,8 +33,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        email:          { label: "Email",          type: "email" },
-        password:       { label: "Password",       type: "password" },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
         turnstileToken: { label: "Turnstile Token", type: "text" },
       },
       async authorize(credentials, request) {
@@ -41,7 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const remoteIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
         const captchaValid = await verifyTurnstileToken(
           credentials.turnstileToken as string | undefined,
-          remoteIp
+          remoteIp,
         )
         if (!captchaValid) return null
 
@@ -61,10 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             throw new CuentaPendienteActivacionError()
           }
 
-          const valida = await bcrypt.compare(
-            credentials.password as string,
-            usuario.password_hash
-          )
+          const valida = await bcrypt.compare(credentials.password as string, usuario.password_hash)
           if (!valida) return null
 
           if (usuario.role !== "SUPERADMIN" && usuario.company_id) {
@@ -76,15 +75,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           try {
             after(() =>
-              prisma.user.update({
-                where: { id: usuario.id },
-                data:  { last_access: new Date() },
-              }).catch((error) => {
-                console.error("Failed to update last_access", {
-                  userId: usuario.id,
-                  message: error instanceof Error ? error.message : String(error),
+              prisma.user
+                .update({
+                  where: { id: usuario.id },
+                  data: { last_access: new Date() },
                 })
-              })
+                .catch((error) => {
+                  console.error("Failed to update last_access", {
+                    userId: usuario.id,
+                    message: error instanceof Error ? error.message : String(error),
+                  })
+                }),
             )
           } catch (error) {
             console.error("Failed to schedule last_access update via after()", {
@@ -103,7 +104,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             empresa_slug: usuario.company?.slug ?? null,
           }
         } catch (error) {
-          if (error instanceof EmpresaBloqueadaError || error instanceof CuentaPendienteActivacionError) throw error
+          if (
+            error instanceof EmpresaBloqueadaError ||
+            error instanceof CuentaPendienteActivacionError
+          )
+            throw error
 
           console.error("Credentials login failed while reading database", {
             message: error instanceof Error ? error.message : String(error),

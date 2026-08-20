@@ -42,7 +42,8 @@ export function Pagination({
       }}
     >
       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-        {totalResults} resultado{totalResults !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
+        {totalResults} resultado{totalResults !== 1 ? "s" : ""} · página {currentPage} de{" "}
+        {totalPages}
       </Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
         {currentPage > 1 ? (

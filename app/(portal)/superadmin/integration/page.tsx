@@ -11,42 +11,58 @@ import Typography from "@mui/material/Typography"
 
 function buildPortalWebhookUrl() {
   const baseUrl = process.env.NEXTAUTH_URL?.trim().replace(/\/$/, "")
-  return baseUrl ? `${baseUrl}/api/internal/webhooks/tutor-learning` : "/api/internal/webhooks/tutor-learning"
+  return baseUrl
+    ? `${baseUrl}/api/internal/webhooks/tutor-learning`
+    : "/api/internal/webhooks/tutor-learning"
 }
 
-function bool(value: boolean) { return value ? "Sí" : "No" }
+function bool(value: boolean) {
+  return value ? "Sí" : "No"
+}
 
 export default async function SuperAdminIntegrationPage() {
   const session = await getSession()
   if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
-  const diagnostics   = await getTutorLearningWebhookDiagnostics()
-  const bridgeHealth  = diagnostics.bridgeHealth
+  const diagnostics = await getTutorLearningWebhookDiagnostics()
+  const bridgeHealth = diagnostics.bridgeHealth
   const bridgeReachable = bridgeHealth ? bridgeHealth.ok : false
-  const bridgeError   = bridgeHealth && "error_message" in bridgeHealth ? bridgeHealth.error_message : null
+  const bridgeError =
+    bridgeHealth && "error_message" in bridgeHealth ? bridgeHealth.error_message : null
 
   const infoRows: { label: string; items: { key: string; value: string; mono?: boolean }[] }[] = [
     {
       label: "Plugin",
       items: [
-        { key: "Versión",                value: bridgeHealth?.plugin_version    || "Sin dato" },
-        { key: "WordPress",              value: bridgeHealth?.wordpress_version  || "Sin dato" },
-        { key: "Tutor REST disponible",  value: bool(Boolean(bridgeHealth?.tutor_rest_available)) },
+        { key: "Versión", value: bridgeHealth?.plugin_version || "Sin dato" },
+        { key: "WordPress", value: bridgeHealth?.wordpress_version || "Sin dato" },
+        { key: "Tutor REST disponible", value: bool(Boolean(bridgeHealth?.tutor_rest_available)) },
       ],
     },
     {
       label: "Configuración",
       items: [
-        { key: "Service user",        value: bool(Boolean(bridgeHealth?.service_user_configured)) },
-        { key: "Webhook en bridge",   value: bool(Boolean(bridgeHealth?.learning_webhook_configured)) },
-        { key: "URL esperada",        value: buildPortalWebhookUrl(), mono: true },
+        { key: "Service user", value: bool(Boolean(bridgeHealth?.service_user_configured)) },
+        {
+          key: "Webhook en bridge",
+          value: bool(Boolean(bridgeHealth?.learning_webhook_configured)),
+        },
+        { key: "URL esperada", value: buildPortalWebhookUrl(), mono: true },
       ],
     },
   ]
 
   const statusCards = [
-    { label: "Bridge configurado", ok: diagnostics.bridgeConfigured, description: "Base URL y credenciales definidas en variables de entorno." },
-    { label: "Bridge responde",    ok: bridgeReachable,              description: "Health check responde desde el portal correctamente." },
+    {
+      label: "Bridge configurado",
+      ok: diagnostics.bridgeConfigured,
+      description: "Base URL y credenciales definidas en variables de entorno.",
+    },
+    {
+      label: "Bridge responde",
+      ok: bridgeReachable,
+      description: "Health check responde desde el portal correctamente.",
+    },
   ]
 
   return (
@@ -60,18 +76,19 @@ export default async function SuperAdminIntegrationPage() {
         <Alert
           severity="success"
           icon={<CheckCircle2 size={16} />}
-          sx={{ borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" }}
+          sx={{
+            borderRadius: 2,
+            border: "1px solid #bbf7d0",
+            bgcolor: "#f0fdf4",
+            color: "#14532d",
+          }}
         >
           <strong>Bridge conectado correctamente</strong>
           <br />
           desarrolla360-bridge · WordPress · Tutor LMS Pro
         </Alert>
       ) : (
-        <Alert
-          severity="error"
-          icon={<XCircle size={16} />}
-          sx={{ borderRadius: 2 }}
-        >
+        <Alert severity="error" icon={<XCircle size={16} />} sx={{ borderRadius: 2 }}>
           <strong>Bridge inaccesible</strong>
           <br />
           {bridgeError ?? "No se pudo establecer conexión con el plugin WordPress."}
@@ -85,13 +102,22 @@ export default async function SuperAdminIntegrationPage() {
             elevation={0}
             sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}
           >
-            <Box sx={{ p: 2.5, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                p: 2.5,
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+              }}
+            >
               <Box>
                 <Typography sx={{ fontSize: 11, color: "text.secondary" }}>{label}</Typography>
                 <Typography sx={{ mt: 0.5, fontSize: 24, fontWeight: 700, color: "text.primary" }}>
                   {ok ? "Sí" : "No"}
                 </Typography>
-                <Typography sx={{ mt: 0.5, fontSize: 11, color: "text.secondary" }}>{description}</Typography>
+                <Typography sx={{ mt: 0.5, fontSize: 11, color: "text.secondary" }}>
+                  {description}
+                </Typography>
               </Box>
               <Box
                 sx={{
@@ -154,7 +180,10 @@ export default async function SuperAdminIntegrationPage() {
                   }}
                 >
                   {items.map(({ key, value, mono }) => (
-                    <Box key={key} sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+                    <Box
+                      key={key}
+                      sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}
+                    >
                       <Typography sx={{ fontSize: 13, color: "text.secondary", flexShrink: 0 }}>
                         {key}
                       </Typography>
@@ -180,11 +209,7 @@ export default async function SuperAdminIntegrationPage() {
           {bridgeError && (
             <>
               <Divider sx={{ my: 2 }} />
-              <Alert
-                severity="error"
-                icon={<XCircle size={16} />}
-                sx={{ borderRadius: 2 }}
-              >
+              <Alert severity="error" icon={<XCircle size={16} />} sx={{ borderRadius: 2 }}>
                 No pudimos consultar el health del bridge. Detalle: {bridgeError}
               </Alert>
             </>

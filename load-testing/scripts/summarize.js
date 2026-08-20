@@ -10,19 +10,25 @@ function summarizeFile(file) {
   try {
     data = JSON.parse(fs.readFileSync(file, "utf8"))
   } catch (err) {
-    console.warn(`WARN ${name}: no se pudo leer/parsear el JSON (${err.message}), se omite del informe`)
+    console.warn(
+      `WARN ${name}: no se pudo leer/parsear el JSON (${err.message}), se omite del informe`,
+    )
     return null
   }
 
   const agg = data.aggregate
   if (!agg) {
-    console.warn(`WARN ${name}: el JSON no tiene "aggregate" (¿no es un output de artillery run --output?), se omite`)
+    console.warn(
+      `WARN ${name}: el JSON no tiene "aggregate" (¿no es un output de artillery run --output?), se omite`,
+    )
     return null
   }
 
   const rt = agg.summaries?.["http.response_time"]
   if (!rt) {
-    console.warn(`WARN ${name}: falta aggregate.summaries["http.response_time"] (posible corrida sin requests HTTP completados)`)
+    console.warn(
+      `WARN ${name}: falta aggregate.summaries["http.response_time"] (posible corrida sin requests HTTP completados)`,
+    )
   }
 
   const counters = agg.counters ?? {}
@@ -67,7 +73,9 @@ function main() {
   const rows = files.map(summarizeFile).filter(Boolean)
 
   if (rows.length === 0) {
-    console.warn("WARN: no se generaron filas validas (todos los JSON fallaron o no habia ninguno en reports/raw)")
+    console.warn(
+      "WARN: no se generaron filas validas (todos los JSON fallaron o no habia ninguno en reports/raw)",
+    )
   }
 
   const date = new Date().toISOString().slice(0, 10)
@@ -88,7 +96,9 @@ function main() {
   const out = path.join(config.reportsDir, `INFORME-LOADTEST-${date}.md`)
   fs.writeFileSync(out, lines.join("\n"))
   console.log(`OK reporte: ${out}`)
-  rows.forEach((r) => console.log(`${r.pass ? "PASS" : "FAIL"} ${r.name} p95=${r.p95}ms err=${r.errorRate}%`))
+  rows.forEach((r) =>
+    console.log(`${r.pass ? "PASS" : "FAIL"} ${r.name} p95=${r.p95}ms err=${r.errorRate}%`),
+  )
 }
 
 main()

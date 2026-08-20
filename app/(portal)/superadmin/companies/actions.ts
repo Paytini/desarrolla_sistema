@@ -34,16 +34,16 @@ export async function createCompanyAction(
   const session = await requireSuperAdminSession()
   const actor = getAuditActorFromSession(session)
 
-  const nombre                = getString(formData, "nombre")
-  const emailHr               = getString(formData, "email_hr").toLowerCase()
-  const telefono              = getString(formData, "telefono")
-  const rfc                   = getString(formData, "rfc")
-  const contractedSeats       = getPositiveInt(formData, "asientos_contratados")
-  const nombreHr              = getString(formData, "nombre_hr")
-  const passwordHr            = getString(formData, "password_hr")
-  const notas                 = getString(formData, "notas")
-  const packageIdRaw          = getString(formData, "paquete_id")
-  const expirationDateRaw     = getString(formData, "fecha_vencimiento")
+  const nombre = getString(formData, "nombre")
+  const emailHr = getString(formData, "email_hr").toLowerCase()
+  const telefono = getString(formData, "telefono")
+  const rfc = getString(formData, "rfc")
+  const contractedSeats = getPositiveInt(formData, "asientos_contratados")
+  const nombreHr = getString(formData, "nombre_hr")
+  const passwordHr = getString(formData, "password_hr")
+  const notas = getString(formData, "notas")
+  const packageIdRaw = getString(formData, "paquete_id")
+  const expirationDateRaw = getString(formData, "fecha_vencimiento")
 
   if (!nombre || !emailHr || !nombreHr || !passwordHr || contractedSeats < 1) {
     return { error: "datos" }
@@ -65,8 +65,8 @@ export async function createCompanyAction(
   })
   if (existingUser) return { error: "usuario_hr" }
 
-  const passwordHash  = await bcrypt.hash(passwordHr, 12)
-  const packageId     = packageIdRaw || null
+  const passwordHash = await bcrypt.hash(passwordHr, 12)
+  const packageId = packageIdRaw || null
   const expirationDate = (() => {
     if (!expirationDateRaw) return null
     const d = new Date(expirationDateRaw)
@@ -77,23 +77,23 @@ export async function createCompanyAction(
   const createdResult = await prisma.$transaction(async (tx) => {
     const company = await tx.company.create({
       data: {
-        name:              nombre,
+        name: nombre,
         slug,
-        hr_email:          emailHr,
-        phone:             telefono || null,
-        rfc:               rfc || null,
-        contracted_seats:  contractedSeats,
-        notes:             notas || null,
+        hr_email: emailHr,
+        phone: telefono || null,
+        rfc: rfc || null,
+        contracted_seats: contractedSeats,
+        notes: notas || null,
       },
     })
 
     await tx.user.create({
       data: {
-        email:         emailHr,
+        email: emailHr,
         password_hash: passwordHash,
-        name:          nombreHr,
-        role:          "HR",
-        company_id:    company.id,
+        name: nombreHr,
+        role: "HR",
+        company_id: company.id,
       },
     })
 
@@ -101,10 +101,10 @@ export async function createCompanyAction(
     if (packageId) {
       await tx.companyPackage.create({
         data: {
-          company_id:       company.id,
-          package_id:       packageId,
-          expiration_date:  expirationDate,
-          active:           true,
+          company_id: company.id,
+          package_id: packageId,
+          expiration_date: expirationDate,
+          active: true,
         },
       })
       assignedPackageId = packageId
@@ -118,24 +118,24 @@ export async function createCompanyAction(
     await createSeatHistoryEntry({
       actor,
       companyId: createdResult.companyId,
-      motivo:   "empresa_creada",
-      detalle:  "Se inicializaron los cupos al crear la empresa en SuperAdmin.",
+      motivo: "empresa_creada",
+      detalle: "Se inicializaron los cupos al crear la empresa en SuperAdmin.",
       before: { asientos_contratados: 0, asientos_usados: 0, empleados_suspendidos: 0 },
-      after:  seatSnapshot,
+      after: seatSnapshot,
     })
   }
 
   await createAuditEvent({
     actor,
-    accion:    "EMPRESA_CREADA",
+    accion: "EMPRESA_CREADA",
     entityType: "EMPRESA",
-    entityId:  createdResult.companyId,
+    entityId: createdResult.companyId,
     companyId: createdResult.companyId,
-    resumen:   `Se creo la empresa ${nombre} y su acceso HR inicial.`,
+    resumen: `Se creo la empresa ${nombre} y su acceso HR inicial.`,
     metadata: {
-      email_hr:              emailHr,
-      asientos_contratados:  contractedSeats,
-      paquete_inicial_id:    createdResult.assignedPackageId,
+      email_hr: emailHr,
+      asientos_contratados: contractedSeats,
+      paquete_inicial_id: createdResult.assignedPackageId,
     },
   })
 
@@ -149,20 +149,20 @@ export async function createCompanyAction(
     await enqueueEmailSendJob({ to: emailHr, subject, html, text })
     await createAuditEvent({
       actor,
-      accion:    "EMAIL_CREDENCIALES_ENCOLADO",
+      accion: "EMAIL_CREDENCIALES_ENCOLADO",
       entityType: "EMPRESA",
-      entityId:  createdResult.companyId,
+      entityId: createdResult.companyId,
       companyId: createdResult.companyId,
-      resumen:   `Se encolo el correo de credenciales para ${emailHr}.`,
+      resumen: `Se encolo el correo de credenciales para ${emailHr}.`,
     })
   } catch (error) {
     await createAuditEvent({
       actor,
-      accion:    "EMAIL_CREDENCIALES_FALLIDO",
+      accion: "EMAIL_CREDENCIALES_FALLIDO",
       entityType: "EMPRESA",
-      entityId:  createdResult.companyId,
+      entityId: createdResult.companyId,
       companyId: createdResult.companyId,
-      resumen:   `No se pudo encolar el correo de credenciales para ${emailHr}.`,
+      resumen: `No se pudo encolar el correo de credenciales para ${emailHr}.`,
       metadata: {
         error: error instanceof Error ? error.message : String(error),
       },
@@ -172,24 +172,24 @@ export async function createCompanyAction(
   if (createdResult.assignedPackageId) {
     await createAuditEvent({
       actor,
-      accion:    "PAQUETE_ASIGNADO",
+      accion: "PAQUETE_ASIGNADO",
       entityType: "EMPRESA_PAQUETE",
-      entityId:  createdResult.assignedPackageId,
+      entityId: createdResult.assignedPackageId,
       companyId: createdResult.companyId,
-      resumen:   `Se asigno paquete inicial a la empresa ${nombre}.`,
+      resumen: `Se asigno paquete inicial a la empresa ${nombre}.`,
       metadata: {
-        paquete_id:        createdResult.assignedPackageId,
+        paquete_id: createdResult.assignedPackageId,
         fecha_vencimiento: expirationDate?.toISOString() ?? null,
       },
     })
   }
 
   await notifySuperadmins({
-    tipo:       "EMPRESA_CREADA",
-    titulo:     "Nueva empresa registrada",
-    mensaje:    `${actor.nombre} creó la empresa ${nombre}.`,
+    tipo: "EMPRESA_CREADA",
+    titulo: "Nueva empresa registrada",
+    mensaje: `${actor.nombre} creó la empresa ${nombre}.`,
     entidadTipo: "EMPRESA",
-    entidadId:  createdResult.companyId,
+    entidadId: createdResult.companyId,
     excludeUsuarioId: actor.userId,
   })
 
@@ -233,11 +233,11 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   })
 
   await notifySuperadmins({
-    tipo:       company.active ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
-    titulo:     company.active ? "Empresa suspendida" : "Empresa reactivada",
-    mensaje:    `${actor.nombre} ${company.active ? "suspendió" : "reactivó"} la empresa ${company.name}.`,
+    tipo: company.active ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
+    titulo: company.active ? "Empresa suspendida" : "Empresa reactivada",
+    mensaje: `${actor.nombre} ${company.active ? "suspendió" : "reactivó"} la empresa ${company.name}.`,
     entidadTipo: "EMPRESA",
-    entidadId:  companyId,
+    entidadId: companyId,
     excludeUsuarioId: actor.userId,
   })
 
@@ -245,7 +245,9 @@ export async function toggleCompanyStatusAction(formData: FormData) {
   revalidatePath("/superadmin/reports")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  redirect(`/superadmin/companies?success=${company.active ? "empresa_suspendida" : "empresa_activada"}`)
+  redirect(
+    `/superadmin/companies?success=${company.active ? "empresa_suspendida" : "empresa_activada"}`,
+  )
 }
 
 export async function updateCompanyBrandingAction(formData: FormData) {
@@ -282,4 +284,3 @@ export async function updateCompanyBrandingAction(formData: FormData) {
   revalidateTag(companyCacheRootTag(companyId), "max")
   redirect(`/superadmin/companies/${companyId}?success=marca_actualizada`)
 }
-

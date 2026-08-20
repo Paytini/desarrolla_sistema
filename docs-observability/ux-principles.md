@@ -2,7 +2,6 @@
 trigger: model_decision
 ---
 
-
 # UX Design Principles for AI Interface Development
 
 ## Core Instruction

@@ -60,10 +60,14 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
 
   const today = getTodayInConsultingTimeZone()
   const upcoming = requests
-    .filter((request) => request.status !== "CANCELLED" && toDateKey(request.preferred_date) >= today)
+    .filter(
+      (request) => request.status !== "CANCELLED" && toDateKey(request.preferred_date) >= today,
+    )
     .sort((a, b) => toDateKey(a.preferred_date).localeCompare(toDateKey(b.preferred_date)))
   const history = requests
-    .filter((request) => request.status === "CANCELLED" || toDateKey(request.preferred_date) < today)
+    .filter(
+      (request) => request.status === "CANCELLED" || toDateKey(request.preferred_date) < today,
+    )
     .sort((a, b) => toDateKey(b.preferred_date).localeCompare(toDateKey(a.preferred_date)))
 
   const returnTo = companyPath(branding.slug, "/consulting")
@@ -108,7 +112,10 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
       <PageHeader
         title="Consultoría"
         description="Sesiones en vivo con nuestro equipo de consultores"
-        breadcrumbs={[{ label: "Empresa", href: companyPath(branding.slug, "/home") }, { label: "Consultoría" }]}
+        breadcrumbs={[
+          { label: "Empresa", href: companyPath(branding.slug, "/home") },
+          { label: "Consultoría" },
+        ]}
         action={
           <Link
             href={companyPath(branding.slug, "/consulting/new")}
@@ -119,7 +126,9 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
         }
       />
 
-      {success ? <StatusToast tone="success" message={successMessages[success] ?? success} /> : null}
+      {success ? (
+        <StatusToast tone="success" message={successMessages[success] ?? success} />
+      ) : null}
       {error ? <StatusToast tone="error" message={errorMessages[error] ?? error} /> : null}
 
       <div className="space-y-5">

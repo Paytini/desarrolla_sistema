@@ -24,7 +24,10 @@ import { ConfirmIconButton } from "@/components/shared/ConfirmIconButton"
 import { SearchInput } from "@/components/shared/SearchInput"
 import { Pagination } from "@/components/shared/Pagination"
 import { getInitials } from "@/components/layout/nav-config"
-import { deleteEmployeeAsSuperAdminAction, toggleHrUserStatusAction } from "@/app/(portal)/superadmin/access/actions"
+import {
+  deleteEmployeeAsSuperAdminAction,
+  toggleHrUserStatusAction,
+} from "@/app/(portal)/superadmin/access/actions"
 
 export type HrAccessRow = {
   id: string
@@ -86,7 +89,15 @@ function StatusBadge({
   )
 }
 
-function RowIdentity({ name, email, avatarLabel }: { name: string; email: string; avatarLabel: string }) {
+function RowIdentity({
+  name,
+  email,
+  avatarLabel,
+}: {
+  name: string
+  email: string
+  avatarLabel: string
+}) {
   return (
     <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
       <Avatar
@@ -102,12 +113,8 @@ function RowIdentity({ name, email, avatarLabel }: { name: string; email: string
         {getInitials(avatarLabel)}
       </Avatar>
       <Box>
-        <Typography sx={{ fontSize: 13, fontWeight: 500 }}>
-          {name}
-        </Typography>
-        <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.25 }}>
-          {email}
-        </Typography>
+        <Typography sx={{ fontSize: 13, fontWeight: 500 }}>{name}</Typography>
+        <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.25 }}>{email}</Typography>
       </Box>
     </Stack>
   )
@@ -115,11 +122,7 @@ function RowIdentity({ name, email, avatarLabel }: { name: string; email: string
 
 function SeatsRing({ used, total }: { used: number | null; total: number | null }) {
   if (!total || total <= 0) {
-    return (
-      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-        —
-      </Typography>
-    )
+    return <Typography sx={{ fontSize: 12, color: "text.secondary" }}>—</Typography>
   }
   const pct = Math.min(100, Math.round(((used ?? 0) / total) * 100))
   return (
@@ -154,9 +157,7 @@ function SectionHeader({ title, description }: { title: string; description: str
         {title}
       </Typography>
       <Box sx={{ mt: 1.5, mb: 1, height: 2, width: 24, bgcolor: "primary.main" }} />
-      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-        {description}
-      </Typography>
+      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>{description}</Typography>
     </Box>
   )
 }
@@ -167,9 +168,7 @@ function EmptyState({ icon: Icon, label }: { icon: LucideIcon; label: string }) 
       <Avatar sx={{ width: 48, height: 48, bgcolor: "action.hover", color: "text.disabled" }}>
         <Icon size={20} />
       </Avatar>
-      <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-        {label}
-      </Typography>
+      <Typography sx={{ fontSize: 13, color: "text.secondary" }}>{label}</Typography>
     </Stack>
   )
 }
@@ -198,12 +197,15 @@ export function AccessTabs({
   employeePagination,
 }: AccessTabsProps) {
   const router = useRouter()
-  const [tab, setTab]         = useState<"hr" | "employees">(defaultTab)
-  const [hrSearch, setHrSearch]   = useState("")
+  const [tab, setTab] = useState<"hr" | "employees">(defaultTab)
+  const [hrSearch, setHrSearch] = useState("")
 
   function handleTabChange(value: "hr" | "employees") {
     setTab(value)
-    router.replace(value === "employees" ? "/superadmin/access?tab=employees" : "/superadmin/access", { scroll: false })
+    router.replace(
+      value === "employees" ? "/superadmin/access?tab=employees" : "/superadmin/access",
+      { scroll: false },
+    )
   }
 
   function buildEmployeePageUrl(page: number) {
@@ -226,15 +228,27 @@ export function AccessTabs({
     : hrUsers
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: '8px', backgroundColor: '#FFFFFF' }}>
-      <Tabs value={tab} onChange={(_, value: "hr" | "employees") => handleTabChange(value)} sx={{ px: 2.5, pt: 1, borderBottom: '1px solid #E5E7EB' }}>
+    <Paper elevation={0} sx={{ borderRadius: "8px", backgroundColor: "#FFFFFF" }}>
+      <Tabs
+        value={tab}
+        onChange={(_, value: "hr" | "employees") => handleTabChange(value)}
+        sx={{ px: 2.5, pt: 1, borderBottom: "1px solid #E5E7EB" }}
+      >
         <Tab value="hr" label={`Usuarios HR (${hrUsers.length})`} />
         <Tab value="employees" label={`Empleados (${employeesGrandTotal})`} />
       </Tabs>
 
       {tab === "hr" && (
         <Stack spacing={2} sx={{ p: 2.5 }}>
-          <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
             <SectionHeader
               title="Usuarios HR por empresa"
               description="Pausa o reactiva accesos sin necesidad de eliminar la cuenta."
@@ -273,7 +287,11 @@ export function AccessTabs({
                       <Typography sx={{ fontSize: 13 }}>{user.companyName}</Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <StatusBadge active={user.active} activeLabel="Activo" inactiveLabel="Suspendido" />
+                      <StatusBadge
+                        active={user.active}
+                        activeLabel="Activo"
+                        inactiveLabel="Suspendido"
+                      />
                     </TableCell>
                     <TableCell sx={cellSx}>
                       <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
@@ -294,7 +312,9 @@ export function AccessTabs({
                         tone={user.active ? "outline" : "brand"}
                         icon={user.active ? <Pause size={13} /> : <Play size={13} />}
                         label={user.active ? "Suspender" : "Reactivar"}
-                        title={user.active ? `¿Suspender a ${user.name}?` : `¿Reactivar a ${user.name}?`}
+                        title={
+                          user.active ? `¿Suspender a ${user.name}?` : `¿Reactivar a ${user.name}?`
+                        }
                         description={
                           user.active
                             ? "El usuario perderá acceso al portal de inmediato."
@@ -315,12 +335,25 @@ export function AccessTabs({
 
       {tab === "employees" && (
         <Stack spacing={2} sx={{ p: 2.5 }}>
-          <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
             <SectionHeader
               title="Empleados del portal"
               description="Elimina accesos cuando sea necesario liberar una cuenta."
             />
-            <Box component="form" method="GET" action="/superadmin/access" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box
+              component="form"
+              method="GET"
+              action="/superadmin/access"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
               <input type="hidden" name="tab" value="employees" />
               <SearchInput
                 name="q"
@@ -362,7 +395,11 @@ export function AccessTabs({
                       <Typography sx={{ fontSize: 13 }}>{employee.companyName}</Typography>
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <StatusBadge active={employee.active} activeLabel="Activo" inactiveLabel="Suspendido" />
+                      <StatusBadge
+                        active={employee.active}
+                        activeLabel="Activo"
+                        inactiveLabel="Suspendido"
+                      />
                     </TableCell>
                     <TableCell sx={cellSx}>
                       {employee.portalActive === null ? (
@@ -370,11 +407,17 @@ export function AccessTabs({
                           Sin cuenta
                         </Typography>
                       ) : (
-                        <StatusBadge active={employee.portalActive} activeLabel="Activo" inactiveLabel="Suspendido" />
+                        <StatusBadge
+                          active={employee.portalActive}
+                          activeLabel="Activo"
+                          inactiveLabel="Suspendido"
+                        />
                       )}
                     </TableCell>
                     <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 12, color: "text.secondary", fontFamily: "monospace" }}>
+                      <Typography
+                        sx={{ fontSize: 12, color: "text.secondary", fontFamily: "monospace" }}
+                      >
                         {employee.wpUserId ?? "—"}
                       </Typography>
                     </TableCell>

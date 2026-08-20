@@ -1,0 +1,4 @@
+node_modules
+.next
+wordpress-plugin
+prisma/migrations

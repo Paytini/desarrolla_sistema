@@ -1,7 +1,10 @@
 import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:crypto"
 import { prisma } from "@/lib/prisma"
 import { mapWithConcurrency } from "@/lib/concurrency"
-import { syncSingleEmployeePackageEnrollment, type PackageEnrollmentSyncResult } from "@/lib/course-sync"
+import {
+  syncSingleEmployeePackageEnrollment,
+  type PackageEnrollmentSyncResult,
+} from "@/lib/course-sync"
 import { bridgeUpsertEmployee } from "@/lib/wordpress-bridge"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { sendEmail } from "@/lib/ses"
@@ -114,7 +117,13 @@ async function processEmailSendJob(jobId: string, payload: EmailSendPayload) {
     await prisma.job.update({
       where: { id: jobId },
       data: {
-        payload: { to: payload.to, subject: payload.subject, html: "", text: "", attempts: payload.attempts },
+        payload: {
+          to: payload.to,
+          subject: payload.subject,
+          html: "",
+          text: "",
+          attempts: payload.attempts,
+        },
         status: "DONE",
         completed_at: new Date(),
         result: { to: payload.to },
@@ -122,12 +131,20 @@ async function processEmailSendJob(jobId: string, payload: EmailSendPayload) {
     })
   } catch (error) {
     const attempts = payload.attempts + 1
-    const message = error instanceof Error ? error.message.slice(0, 500) : "Error desconocido enviando el correo."
+    const message =
+      error instanceof Error ? error.message.slice(0, 500) : "Error desconocido enviando el correo."
     const exhausted = attempts >= EMAIL_SEND_MAX_ATTEMPTS
-    const backoffMs = Math.min(EMAIL_SEND_BACKOFF_BASE_MS * 2 ** (attempts - 1), EMAIL_SEND_BACKOFF_MAX_MS)
+    const backoffMs = Math.min(
+      EMAIL_SEND_BACKOFF_BASE_MS * 2 ** (attempts - 1),
+      EMAIL_SEND_BACKOFF_MAX_MS,
+    )
 
     if (exhausted) {
-      console.error("EMAIL_SEND: agotados los reintentos, correo no enviado", { to: payload.to, attempts, message })
+      console.error("EMAIL_SEND: agotados los reintentos, correo no enviado", {
+        to: payload.to,
+        attempts,
+        message,
+      })
     }
 
     await prisma.job.update({
@@ -166,7 +183,10 @@ export async function enqueueCsvEmployeeBridgeSyncJob(input: {
   return job.id
 }
 
-async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmployeeBridgeSyncPayload) {
+async function processCsvEmployeeBridgeSyncJob(
+  jobId: string,
+  payload: CsvEmployeeBridgeSyncPayload,
+) {
   const chunk = payload.pending.slice(0, JOB_CHUNK_SIZE)
   const remaining = payload.pending.slice(JOB_CHUNK_SIZE)
 
@@ -194,7 +214,12 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
         email: employee.email,
         error: error instanceof Error ? error.message : String(error),
       })
-      return { employeeId: employee.employeeId, email: employee.email, wpUserId: null, ok: false as const }
+      return {
+        employeeId: employee.employeeId,
+        email: employee.email,
+        wpUserId: null,
+        ok: false as const,
+      }
     }
   })
 
@@ -202,12 +227,15 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
   if (synced.length > 0) {
     await prisma.$transaction(
       synced.flatMap((result) => [
-        prisma.employee.updateMany({ where: { id: result.employeeId }, data: { wp_user_id: result.wpUserId } }),
+        prisma.employee.updateMany({
+          where: { id: result.employeeId },
+          data: { wp_user_id: result.wpUserId },
+        }),
         prisma.user.updateMany({
           where: { email: result.email, company_id: payload.companyId },
           data: { wp_user_id: result.wpUserId },
         }),
-      ])
+      ]),
     )
   }
 
@@ -235,10 +263,19 @@ async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmploy
     await prisma.job.update({
       where: { id: jobId },
       data: {
-        payload: { companyId: payload.companyId, companyName: payload.companyName, pending: [], syncedCount, warningCount },
+        payload: {
+          companyId: payload.companyId,
+          companyName: payload.companyName,
+          pending: [],
+          syncedCount,
+          warningCount,
+        },
         status: "ERROR",
         completed_at: new Date(),
-        error: error instanceof Error ? error.message.slice(0, 500) : "Error desconocido guardando el progreso del job.",
+        error:
+          error instanceof Error
+            ? error.message.slice(0, 500)
+            : "Error desconocido guardando el progreso del job.",
       },
     })
     throw error
@@ -263,7 +300,10 @@ type PackageEnrollmentSyncPayload = {
   processedEmployeeIds: string[]
 }
 
-async function processPackageEnrollmentSyncJob(jobId: string, payload: PackageEnrollmentSyncPayload) {
+async function processPackageEnrollmentSyncJob(
+  jobId: string,
+  payload: PackageEnrollmentSyncPayload,
+) {
   const processedIds = new Set(payload.processedEmployeeIds)
   const remainingIds = payload.employeeIds.filter((id) => !processedIds.has(id))
 
@@ -319,8 +359,8 @@ async function processPackageEnrollmentSyncJob(jobId: string, payload: PackageEn
         packageCourses,
         courseIds,
         courseIdSet,
-        activePackage.package.delivery_mode
-      )
+        activePackage.package.delivery_mode,
+      ),
   )
 
   const newProcessedIds = [...processedIds, ...chunkIds]
@@ -395,7 +435,9 @@ export async function processPendingJobs(limit: number = JOBS_PER_CRON_TICK) {
     } catch (error) {
       errored += 1
       const message =
-        error instanceof Error ? error.message.slice(0, 500) : "Error desconocido procesando el job."
+        error instanceof Error
+          ? error.message.slice(0, 500)
+          : "Error desconocido procesando el job."
 
       await prisma.job.update({
         where: { id: job.id },

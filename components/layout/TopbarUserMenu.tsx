@@ -21,7 +21,7 @@ interface TopbarUserMenuProps {
 export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
   const [open, setOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
-  const color    = avatarColor(name)
+  const color = avatarColor(name)
   const initials = getInitials(name)
 
   return (
@@ -141,7 +141,14 @@ export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
                   {initials}
                 </Avatar>
                 <Box sx={{ textAlign: "center" }}>
-                  <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "text.primary", lineHeight: 1.3 }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.9375rem",
+                      fontWeight: 600,
+                      color: "text.primary",
+                      lineHeight: 1.3,
+                    }}
+                  >
                     {name}
                   </Typography>
                   <Typography sx={{ fontSize: "0.75rem", color: "text.secondary", mt: "2px" }}>
@@ -174,7 +181,11 @@ export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
                   "&:hover": { bgcolor: "rgba(239,68,68,0.05)" },
                 }}
               >
-                <Box component="i" className="ri-logout-box-r-line" sx={{ fontSize: "1.125rem", lineHeight: 1 }} />
+                <Box
+                  component="i"
+                  className="ri-logout-box-r-line"
+                  sx={{ fontSize: "1.125rem", lineHeight: 1 }}
+                />
                 Cerrar sesión
               </Box>
             </Paper>
@@ -183,10 +194,7 @@ export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
       </Popper>
 
       {open && (
-        <Box
-          onClick={() => setOpen(false)}
-          sx={{ position: "fixed", inset: 0, zIndex: 1299 }}
-        />
+        <Box onClick={() => setOpen(false)} sx={{ position: "fixed", inset: 0, zIndex: 1299 }} />
       )}
     </>
   )

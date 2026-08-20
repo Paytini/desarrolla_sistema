@@ -8,7 +8,7 @@ Seeders y pruebas de carga (Artillery + Playwright) para el Portal Empresarial D
 
 Los escenarios tienen el target fijado a `localhost:3005` a propósito: apuntar fuera exige poner `LT_TARGET_URL` de forma explícita.
 
-`empresas.desarrolla360.com` está hoy en modo de prueba, pero sigue usando la base de datos real y —salvo que lo cambies— el WordPress real. Antes de apuntarle una carga, lee [TARGET-REMOTO.md](TARGET-REMOTO.md): explica qué verificar y cuándo conviene más un *preview* de Vercel.
+`empresas.desarrolla360.com` está hoy en modo de prueba, pero sigue usando la base de datos real y —salvo que lo cambies— el WordPress real. Antes de apuntarle una carga, lee [TARGET-REMOTO.md](TARGET-REMOTO.md): explica qué verificar y cuándo conviene más un _preview_ de Vercel.
 
 ---
 
@@ -16,13 +16,13 @@ Los escenarios tienen el target fijado a `localhost:3005` a propósito: apuntar 
 
 La decisión de diseño central del suite: son **preguntas distintas**, por eso son comandos distintos.
 
-| | `npm run simulate:browser` | `npm run simulate:http` |
-|---|---|---|
-| **Pregunta** | ¿Cómo se ve y se siente la app para un usuario? | ¿Cuántos usuarios aguanta el servidor? |
-| **Cómo** | Chromium real, login escribiendo en el formulario, Turnstile incluido | Peticiones HTTP puras, login por API, cookie reutilizada |
-| **Escala** | 1-5 navegadores (cada uno cuesta 150-300 MB y CPU) | Cientos de usuarios virtuales |
-| **Ventana visible** | Sí por defecto | No aplica |
-| **Sirve para medir capacidad** | **No** — compite por CPU con el servidor | **Sí** |
+|                                | `npm run simulate:browser`                                            | `npm run simulate:http`                                  |
+| ------------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Pregunta**                   | ¿Cómo se ve y se siente la app para un usuario?                       | ¿Cuántos usuarios aguanta el servidor?                   |
+| **Cómo**                       | Chromium real, login escribiendo en el formulario, Turnstile incluido | Peticiones HTTP puras, login por API, cookie reutilizada |
+| **Escala**                     | 1-5 navegadores (cada uno cuesta 150-300 MB y CPU)                    | Cientos de usuarios virtuales                            |
+| **Ventana visible**            | Sí por defecto                                                        | No aplica                                                |
+| **Sirve para medir capacidad** | **No** — compite por CPU con el servidor                              | **Sí**                                                   |
 
 Al servidor le da igual si el cliente es un navegador o `curl`: ve las mismas peticiones HTTP. El navegador solo añade valor para ver la experiencia del cliente.
 
@@ -53,23 +53,23 @@ Secuencias completas por escenario (con la escala de siembra que le conviene a c
 
 ## Todos los comandos
 
-| Comando | Qué hace |
-|---|---|
-| `npm run verify` | Comprueba conexión a la base y que existen las tablas |
-| `npm run seed` | Siembra empresas, usuarios, cursos y constancias |
-| `npm run teardown` | Borra todo lo sembrado (verifica residuo 0) |
-| `npm run mock-bridge` | Levanta el sustituto de WordPress en `:4380` |
-| `npm run check-target` | Verifica que los 3 roles pueden autenticarse |
-| `npm run simulate:browser` | Observación: navegador visible, login por UI |
-| `npm run simulate:http` | Capacidad: HTTP puro con sesión reutilizada |
-| `npm run simulate:ladder` | **Escalera**: sube la carga por pasos y para al encontrar el techo |
-| `npm run simulate:spike` | Avalancha de las 8:00 AM (llegada simultánea) |
-| `npm run simulate:enrollment` | Enrolamiento masivo — hallazgo G-2 |
-| `npm run simulate:zip` | ZIP de constancias — hallazgo G-5 |
-| `npm run simulate:cache-storm` | Polling vs caché de superadmin — hallazgo G-4 |
-| `npm run db:watch` | Muestrea conexiones de Postgres durante una carga — hallazgo G-3 |
-| `npm run report` | Reporte visual con gráficas a partir de los resultados de una corrida |
-| `npm run run-all` | Los 6 escenarios originales + informe (~25-30 min) |
+| Comando                        | Qué hace                                                              |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `npm run verify`               | Comprueba conexión a la base y que existen las tablas                 |
+| `npm run seed`                 | Siembra empresas, usuarios, cursos y constancias                      |
+| `npm run teardown`             | Borra todo lo sembrado (verifica residuo 0)                           |
+| `npm run mock-bridge`          | Levanta el sustituto de WordPress en `:4380`                          |
+| `npm run check-target`         | Verifica que los 3 roles pueden autenticarse                          |
+| `npm run simulate:browser`     | Observación: navegador visible, login por UI                          |
+| `npm run simulate:http`        | Capacidad: HTTP puro con sesión reutilizada                           |
+| `npm run simulate:ladder`      | **Escalera**: sube la carga por pasos y para al encontrar el techo    |
+| `npm run simulate:spike`       | Avalancha de las 8:00 AM (llegada simultánea)                         |
+| `npm run simulate:enrollment`  | Enrolamiento masivo — hallazgo G-2                                    |
+| `npm run simulate:zip`         | ZIP de constancias — hallazgo G-5                                     |
+| `npm run simulate:cache-storm` | Polling vs caché de superadmin — hallazgo G-4                         |
+| `npm run db:watch`             | Muestrea conexiones de Postgres durante una carga — hallazgo G-3      |
+| `npm run report`               | Reporte visual con gráficas a partir de los resultados de una corrida |
+| `npm run run-all`              | Los 6 escenarios originales + informe (~25-30 min)                    |
 
 Los hallazgos G-* son de [../docs-observability/INFORME-RENDIMIENTO.md](../docs-observability/INFORME-RENDIMIENTO.md); los resultados medidos están en [INFORME-LOADTEST-BASELINE.md](../docs-observability/INFORME-LOADTEST-BASELINE.md).
 

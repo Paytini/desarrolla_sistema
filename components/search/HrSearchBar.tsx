@@ -11,9 +11,15 @@ import Typography from "@mui/material/Typography"
 import SearchPalette from "./SearchPalette"
 import { companyPath } from "@/lib/company-routes"
 
-type EmployeeResult = { id: number; first_name: string; last_name: string; email: string; department: string | null }
-type CourseResult   = { wp_course_id: number; course_name: string }
-type SearchResults  = { employees: EmployeeResult[]; courses: CourseResult[] }
+type EmployeeResult = {
+  id: number
+  first_name: string
+  last_name: string
+  email: string
+  department: string | null
+}
+type CourseResult = { wp_course_id: number; course_name: string }
+type SearchResults = { employees: EmployeeResult[]; courses: CourseResult[] }
 
 export default function HrSearchBar({ companySlug }: { companySlug: string }) {
   return (
@@ -43,7 +49,11 @@ export default function HrSearchBar({ companySlug }: { companySlug: string }) {
               <Box component="section">
                 <GroupHeader icon={Users} label="Empleados" count={results.employees.length} />
                 {results.employees.map((e) => (
-                  <ResultRow key={e.id} href={companyPath(companySlug, "/employees")} onClose={onClose}>
+                  <ResultRow
+                    key={e.id}
+                    href={companyPath(companySlug, "/employees")}
+                    onClose={onClose}
+                  >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"
@@ -64,8 +74,17 @@ export default function HrSearchBar({ companySlug }: { companySlug: string }) {
                         <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                           {e.first_name} {e.last_name}
                         </Typography>
-                        <Typography sx={{ fontSize: 11, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {e.email}{e.department ? ` · ${e.department}` : ""}
+                        <Typography
+                          sx={{
+                            fontSize: 11,
+                            color: "text.secondary",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {e.email}
+                          {e.department ? ` · ${e.department}` : ""}
                         </Typography>
                       </Box>
                     </Box>
@@ -76,9 +95,17 @@ export default function HrSearchBar({ companySlug }: { companySlug: string }) {
 
             {results.courses.length > 0 && (
               <Box component="section">
-                <GroupHeader icon={BookOpen} label="Cursos del paquete" count={results.courses.length} />
+                <GroupHeader
+                  icon={BookOpen}
+                  label="Cursos del paquete"
+                  count={results.courses.length}
+                />
                 {results.courses.map((c) => (
-                  <ResultRow key={c.wp_course_id} href={companyPath(companySlug, "/progress")} onClose={onClose}>
+                  <ResultRow
+                    key={c.wp_course_id}
+                    href={companyPath(companySlug, "/progress")}
+                    onClose={onClose}
+                  >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Avatar
                         variant="rounded"

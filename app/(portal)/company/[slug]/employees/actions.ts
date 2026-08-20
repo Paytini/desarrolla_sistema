@@ -18,14 +18,15 @@ import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
 import { buildActivationEmail } from "@/lib/email-templates/activation"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
-import { enqueueCsvEmployeeBridgeSyncJob, enqueueEmailSendJob, enqueueEmailSendJobs } from "@/lib/jobs"
+import {
+  enqueueCsvEmployeeBridgeSyncJob,
+  enqueueEmailSendJob,
+  enqueueEmailSendJobs,
+} from "@/lib/jobs"
 import { buildActivationUrl, buildPendingActivationFields } from "@/lib/onboarding"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
-import {
-  bridgeUpsertEmployee,
-  isWordPressBridgeConfigured,
-} from "@/lib/wordpress-bridge"
+import { bridgeUpsertEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
 
 const CSV_IMPORT_LIMIT = 200
 
@@ -139,7 +140,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
         where: { email },
         select: { id: true },
       }),
-    ])
+    ]),
   )
 
   if (existingEmployee || existingUser) {
@@ -209,7 +210,10 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       return employee
     })
   } catch (err) {
-    if (err instanceof Error && (err as NodeJS.ErrnoException & { code?: string }).code === "cupos") {
+    if (
+      err instanceof Error &&
+      (err as NodeJS.ErrnoException & { code?: string }).code === "cupos"
+    ) {
       return { ok: false as const, code: "cupos" }
     }
     throw err
@@ -324,10 +328,7 @@ function normalizeCsvHeader(header: string) {
     .replace(/^_+|_+$/g, "")
 }
 
-function csvField(
-  row: Record<string, string>,
-  aliases: string[]
-) {
+function csvField(row: Record<string, string>, aliases: string[]) {
   for (const alias of aliases) {
     const value = row[alias]
     if (typeof value === "string" && value.trim() !== "") {
@@ -357,7 +358,7 @@ function normalizeCsvEmployees(dataRows: string[][], headers: string[]) {
 
   for (const dataRow of dataRows) {
     const row = Object.fromEntries(
-      headers.map((header, index) => [header, String(dataRow[index] ?? "").trim()])
+      headers.map((header, index) => [header, String(dataRow[index] ?? "").trim()]),
     )
 
     const nombre = csvField(row, ["nombre", "first_name", "nombres"])
@@ -528,7 +529,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
             select: { email: true },
           })
         : Promise.resolve([]),
-    ])
+    ]),
   )
   const [beforeSeatSnapshot, activeEmployees] = await Promise.all([
     getCompanySeatSnapshot(companyId),
@@ -563,77 +564,81 @@ export async function importEmployeesCsvAction(formData: FormData) {
   skipped += Math.max(availableEmployees.length - employeesToCreate.length, 0)
 
   const activationByEmail = new Map(
-    employeesToCreate.map((employee) => [employee.email, buildPendingActivationFields()])
+    employeesToCreate.map((employee) => [employee.email, buildPendingActivationFields()]),
   )
 
-  const createdEmployees = employeesToCreate.length > 0
-    ? await prisma.$transaction(async (tx) => {
-        await tx.employee.createMany({
-          data: employeesToCreate.map((employee) => ({
-            company_id: companyId,
-            first_name: employee.nombre,
-            last_name: employee.apellido,
-            second_last_name: employee.apellidoMaterno,
-            email: employee.email,
-            curp: employee.curp,
-            department: employee.departamento,
-            position: employee.puesto,
-            occupation_code: employee.ocupacionEspecificaClave,
-            occupation_name: employee.ocupacionEspecifica,
-          })),
-        })
+  const createdEmployees =
+    employeesToCreate.length > 0
+      ? await prisma.$transaction(
+          async (tx) => {
+            await tx.employee.createMany({
+              data: employeesToCreate.map((employee) => ({
+                company_id: companyId,
+                first_name: employee.nombre,
+                last_name: employee.apellido,
+                second_last_name: employee.apellidoMaterno,
+                email: employee.email,
+                curp: employee.curp,
+                department: employee.departamento,
+                position: employee.puesto,
+                occupation_code: employee.ocupacionEspecificaClave,
+                occupation_name: employee.ocupacionEspecifica,
+              })),
+            })
 
-        await tx.user.createMany({
-          data: employeesToCreate.map((employee) => {
-            const activation = activationByEmail.get(employee.email)!
-            return {
-              email: employee.email,
-              password_hash: activation.passwordHash,
-              activation_token: activation.activationToken,
-              activation_token_expires_at: activation.activationTokenExpiresAt,
-              name: `${employee.nombre} ${employee.apellido}`.trim(),
-              role: "EMPLOYEE" as const,
-              company_id: companyId,
-              active: true,
-            }
-          }),
-        })
+            await tx.user.createMany({
+              data: employeesToCreate.map((employee) => {
+                const activation = activationByEmail.get(employee.email)!
+                return {
+                  email: employee.email,
+                  password_hash: activation.passwordHash,
+                  activation_token: activation.activationToken,
+                  activation_token_expires_at: activation.activationTokenExpiresAt,
+                  name: `${employee.nombre} ${employee.apellido}`.trim(),
+                  role: "EMPLOYEE" as const,
+                  company_id: companyId,
+                  active: true,
+                }
+              }),
+            })
 
-        await tx.company.update({
-          where: { id: companyId },
-          data: { used_seats: activeEmployees + employeesToCreate.length },
-        })
+            await tx.company.update({
+              where: { id: companyId },
+              data: { used_seats: activeEmployees + employeesToCreate.length },
+            })
 
-        const persistedEmployees = await tx.employee.findMany({
-          where: {
-            company_id: companyId,
-            email: { in: employeesToCreate.map((employee) => employee.email) },
+            const persistedEmployees = await tx.employee.findMany({
+              where: {
+                company_id: companyId,
+                email: { in: employeesToCreate.map((employee) => employee.email) },
+              },
+              select: {
+                id: true,
+                email: true,
+              },
+            })
+
+            const persistedByEmail = new Map(
+              persistedEmployees.map((employee) => [employee.email.toLowerCase(), employee]),
+            )
+
+            return employeesToCreate.flatMap((employee) => {
+              const persistedEmployee = persistedByEmail.get(employee.email)
+              return persistedEmployee
+                ? [
+                    {
+                      ...employee,
+                      id: persistedEmployee.id,
+                    },
+                  ]
+                : []
+            })
           },
-          select: {
-            id: true,
-            email: true,
+          {
+            timeout: 15_000,
           },
-        })
-
-        const persistedByEmail = new Map(
-          persistedEmployees.map((employee) => [employee.email.toLowerCase(), employee])
         )
-
-        return employeesToCreate.flatMap((employee) => {
-          const persistedEmployee = persistedByEmail.get(employee.email)
-          return persistedEmployee
-            ? [
-                {
-                  ...employee,
-                  id: persistedEmployee.id,
-                },
-              ]
-            : []
-        })
-      }, {
-        timeout: 15_000,
-      })
-    : []
+      : []
 
   const created = createdEmployees.length
   let queuedSync = false
@@ -720,7 +725,10 @@ export async function importEmployeesCsvAction(formData: FormData) {
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(
-    employeesPath(slug, `?success=csv_imported&created=${created}&queued=${queuedSync ? 1 : 0}&skipped=${skipped}`)
+    employeesPath(
+      slug,
+      `?success=csv_imported&created=${created}&queued=${queuedSync ? 1 : 0}&skipped=${skipped}`,
+    ),
   )
 }
 
@@ -874,7 +882,9 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
-  redirect(withStatus(returnTo, "success", employee.active ? "empleado_suspendido" : "empleado_activado"))
+  redirect(
+    withStatus(returnTo, "success", employee.active ? "empleado_suspendido" : "empleado_activado"),
+  )
 }
 
 export async function deleteEmployeeAction(formData: FormData) {
@@ -945,5 +955,10 @@ export async function triggerCompanyLearningSyncAction() {
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
-  redirect(employeesPath(slug, `?success=${queued ? "sync_background_started" : "sync_background_already_running"}`))
+  redirect(
+    employeesPath(
+      slug,
+      `?success=${queued ? "sync_background_started" : "sync_background_already_running"}`,
+    ),
+  )
 }

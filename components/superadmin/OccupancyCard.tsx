@@ -8,14 +8,14 @@ interface OccupancyCardProps {
 
 function HorizontalBar({ name, used, total }: { name: string; used: number; total: number }) {
   const pct = total ? Math.round((used / total) * 100) : 0
-  const barColor =
-    pct >= 90 ? "#F472B6" :
-    pct >= 70 ? "#FBBF24" :
-    "#34D399"
+  const barColor = pct >= 90 ? "#F472B6" : pct >= 70 ? "#FBBF24" : "#34D399"
 
   return (
     <Box>
-      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1.5, mb: 0.75 }}>
+      <Stack
+        direction="row"
+        sx={{ alignItems: "center", justifyContent: "space-between", gap: 1.5, mb: 0.75 }}
+      >
         <Typography
           sx={{
             minWidth: 0,
@@ -30,10 +30,21 @@ function HorizontalBar({ name, used, total }: { name: string; used: number; tota
           {name}
         </Typography>
         <Stack direction="row" sx={{ alignItems: "center", gap: 1, flexShrink: 0 }}>
-          <Typography sx={{ fontSize: 11, fontVariantNumeric: "tabular-nums", color: "text.disabled" }}>
+          <Typography
+            sx={{ fontSize: 11, fontVariantNumeric: "tabular-nums", color: "text.disabled" }}
+          >
             {used}/{total}
           </Typography>
-          <Typography sx={{ minWidth: 32, textAlign: "right", fontSize: 11, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: barColor }}>
+          <Typography
+            sx={{
+              minWidth: 32,
+              textAlign: "right",
+              fontSize: 11,
+              fontWeight: 600,
+              fontVariantNumeric: "tabular-nums",
+              color: barColor,
+            }}
+          >
             {pct}%
           </Typography>
         </Stack>
@@ -61,13 +72,16 @@ export function OccupancyCard({ occupancyPct, companies }: OccupancyCardProps) {
         <Box sx={{ textAlign: "right" }}>
           <Typography
             variant="h3"
-            sx={{ fontSize: 36, fontWeight: 700, lineHeight: 1, color: occupancyPct >= 90 ? "#F472B6" : occupancyPct >= 70 ? "#FBBF24" : "#1E293B" }}
+            sx={{
+              fontSize: 36,
+              fontWeight: 700,
+              lineHeight: 1,
+              color: occupancyPct >= 90 ? "#F472B6" : occupancyPct >= 70 ? "#FBBF24" : "#1E293B",
+            }}
           >
             {occupancyPct}%
           </Typography>
-          <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
-            ocupación global
-          </Typography>
+          <Typography sx={{ fontSize: 11, color: "text.secondary" }}>ocupación global</Typography>
         </Box>
       }
     >
@@ -78,7 +92,12 @@ export function OccupancyCard({ occupancyPct, companies }: OccupancyCardProps) {
       ) : (
         <Stack spacing={2}>
           {companies.slice(0, 6).map((e) => (
-            <HorizontalBar key={e.id} name={e.name} used={e.used_seats} total={e.contracted_seats} />
+            <HorizontalBar
+              key={e.id}
+              name={e.name}
+              used={e.used_seats}
+              total={e.contracted_seats}
+            />
           ))}
         </Stack>
       )}

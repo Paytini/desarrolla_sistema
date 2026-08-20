@@ -31,7 +31,13 @@ export default function DeleteEmployeeButton({
         color="error"
         size="small"
         onClick={() => setOpen(true)}
-        sx={{ height: 28, px: 1.5, fontSize: 12, boxShadow: "none", "&:hover": { boxShadow: "none" } }}
+        sx={{
+          height: 28,
+          px: 1.5,
+          fontSize: 12,
+          boxShadow: "none",
+          "&:hover": { boxShadow: "none" },
+        }}
       >
         Eliminar
       </Button>
@@ -63,8 +69,8 @@ export default function DeleteEmployeeButton({
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Esta acción eliminará al empleado del portal y también intentará remover su acceso a
-            los cursos asignados.
+            Esta acción eliminará al empleado del portal y también intentará remover su acceso a los
+            cursos asignados.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>

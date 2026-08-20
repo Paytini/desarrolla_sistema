@@ -53,5 +53,9 @@ export async function GET(req: NextRequest) {
   }))
   const packagesResult = packages.map((p) => ({ id: p.id, name: p.name, active: p.active }))
 
-  return NextResponse.json({ companies: companiesResult, employees: employeesResult, packages: packagesResult })
+  return NextResponse.json({
+    companies: companiesResult,
+    employees: employeesResult,
+    packages: packagesResult,
+  })
 }

@@ -1,53 +1,51 @@
-import CnoSelect from "@/components/company/CnoSelect";
-import CsvEmployeeImportForm from "@/components/company/CsvEmployeeImportForm";
-import CurpInfoButton from "@/components/company/CurpInfoButton";
-import DeleteEmployeeButton from "@/components/company/DeleteEmployeeButton";
-import EmployeeListFilters from "@/components/company/EmployeeListFilters";
-import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModal";
-import KpiCard from "@/components/shared/KpiCard";
-import { PageHeader } from "@/components/shared/PageHeader";
-import StatusBadge from "@/components/shared/StatusBadge";
-import StatusToast from "@/components/shared/StatusToast";
-import { AlertCircle, Package, ShieldCheck, Users, UserX } from "lucide-react";
+import CnoSelect from "@/components/company/CnoSelect"
+import CsvEmployeeImportForm from "@/components/company/CsvEmployeeImportForm"
+import CurpInfoButton from "@/components/company/CurpInfoButton"
+import DeleteEmployeeButton from "@/components/company/DeleteEmployeeButton"
+import EmployeeListFilters from "@/components/company/EmployeeListFilters"
+import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModal"
+import KpiCard from "@/components/shared/KpiCard"
+import { PageHeader } from "@/components/shared/PageHeader"
+import StatusBadge from "@/components/shared/StatusBadge"
+import StatusToast from "@/components/shared/StatusToast"
+import { AlertCircle, Package, ShieldCheck, Users, UserX } from "lucide-react"
 import {
   matchesEmployeeFilters,
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
-} from "@/lib/company-employees";
-import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache";
-import { formatDate, getInitials } from "@/lib/format";
-import { paginate } from "@/lib/pagination";
-import { readSearchParam } from "@/lib/search-params";
-import { getSession } from "@/lib/session";
-import { redirect } from "next/navigation";
-import { companyPath } from "@/lib/company-routes";
-import { Pagination } from "@/components/shared/Pagination";
+} from "@/lib/company-employees"
+import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache"
+import { formatDate, getInitials } from "@/lib/format"
+import { paginate } from "@/lib/pagination"
+import { readSearchParam } from "@/lib/search-params"
+import { getSession } from "@/lib/session"
+import { redirect } from "next/navigation"
+import { companyPath } from "@/lib/company-routes"
+import { Pagination } from "@/components/shared/Pagination"
 import {
   createEmployeeAction,
   deleteEmployeeAction,
   resendActivationAction,
   toggleEmployeeStatusAction,
   triggerCompanyLearningSyncAction,
-} from "./actions";
+} from "./actions"
 
-export const maxDuration = 300;
+export const maxDuration = 300
 
 const successMessages: Record<string, string> = {
   empleado_creado:
     "El empleado se creo correctamente. Le enviamos un correo para que active su cuenta.",
   empleado_creado_sync:
     "El empleado se creo y su acceso ya quedo activo. Le enviamos un correo para que active su cuenta. El siguiente paso es asignarle cursos desde HR > Asignaciones.",
-  empleado_suspendido:
-    "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
+  empleado_suspendido: "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
-  empleado_eliminado:
-    "El empleado se elimino del portal y su cupo fue liberado.",
+  empleado_eliminado: "El empleado se elimino del portal y su cupo fue liberado.",
   sync_background_started:
     "Estamos actualizando los cursos, avances y constancias de tu equipo. Puedes seguir usando el portal mientras terminamos.",
   sync_background_already_running:
     "Ya hay una actualización en curso. En unos minutos verás la información más reciente.",
   activacion_reenviada: "Se reenvió el correo de activación al empleado.",
-};
+}
 
 const errorMessages: Record<string, string> = {
   datos: "Faltan datos obligatorios para registrar al empleado.",
@@ -62,62 +60,47 @@ const errorMessages: Record<string, string> = {
   asignacion_manual:
     "El empleado se creo, pero aun no tiene cursos asignados. Asignalo desde HR > Asignaciones segun su area.",
   csv_file: "Selecciona un archivo CSV valido para importar empleados.",
-  csv_empty:
-    "El archivo CSV no contiene filas suficientes para importar empleados.",
-  csv_limit:
-    "El archivo CSV excede el limite permitido de 200 filas por carga.",
+  csv_empty: "El archivo CSV no contiene filas suficientes para importar empleados.",
+  csv_limit: "El archivo CSV excede el limite permitido de 200 filas por carga.",
   bridge_delete:
     "No fue posible eliminar el acceso del empleado a los cursos. El registro del portal se mantuvo intacto para evitar inconsistencias.",
-};
+}
 
 type PageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-};
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
 
 function getSuccessMessage(
   success: string | undefined,
   params: Record<string, string | string[] | undefined> | undefined,
 ) {
-  if (!success) return null;
+  if (!success) return null
   if (success === "csv_imported") {
-    const created = readSearchParam(params, "created") ?? "0";
-    const queued = readSearchParam(params, "queued") === "1";
-    const skipped = readSearchParam(params, "skipped") ?? "0";
-    const syncNote = queued
-      ? "El acceso a cursos se esta activando en segundo plano."
-      : "";
-    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado recibira un correo para activar su cuenta. ${syncNote}`.trim();
+    const created = readSearchParam(params, "created") ?? "0"
+    const queued = readSearchParam(params, "queued") === "1"
+    const skipped = readSearchParam(params, "skipped") ?? "0"
+    const syncNote = queued ? "El acceso a cursos se esta activando en segundo plano." : ""
+    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado recibira un correo para activar su cuenta. ${syncNote}`.trim()
   }
-  return successMessages[success] ?? success;
+  return successMessages[success] ?? success
 }
 
-function buildEmployeeListPath(
-  slug: string,
-  query: string,
-  status: string,
-  page: number = 1,
-) {
-  const basePath = companyPath(slug, "/employees");
-  const searchParams = new URLSearchParams();
-  if (query) searchParams.set("q", query);
-  if (status !== "all") searchParams.set("status", status);
-  if (page > 1) searchParams.set("page", String(page));
-  const serialized = searchParams.toString();
-  return serialized ? `${basePath}?${serialized}` : basePath;
+function buildEmployeeListPath(slug: string, query: string, status: string, page: number = 1) {
+  const basePath = companyPath(slug, "/employees")
+  const searchParams = new URLSearchParams()
+  if (query) searchParams.set("q", query)
+  if (status !== "all") searchParams.set("status", status)
+  if (page > 1) searchParams.set("page", String(page))
+  const serialized = searchParams.toString()
+  return serialized ? `${basePath}?${serialized}` : basePath
 }
 
 function ManualEmployeeForm() {
   return (
-    <form
-      action={createEmployeeAction}
-      autoComplete="off"
-      className="grid gap-3"
-    >
+    <form action={createEmployeeAction} autoComplete="off" className="grid gap-3">
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Apellido paterno
-          </span>
+          <span className="text-[14px] font-normal text-slate-700">Apellido paterno</span>
           <input
             name="apellido"
             required
@@ -127,9 +110,7 @@ function ManualEmployeeForm() {
         <label className="grid gap-1 text-sm">
           <span className="text-[14px] font-normal text-slate-700">
             Apellido materno{" "}
-            <span className="text-[12px] font-normal text-slate-400">
-              (opcional)
-            </span>
+            <span className="text-[12px] font-normal text-slate-400">(opcional)</span>
           </span>
           <input
             name="apellido_materno"
@@ -139,9 +120,7 @@ function ManualEmployeeForm() {
       </div>
 
       <label className="grid gap-1 text-sm">
-        <span className="text-[14px] font-normal text-slate-700">
-          Nombre(s)
-        </span>
+        <span className="text-[14px] font-normal text-slate-700">Nombre(s)</span>
         <input
           name="nombre"
           required
@@ -150,9 +129,7 @@ function ManualEmployeeForm() {
       </label>
 
       <label className="grid gap-1 text-sm">
-        <span className="text-[14px] font-normal text-slate-700">
-          Correo electrónico
-        </span>
+        <span className="text-[14px] font-normal text-slate-700">Correo electrónico</span>
         <input
           name="email"
           type="email"
@@ -190,10 +167,7 @@ function ManualEmployeeForm() {
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-1 text-sm">
           <span className="text-[14px] font-normal text-slate-700">
-            Departamento{" "}
-            <span className="text-[12px] font-normal text-slate-400">
-              (opcional)
-            </span>
+            Departamento <span className="text-[12px] font-normal text-slate-400">(opcional)</span>
           </span>
           <input
             name="departamento"
@@ -202,10 +176,7 @@ function ManualEmployeeForm() {
         </label>
         <label className="grid gap-1 text-sm">
           <span className="text-[14px] font-normal text-slate-700">
-            Puesto{" "}
-            <span className="text-[12px] font-normal text-slate-400">
-              (opcional)
-            </span>
+            Puesto <span className="text-[12px] font-normal text-slate-400">(opcional)</span>
           </span>
           <input
             name="puesto"
@@ -223,60 +194,45 @@ function ManualEmployeeForm() {
         </button>
       </div>
     </form>
-  );
+  )
 }
 
-export default async function CompanyEmployeesPage({
-  searchParams,
-}: PageProps) {
-  const session = await getSession();
-  if (!session || session.user.role !== "HR" || !session.user.empresa_id)
-    redirect("/login");
+export default async function CompanyEmployeesPage({ searchParams }: PageProps) {
+  const session = await getSession()
+  if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
-  const params = await searchParams;
-  const success = readSearchParam(params, "success");
-  const error = readSearchParam(params, "error");
-  const searchQuery = (readSearchParam(params, "q") ?? "").trim();
-  const query = normalizeEmployeeSearchQuery(searchQuery);
-  const status = normalizeEmployeeFilterStatus(
-    readSearchParam(params, "status"),
-  );
-  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"));
+  const params = await searchParams
+  const success = readSearchParam(params, "success")
+  const error = readSearchParam(params, "error")
+  const searchQuery = (readSearchParam(params, "q") ?? "").trim()
+  const query = normalizeEmployeeSearchQuery(searchQuery)
+  const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const company = await getHrEmployeesSnapshot(session.user.empresa_id);
-  if (!company) redirect("/login");
+  const company = await getHrEmployeesSnapshot(session.user.empresa_id)
+  if (!company) redirect("/login")
 
-  const activeEmployees = company.employees.filter((e) => e.active).length;
-  const inactiveEmployees = company.employees.length - activeEmployees;
-  const availableSeats = Math.max(
-    company.contracted_seats - activeEmployees,
-    0,
-  );
-  const activePackage = company.packages[0]?.package?.name ?? "Sin paquete";
+  const activeEmployees = company.employees.filter((e) => e.active).length
+  const inactiveEmployees = company.employees.length - activeEmployees
+  const availableSeats = Math.max(company.contracted_seats - activeEmployees, 0)
+  const activePackage = company.packages[0]?.package?.name ?? "Sin paquete"
   const employeesWithAccessIssues = company.employees.filter((e) =>
     e.courses.some((c) => c.access_status === "ERROR"),
-  ).length;
+  ).length
   const filteredEmployees = company.employees.filter((e) =>
     matchesEmployeeFilters(e, { query, status }),
-  );
-  const PAGE_SIZE = 20;
+  )
+  const PAGE_SIZE = 20
   const {
     items: pagedEmployees,
     currentPage,
     totalPages,
-  } = paginate(filteredEmployees, page, PAGE_SIZE);
-  const employeesBasePath = companyPath(company.slug, "/employees");
-  const currentListPath = buildEmployeeListPath(
-    company.slug,
-    searchQuery,
-    status,
-    currentPage,
-  );
+  } = paginate(filteredEmployees, page, PAGE_SIZE)
+  const employeesBasePath = companyPath(company.slug, "/employees")
+  const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status, currentPage)
   const exportHref = `/api/company/employees/export${
-    currentListPath === employeesBasePath
-      ? ""
-      : currentListPath.replace(employeesBasePath, "")
-  }`;
+    currentListPath === employeesBasePath ? "" : currentListPath.replace(employeesBasePath, "")
+  }`
 
   return (
     <div className="space-y-6">
@@ -307,22 +263,12 @@ export default async function CompanyEmployeesPage({
       />
 
       {success ? (
-        <StatusToast
-          tone="success"
-          message={getSuccessMessage(success, params) ?? success}
-        />
+        <StatusToast tone="success" message={getSuccessMessage(success, params) ?? success} />
       ) : null}
-      {error ? (
-        <StatusToast tone="error" message={errorMessages[error] ?? error} />
-      ) : null}
+      {error ? <StatusToast tone="error" message={errorMessages[error] ?? error} /> : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard
-          label="Paquete activo"
-          value={activePackage}
-          icon={Package}
-          borderColor="violet"
-        />
+        <KpiCard label="Paquete activo" value={activePackage} icon={Package} borderColor="violet" />
         <KpiCard
           label="Activos"
           value={String(activeEmployees)}
@@ -390,13 +336,11 @@ export default async function CompanyEmployeesPage({
           {pagedEmployees.map((employee) => {
             const activeCourseCount = employee.courses.filter(
               (c) => c.access_status === "ACTIVE",
-            ).length;
+            ).length
             const errorCourseCount = employee.courses.filter(
               (c) => c.access_status === "ERROR",
-            ).length;
-            const initials = getInitials(
-              `${employee.first_name} ${employee.last_name}`,
-            );
+            ).length
+            const initials = getInitials(`${employee.first_name} ${employee.last_name}`)
 
             return (
               <div
@@ -420,10 +364,7 @@ export default async function CompanyEmployeesPage({
                     <p className="truncate text-sm font-semibold text-slate-950">
                       {employee.first_name} {employee.last_name}
                     </p>
-                    <StatusBadge
-                      variant={employee.active ? "green" : "slate"}
-                      dot
-                    >
+                    <StatusBadge variant={employee.active ? "green" : "slate"} dot>
                       {employee.active ? "Activo" : "Suspendido"}
                     </StatusBadge>
                     {errorCourseCount > 0 && (
@@ -449,16 +390,8 @@ export default async function CompanyEmployeesPage({
 
                 <div className="flex shrink-0 gap-1.5">
                   <form action={resendActivationAction}>
-                    <input
-                      type="hidden"
-                      name="empleado_id"
-                      value={employee.id}
-                    />
-                    <input
-                      type="hidden"
-                      name="return_to"
-                      value={currentListPath}
-                    />
+                    <input type="hidden" name="empleado_id" value={employee.id} />
+                    <input type="hidden" name="return_to" value={currentListPath} />
                     <button
                       type="submit"
                       className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-gray-200"
@@ -467,16 +400,8 @@ export default async function CompanyEmployeesPage({
                     </button>
                   </form>
                   <form action={toggleEmployeeStatusAction}>
-                    <input
-                      type="hidden"
-                      name="empleado_id"
-                      value={employee.id}
-                    />
-                    <input
-                      type="hidden"
-                      name="return_to"
-                      value={currentListPath}
-                    />
+                    <input type="hidden" name="empleado_id" value={employee.id} />
+                    <input type="hidden" name="return_to" value={currentListPath} />
                     <button
                       type="submit"
                       className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
@@ -496,18 +421,16 @@ export default async function CompanyEmployeesPage({
                   />
                 </div>
               </div>
-            );
+            )
           })}
         </div>
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           totalResults={filteredEmployees.length}
-          buildPageUrl={(p) =>
-            buildEmployeeListPath(company.slug, searchQuery, status, p)
-          }
+          buildPageUrl={(p) => buildEmployeeListPath(company.slug, searchQuery, status, p)}
         />
       </section>
     </div>
-  );
+  )
 }

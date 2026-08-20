@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     matchesEmployeeFilters(empleado, {
       query,
       status,
-    })
+    }),
   )
 
   const rows = [

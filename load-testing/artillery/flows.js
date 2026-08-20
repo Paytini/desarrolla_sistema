@@ -54,7 +54,9 @@ async function employeeJourney(page, vuContext, events, test) {
   })
   await page.waitForTimeout(2000)
   await step("poll_refresh", async () => {
-    await page.request.post(`${config.targetUrl}/api/employee/learning/refresh`, { data: { force: false } })
+    await page.request.post(`${config.targetUrl}/api/employee/learning/refresh`, {
+      data: { force: false },
+    })
   })
   await step("certificados", async () => {
     await page.goto(`${config.targetUrl}/employee/certificates`, { waitUntil: "networkidle" })
@@ -97,9 +99,12 @@ async function rhJourney(page, vuContext, events, test) {
             // always redirects back with ?success=... or ?error=... (actions.ts), so
             // wait for that instead of racing on network idle.
             await page
-              .waitForURL((url) => url.searchParams.has("success") || url.searchParams.has("error"), {
-                timeout: 20000,
-              })
+              .waitForURL(
+                (url) => url.searchParams.has("success") || url.searchParams.has("error"),
+                {
+                  timeout: 20000,
+                },
+              )
               .catch(() => {})
           }
           await page.waitForLoadState("networkidle")
@@ -112,7 +117,9 @@ async function rhJourney(page, vuContext, events, test) {
     await assertRealPage(page, "Asignación de cursos")
   })
   await step("constancias", async () => {
-    await page.goto(`${config.targetUrl}/company/${slug}/certificates`, { waitUntil: "networkidle" })
+    await page.goto(`${config.targetUrl}/company/${slug}/certificates`, {
+      waitUntil: "networkidle",
+    })
     await assertRealPage(page, "Constancias DC-3")
   })
 }

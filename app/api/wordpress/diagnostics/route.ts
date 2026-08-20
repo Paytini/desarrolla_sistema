@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   if (!isWordPressBridgeConfigured()) {
     return NextResponse.json(
       { message: "El puente con WordPress no esta configurado" },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
   if (!studentId) {
     return NextResponse.json(
       { message: "Debes enviar `studentId` en el query string." },
-      { status: 400 }
+      { status: 400 },
     )
   }
 

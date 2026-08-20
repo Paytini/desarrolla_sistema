@@ -159,7 +159,8 @@ export default function CsvEmployeeImportForm() {
                   Nota
                 </span>
                 <p>
-                  Cada empleado recibirá un correo para crear su propia contraseña y activar su cuenta.
+                  Cada empleado recibirá un correo para crear su propia contraseña y activar su
+                  cuenta.
                 </p>
               </div>
             </div>

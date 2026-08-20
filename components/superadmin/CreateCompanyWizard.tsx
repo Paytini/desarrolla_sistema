@@ -20,8 +20,8 @@ type Package = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["paque
 const STEPS = ["Info empresa", "Admin HR", "Plan"]
 
 const ERROR_MESSAGES: Record<string, string> = {
-  datos:      "Faltan datos obligatorios.",
-  email_hr:   "Ese correo ya está ligado a otra empresa.",
+  datos: "Faltan datos obligatorios.",
+  email_hr: "Ese correo ya está ligado a otra empresa.",
   usuario_hr: "Ese correo ya existe como usuario del portal.",
 }
 
@@ -49,21 +49,21 @@ type FormValues = {
 }
 
 export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
-  const [step, setStep]              = useState(0)
+  const [step, setStep] = useState(0)
   const [state, formAction, pending] = useActionState(createCompanyAction, null)
-  const formRef                      = useRef<HTMLFormElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
   const [values, setValues] = useState<FormValues>({
-    nombre:               "",
-    rfc:                  "",
-    telefono:             "",
-    email_hr:             "",
-    nombre_hr:            "",
-    password_hr:          "",
+    nombre: "",
+    rfc: "",
+    telefono: "",
+    email_hr: "",
+    nombre_hr: "",
+    password_hr: "",
     asientos_contratados: "25",
-    paquete_id:           "",
-    fecha_vencimiento:    "",
-    notas:                "",
+    paquete_id: "",
+    fecha_vencimiento: "",
+    notas: "",
   })
 
   function set(name: keyof FormValues, value: string) {
@@ -124,38 +124,39 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
           }
         }}
       >
-
         {step !== 0 && (
           <>
-            <input type="hidden" name="nombre"    value={values.nombre}   />
-            <input type="hidden" name="rfc"       value={values.rfc}      />
-            <input type="hidden" name="telefono"  value={values.telefono} />
+            <input type="hidden" name="nombre" value={values.nombre} />
+            <input type="hidden" name="rfc" value={values.rfc} />
+            <input type="hidden" name="telefono" value={values.telefono} />
           </>
         )}
         {step !== 1 && (
           <>
-            <input type="hidden" name="email_hr"   value={values.email_hr}   />
-            <input type="hidden" name="nombre_hr"  value={values.nombre_hr}  />
+            <input type="hidden" name="email_hr" value={values.email_hr} />
+            <input type="hidden" name="nombre_hr" value={values.nombre_hr} />
             <input type="hidden" name="password_hr" value={values.password_hr} />
           </>
         )}
         {step !== 2 && (
           <>
             <input type="hidden" name="asientos_contratados" value={values.asientos_contratados} />
-            <input type="hidden" name="paquete_id"           value={values.paquete_id}           />
-            <input type="hidden" name="fecha_vencimiento"    value={values.fecha_vencimiento}    />
-            <input type="hidden" name="notas"                value={values.notas}                />
+            <input type="hidden" name="paquete_id" value={values.paquete_id} />
+            <input type="hidden" name="fecha_vencimiento" value={values.fecha_vencimiento} />
+            <input type="hidden" name="notas" value={values.notas} />
           </>
         )}
 
         {step === 0 && (
           <Box sx={{ display: "grid", gap: 2.5 }}>
-            {state?.error === "datos" && (
-              <Alert severity="error">{ERROR_MESSAGES.datos}</Alert>
-            )}
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+            {state?.error === "datos" && <Alert severity="error">{ERROR_MESSAGES.datos}</Alert>}
+            <Box
+              sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}
+            >
               <Box>
-                <Typography component="label" htmlFor="nombre" sx={LABEL_SX}>Nombre *</Typography>
+                <Typography component="label" htmlFor="nombre" sx={LABEL_SX}>
+                  Nombre *
+                </Typography>
                 <TextField
                   id="nombre"
                   name="nombre"
@@ -168,7 +169,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
                 />
               </Box>
               <Box>
-                <Typography component="label" htmlFor="rfc" sx={LABEL_SX}>RFC</Typography>
+                <Typography component="label" htmlFor="rfc" sx={LABEL_SX}>
+                  RFC
+                </Typography>
                 <TextField
                   id="rfc"
                   name="rfc"
@@ -181,7 +184,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
               </Box>
             </Box>
             <Box sx={{ maxWidth: 320 }}>
-              <Typography component="label" htmlFor="telefono" sx={LABEL_SX}>Teléfono</Typography>
+              <Typography component="label" htmlFor="telefono" sx={LABEL_SX}>
+                Teléfono
+              </Typography>
               <TextField
                 id="telefono"
                 name="telefono"
@@ -197,9 +202,13 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
 
         {step === 1 && (
           <Box sx={{ display: "grid", gap: 2.5 }}>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+            <Box
+              sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}
+            >
               <Box>
-                <Typography component="label" htmlFor="email_hr" sx={LABEL_SX}>Correo HR *</Typography>
+                <Typography component="label" htmlFor="email_hr" sx={LABEL_SX}>
+                  Correo HR *
+                </Typography>
                 <TextField
                   id="email_hr"
                   name="email_hr"
@@ -215,7 +224,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
                 />
               </Box>
               <Box>
-                <Typography component="label" htmlFor="nombre_hr" sx={LABEL_SX}>Nombre completo *</Typography>
+                <Typography component="label" htmlFor="nombre_hr" sx={LABEL_SX}>
+                  Nombre completo *
+                </Typography>
                 <TextField
                   id="nombre_hr"
                   name="nombre_hr"
@@ -229,7 +240,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
               </Box>
             </Box>
             <Box sx={{ maxWidth: 320 }}>
-              <Typography component="label" htmlFor="password_hr" sx={LABEL_SX}>Contraseña temporal *</Typography>
+              <Typography component="label" htmlFor="password_hr" sx={LABEL_SX}>
+                Contraseña temporal *
+              </Typography>
               <PasswordToggleInput
                 name="password_hr"
                 minLength={8}
@@ -253,7 +266,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
             <Box sx={{ display: "grid", gap: 2.5 }}>
               <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
                 <Box>
-                  <Typography component="label" htmlFor="asientos_contratados" sx={LABEL_SX}>Cupos *</Typography>
+                  <Typography component="label" htmlFor="asientos_contratados" sx={LABEL_SX}>
+                    Cupos *
+                  </Typography>
                   <TextField
                     id="asientos_contratados"
                     name="asientos_contratados"
@@ -267,7 +282,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
                   />
                 </Box>
                 <Box>
-                  <Typography component="label" htmlFor="paquete_id" sx={LABEL_SX}>Paquete inicial</Typography>
+                  <Typography component="label" htmlFor="paquete_id" sx={LABEL_SX}>
+                    Paquete inicial
+                  </Typography>
                   <TextField
                     id="paquete_id"
                     name="paquete_id"
@@ -279,13 +296,17 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
                   >
                     <MenuItem value="">Sin asignar</MenuItem>
                     {paquetes.map((p) => (
-                      <MenuItem key={p.id} value={p.id}>{p.name}</MenuItem>
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.name}
+                      </MenuItem>
                     ))}
                   </TextField>
                 </Box>
               </Box>
               <Box sx={{ maxWidth: 220 }}>
-                <Typography component="label" htmlFor="fecha_vencimiento" sx={LABEL_SX}>Vigencia</Typography>
+                <Typography component="label" htmlFor="fecha_vencimiento" sx={LABEL_SX}>
+                  Vigencia
+                </Typography>
                 <TextField
                   id="fecha_vencimiento"
                   name="fecha_vencimiento"
@@ -297,7 +318,9 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
                 />
               </Box>
               <Box>
-                <Typography component="label" htmlFor="notas" sx={LABEL_SX}>Notas internas</Typography>
+                <Typography component="label" htmlFor="notas" sx={LABEL_SX}>
+                  Notas internas
+                </Typography>
                 <TextField
                   id="notas"
                   name="notas"
@@ -336,10 +359,10 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
               </Typography>
               {(
                 [
-                  { label: "Empresa",  key: "nombre"    },
-                  { label: "RFC",      key: "rfc"       },
-                  { label: "Teléfono", key: "telefono"  },
-                  { label: "Email HR", key: "email_hr"  },
+                  { label: "Empresa", key: "nombre" },
+                  { label: "RFC", key: "rfc" },
+                  { label: "Teléfono", key: "telefono" },
+                  { label: "Email HR", key: "email_hr" },
                   { label: "Admin HR", key: "nombre_hr" },
                 ] as { label: string; key: keyof FormValues }[]
               ).map(({ label, key }) => (
@@ -375,12 +398,7 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
           </Button>
 
           {step < 2 ? (
-            <Button
-              key="next"
-              type="button"
-              onClick={handleNext}
-              variant="contained"
-            >
+            <Button key="next" type="button" onClick={handleNext} variant="contained">
               Siguiente →
             </Button>
           ) : (

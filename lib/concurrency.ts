@@ -1,7 +1,7 @@
 export async function mapWithConcurrency<T, R>(
   items: T[],
   concurrency: number,
-  mapper: (item: T, index: number) => Promise<R>
+  mapper: (item: T, index: number) => Promise<R>,
 ) {
   const results = new Array<R>(items.length)
   let nextIndex = 0
@@ -14,9 +14,8 @@ export async function mapWithConcurrency<T, R>(
     }
   }
 
-  const workers = Array.from(
-    { length: Math.min(Math.max(concurrency, 1), items.length) },
-    () => worker()
+  const workers = Array.from({ length: Math.min(Math.max(concurrency, 1), items.length) }, () =>
+    worker(),
   )
 
   await Promise.all(workers)

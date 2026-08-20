@@ -24,7 +24,10 @@ export function FullscreenToggle() {
   }
 
   return (
-    <Tooltip title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} placement="bottom">
+    <Tooltip
+      title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+      placement="bottom"
+    >
       <Box
         component="button"
         onClick={toggle}

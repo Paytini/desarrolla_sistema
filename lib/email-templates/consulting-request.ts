@@ -60,7 +60,7 @@ export function buildConsultingRequestEmail({
         <tr>
           <td style="padding: 8px 0; color: #64748b; font-size: 13px; vertical-align: top; width: 40%;">${escapeHtml(label)}</td>
           <td style="padding: 8px 0; font-weight: 600;">${escapeHtml(value)}</td>
-        </tr>`
+        </tr>`,
           )
           .join("")}
       </table>

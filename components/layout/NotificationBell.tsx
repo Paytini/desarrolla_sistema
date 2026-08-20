@@ -20,10 +20,10 @@ type NotificationItem = {
 }
 
 const TYPE_ICON: Record<string, typeof Building2> = {
-  EMPRESA_CREADA:      Building2,
-  EMPRESA_SUSPENDIDA:  ShieldAlert,
-  EMPRESA_REACTIVADA:  Building2,
-  PAQUETE_ASIGNADO:    Package,
+  EMPRESA_CREADA: Building2,
+  EMPRESA_SUSPENDIDA: ShieldAlert,
+  EMPRESA_REACTIVADA: Building2,
+  PAQUETE_ASIGNADO: Package,
 }
 
 function timeAgo(iso: string) {
@@ -115,7 +115,14 @@ export function NotificationBell() {
         )}
       </Box>
 
-      <Popper open={open} anchorEl={anchorEl} placement="bottom-end" transition disablePortal={false} style={{ zIndex: 1300 }}>
+      <Popper
+        open={open}
+        anchorEl={anchorEl}
+        placement="bottom-end"
+        transition
+        disablePortal={false}
+        style={{ zIndex: 1300 }}
+      >
         {({ TransitionProps }) => (
           <Fade {...TransitionProps} timeout={160}>
             <Paper
@@ -156,7 +163,9 @@ export function NotificationBell() {
                         py: 1.5,
                         borderBottom: "1px solid",
                         borderColor: "divider",
-                        bgcolor: n.read ? "transparent" : (theme) => alpha(theme.palette.primary.main, 0.04),
+                        bgcolor: n.read
+                          ? "transparent"
+                          : (theme) => alpha(theme.palette.primary.main, 0.04),
                       }}
                     >
                       <Box
@@ -175,10 +184,19 @@ export function NotificationBell() {
                         <Icon size={14} strokeWidth={2} />
                       </Box>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary" }}>
+                        <Typography
+                          sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary" }}
+                        >
                           {n.title}
                         </Typography>
-                        <Typography sx={{ fontSize: "0.75rem", color: "text.secondary", lineHeight: 1.4, mt: "1px" }}>
+                        <Typography
+                          sx={{
+                            fontSize: "0.75rem",
+                            color: "text.secondary",
+                            lineHeight: 1.4,
+                            mt: "1px",
+                          }}
+                        >
                           {n.message}
                         </Typography>
                         <Typography sx={{ fontSize: "0.6875rem", color: "text.disabled", mt: 0.5 }}>

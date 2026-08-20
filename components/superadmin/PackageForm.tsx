@@ -79,9 +79,7 @@ export function PackageForm({ action, submitLabel, initialValues }: PackageFormP
           size="small"
           fullWidth
         >
-          <MenuItem value="DIRECT_ENROLLMENT">
-            Matrícula directa por curso (Recomendado)
-          </MenuItem>
+          <MenuItem value="DIRECT_ENROLLMENT">Matrícula directa por curso (Recomendado)</MenuItem>
           <MenuItem value="PRIVATE_BUNDLE_REFERENCE">
             Bundle privado como referencia operativa
           </MenuItem>
@@ -141,8 +139,8 @@ export function PackageForm({ action, submitLabel, initialValues }: PackageFormP
       >
         {hasExistingBundle ? (
           <>
-            Este paquete ya tiene un bundle en WordPress. Al guardar, el título, la descripción
-            y los cursos seleccionados se sincronizan automáticamente con ese bundle.
+            Este paquete ya tiene un bundle en WordPress. Al guardar, el título, la descripción y
+            los cursos seleccionados se sincronizan automáticamente con ese bundle.
           </>
         ) : (
           <>

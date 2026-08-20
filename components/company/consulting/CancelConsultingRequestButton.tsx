@@ -63,8 +63,8 @@ export function CancelConsultingRequestButton({
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Esta acción marcará la solicitud como cancelada. Tendrás que agendar una nueva si cambias de
-            opinión.
+            Esta acción marcará la solicitud como cancelada. Tendrás que agendar una nueva si
+            cambias de opinión.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>

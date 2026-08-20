@@ -5,7 +5,10 @@ type TurnstileVerifyResponse = {
   "error-codes"?: string[]
 }
 
-export async function verifyTurnstileToken(token: string | undefined, remoteIp?: string): Promise<boolean> {
+export async function verifyTurnstileToken(
+  token: string | undefined,
+  remoteIp?: string,
+): Promise<boolean> {
   if (!token) return false
 
   const secret = process.env.TURNSTILE_SECRET_KEY

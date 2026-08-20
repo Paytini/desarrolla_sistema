@@ -11,10 +11,20 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type CompanyResult  = { id: number; name: string; active: boolean }
-type EmployeeResult = { id: number; first_name: string; last_name: string; email: string; company: { name: string } }
-type PackageResult  = { id: number; name: string; active: boolean }
-type SearchResults  = { companies: CompanyResult[]; employees: EmployeeResult[]; packages: PackageResult[] }
+type CompanyResult = { id: number; name: string; active: boolean }
+type EmployeeResult = {
+  id: number
+  first_name: string
+  last_name: string
+  email: string
+  company: { name: string }
+}
+type PackageResult = { id: number; name: string; active: boolean }
+type SearchResults = {
+  companies: CompanyResult[]
+  employees: EmployeeResult[]
+  packages: PackageResult[]
+}
 
 export default function SuperadminSearchBar() {
   return (
@@ -48,11 +58,7 @@ export default function SuperadminSearchBar() {
               <Box component="section">
                 <GroupHeader icon={Building2} label="Empresas" count={results.companies.length} />
                 {results.companies.map((c) => (
-                  <ResultRow
-                    key={c.id}
-                    href={`/superadmin/companies/${c.id}`}
-                    onClose={onClose}
-                  >
+                  <ResultRow key={c.id} href={`/superadmin/companies/${c.id}`} onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <LetterAvatar letter={c.name[0]} variant="blue" />
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
@@ -69,18 +75,22 @@ export default function SuperadminSearchBar() {
               <Box component="section">
                 <GroupHeader icon={Users} label="Empleados" count={results.employees.length} />
                 {results.employees.map((e) => (
-                  <ResultRow
-                    key={e.id}
-                    href="/superadmin/access"
-                    onClose={onClose}
-                  >
+                  <ResultRow key={e.id} href="/superadmin/access" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <LetterAvatar letter={e.first_name[0]} variant="slate" />
                       <Box sx={{ minWidth: 0 }}>
                         <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                           {e.first_name} {e.last_name}
                         </Typography>
-                        <Typography sx={{ fontSize: 11, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <Typography
+                          sx={{
+                            fontSize: 11,
+                            color: "text.secondary",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {e.email} · {e.company.name}
                         </Typography>
                       </Box>
@@ -94,11 +104,7 @@ export default function SuperadminSearchBar() {
               <Box component="section">
                 <GroupHeader icon={Package} label="Paquetes" count={results.packages.length} />
                 {results.packages.map((p) => (
-                  <ResultRow
-                    key={p.id}
-                    href="/superadmin/packages"
-                    onClose={onClose}
-                  >
+                  <ResultRow key={p.id} href="/superadmin/packages" onClose={onClose}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <LetterAvatar letter={p.name[0]} variant="slate" />
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
@@ -190,8 +196,8 @@ function ResultRow({
 
 function LetterAvatar({ letter, variant }: { letter: string; variant: "blue" | "slate" }) {
   const colors = {
-    blue:  { bgcolor: "rgba(53,121,245,0.1)", color: "#3579F5" },
-    slate: { bgcolor: "#f1f5f9",              color: "#64748b" },
+    blue: { bgcolor: "rgba(53,121,245,0.1)", color: "#3579F5" },
+    slate: { bgcolor: "#f1f5f9", color: "#64748b" },
   }[variant]
 
   return (

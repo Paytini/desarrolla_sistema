@@ -39,7 +39,7 @@ function shouldTrackFetch(input: RequestInfo | URL, init?: RequestInit) {
 
   const headers = new Headers(
     init?.headers ??
-      (typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined)
+      (typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined),
   )
 
   if (headers.get("x-skip-global-loading") === "1") {
@@ -107,7 +107,7 @@ export default function GlobalLoadingController() {
 
       show(
         customMessage || "Procesando...",
-        customDetail || "Estamos guardando cambios y preparando la respuesta."
+        customDetail || "Estamos guardando cambios y preparando la respuesta.",
       )
     }
 
@@ -163,10 +163,5 @@ export default function GlobalLoadingController() {
     return null
   }
 
-  return (
-    <LoadingOverlay
-      message={message}
-      detail={detail}
-    />
-  )
+  return <LoadingOverlay message={message} detail={detail} />
 }

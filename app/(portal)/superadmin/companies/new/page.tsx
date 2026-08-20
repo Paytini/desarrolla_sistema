@@ -20,11 +20,11 @@ export default async function NewCompanyPage() {
         <Link
           href="/superadmin/companies"
           style={{
-            display:     "inline-flex",
-            alignItems:  "center",
-            gap:         6,
-            fontSize:    13,
-            color:       "#64748b",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 13,
+            color: "#64748b",
             textDecoration: "none",
             marginBottom: 12,
           }}

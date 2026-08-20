@@ -1,6 +1,15 @@
 "use client"
 
-import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, RotateCw, Search, Upload, X } from "lucide-react"
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  RotateCw,
+  Search,
+  Upload,
+  X,
+} from "lucide-react"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Box from "@mui/material/Box"
@@ -69,12 +78,32 @@ const STATUS_CONFIG: Record<
   Status,
   { label: string; bg: string; color: string; border: string; dot: string }
 > = {
-  complete:   { label: "Completo",   bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0", dot: "#22c55e"  },
-  incomplete: { label: "Incompleto", bg: "#fffbeb", color: "#b45309", border: "#fde68a", dot: "#f59e0b"  },
-  empty:      { label: "Sin datos",  bg: "#f8fafc", color: "#64748b", border: "#e2e8f0", dot: "#94a3b8"  },
+  complete: {
+    label: "Completo",
+    bg: "#f0fdf4",
+    color: "#15803d",
+    border: "#bbf7d0",
+    dot: "#22c55e",
+  },
+  incomplete: {
+    label: "Incompleto",
+    bg: "#fffbeb",
+    color: "#b45309",
+    border: "#fde68a",
+    dot: "#f59e0b",
+  },
+  empty: { label: "Sin datos", bg: "#f8fafc", color: "#64748b", border: "#e2e8f0", dot: "#94a3b8" },
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string
+  required?: boolean
+  children: React.ReactNode
+}) {
   return (
     <Box sx={{ display: "grid", gap: 0.75 }}>
       <Typography
@@ -87,7 +116,11 @@ function Field({ label, required, children }: { label: string; required?: boolea
         }}
       >
         {label}
-        {required && <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>*</Box>}
+        {required && (
+          <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>
+            *
+          </Box>
+        )}
       </Typography>
       {children}
     </Box>
@@ -125,15 +158,15 @@ function CourseEditorCard({
   syncAction: SyncAction
   defaultOpen?: boolean
 }) {
-  const [open, setOpen]                 = useState(defaultOpen ?? false)
-  const [isPending, startTransition]    = useTransition()
-  const [saved, setSaved]               = useState(false)
-  const [saveError, setSaveError]       = useState<string | null>(null)
+  const [open, setOpen] = useState(defaultOpen ?? false)
+  const [isPending, startTransition] = useTransition()
+  const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [signatureUrl, setSignatureUrl] = useState(course.metadata?.instructor_signature_url ?? "")
   const [uploadingSignature, setUploadingSignature] = useState(false)
-  const [uploadError, setUploadError]   = useState<string | null>(null)
-  const fileInputRef                    = useRef<HTMLInputElement>(null)
-  const cardRef                         = useRef<HTMLDivElement>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (defaultOpen && cardRef.current) {
@@ -142,14 +175,14 @@ function CourseEditorCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [isSyncing, startSyncTransition] = useTransition()
-  const [syncSuccess, setSyncSuccess]   = useState(false)
-  const [syncError, setSyncError]       = useState<string | null>(null)
-  const router                          = useRouter()
+  const [syncSuccess, setSyncSuccess] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const router = useRouter()
 
-  const status       = getStatus(course.metadata)
+  const status = getStatus(course.metadata)
   const completeness = getCompleteness(course.metadata)
-  const cfg          = STATUS_CONFIG[status]
-  const m            = course.metadata
+  const cfg = STATUS_CONFIG[status]
+  const m = course.metadata
 
   async function handleSignatureChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -161,9 +194,12 @@ function CourseEditorCard({
       fd.append("file", file)
       fd.append("nombre", `instructor-${course.wpCourseId}`)
       fd.append("wpCourseId", String(course.wpCourseId))
-      const res  = await fetch("/api/upload/instructor-signature", { method: "POST", body: fd })
+      const res = await fetch("/api/upload/instructor-signature", { method: "POST", body: fd })
       const data = await res.json()
-      if (!res.ok) { setUploadError(data.error ?? "Error subiendo la firma"); return }
+      if (!res.ok) {
+        setUploadError(data.error ?? "Error subiendo la firma")
+        return
+      }
       setSignatureUrl(data.url as string)
     } catch {
       setUploadError("Error de conexión al subir la firma")
@@ -176,7 +212,10 @@ function CourseEditorCard({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSaveError(null)
-    if (!signatureUrl) { setSaveError("La firma del instructor es obligatoria"); return }
+    if (!signatureUrl) {
+      setSaveError("La firma del instructor es obligatoria")
+      return
+    }
     const formData = new FormData(e.currentTarget)
     startTransition(async () => {
       const result = await action(formData)
@@ -207,7 +246,9 @@ function CourseEditorCard({
   }
 
   const isBlobUrl = signatureUrl.includes("blob.vercel-storage.com")
-  const proxyUrl  = isBlobUrl ? `/api/upload/signature-proxy?url=${encodeURIComponent(signatureUrl)}` : signatureUrl
+  const proxyUrl = isBlobUrl
+    ? `/api/upload/signature-proxy?url=${encodeURIComponent(signatureUrl)}`
+    : signatureUrl
 
   return (
     <Paper
@@ -322,10 +363,11 @@ function CourseEditorCard({
               "& .MuiChip-label": { px: 1.25 },
             }}
           />
-          {open
-            ? <ChevronUp   size={15} style={{ color: "#858382", flexShrink: 0 }} />
-            : <ChevronDown size={15} style={{ color: "#858382", flexShrink: 0 }} />
-          }
+          {open ? (
+            <ChevronUp size={15} style={{ color: "#858382", flexShrink: 0 }} />
+          ) : (
+            <ChevronDown size={15} style={{ color: "#858382", flexShrink: 0 }} />
+          )}
         </Box>
       </Box>
 
@@ -358,7 +400,9 @@ function CourseEditorCard({
           >
             <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
               Fuente:{" "}
-              <Box component="strong" sx={{ color: "text.primary" }}>{m?.source ?? "Sin capturar"}</Box>
+              <Box component="strong" sx={{ color: "text.primary" }}>
+                {m?.source ?? "Sin capturar"}
+              </Box>
               {" · "}
               Última sincronización:{" "}
               <Box component="strong" sx={{ color: "text.primary" }}>
@@ -414,13 +458,9 @@ function CourseEditorCard({
             </Box>
           </Paper>
 
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ display: "grid", gap: 2 }}
-          >
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: "grid", gap: 2 }}>
             <input type="hidden" name="wp_curso_id" value={course.wpCourseId} />
-            <input type="hidden" name="firma_url"   value={signatureUrl} />
+            <input type="hidden" name="firma_url" value={signatureUrl} />
 
             <SectionLabel>Datos del curso</SectionLabel>
 
@@ -514,183 +554,182 @@ function CourseEditorCard({
             </Field>
 
             <Field label="Firma del instructor" required>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  style={{ display: "none" }}
-                  onChange={handleSignatureChange}
-                />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                style={{ display: "none" }}
+                onChange={handleSignatureChange}
+              />
 
-                {signatureUrl ? (
+              {signatureUrl ? (
+                <Box
+                  sx={{
+                    borderRadius: "12px",
+                    border: "2px solid #1E293B",
+                    overflow: "hidden",
+                    boxShadow: "3px 3px 0px 0px #1E293B",
+                  }}
+                >
                   <Box
                     sx={{
-                      borderRadius: "12px",
-                      border: "2px solid #1E293B",
-                      overflow: "hidden",
-                      boxShadow: "3px 3px 0px 0px #1E293B",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        position: "relative",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        minHeight: 100,
-                        py: 3,
-                        px: 4,
-                        bgcolor: "#ffffff",
-                        backgroundImage:
-                          "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
-                        backgroundSize: "18px 18px",
-                      }}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={proxyUrl}
-                        alt="Firma del instructor"
-                        style={{
-                          maxHeight: 80,
-                          maxWidth: "100%",
-                          objectFit: "contain",
-                          position: "relative",
-                          zIndex: 1,
-                        }}
-                      />
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        borderTop: "1.5px solid #e2e8f0",
-                        bgcolor: "#f8fafc",
-                        px: 2,
-                        py: 1,
-                      }}
-                    >
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                        <CheckCircle2 size={12} strokeWidth={2.5} style={{ color: "#22c55e" }} />
-                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#15803d" }}>
-                          Firma cargada
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: "flex", gap: 0.75 }}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          disabled={uploadingSignature}
-                          onClick={() => fileInputRef.current?.click()}
-                          sx={{
-                            height: 26,
-                            fontSize: 11,
-                            px: 1.25,
-                            borderRadius: "6px",
-                            borderColor: "#CBD5E1",
-                            color: "#64748b",
-                            "&:hover": { borderColor: "#94a3b8", bgcolor: "transparent" },
-                          }}
-                        >
-                          {uploadingSignature ? "Subiendo…" : "Cambiar"}
-                        </Button>
-                        <IconButton
-                          size="small"
-                          onClick={() => setSignatureUrl("")}
-                          sx={{
-                            width: 26,
-                            height: 26,
-                            borderRadius: "6px",
-                            border: "1px solid #CBD5E1",
-                            color: "#94a3b8",
-                            "&:hover": {
-                              borderColor: "#fca5a5",
-                              color: "#ef4444",
-                              bgcolor: "rgba(239,68,68,0.06)",
-                            },
-                          }}
-                        >
-                          <X size={12} />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                  </Box>
-                ) : (
-                  <Box
-                    onClick={() => !uploadingSignature && fileInputRef.current?.click()}
-                    sx={{
-                      borderRadius: "12px",
-                      border: "2px dashed",
-                      borderColor: uploadingSignature ? "#3579F5" : "#CBD5E1",
-                      bgcolor: uploadingSignature ? "rgba(53,121,245,0.03)" : "#fafafa",
-                      cursor: uploadingSignature ? "default" : "pointer",
+                      position: "relative",
                       display: "flex",
-                      flexDirection: "column",
                       alignItems: "center",
                       justifyContent: "center",
-                      gap: 1,
-                      py: 3.5,
-                      transition: "all 0.18s ease",
-                      "&:hover": uploadingSignature
-                        ? {}
-                        : {
-                            borderColor: "#3579F5",
-                            bgcolor: "rgba(53,121,245,0.04)",
-                          },
+                      minHeight: 100,
+                      py: 3,
+                      px: 4,
+                      bgcolor: "#ffffff",
+                      backgroundImage: "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
+                      backgroundSize: "18px 18px",
                     }}
                   >
-                    {uploadingSignature ? (
-                      <>
-                        <Box
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            border: "2.5px solid #e2e8f0",
-                            borderTopColor: "#3579F5",
-                            animation: "spin 0.7s linear infinite",
-                            "@keyframes spin": { to: { transform: "rotate(360deg)" } },
-                          }}
-                        />
-                        <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#3579F5" }}>
-                          Subiendo firma…
-                        </Typography>
-                      </>
-                    ) : (
-                      <>
-                        <Box
-                          sx={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: "10px",
-                            bgcolor: "#f1f5f9",
-                            border: "1.5px solid #e2e8f0",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            mb: 0.25,
-                          }}
-                        >
-                          <Upload size={18} strokeWidth={1.5} style={{ color: "#64748b" }} />
-                        </Box>
-                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>
-                          Subir firma del instructor
-                        </Typography>
-                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
-                          PNG, JPG o WEBP
-                        </Typography>
-                      </>
-                    )}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={proxyUrl}
+                      alt="Firma del instructor"
+                      style={{
+                        maxHeight: 80,
+                        maxWidth: "100%",
+                        objectFit: "contain",
+                        position: "relative",
+                        zIndex: 1,
+                      }}
+                    />
                   </Box>
-                )}
 
-                {uploadError && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 0.75 }}>
-                    <AlertCircle size={12} strokeWidth={2} style={{ color: "#dc2626" }} />
-                    <Typography sx={{ fontSize: 12, color: "error.main" }}>{uploadError}</Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      borderTop: "1.5px solid #e2e8f0",
+                      bgcolor: "#f8fafc",
+                      px: 2,
+                      py: 1,
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                      <CheckCircle2 size={12} strokeWidth={2.5} style={{ color: "#22c55e" }} />
+                      <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#15803d" }}>
+                        Firma cargada
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 0.75 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={uploadingSignature}
+                        onClick={() => fileInputRef.current?.click()}
+                        sx={{
+                          height: 26,
+                          fontSize: 11,
+                          px: 1.25,
+                          borderRadius: "6px",
+                          borderColor: "#CBD5E1",
+                          color: "#64748b",
+                          "&:hover": { borderColor: "#94a3b8", bgcolor: "transparent" },
+                        }}
+                      >
+                        {uploadingSignature ? "Subiendo…" : "Cambiar"}
+                      </Button>
+                      <IconButton
+                        size="small"
+                        onClick={() => setSignatureUrl("")}
+                        sx={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: "6px",
+                          border: "1px solid #CBD5E1",
+                          color: "#94a3b8",
+                          "&:hover": {
+                            borderColor: "#fca5a5",
+                            color: "#ef4444",
+                            bgcolor: "rgba(239,68,68,0.06)",
+                          },
+                        }}
+                      >
+                        <X size={12} />
+                      </IconButton>
+                    </Box>
                   </Box>
-                )}
+                </Box>
+              ) : (
+                <Box
+                  onClick={() => !uploadingSignature && fileInputRef.current?.click()}
+                  sx={{
+                    borderRadius: "12px",
+                    border: "2px dashed",
+                    borderColor: uploadingSignature ? "#3579F5" : "#CBD5E1",
+                    bgcolor: uploadingSignature ? "rgba(53,121,245,0.03)" : "#fafafa",
+                    cursor: uploadingSignature ? "default" : "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1,
+                    py: 3.5,
+                    transition: "all 0.18s ease",
+                    "&:hover": uploadingSignature
+                      ? {}
+                      : {
+                          borderColor: "#3579F5",
+                          bgcolor: "rgba(53,121,245,0.04)",
+                        },
+                  }}
+                >
+                  {uploadingSignature ? (
+                    <>
+                      <Box
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          border: "2.5px solid #e2e8f0",
+                          borderTopColor: "#3579F5",
+                          animation: "spin 0.7s linear infinite",
+                          "@keyframes spin": { to: { transform: "rotate(360deg)" } },
+                        }}
+                      />
+                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#3579F5" }}>
+                        Subiendo firma…
+                      </Typography>
+                    </>
+                  ) : (
+                    <>
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: "10px",
+                          bgcolor: "#f1f5f9",
+                          border: "1.5px solid #e2e8f0",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          mb: 0.25,
+                        }}
+                      >
+                        <Upload size={18} strokeWidth={1.5} style={{ color: "#64748b" }} />
+                      </Box>
+                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>
+                        Subir firma del instructor
+                      </Typography>
+                      <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+                        PNG, JPG o WEBP
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              )}
+
+              {uploadError && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 0.75 }}>
+                  <AlertCircle size={12} strokeWidth={2} style={{ color: "#dc2626" }} />
+                  <Typography sx={{ fontSize: 12, color: "error.main" }}>{uploadError}</Typography>
+                </Box>
+              )}
             </Field>
 
             <Box
@@ -711,8 +750,10 @@ function CourseEditorCard({
                 </Box>
               ) : (
                 <Typography sx={{ fontSize: 12, color: "text.disabled" }}>
-                  <Box component="span" sx={{ color: "error.main" }}>*</Box>
-                  {" "}Campos requeridos para emitir el DC-3
+                  <Box component="span" sx={{ color: "error.main" }}>
+                    *
+                  </Box>{" "}
+                  Campos requeridos para emitir el DC-3
                 </Typography>
               )}
               <Button
@@ -744,10 +785,10 @@ function CourseEditorCard({
 type FilterValue = "all" | Status
 
 const FILTERS: { value: FilterValue; label: string }[] = [
-  { value: "all",        label: "Todos" },
-  { value: "complete",   label: "Completos" },
+  { value: "all", label: "Todos" },
+  { value: "complete", label: "Completos" },
   { value: "incomplete", label: "Incompletos" },
-  { value: "empty",      label: "Sin datos" },
+  { value: "empty", label: "Sin datos" },
 ]
 
 export default function Dc3EditorList({
@@ -762,14 +803,14 @@ export default function Dc3EditorList({
   openCourseId?: number | null
 }) {
   const [filter, setFilter] = useState<FilterValue>("all")
-  const [query, setQuery]   = useState("")
-  const [page, setPage]     = useState(1)
+  const [query, setQuery] = useState("")
+  const [page, setPage] = useState(1)
 
   const counts: Record<FilterValue, number> = {
-    all:        courses.length,
-    complete:   courses.filter((c) => getStatus(c.metadata) === "complete").length,
+    all: courses.length,
+    complete: courses.filter((c) => getStatus(c.metadata) === "complete").length,
     incomplete: courses.filter((c) => getStatus(c.metadata) === "incomplete").length,
-    empty:      courses.filter((c) => getStatus(c.metadata) === "empty").length,
+    empty: courses.filter((c) => getStatus(c.metadata) === "empty").length,
   }
 
   const statusFiltered =
@@ -782,67 +823,81 @@ export default function Dc3EditorList({
   // able to find it, so pagination steps aside rather than hiding it on some
   // other page.
   const hasOpenTarget = openCourseId != null && filtered.some((c) => c.wpCourseId === openCourseId)
-  const totalPages    = Math.max(1, Math.ceil(filtered.length / DC3_PAGE_SIZE))
-  const currentPage   = hasOpenTarget ? 1 : Math.min(page, totalPages)
-  const paged         = hasOpenTarget
+  const totalPages = Math.max(1, Math.ceil(filtered.length / DC3_PAGE_SIZE))
+  const currentPage = hasOpenTarget ? 1 : Math.min(page, totalPages)
+  const paged = hasOpenTarget
     ? filtered
     : filtered.slice((currentPage - 1) * DC3_PAGE_SIZE, currentPage * DC3_PAGE_SIZE)
 
   return (
     <Box sx={{ display: "grid", gap: 2 }}>
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1.5 }}>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-        {FILTERS.map(({ value, label }) => {
-          const active = filter === value
-          return (
-            <Box
-              key={value}
-              component="button"
-              type="button"
-              onClick={() => { setFilter(value); setPage(1) }}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.75,
-                px: 2,
-                py: 0.875,
-                borderRadius: "20px",
-                border: "1px solid",
-                borderColor: active ? "transparent" : "divider",
-                bgcolor: active ? "#0f172a" : "background.paper",
-                color: active ? "#fff" : "text.secondary",
-                fontSize: 14,
-                fontWeight: 500,
-                fontFamily: "inherit",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                "&:hover:not([data-active])": { bgcolor: "action.hover", color: "text.primary" },
-              }}
-            >
-              {label}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1.5,
+        }}
+      >
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          {FILTERS.map(({ value, label }) => {
+            const active = filter === value
+            return (
               <Box
-                component="span"
+                key={value}
+                component="button"
+                type="button"
+                onClick={() => {
+                  setFilter(value)
+                  setPage(1)
+                }}
                 sx={{
-                  px: 0.875,
-                  py: 0.25,
-                  borderRadius: "10px",
-                  fontSize: "10px",
-                  fontWeight: 600,
-                  bgcolor: active ? "rgba(255,255,255,0.2)" : "action.hover",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  px: 2,
+                  py: 0.875,
+                  borderRadius: "20px",
+                  border: "1px solid",
+                  borderColor: active ? "transparent" : "divider",
+                  bgcolor: active ? "#0f172a" : "background.paper",
                   color: active ? "#fff" : "text.secondary",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  "&:hover:not([data-active])": { bgcolor: "action.hover", color: "text.primary" },
                 }}
               >
-                {counts[value]}
+                {label}
+                <Box
+                  component="span"
+                  sx={{
+                    px: 0.875,
+                    py: 0.25,
+                    borderRadius: "10px",
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    bgcolor: active ? "rgba(255,255,255,0.2)" : "action.hover",
+                    color: active ? "#fff" : "text.secondary",
+                  }}
+                >
+                  {counts[value]}
+                </Box>
               </Box>
-            </Box>
-          )
-        })}
-      </Box>
+            )
+          })}
+        </Box>
 
         <TextField
           size="small"
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setPage(1) }}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setPage(1)
+          }}
           placeholder="Buscar curso…"
           sx={{ width: 220 }}
           slotProps={{
@@ -871,7 +926,9 @@ export default function Dc3EditorList({
             }}
           >
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {query.trim() ? `Sin resultados para "${query.trim()}".` : "No hay cursos en esta categoría."}
+              {query.trim()
+                ? `Sin resultados para "${query.trim()}".`
+                : "No hay cursos en esta categoría."}
             </Typography>
           </Box>
         ) : (
@@ -890,7 +947,8 @@ export default function Dc3EditorList({
       {!hasOpenTarget && totalPages > 1 && (
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pt: 1 }}>
           <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-            {filtered.length} resultado{filtered.length !== 1 ? "s" : ""} · página {currentPage} de {totalPages}
+            {filtered.length} resultado{filtered.length !== 1 ? "s" : ""} · página {currentPage} de{" "}
+            {totalPages}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
             <Button

@@ -36,7 +36,7 @@ export function ZipDownloadButton({ count, filteredCount, queryString }: ZipDown
   }
 
   const isLoading = status === "loading"
-  const isError   = status === "error"
+  const isError = status === "error"
 
   return (
     <button
@@ -59,10 +59,10 @@ export function ZipDownloadButton({ count, filteredCount, queryString }: ZipDown
       {isLoading
         ? "Descargando…"
         : isError
-        ? "Error — intenta de nuevo"
-        : isFiltered
-        ? `Descargar ZIP (${filteredCount} filtradas)`
-        : `Descargar ZIP (${count})`}
+          ? "Error — intenta de nuevo"
+          : isFiltered
+            ? `Descargar ZIP (${filteredCount} filtradas)`
+            : `Descargar ZIP (${count})`}
     </button>
   )
 }

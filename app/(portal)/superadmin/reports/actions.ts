@@ -16,16 +16,17 @@ import { isUuid } from "@/lib/uuid"
 
 function getSyncErrorMessage(error: unknown) {
   const rawMessage =
-    error instanceof Error
-      ? error.message
-      : "No fue posible sincronizar el paquete con la empresa."
+    error instanceof Error ? error.message : "No fue posible sincronizar el paquete con la empresa."
   const normalizedMessage = rawMessage.toLowerCase()
 
   if (rawMessage.includes("status 404")) {
     return "El plugin de WordPress no tiene el endpoint nuevo de confirmacion de acceso."
   }
 
-  if (rawMessage.includes("status 401") || normalizedMessage.includes("credenciales insuficientes")) {
+  if (
+    rawMessage.includes("status 401") ||
+    normalizedMessage.includes("credenciales insuficientes")
+  ) {
     return "WordPress rechazo autenticacion del bridge. Revisa WP_BRIDGE_PORTAL_KEY."
   }
 
@@ -58,7 +59,9 @@ export async function triggerGlobalLearningSyncAction() {
   revalidatePath("/employee/certificates")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
-  redirect(`/superadmin/reports?success=${queued ? "sync_background_started" : "sync_background_already_running"}`)
+  redirect(
+    `/superadmin/reports?success=${queued ? "sync_background_started" : "sync_background_already_running"}`,
+  )
 }
 
 export async function retryCompanySyncAction(formData: FormData) {

@@ -78,7 +78,14 @@ export default function EmployeeOnboardingModal({
             pb: 2,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 2,
+            }}
+          >
             <Box>
               <Typography variant="h6" component="h2" sx={{ fontWeight: 600, fontSize: 18 }}>
                 Agregar empleados
@@ -87,7 +94,11 @@ export default function EmployeeOnboardingModal({
                 Manual para una persona o CSV para cargas masivas.
               </Typography>
             </Box>
-            <IconButton onClick={() => setOpen(false)} aria-label="Cerrar panel de alta" size="small">
+            <IconButton
+              onClick={() => setOpen(false)}
+              aria-label="Cerrar panel de alta"
+              size="small"
+            >
               <X size={18} />
             </IconButton>
           </Box>

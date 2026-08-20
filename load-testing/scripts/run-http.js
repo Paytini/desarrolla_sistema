@@ -63,9 +63,15 @@ const outLabel = process.env.LT_OUTPUT_LABEL ? `-${process.env.LT_OUTPUT_LABEL}`
 const outPath = path.join(rawDir, `21-http-user-session${isSpike ? "-spike" : ""}${outLabel}.json`)
 
 console.log("=".repeat(70))
-console.log(isSpike ? "MODO SPIKE — avalancha simultanea (arrivalCount + duration)" : "MODO HTTP — sesion reutilizada (capacidad)")
+console.log(
+  isSpike
+    ? "MODO SPIKE — avalancha simultanea (arrivalCount + duration)"
+    : "MODO HTTP — sesion reutilizada (capacidad)",
+)
 console.log("=".repeat(70))
-console.log(`  target:            ${config.targetUrl}${targetOverride ? "  (override via LT_TARGET_URL, inyectado en --overrides)" : "  (default del .yml, LT_TARGET_URL no definida)"}`)
+console.log(
+  `  target:            ${config.targetUrl}${targetOverride ? "  (override via LT_TARGET_URL, inyectado en --overrides)" : "  (default del .yml, LT_TARGET_URL no definida)"}`,
+)
 if (isSpike) {
   const p = overrides.config.phases[0]
   console.log(`  arrivalCount:      ${p.arrivalCount} usuarios`)
@@ -79,7 +85,9 @@ if (isSpike) {
   console.log(`  pagesPerSession:   ${v.pagesPerSession} (loop count por VU)`)
   console.log(`  thinkMinSec:       ${v.thinkMinSec}`)
   console.log(`  thinkMaxSec:       ${v.thinkMaxSec}`)
-  console.log(`  env vars:          LT_HTTP_ARRIVAL_RATE, LT_HTTP_DURATION_SEC, LT_PAGES_PER_SESSION, LT_THINK_MIN_SEC, LT_THINK_MAX_SEC`)
+  console.log(
+    `  env vars:          LT_HTTP_ARRIVAL_RATE, LT_HTTP_DURATION_SEC, LT_PAGES_PER_SESSION, LT_THINK_MIN_SEC, LT_THINK_MAX_SEC`,
+  )
 }
 console.log(`  scenario file:     ${scenarioRelPath}`)
 console.log(`  output:            ${outPath}`)
@@ -94,10 +102,12 @@ try {
   execFileSync(
     "npx",
     ["artillery", "run", scenarioRelPath, "--overrides", overridesJson, "--output", outPath],
-    { cwd: rootDir, stdio: "inherit" }
+    { cwd: rootDir, stdio: "inherit" },
   )
 } catch (_err) {
-  console.error("\nartillery termino con codigo distinto de 0 (probablemente un umbral 'ensure' fallo). El JSON de salida se escribe igual si la corrida llego a completarse — revisalo antes de asumir que fallo todo.")
+  console.error(
+    "\nartillery termino con codigo distinto de 0 (probablemente un umbral 'ensure' fallo). El JSON de salida se escribe igual si la corrida llego a completarse — revisalo antes de asumir que fallo todo.",
+  )
 }
 
 console.log(`\nReporte crudo escrito en: ${outPath}`)

@@ -3,14 +3,14 @@
 import { Box, Typography } from "@mui/material"
 
 const periodConfig = {
-  morning:   "Buenos días",
+  morning: "Buenos días",
   afternoon: "Buenas tardes",
-  evening:   "Buenas noches",
+  evening: "Buenas noches",
 } as const
 
 export function DashboardGreeting({ name }: { name: string }) {
-  const hour     = new Date().getHours()
-  const period   = hour < 12 ? "morning" : hour < 19 ? "afternoon" : "evening"
+  const hour = new Date().getHours()
+  const period = hour < 12 ? "morning" : hour < 19 ? "afternoon" : "evening"
   const greeting = periodConfig[period]
   const firstName = name.split(" ")[0] ?? name
 

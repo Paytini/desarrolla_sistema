@@ -13,7 +13,7 @@ import { isUuid } from "@/lib/uuid"
 import { updatePackageAction } from "../../actions"
 
 const errorMessages: Record<string, string> = {
-  datos:  "Faltan datos obligatorios para actualizar el paquete.",
+  datos: "Faltan datos obligatorios para actualizar el paquete.",
   cursos: "Debes seleccionar al menos un curso.",
   bundle: "No fue posible sincronizar el bundle en Tutor LMS.",
 }
@@ -51,7 +51,7 @@ export default async function EditPackagePage({ params, searchParams }: PageProp
   if (!pkg || !pkg.active) notFound()
 
   const searchParamsValue = await searchParams
-  const error  = readSearchParam(searchParamsValue, "error")
+  const error = readSearchParam(searchParamsValue, "error")
   const detail = readDecodedSearchParam(searchParamsValue, "detail")
 
   return (
@@ -60,13 +60,13 @@ export default async function EditPackagePage({ params, searchParams }: PageProp
         <Link
           href="/superadmin/packages"
           style={{
-            display:        "inline-flex",
-            alignItems:     "center",
-            gap:            6,
-            fontSize:       13,
-            color:          "#64748b",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 13,
+            color: "#64748b",
             textDecoration: "none",
-            marginBottom:   12,
+            marginBottom: 12,
           }}
         >
           <ArrowLeft size={14} strokeWidth={2} />

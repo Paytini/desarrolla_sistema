@@ -23,10 +23,12 @@ function loadCsvRows(relativePath) {
 }
 
 function loadEmployeeCredentials() {
-  return loadCsvRows(path.join("payloads", "employee-credentials.csv")).map(([email, password]) => ({
-    email,
-    password,
-  }))
+  return loadCsvRows(path.join("payloads", "employee-credentials.csv")).map(
+    ([email, password]) => ({
+      email,
+      password,
+    }),
+  )
 }
 
 function cookiesFromHeader(cookieHeader, targetUrl) {
@@ -36,7 +38,12 @@ function cookiesFromHeader(cookieHeader, targetUrl) {
     .filter(Boolean)
     .map((pair) => {
       const idx = pair.indexOf("=")
-      return { name: pair.slice(0, idx), value: pair.slice(idx + 1), domain: url.hostname, path: "/" }
+      return {
+        name: pair.slice(0, idx),
+        value: pair.slice(idx + 1),
+        domain: url.hostname,
+        path: "/",
+      }
     })
 }
 
@@ -92,7 +99,11 @@ async function massEnrollmentSweep(page, vuContext, events, test) {
   const { step } = test
   const companies = loadLtCompanies()
 
-  const { cookieHeader } = await apiLogin(config.targetUrl, config.superadmin.email, config.superadmin.password)
+  const { cookieHeader } = await apiLogin(
+    config.targetUrl,
+    config.superadmin.email,
+    config.superadmin.password,
+  )
   await page.context().addCookies(cookiesFromHeader(cookieHeader, config.targetUrl))
 
   const results = []
@@ -102,7 +113,9 @@ async function massEnrollmentSweep(page, vuContext, events, test) {
       await page.goto(`${config.targetUrl}/superadmin/packages`, { waitUntil: "domcontentloaded" })
     })
 
-    const row = page.locator("tr").filter({ has: page.locator(`input[name="empresa_id"][value="${company.id}"]`) })
+    const row = page
+      .locator("tr")
+      .filter({ has: page.locator(`input[name="empresa_id"][value="${company.id}"]`) })
     const syncButton = row.getByRole("button", { name: /Sincronizar/i })
     await syncButton.waitFor({ state: "visible", timeout: 15_000 })
 
@@ -112,14 +125,19 @@ async function massEnrollmentSweep(page, vuContext, events, test) {
     await step(`sync_${company.slug}`, async () => {
       try {
         await Promise.all([
-          page.waitForURL((url) => url.searchParams.has("success") || url.searchParams.has("error"), {
-            timeout: 300_000,
-          }),
+          page.waitForURL(
+            (url) => url.searchParams.has("success") || url.searchParams.has("error"),
+            {
+              timeout: 300_000,
+            },
+          ),
           syncButton.click(),
         ])
       } catch (err) {
         clientTimedOut = true
-        console.error(`[mass-enrollment] empresa=${company.slug} el cliente dejo de esperar: ${err.message}`)
+        console.error(
+          `[mass-enrollment] empresa=${company.slug} el cliente dejo de esperar: ${err.message}`,
+        )
       }
     })
 
@@ -136,7 +154,7 @@ async function massEnrollmentSweep(page, vuContext, events, test) {
     events.emit("counter", `enrollment.${company.slug}.outcome.${outcome}`, 1)
     events.emit("histogram", "enrollment.wall_time_ms", elapsedMs)
     console.log(
-      `[mass-enrollment] empresa=${company.slug} (id=${company.id}) outcome=${outcome} wall_time_ms=${elapsedMs} url=${finalUrl}`
+      `[mass-enrollment] empresa=${company.slug} (id=${company.id}) outcome=${outcome} wall_time_ms=${elapsedMs} url=${finalUrl}`,
     )
     results.push({ slug: company.slug, companyId: company.id, outcome, elapsedMs, finalUrl })
   }
@@ -184,15 +202,23 @@ async function runCacheInvalidationStorm(context, events) {
     const pollerAccounts = allEmployees.slice(0, pollerCount)
 
     console.log(
-      `[cache-storm] setup: superadmin + ${pollerCount} empleados (login concurrencia ${LOGIN_CONCURRENCY})...`
+      `[cache-storm] setup: superadmin + ${pollerCount} empleados (login concurrencia ${LOGIN_CONCURRENCY})...`,
     )
     const setupStartedAt = Date.now()
 
-    const superadminSession = await apiLogin(config.targetUrl, config.superadmin.email, config.superadmin.password)
-    const pollerSessions = await mapWithConcurrency(pollerAccounts, LOGIN_CONCURRENCY, async (emp) => {
-      const session = await apiLogin(config.targetUrl, emp.email, emp.password)
-      return { email: emp.email, cookieHeader: session.cookieHeader }
-    })
+    const superadminSession = await apiLogin(
+      config.targetUrl,
+      config.superadmin.email,
+      config.superadmin.password,
+    )
+    const pollerSessions = await mapWithConcurrency(
+      pollerAccounts,
+      LOGIN_CONCURRENCY,
+      async (emp) => {
+        const session = await apiLogin(config.targetUrl, emp.email, emp.password)
+        return { email: emp.email, cookieHeader: session.cookieHeader }
+      },
+    )
 
     console.log(`[cache-storm] setup completo en ${Date.now() - setupStartedAt}ms`)
 
@@ -205,7 +231,9 @@ async function runCacheInvalidationStorm(context, events) {
 
     async function fetchTimed(pathName, cookieHeader) {
       const t0 = Date.now()
-      const res = await fetch(`${config.targetUrl}${pathName}`, { headers: { Cookie: cookieHeader } })
+      const res = await fetch(`${config.targetUrl}${pathName}`, {
+        headers: { Cookie: cookieHeader },
+      })
       await res.text()
       return { ms: Date.now() - t0, status: res.status }
     }
@@ -222,7 +250,10 @@ async function runCacheInvalidationStorm(context, events) {
         if (stopSuperadmin) break
         await sleep(300)
         try {
-          const companies = await fetchTimed("/superadmin/companies", superadminSession.cookieHeader)
+          const companies = await fetchTimed(
+            "/superadmin/companies",
+            superadminSession.cookieHeader,
+          )
           samples.push({ t_ms: Date.now() - testStartedAt, phase, page: "companies", ...companies })
         } catch (err) {
           console.error(`[cache-storm] error consultando /superadmin/companies: ${err.message}`)
@@ -254,7 +285,7 @@ async function runCacheInvalidationStorm(context, events) {
     await sleep(CONTROL_WINDOW_MS)
 
     console.log(
-      `[cache-storm] ventana STORM: ${pollerSessions.length} pollers cada ${POLL_INTERVAL_MS}ms por ${STORM_WINDOW_MS / 1000}s...`
+      `[cache-storm] ventana STORM: ${pollerSessions.length} pollers cada ${POLL_INTERVAL_MS}ms por ${STORM_WINDOW_MS / 1000}s...`,
     )
     pollersActive = true
     const pollerPromises = pollerSessions.map((session) => pollerLoop(session))
@@ -286,8 +317,14 @@ async function runCacheInvalidationStorm(context, events) {
       stormWindowMs: STORM_WINDOW_MS,
       pollCount,
       pollErrorCount,
-      reports: { control: bucketStats("control", "reports"), storm: bucketStats("storm", "reports") },
-      companies: { control: bucketStats("control", "companies"), storm: bucketStats("storm", "companies") },
+      reports: {
+        control: bucketStats("control", "reports"),
+        storm: bucketStats("storm", "reports"),
+      },
+      companies: {
+        control: bucketStats("control", "companies"),
+        storm: bucketStats("storm", "companies"),
+      },
     }
 
     console.log("[cache-storm] === RESUMEN control vs storm ===")
@@ -296,7 +333,8 @@ async function runCacheInvalidationStorm(context, events) {
     for (const page of ["reports", "companies"]) {
       const control = summary[page].control
       const storm = summary[page].storm
-      if (control.p50 != null) events.emit("histogram", `cache_storm.${page}.control.ms`, control.p50)
+      if (control.p50 != null)
+        events.emit("histogram", `cache_storm.${page}.control.ms`, control.p50)
       if (storm.p50 != null) events.emit("histogram", `cache_storm.${page}.storm.ms`, storm.p50)
     }
     events.emit("counter", "cache_storm.poll_count", pollCount)

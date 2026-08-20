@@ -41,19 +41,20 @@ export function SearchInput({
               <Search size={14} style={{ color: "#9CA3AF" }} />
             </InputAdornment>
           ),
-          endAdornment: isControlled && value ? (
-            <InputAdornment position="end">
-              <IconButton
-                size="small"
-                edge="end"
-                onClick={() => onChange?.("")}
-                aria-label="Limpiar búsqueda"
-                sx={{ color: "#9CA3AF", "&:hover": { color: "#374151" } }}
-              >
-                <X size={13} />
-              </IconButton>
-            </InputAdornment>
-          ) : null,
+          endAdornment:
+            isControlled && value ? (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  edge="end"
+                  onClick={() => onChange?.("")}
+                  aria-label="Limpiar búsqueda"
+                  sx={{ color: "#9CA3AF", "&:hover": { color: "#374151" } }}
+                >
+                  <X size={13} />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
         },
       }}
     />

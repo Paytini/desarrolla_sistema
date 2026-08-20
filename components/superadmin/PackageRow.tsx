@@ -28,7 +28,9 @@ import type { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities, formatDate } from "@/lib/format"
 
 export type Package = Awaited<ReturnType<typeof getSuperadminPackagesSnapshot>>["paquetes"][number]
-export type Dc3MetadataByCourseId = Awaited<ReturnType<typeof getSuperadminPackagesSnapshot>>["dc3MetadataByCourseId"]
+export type Dc3MetadataByCourseId = Awaited<
+  ReturnType<typeof getSuperadminPackagesSnapshot>
+>["dc3MetadataByCourseId"]
 
 const TD_SX = { borderBottom: "1px solid", borderColor: "divider" }
 
@@ -86,8 +88,10 @@ export function PackageRow({
             label={`${dc3Total} curso${dc3Total !== 1 ? "s" : ""}`}
             size="small"
             sx={{
-              height: 22, fontSize: 11,
-              bgcolor: "action.hover", color: "text.secondary",
+              height: 22,
+              fontSize: 11,
+              bgcolor: "action.hover",
+              color: "text.secondary",
               "& .MuiChip-icon": { color: "text.disabled", ml: 0.75 },
               "& .MuiChip-label": { px: 1 },
             }}
@@ -99,11 +103,21 @@ export function PackageRow({
             label={companyNames.length > 0 ? companyNames.join(", ") : "Sin asignar"}
             size="small"
             sx={{
-              height: 22, fontSize: 11, maxWidth: 220,
-              bgcolor: companyNames.length > 0 ? (theme) => alpha(theme.palette.primary.main, 0.08) : "action.hover",
+              height: 22,
+              fontSize: 11,
+              maxWidth: 220,
+              bgcolor:
+                companyNames.length > 0
+                  ? (theme) => alpha(theme.palette.primary.main, 0.08)
+                  : "action.hover",
               color: companyNames.length > 0 ? "primary.main" : "text.disabled",
               "& .MuiChip-icon": { color: "inherit", ml: 0.75 },
-              "& .MuiChip-label": { px: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+              "& .MuiChip-label": {
+                px: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              },
             }}
           />
         </TableCell>
@@ -114,7 +128,8 @@ export function PackageRow({
               label={dc3AllOk ? "Completo" : `${dc3Complete}/${dc3Total}`}
               size="small"
               sx={{
-                height: 22, fontSize: 11,
+                height: 22,
+                fontSize: 11,
                 bgcolor: dc3AllOk ? "action.hover" : "#fffbeb",
                 color: dc3AllOk ? "text.secondary" : "#b45309",
                 "& .MuiChip-icon": { color: dc3AllOk ? "text.disabled" : "#f59e0b", ml: 0.75 },
@@ -148,7 +163,10 @@ export function PackageRow({
       </TableRow>
 
       <TableRow>
-        <TableCell sx={{ p: 0, borderBottom: open ? "1px solid" : "none", borderColor: "divider" }} colSpan={7}>
+        <TableCell
+          sx={{ p: 0, borderBottom: open ? "1px solid" : "none", borderColor: "divider" }}
+          colSpan={7}
+        >
           <Collapse in={open} timeout={160} unmountOnExit>
             <Box sx={{ bgcolor: "action.hover", px: 2, py: 1.5 }}>
               {pkg.operational_notes && (
@@ -169,7 +187,16 @@ export function PackageRow({
                 </Box>
               )}
 
-              <Typography sx={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "text.disabled", mb: 0.75 }}>
+              <Typography
+                sx={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "text.disabled",
+                  mb: 0.75,
+                }}
+              >
                 Cursos y estado DC-3
               </Typography>
 
@@ -178,11 +205,20 @@ export function PackageRow({
                   Este paquete no tiene cursos asignados.
                 </Typography>
               ) : (
-                <Box sx={{ borderRadius: "10px", border: "1px solid", borderColor: "divider", bgcolor: "background.paper", overflow: "hidden" }}>
+                <Box
+                  sx={{
+                    borderRadius: "10px",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    overflow: "hidden",
+                  }}
+                >
                   {pkg.courses.map((course, index) => {
-                    const dc3Metadata  = dc3MetadataByCourseId[String(course.wp_course_id)] as Dc3MetadataView | undefined
+                    const dc3Metadata = dc3MetadataByCourseId[String(course.wp_course_id)] as
+                      Dc3MetadataView | undefined
                     const missingCount = getDc3MissingFields(dc3Metadata).length
-                    const isDc3Ready   = missingCount === 0
+                    const isDc3Ready = missingCount === 0
 
                     return (
                       <Box
@@ -199,18 +235,43 @@ export function PackageRow({
                       >
                         <Box
                           sx={{
-                            width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
+                            width: 7,
+                            height: 7,
+                            borderRadius: "50%",
+                            flexShrink: 0,
                             bgcolor: isDc3Ready ? "primary.main" : "#fbbf24",
                           }}
                         />
-                        <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+                        <Typography
+                          sx={{
+                            flex: 1,
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: "text.primary",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            minWidth: 0,
+                          }}
+                        >
                           {decodeHtmlEntities(course.course_name ?? "")}
                         </Typography>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
-                          <Typography sx={{ fontSize: 10, fontWeight: 600, color: isDc3Ready ? "text.secondary" : "#b45309" }}>
-                            {isDc3Ready ? "DC-3 ✓" : `${missingCount} pendiente${missingCount !== 1 ? "s" : ""}`}
+                          <Typography
+                            sx={{
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: isDc3Ready ? "text.secondary" : "#b45309",
+                            }}
+                          >
+                            {isDc3Ready
+                              ? "DC-3 ✓"
+                              : `${missingCount} pendiente${missingCount !== 1 ? "s" : ""}`}
                           </Typography>
-                          <Link href={`/superadmin/dc3?open=${course.wp_course_id}`} style={{ display: "flex", color: "#cbd5e1", lineHeight: 0 }}>
+                          <Link
+                            href={`/superadmin/dc3?open=${course.wp_course_id}`}
+                            style={{ display: "flex", color: "#cbd5e1", lineHeight: 0 }}
+                          >
                             <ExternalLink size={12} />
                           </Link>
                         </Box>
@@ -221,7 +282,9 @@ export function PackageRow({
               )}
 
               <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 1.25 }}>
-                {pkg.delivery_mode === "PRIVATE_BUNDLE_REFERENCE" ? "Bundle privado" : "Matrícula directa"}
+                {pkg.delivery_mode === "PRIVATE_BUNDLE_REFERENCE"
+                  ? "Bundle privado"
+                  : "Matrícula directa"}
                 {pkg.wp_bundle_id ? ` · WP #${pkg.wp_bundle_id}` : ""}
               </Typography>
             </Box>

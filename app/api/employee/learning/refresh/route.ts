@@ -18,11 +18,11 @@ export async function POST(request: Request) {
         ok: false,
         message: "No autorizado para refrescar el progreso del empleado.",
       },
-      { status: 401 }
+      { status: 401 },
     )
   }
 
-  const body = await request.json().catch(() => null) as { force?: boolean } | null
+  const body = (await request.json().catch(() => null)) as { force?: boolean } | null
   const forceRequested = body?.force ?? false
 
   if (forceRequested) {

@@ -17,7 +17,7 @@ type PackageCourseInput = {
 }
 
 function hasValidWpCourseId<T extends { wp_course_id?: number | null }>(
-  course: T
+  course: T,
 ): course is T & { wp_course_id: number } {
   return Number.isInteger(course.wp_course_id) && Number(course.wp_course_id) > 0
 }
@@ -34,7 +34,7 @@ function parseBridgeDate(value?: string | null) {
 function buildPackageCourseUpsertOperation(
   employeeId: string,
   packageCourse: PackageCourseInput,
-  syncedAt: Date
+  syncedAt: Date,
 ) {
   return prisma.employeeCourse.upsert({
     where: {
@@ -67,7 +67,7 @@ function buildPackageCourseUpsertOperation(
 
 export async function upsertEmployeePackageCourses(
   employeeId: string,
-  packageCourses: PackageCourseInput[]
+  packageCourses: PackageCourseInput[],
 ) {
   if (packageCourses.length === 0) {
     return
@@ -76,37 +76,38 @@ export async function upsertEmployeePackageCourses(
   const syncedAt = new Date()
   await prisma.$transaction(
     packageCourses.map((packageCourse) =>
-      buildPackageCourseUpsertOperation(employeeId, packageCourse, syncedAt)
-    )
+      buildPackageCourseUpsertOperation(employeeId, packageCourse, syncedAt),
+    ),
   )
 }
 
 export async function replaceEmployeePackageCourses(
   employeeId: string,
-  packageCourses: PackageCourseInput[]
+  packageCourses: PackageCourseInput[],
 ) {
   const selectedCourseIds = packageCourses.map((course) => course.wp_course_id)
   const syncedAt = new Date()
 
-  const deleteOperation = selectedCourseIds.length > 0
-    ? prisma.employeeCourse.deleteMany({
-        where: {
-          employee_id: employeeId,
-          wp_course_id: {
-            notIn: selectedCourseIds,
+  const deleteOperation =
+    selectedCourseIds.length > 0
+      ? prisma.employeeCourse.deleteMany({
+          where: {
+            employee_id: employeeId,
+            wp_course_id: {
+              notIn: selectedCourseIds,
+            },
           },
-        },
-      })
-    : prisma.employeeCourse.deleteMany({
-        where: {
-          employee_id: employeeId,
-        },
-      })
+        })
+      : prisma.employeeCourse.deleteMany({
+          where: {
+            employee_id: employeeId,
+          },
+        })
 
   const operations = [
     deleteOperation,
     ...packageCourses.map((packageCourse) =>
-      buildPackageCourseUpsertOperation(employeeId, packageCourse, syncedAt)
+      buildPackageCourseUpsertOperation(employeeId, packageCourse, syncedAt),
     ),
   ]
 
@@ -118,7 +119,7 @@ export async function setCourseAssignment(
   courseId: number,
   courseName: string,
   employeeIds: string[],
-  accessSource?: string | null
+  accessSource?: string | null,
 ) {
   const currentRows = await prisma.employeeCourse.findMany({
     where: { wp_course_id: courseId, employee: { company_id: companyId } },
@@ -144,9 +145,9 @@ export async function setCourseAssignment(
         buildPackageCourseUpsertOperation(
           employeeId,
           { wp_course_id: courseId, course_name: courseName, access_source: accessSource },
-          syncedAt
-        )
-      )
+          syncedAt,
+        ),
+      ),
     )
   }
 
@@ -167,7 +168,7 @@ export async function setCourseAssignment(
 
         const studentCourses = await bridgeGetStudentCourses(employee.wp_user_id)
         const match = studentCourses.courses.find(
-          (course) => hasValidWpCourseId(course) && course.wp_course_id === courseId
+          (course) => hasValidWpCourseId(course) && course.wp_course_id === courseId,
         )
 
         if (match) {
@@ -220,7 +221,7 @@ export async function syncSingleEmployeePackageEnrollment(
   packageCourses: PackageCourseInput[],
   courseIds: number[],
   courseIdSet: Set<number>,
-  deliveryMode: string
+  deliveryMode: string,
 ): Promise<PackageEnrollmentSyncResult> {
   const wpUserId = employee.wp_user_id
 
@@ -358,7 +359,7 @@ export async function markEmployeeCourseAccessError(
   employeeId: string,
   courseIds: number[],
   accessOrigin: string | null | undefined,
-  message: string
+  message: string,
 ) {
   if (courseIds.length === 0) {
     return

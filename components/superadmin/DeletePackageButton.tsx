@@ -89,8 +89,8 @@ export default function DeletePackageButton({
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            El paquete se ocultará del catálogo y ya no aparecerá para nuevas asignaciones.
-            No se eliminarán cursos ni datos históricos ya guardados.
+            El paquete se ocultará del catálogo y ya no aparecerá para nuevas asignaciones. No se
+            eliminarán cursos ni datos históricos ya guardados.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
@@ -99,12 +99,7 @@ export default function DeletePackageButton({
           </Button>
           <form action={action}>
             <input type="hidden" name="paquete_id" value={packageId} />
-            <Button
-              type="submit"
-              variant="contained"
-              color="error"
-              onClick={() => setOpen(false)}
-            >
+            <Button type="submit" variant="contained" color="error" onClick={() => setOpen(false)}>
               Sí, eliminar
             </Button>
           </form>

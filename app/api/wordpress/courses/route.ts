@@ -13,7 +13,7 @@ export async function GET() {
   if (!isWordPressBridgeConfigured()) {
     return NextResponse.json(
       { message: "El puente con WordPress no esta configurado" },
-      { status: 400 }
+      { status: 400 },
     )
   }
 

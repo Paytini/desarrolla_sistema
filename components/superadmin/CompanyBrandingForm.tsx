@@ -75,7 +75,9 @@ export function CompanyBrandingForm({
               style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
             />
           ) : (
-            <Typography sx={{ fontSize: "13px", color: "#9CA3AF", textAlign: "center", px: 2 }}>Sin logo</Typography>
+            <Typography sx={{ fontSize: "13px", color: "#9CA3AF", textAlign: "center", px: 2 }}>
+              Sin logo
+            </Typography>
           )}
         </Box>
 
@@ -97,7 +99,9 @@ export function CompanyBrandingForm({
             />
           </Button>
           {uploadError && (
-            <Typography sx={{ mt: 0.5, fontSize: "11px", color: "#dc2626" }}>{uploadError}</Typography>
+            <Typography sx={{ mt: 0.5, fontSize: "11px", color: "#dc2626" }}>
+              {uploadError}
+            </Typography>
           )}
         </Box>
       </Box>

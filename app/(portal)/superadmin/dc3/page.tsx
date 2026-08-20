@@ -19,11 +19,15 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
-  const params     = await searchParams
-  const openParam  = readSearchParam(params, "open")
+  const params = await searchParams
+  const openParam = readSearchParam(params, "open")
   const openCourseId = openParam ? Number(openParam) : null
 
-  const { publishedCourses, metadata, paqueteCursos: packageCourses } = await getSuperadminDc3Snapshot()
+  const {
+    publishedCourses,
+    metadata,
+    paqueteCursos: packageCourses,
+  } = await getSuperadminDc3Snapshot()
 
   const packagesByCourseId = new Map<number, string[]>()
   for (const pc of packageCourses) {
@@ -63,7 +67,12 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
           </Box>
         </Paper>
       ) : (
-        <Dc3EditorList courses={courses} action={saveDc3MetadataAction} syncAction={syncDc3MetadataAction} openCourseId={openCourseId} />
+        <Dc3EditorList
+          courses={courses}
+          action={saveDc3MetadataAction}
+          syncAction={syncDc3MetadataAction}
+          openCourseId={openCourseId}
+        />
       )}
     </Box>
   )

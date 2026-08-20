@@ -26,7 +26,9 @@ function parseSteps(spec) {
   return spec.split(",").map((raw, i) => {
     const [rate, duration, pages] = raw.trim().split(":").map(Number)
     if (!rate || !duration || !pages) {
-      console.error(`error: paso ${i + 1} malformado ("${raw}"). Formato: arrivalRate:durationSec:pagesPerSession`)
+      console.error(
+        `error: paso ${i + 1} malformado ("${raw}"). Formato: arrivalRate:durationSec:pagesPerSession`,
+      )
       process.exit(1)
     }
     return { n: i + 1, rate, duration, pages }
@@ -87,7 +89,9 @@ function main() {
   console.log("=".repeat(70))
   console.log(" ESCALERA DE CARGA — busca el techo, no lo rompe")
   console.log("=".repeat(70))
-  console.log(` Pasos            : ${steps.map((s) => `${s.rate}/s×${s.duration}s×${s.pages}p`).join("  →  ")}`)
+  console.log(
+    ` Pasos            : ${steps.map((s) => `${s.rate}/s×${s.duration}s×${s.pages}p`).join("  →  ")}`,
+  )
   console.log(` Corta si el error supera : ${MAX_ERROR_PCT}%`)
   console.log(` Pausa entre pasos        : ${PAUSE_SEC}s`)
   console.log(` Target                   : ${config.targetUrl}`)
@@ -101,7 +105,9 @@ function main() {
 
   for (const step of steps) {
     console.log("\n" + "─".repeat(70))
-    console.log(`PASO ${step.n}/${steps.length} — ${step.rate} usuarios/s · ${step.duration}s · ${step.pages} páginas por sesión`)
+    console.log(
+      `PASO ${step.n}/${steps.length} — ${step.rate} usuarios/s · ${step.duration}s · ${step.pages} páginas por sesión`,
+    )
     console.log("─".repeat(70) + "\n")
 
     const outFile = runStep(step)
@@ -114,10 +120,14 @@ function main() {
 
     const verdict = r.errorPct <= MAX_ERROR_PCT ? "OK" : "SUPERA EL UMBRAL"
     results.push({ ...step, ...r, verdict })
-    console.log(`\n>>> PASO ${step.n}: ${r.created} usuarios · ${r.failed} fallidos (${r.errorPct.toFixed(1)}%) · p95 ${r.p95} ms — ${verdict}`)
+    console.log(
+      `\n>>> PASO ${step.n}: ${r.created} usuarios · ${r.failed} fallidos (${r.errorPct.toFixed(1)}%) · p95 ${r.p95} ms — ${verdict}`,
+    )
 
     if (r.errorPct > MAX_ERROR_PCT) {
-      console.log(`\n>>> Techo encontrado. El último paso limpio fue ${ceiling ? `${ceiling.rate} usuarios/s` : "ninguno"}.`)
+      console.log(
+        `\n>>> Techo encontrado. El último paso limpio fue ${ceiling ? `${ceiling.rate} usuarios/s` : "ninguno"}.`,
+      )
       break
     }
     ceiling = { ...step, ...r }
@@ -133,14 +143,16 @@ function main() {
   console.log(" -----|------------|----------|---------|---------|----------")
   for (const r of results) {
     console.log(
-      ` ${String(r.n).padEnd(4)} | ${String(r.rate).padEnd(10)} | ${String(r.failed).padEnd(8)} | ${(r.errorPct.toFixed(1) + "%").padEnd(7)} | ${(r.p95 + " ms").padEnd(7)} | ${r.verdict}`
+      ` ${String(r.n).padEnd(4)} | ${String(r.rate).padEnd(10)} | ${String(r.failed).padEnd(8)} | ${(r.errorPct.toFixed(1) + "%").padEnd(7)} | ${(r.p95 + " ms").padEnd(7)} | ${r.verdict}`,
     )
   }
   console.log("")
 
   if (ceiling) {
     console.log(` Techo sostenible en esta máquina: **${ceiling.rate} usuarios/s**`)
-    console.log(` (${ceiling.created} usuarios, ${ceiling.errorPct.toFixed(1)}% de error, p95 ${ceiling.p95} ms)`)
+    console.log(
+      ` (${ceiling.created} usuarios, ${ceiling.errorPct.toFixed(1)}% de error, p95 ${ceiling.p95} ms)`,
+    )
   } else {
     console.log(" Ningún paso quedó bajo el umbral. Empieza más abajo:")
     console.log(' LT_LADDER_STEPS="0.5:120:4,1:120:6" npm run simulate:ladder')

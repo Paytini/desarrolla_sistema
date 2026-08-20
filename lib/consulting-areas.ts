@@ -12,14 +12,7 @@ import {
 import type { KpiColorKey } from "@/lib/kpi-colors"
 
 export type ConsultingAreaId =
-  | "CTPAT"
-  | "OEA"
-  | "FIRE_SAFETY"
-  | "HUMAN_RESOURCES"
-  | "EC0217"
-  | "EC0634"
-  | "EC0306"
-  | "EC0397_01"
+  "CTPAT" | "OEA" | "FIRE_SAFETY" | "HUMAN_RESOURCES" | "EC0217" | "EC0634" | "EC0306" | "EC0397_01"
 
 export type ConsultingAreaOption = {
   id: ConsultingAreaId
@@ -61,7 +54,8 @@ export const CONSULTING_AREAS: ConsultingAreaOption[] = [
   {
     id: "EC0217",
     label: "EC0217",
-    description: "Impartición de cursos de formación del capital humano de manera presencial grupal.",
+    description:
+      "Impartición de cursos de formación del capital humano de manera presencial grupal.",
     icon: GraduationCap,
     color: "emerald",
   },
@@ -82,7 +76,8 @@ export const CONSULTING_AREAS: ConsultingAreaOption[] = [
   {
     id: "EC0397_01",
     label: "EC0397.01",
-    description: "Vigilancia del cumplimiento de la normatividad en seguridad y salud en el trabajo.",
+    description:
+      "Vigilancia del cumplimiento de la normatividad en seguridad y salud en el trabajo.",
     icon: Compass,
     color: "pink",
   },

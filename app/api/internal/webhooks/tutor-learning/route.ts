@@ -34,7 +34,9 @@ type TutorLearningWebhookPayload = TutorLearningWebhookEvent & {
 }
 
 function getWebhookSecret() {
-  return process.env.BRIDGE_WEBHOOK_SECRET?.trim() || process.env.WP_BRIDGE_WEBHOOK_SECRET?.trim() || ""
+  return (
+    process.env.BRIDGE_WEBHOOK_SECRET?.trim() || process.env.WP_BRIDGE_WEBHOOK_SECRET?.trim() || ""
+  )
 }
 
 function secureCompare(left: string, right: string) {
@@ -54,9 +56,7 @@ function hasValidSignature(rawBody: string, timestamp: string, signature: string
     return false
   }
 
-  const expected = createHmac("sha256", secret)
-    .update(`${timestamp}.${rawBody}`)
-    .digest("hex")
+  const expected = createHmac("sha256", secret).update(`${timestamp}.${rawBody}`).digest("hex")
 
   return secureCompare(expected, signature)
 }
@@ -75,7 +75,11 @@ function isValidEvent(event: TutorLearningWebhookEvent) {
   return Number.isInteger(event.student_wp_user_id) && Array.isArray(event.courses)
 }
 
-async function processLearningWebhookEvent(event: TutorLearningWebhookEvent, eventType: string, occurredAt: string | null) {
+async function processLearningWebhookEvent(
+  event: TutorLearningWebhookEvent,
+  eventType: string,
+  occurredAt: string | null,
+) {
   if (event.employee_id && !isUuid(event.employee_id)) {
     event.employee_id = null
   }
@@ -96,7 +100,12 @@ async function processLearningWebhookEvent(event: TutorLearningWebhookEvent, eve
   const sourceHash = event.source_hash ?? null
 
   if (await isDuplicateTutorLearningWebhook(wpUserId, sourceHash)) {
-    return { student_wp_user_id: wpUserId, ok: true as const, duplicate: true, source_hash: sourceHash }
+    return {
+      student_wp_user_id: wpUserId,
+      ok: true as const,
+      duplicate: true,
+      source_hash: sourceHash,
+    }
   }
 
   try {
@@ -143,7 +152,10 @@ async function processLearningWebhookEvent(event: TutorLearningWebhookEvent, eve
       student_wp_user_id: wpUserId,
       ok: false as const,
       code: "sync_failed" as const,
-      message: error instanceof Error ? error.message : "No fue posible aplicar el webhook academico al portal.",
+      message:
+        error instanceof Error
+          ? error.message
+          : "No fue posible aplicar el webhook academico al portal.",
     }
   }
 }
@@ -156,14 +168,14 @@ export async function POST(request: Request) {
   if (!getWebhookSecret()) {
     return NextResponse.json(
       { ok: false, message: "Webhook secret no configurado en el portal." },
-      { status: 503 }
+      { status: 503 },
     )
   }
 
   if (!isFreshTimestamp(timestamp) || !hasValidSignature(rawBody, timestamp, signature)) {
     return NextResponse.json(
       { ok: false, message: "Firma del webhook invalida o expirada." },
-      { status: 401 }
+      { status: 401 },
     )
   }
 
@@ -174,7 +186,7 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json(
       { ok: false, message: "El webhook no contiene JSON valido." },
-      { status: 400 }
+      { status: 400 },
     )
   }
 
@@ -185,11 +197,15 @@ export async function POST(request: Request) {
     if (payload.events.length === 0) {
       return NextResponse.json(
         { ok: false, message: "El lote del webhook no contiene eventos." },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    const results: Array<{ student_wp_user_id: number | null; ok: boolean; [key: string]: unknown }> = []
+    const results: Array<{
+      student_wp_user_id: number | null
+      ok: boolean
+      [key: string]: unknown
+    }> = []
     for (const event of payload.events) {
       try {
         results.push(await processLearningWebhookEvent(event, eventType, occurredAt))
@@ -198,7 +214,8 @@ export async function POST(request: Request) {
           student_wp_user_id: event?.student_wp_user_id ?? null,
           ok: false,
           code: "sync_failed",
-          message: error instanceof Error ? error.message : "Error inesperado al procesar el evento.",
+          message:
+            error instanceof Error ? error.message : "Error inesperado al procesar el evento.",
         })
       }
     }

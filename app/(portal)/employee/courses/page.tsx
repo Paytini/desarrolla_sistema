@@ -25,7 +25,7 @@ import Typography from "@mui/material/Typography"
 function getCourseUrl(
   courseId: number,
   courseUrlById: Map<number, string>,
-  fallbackUrlById: Map<number, string>
+  fallbackUrlById: Map<number, string>,
 ) {
   const direct = courseUrlById.get(courseId)
   if (direct) return direct
@@ -42,12 +42,12 @@ export default async function EmployeeCourses() {
   }
 
   const learningData = await getEmployeeLearningData(session.user.email ?? "")
-  const employee     = learningData?.employee
+  const employee = learningData?.employee
   if (!employee) redirect("/login")
 
-  let courseUrlById   = new Map<number, string>()
+  let courseUrlById = new Map<number, string>()
   let fallbackUrlById = new Map<number, string>()
-  let thumbnailById   = new Map<number, string>()
+  let thumbnailById = new Map<number, string>()
 
   if (isWordPressBridgeConfigured()) {
     try {
@@ -55,18 +55,18 @@ export default async function EmployeeCourses() {
       courseUrlById = new Map(
         bridgeCourses.courses
           .filter((c) => c.course_url)
-          .map((c) => [c.wp_course_id, c.course_url as string])
+          .map((c) => [c.wp_course_id, c.course_url as string]),
       )
       const siteUrl = getWordPressSiteUrl()
       fallbackUrlById = new Map(
         bridgeCourses.courses
           .filter((c) => c.post_type && siteUrl)
-          .map((c) => [c.wp_course_id, `${siteUrl}/?post_type=${c.post_type}&p=${c.wp_course_id}`])
+          .map((c) => [c.wp_course_id, `${siteUrl}/?post_type=${c.post_type}&p=${c.wp_course_id}`]),
       )
       thumbnailById = new Map(
         bridgeCourses.courses
           .filter((c) => c.thumbnail_url)
-          .map((c) => [c.wp_course_id, c.thumbnail_url as string])
+          .map((c) => [c.wp_course_id, c.thumbnail_url as string]),
       )
     } catch {}
   }
@@ -95,7 +95,7 @@ export default async function EmployeeCourses() {
 
   const courses = employee.courses as PortalCourseRecord[]
 
-  let dc3MetaMap  = new Map<number, { duration_hours: number | null }>()
+  let dc3MetaMap = new Map<number, { duration_hours: number | null }>()
   let pkgCourseMap = new Map<number, { description: string | null; lesson_count: number | null }>()
 
   if (session.user.empresa_id && courses.length > 0) {
@@ -112,15 +112,22 @@ export default async function EmployeeCourses() {
           distinct: ["wp_course_id"],
         }),
       ])
-      dc3MetaMap  = new Map(dc3MetaRecords.map((m) => [m.wp_course_id, { duration_hours: m.duration_hours }]))
-      pkgCourseMap = new Map(pkgCourses.map((c) => [c.wp_course_id, { description: c.description, lesson_count: c.lesson_count }]))
+      dc3MetaMap = new Map(
+        dc3MetaRecords.map((m) => [m.wp_course_id, { duration_hours: m.duration_hours }]),
+      )
+      pkgCourseMap = new Map(
+        pkgCourses.map((c) => [
+          c.wp_course_id,
+          { description: c.description, lesson_count: c.lesson_count },
+        ]),
+      )
     } catch {}
   }
 
-  const completedCourses  = courses.filter((c) => c.completed).length
+  const completedCourses = courses.filter((c) => c.completed).length
   const coursesInProgress = courses.filter((c) => !c.completed && c.progress_pct > 0).length
-  const pendingCourses    = courses.filter((c) => c.progress_pct === 0).length
-  const averageProgress   = courses.length
+  const pendingCourses = courses.filter((c) => c.progress_pct === 0).length
+  const averageProgress = courses.length
     ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length)
     : 0
 
@@ -132,10 +139,34 @@ export default async function EmployeeCourses() {
         breadcrumbs={[{ label: "Mi espacio" }, { label: "Mis cursos" }]}
       />
 
-      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr 1fr", xl: "repeat(4,1fr)" } }}>
-        <KpiCard label="Completados"  value={String(completedCourses)} sub={`de ${courses.length} cursos`} icon={CheckCircle} borderColor="emerald" />
-        <KpiCard label="En progreso"  value={String(coursesInProgress)}  sub="iniciados"  icon={BookOpen} borderColor="amber" />
-        <KpiCard label="Sin iniciar"  value={String(pendingCourses)}  sub="pendientes" icon={Clock}    borderColor="charcoal" />
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: { xs: "1fr 1fr", xl: "repeat(4,1fr)" },
+        }}
+      >
+        <KpiCard
+          label="Completados"
+          value={String(completedCourses)}
+          sub={`de ${courses.length} cursos`}
+          icon={CheckCircle}
+          borderColor="emerald"
+        />
+        <KpiCard
+          label="En progreso"
+          value={String(coursesInProgress)}
+          sub="iniciados"
+          icon={BookOpen}
+          borderColor="amber"
+        />
+        <KpiCard
+          label="Sin iniciar"
+          value={String(pendingCourses)}
+          sub="pendientes"
+          icon={Clock}
+          borderColor="charcoal"
+        />
 
         <Paper
           elevation={0}
@@ -149,20 +180,25 @@ export default async function EmployeeCourses() {
             p: 2.5,
           }}
         >
-          <Typography sx={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8" }}>
+          <Typography
+            sx={{
+              fontSize: "10px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              color: "#94a3b8",
+            }}
+          >
             Avance global
           </Typography>
-          <Typography sx={{ mt: 0.5, fontSize: 28, fontWeight: 700, lineHeight: 1, color: "#1a1a1a" }}>
+          <Typography
+            sx={{ mt: 0.5, fontSize: 28, fontWeight: 700, lineHeight: 1, color: "#1a1a1a" }}
+          >
             {averageProgress}%
           </Typography>
           <Typography sx={{ mt: 0.5, fontSize: 11, color: "#64748b" }}>promedio</Typography>
           <Box sx={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
-            <RingChart
-              pct={averageProgress}
-              size={72}
-              sw={7}
-              color="#3579F5"
-            />
+            <RingChart pct={averageProgress} size={72} sw={7} color="#3579F5" />
           </Box>
         </Paper>
       </Box>
@@ -170,13 +206,29 @@ export default async function EmployeeCourses() {
       <EmployeeLearningRefresh autoRefresh pollIntervalMs={60_000} />
 
       {learningData?.syncError ? (
-        <Alert severity="warning" sx={{ borderRadius: 2, border: "1px solid #fde68a", bgcolor: "#fffbeb", color: "#78350f" }}>
+        <Alert
+          severity="warning"
+          sx={{
+            borderRadius: 2,
+            border: "1px solid #fde68a",
+            bgcolor: "#fffbeb",
+            color: "#78350f",
+          }}
+        >
           No pudimos refrescar tu avance. Mostramos el último dato guardado.
         </Alert>
       ) : null}
 
       {!learningData?.syncError && learningData?.backgroundSyncQueued ? (
-        <Alert severity="info" sx={{ borderRadius: 2, border: "1px solid #bae6fd", bgcolor: "#f0f9ff", color: "#0c4a6e" }}>
+        <Alert
+          severity="info"
+          sx={{
+            borderRadius: 2,
+            border: "1px solid #bae6fd",
+            bgcolor: "#f0f9ff",
+            color: "#0c4a6e",
+          }}
+        >
           Verificando tu avance más reciente. La vista se actualizará automáticamente.
         </Alert>
       ) : null}
@@ -197,18 +249,29 @@ export default async function EmployeeCourses() {
           </Typography>
         </Paper>
       ) : (
-        <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", xl: "1fr 1fr 1fr" } }}>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", xl: "1fr 1fr 1fr" },
+          }}
+        >
           {courses.map((course) => {
             const courseUrl = getCourseUrl(course.wp_course_id, courseUrlById, fallbackUrlById)
-            const launchUrl = buildWordPressCourseLaunchUrl({ wpUserId: employee.wp_user_id, courseUrl })
-            const thumbnail  = thumbnailById.get(course.wp_course_id)
-            const dc3Meta    = dc3MetaMap.get(course.wp_course_id)
-            const pkgMeta    = pkgCourseMap.get(course.wp_course_id)
-            const hasError   = course.access_status === "ERROR"
+            const launchUrl = buildWordPressCourseLaunchUrl({
+              wpUserId: employee.wp_user_id,
+              courseUrl,
+            })
+            const thumbnail = thumbnailById.get(course.wp_course_id)
+            const dc3Meta = dc3MetaMap.get(course.wp_course_id)
+            const pkgMeta = pkgCourseMap.get(course.wp_course_id)
+            const hasError = course.access_status === "ERROR"
             const inProgress = !course.completed && course.progress_pct > 0
-            const barColor   = course.progress_pct > 0 ? "#3579F5" : "#94a3b8"
-            const duracionLabel = dc3Meta?.duration_hours ? `${Math.round(dc3Meta.duration_hours)}h` : null
-            const hasDc3     = !!dc3Meta
+            const barColor = course.progress_pct > 0 ? "#3579F5" : "#94a3b8"
+            const duracionLabel = dc3Meta?.duration_hours
+              ? `${Math.round(dc3Meta.duration_hours)}h`
+              : null
+            const hasDc3 = !!dc3Meta
 
             return (
               <Paper
@@ -226,7 +289,11 @@ export default async function EmployeeCourses() {
                 {thumbnail ? (
                   <Box sx={{ position: "relative" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={thumbnail} alt="" style={{ height: 144, width: "100%", objectFit: "cover", display: "block" }} />
+                    <img
+                      src={thumbnail}
+                      alt=""
+                      style={{ height: 144, width: "100%", objectFit: "cover", display: "block" }}
+                    />
                     {duracionLabel && (
                       <Box
                         sx={{
@@ -247,8 +314,19 @@ export default async function EmployeeCourses() {
                     )}
                   </Box>
                 ) : (
-                  <Box sx={{ position: "relative", display: "flex", height: 96, alignItems: "center", justifyContent: "center", bgcolor: "#EAF1FE" }}>
-                    <Typography sx={{ fontSize: 30, fontWeight: 800, color: "#3579F5", opacity: 0.4 }}>
+                  <Box
+                    sx={{
+                      position: "relative",
+                      display: "flex",
+                      height: 96,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      bgcolor: "#EAF1FE",
+                    }}
+                  >
+                    <Typography
+                      sx={{ fontSize: 30, fontWeight: 800, color: "#3579F5", opacity: 0.4 }}
+                    >
                       {course.course_name.charAt(0).toUpperCase()}
                     </Typography>
                     {duracionLabel && (
@@ -273,7 +351,15 @@ export default async function EmployeeCourses() {
                 )}
 
                 <Box sx={{ display: "flex", flex: 1, flexDirection: "column", p: 2 }}>
-                  <Box sx={{ mb: 1, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}>
+                  <Box
+                    sx={{
+                      mb: 1,
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      gap: 1,
+                    }}
+                  >
                     <Typography
                       sx={{
                         fontSize: 13,
@@ -287,7 +373,9 @@ export default async function EmployeeCourses() {
                     >
                       {course.course_name}
                     </Typography>
-                    <StatusBadge variant={course.completed ? "green" : inProgress ? "amber" : "slate"}>
+                    <StatusBadge
+                      variant={course.completed ? "green" : inProgress ? "amber" : "slate"}
+                    >
                       {course.completed ? "Completado" : inProgress ? "En progreso" : "Sin iniciar"}
                     </StatusBadge>
                   </Box>
@@ -323,17 +411,43 @@ export default async function EmployeeCourses() {
                     </Box>
                   )}
 
-                  <Box sx={{ mb: 0.5, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <Box
+                    sx={{
+                      mb: 0.5,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
                     <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>Avance</Typography>
-                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a" }}>{course.progress_pct}%</Typography>
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a" }}>
+                      {course.progress_pct}%
+                    </Typography>
                   </Box>
-                  <Box sx={{ mb: 2, height: 6, overflow: "hidden", borderRadius: "999px", bgcolor: "#f0f0f0" }}>
-                    <Box sx={{ height: "100%", borderRadius: "999px", bgcolor: barColor, width: `${course.progress_pct}%` }} />
+                  <Box
+                    sx={{
+                      mb: 2,
+                      height: 6,
+                      overflow: "hidden",
+                      borderRadius: "999px",
+                      bgcolor: "#f0f0f0",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        height: "100%",
+                        borderRadius: "999px",
+                        bgcolor: barColor,
+                        width: `${course.progress_pct}%`,
+                      }}
+                    />
                   </Box>
 
                   {hasError && course.access_error ? (
                     <Box sx={{ mb: 1.5, borderRadius: 2, bgcolor: "#fff1f2", px: 1.5, py: 1 }}>
-                      <Typography sx={{ fontSize: 11, color: "#881337" }}>{course.access_error}</Typography>
+                      <Typography sx={{ fontSize: 11, color: "#881337" }}>
+                        {course.access_error}
+                      </Typography>
                     </Box>
                   ) : null}
 
@@ -363,7 +477,11 @@ export default async function EmployeeCourses() {
                           "&:hover": { bgcolor: course.completed ? "#2A61D6" : "#333" },
                         }}
                       >
-                        {course.completed ? "Repasar" : course.progress_pct > 0 ? "Continuar" : "Iniciar"}
+                        {course.completed
+                          ? "Repasar"
+                          : course.progress_pct > 0
+                            ? "Continuar"
+                            : "Iniciar"}
                       </Button>
                     ) : (
                       <Typography sx={{ textAlign: "center", fontSize: 11, color: "#94a3b8" }}>
@@ -409,7 +527,8 @@ export default async function EmployeeCourses() {
           </Box>
           <Box sx={{ flex: 1 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
-              Tienes {completedCourses} curso{completedCourses > 1 ? "s" : ""} completado{completedCourses > 1 ? "s" : ""}
+              Tienes {completedCourses} curso{completedCourses > 1 ? "s" : ""} completado
+              {completedCourses > 1 ? "s" : ""}
             </Typography>
             <Typography sx={{ fontSize: 11, color: "#64748b" }}>
               Descarga tus constancias DC-3 oficiales STPS.

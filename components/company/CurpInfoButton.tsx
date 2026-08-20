@@ -47,7 +47,7 @@ export default function CurpInfoButton() {
           <div className="mb-3 space-y-1.5">
             <Row pos="1–4" desc="Letras: 2 del apellido paterno + 1 materno + 1 nombre" />
             <Row pos="5–10" desc="Fecha de nacimiento (AAMMDD)" />
-            <Row pos="11" desc='Sexo: H (hombre) o M (mujer)' />
+            <Row pos="11" desc="Sexo: H (hombre) o M (mujer)" />
             <Row pos="12–13" desc="Clave del estado de nacimiento (ej. BC, NL, DF)" />
             <Row pos="14–16" desc="Consonantes internas de apellidos y nombre" />
             <Row pos="17–18" desc="Homoclave y dígito verificador del RENAPO" />

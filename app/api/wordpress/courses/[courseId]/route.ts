@@ -21,7 +21,7 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!isWordPressBridgeConfigured()) {
     return NextResponse.json(
       { message: "El puente con WordPress no esta configurado" },
-      { status: 400 }
+      { status: 400 },
     )
   }
 

@@ -25,7 +25,10 @@ function parseArgs(argv) {
 }
 
 function isoStampForFilename(d = new Date()) {
-  return d.toISOString().replace(/:/g, "-").replace(/\.\d+Z$/, "Z")
+  return d
+    .toISOString()
+    .replace(/:/g, "-")
+    .replace(/\.\d+Z$/, "Z")
 }
 
 function buildOutputPath(reportsDir, label) {
@@ -75,13 +78,17 @@ async function detectMode(pool) {
     await pool.query(SQL_FULL)
     return "full"
   } catch (err) {
-    console.warn(`[db-watch] full pg_stat_activity columns not visible to this role (${err.message}); falling back to count/state-only query`)
+    console.warn(
+      `[db-watch] full pg_stat_activity columns not visible to this role (${err.message}); falling back to count/state-only query`,
+    )
   }
   try {
     await pool.query(SQL_FALLBACK)
     return "restricted"
   } catch (err) {
-    console.warn(`[db-watch] pg_stat_activity not queryable at all by this role (${err.message}); DB samples will be reported unavailable`)
+    console.warn(
+      `[db-watch] pg_stat_activity not queryable at all by this role (${err.message}); DB samples will be reported unavailable`,
+    )
     return "unavailable"
   }
 }
@@ -116,7 +123,8 @@ async function sampleDb(pool, mode) {
       waitingTotal: toNumOrNull(r.waiting_total),
       blockedNonClient: toNumOrNull(r.blocked_non_client),
       clusterTotal: toNumOrNull(r.cluster_total),
-      maxActiveQuerySecs: r.max_active_query_secs === undefined ? null : toNumOrNull(r.max_active_query_secs),
+      maxActiveQuerySecs:
+        r.max_active_query_secs === undefined ? null : toNumOrNull(r.max_active_query_secs),
     }
   } catch (err) {
     return { ok: false, mode, latencyMs: Date.now() - t0, error: err.message }
@@ -146,7 +154,8 @@ function fmtDb(db) {
 }
 
 function fmtHealth(health) {
-  if (!health.ok && health.status === null) return `health: ERROR ${health.error} (${health.latencyMs}ms)`
+  if (!health.ok && health.status === null)
+    return `health: ERROR ${health.error} (${health.latencyMs}ms)`
   return `health: ${health.status} (${health.latencyMs}ms)`
 }
 
@@ -163,18 +172,26 @@ async function main() {
   const pool = new Pool({ connectionString: config.dbUrl, max: 1 })
 
   const maskedDbUrl = String(config.dbUrl || "").replace(/:[^:@/]+@/, ":***@")
-  console.log(`[db-watch] label=${label || "(none)"} interval=${intervalMs}ms target=${config.targetUrl}`)
+  console.log(
+    `[db-watch] label=${label || "(none)"} interval=${intervalMs}ms target=${config.targetUrl}`,
+  )
   console.log(`[db-watch] db=${maskedDbUrl}`)
   console.log(`[db-watch] output=${outFile}`)
 
   const mode = await detectMode(pool)
   console.log(`[db-watch] pg_stat_activity visibility mode: ${mode}`)
   if (mode === "full") {
-    console.log("[db-watch] role can see cluster-wide session state (pg_monitor or superuser) — full metrics available")
+    console.log(
+      "[db-watch] role can see cluster-wide session state (pg_monitor or superuser) — full metrics available",
+    )
   } else if (mode === "restricted") {
-    console.log("[db-watch] role can only see counts/state, not query timing/wait_event for other sessions — reporting what IS visible")
+    console.log(
+      "[db-watch] role can only see counts/state, not query timing/wait_event for other sessions — reporting what IS visible",
+    )
   } else {
-    console.log("[db-watch] role cannot query pg_stat_activity at all — DB samples will be marked unavailable every tick")
+    console.log(
+      "[db-watch] role cannot query pg_stat_activity at all — DB samples will be marked unavailable every tick",
+    )
   }
 
   let stopped = false
@@ -211,7 +228,8 @@ async function main() {
       peakTotal = Math.max(peakTotal, db.total ?? 0)
       peakActive = Math.max(peakActive, db.active ?? 0)
     }
-    if (typeof health.latencyMs === "number") peakHealthLatency = Math.max(peakHealthLatency, health.latencyMs)
+    if (typeof health.latencyMs === "number")
+      peakHealthLatency = Math.max(peakHealthLatency, health.latencyMs)
 
     const record = {
       ts: ts.toISOString(),
@@ -249,7 +267,9 @@ async function main() {
   process.on("SIGINT", finalize)
   process.on("SIGTERM", finalize)
   process.on("unhandledRejection", (err) => {
-    console.warn(`[db-watch] warning: unhandled rejection (ignored, continuing): ${err && err.message ? err.message : err}`)
+    console.warn(
+      `[db-watch] warning: unhandled rejection (ignored, continuing): ${err && err.message ? err.message : err}`,
+    )
   })
   process.on("uncaughtException", (err) => {
     console.warn(`[db-watch] warning: uncaught exception (ignored, continuing): ${err.message}`)

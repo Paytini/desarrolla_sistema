@@ -13,7 +13,7 @@ declare global {
           callback: (token: string) => void
           "expired-callback"?: () => void
           "error-callback"?: () => void
-        }
+        },
       ) => string
       remove: (widgetId: string) => void
     }
@@ -27,9 +27,9 @@ type TurnstileWidgetProps = {
 
 export function TurnstileWidget({ onVerify, onExpire }: TurnstileWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const widgetIdRef   = useRef<string | null>(null)
-  const onVerifyRef   = useRef(onVerify)
-  const onExpireRef   = useRef(onExpire)
+  const widgetIdRef = useRef<string | null>(null)
+  const onVerifyRef = useRef(onVerify)
+  const onExpireRef = useRef(onExpire)
   const [scriptReady, setScriptReady] = useState(false)
   const elementId = useId()
 
@@ -62,7 +62,9 @@ export function TurnstileWidget({ onVerify, onExpire }: TurnstileWidgetProps) {
 
   if (!siteKey) {
     if (process.env.NODE_ENV !== "production") {
-      console.warn("NEXT_PUBLIC_TURNSTILE_SITE_KEY no está configurada — el widget no se renderizará.")
+      console.warn(
+        "NEXT_PUBLIC_TURNSTILE_SITE_KEY no está configurada — el widget no se renderizará.",
+      )
     }
     return null
   }

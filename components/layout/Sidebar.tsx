@@ -27,35 +27,35 @@ import { companyPath } from "@/lib/company-routes"
 
 const SIDEBAR_W = 288
 
-const SIDEBAR_FONT = 'var(--font-plus-jakarta-sans, "Plus Jakarta Sans"), system-ui, "Segoe UI", Arial, sans-serif'
+const SIDEBAR_FONT =
+  'var(--font-plus-jakarta-sans, "Plus Jakarta Sans"), system-ui, "Segoe UI", Arial, sans-serif'
 
-const SIDEBAR_BG      = "var(--sidebar-bg-v4, #FFFFFF)"
-const SIDEBAR_BORDER  = "var(--sidebar-border-v4, #E3D7F5)"
-const SIDEBAR_OVERLAY = "var(--sidebar-overlay-v4, linear-gradient(to bottom, rgba(139,92,246,0) 0%, rgba(139,92,246,0.10) 45%, rgba(139,92,246,0.55) 100%))"
+const SIDEBAR_BG = "var(--sidebar-bg-v4, #FFFFFF)"
+const SIDEBAR_BORDER = "var(--sidebar-border-v4, #E3D7F5)"
+const SIDEBAR_OVERLAY =
+  "var(--sidebar-overlay-v4, linear-gradient(to bottom, rgba(139,92,246,0) 0%, rgba(139,92,246,0.10) 45%, rgba(139,92,246,0.55) 100%))"
 
 const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)":            "#3579F5",
+  "var(--brand)": "#3579F5",
   "var(--sidebar-accent-2)": "#3579F5",
   "var(--sidebar-accent-3)": "#3579F5",
 }
 const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
-function NavItemRow({
-  item,
-  pathname,
-}: {
-  item: NavItem
-  pathname: string
-}) {
+function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
   const active = isActive(item.href, pathname, item.exact)
-  const Icon   = item.icon
+  const Icon = item.icon
   const { bg, text } = kpiColorMap[item.color]
-  const activeBg   = `var(--nav-active-bg, ${bg})`
+  const activeBg = `var(--nav-active-bg, ${bg})`
   const activeText = `var(--nav-active-text, ${text})`
-  const hoverBg     = `var(--nav-hover-bg, ${bg}14)`
+  const hoverBg = `var(--nav-hover-bg, ${bg}14)`
 
   return (
-    <Link href={item.href} prefetch style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+    <Link
+      href={item.href}
+      prefetch
+      style={{ textDecoration: "none", color: "inherit", display: "block" }}
+    >
       <ListItemButton
         selected={active}
         sx={{
@@ -125,7 +125,7 @@ export default function Sidebar({
   companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
-  const homeHref  = homeHrefForRole(role, companySlug)
+  const homeHref = homeHrefForRole(role, companySlug)
 
   return (
     <Box
@@ -167,7 +167,16 @@ export default function Sidebar({
         />
       </Box>
 
-      <Box sx={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <Box
+        sx={{
+          position: "relative",
+          zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          overflow: "hidden",
+        }}
+      >
         <Box
           sx={{
             height: 64,
@@ -179,7 +188,10 @@ export default function Sidebar({
             borderColor: SIDEBAR_BORDER,
           }}
         >
-          <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+          <Link
+            href={homeHref}
+            style={{ display: "flex", alignItems: "center", textDecoration: "none" }}
+          >
             {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
               <img
@@ -203,7 +215,16 @@ export default function Sidebar({
           {role === "SUPERADMIN" ? (
             navSuperAdminSections.map((section, si) => (
               <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2.5, mt: si > 0 ? 2 : 0.5, mb: 0.75 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    px: 2.5,
+                    mt: si > 0 ? 2 : 0.5,
+                    mb: 0.75,
+                  }}
+                >
                   <Box
                     sx={{
                       width: 6,
@@ -214,7 +235,14 @@ export default function Sidebar({
                       boxShadow: `0 0 6px 0 ${resolveAccent(section.accent)}`,
                     }}
                   />
-                  <Typography variant="overline" sx={{ fontFamily: SIDEBAR_FONT, color: resolveAccent(section.accent), lineHeight: 1 }}>
+                  <Typography
+                    variant="overline"
+                    sx={{
+                      fontFamily: SIDEBAR_FONT,
+                      color: resolveAccent(section.accent),
+                      lineHeight: 1,
+                    }}
+                  >
                     {section.heading}
                   </Typography>
                 </Box>
@@ -249,14 +277,26 @@ export default function Sidebar({
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
                   <LifeBuoy size={15} strokeWidth={2} color="#3579F5" />
-                  <Typography sx={{ fontSize: "0.6875rem", fontWeight: 700, color: "#3579F5", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.6875rem",
+                      fontWeight: 700,
+                      color: "#3579F5",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
                     Soporte
                   </Typography>
                 </Box>
-                <Typography sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}>
+                <Typography
+                  sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}
+                >
                   Centro de ayuda
                 </Typography>
-                <Typography sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}>
+                <Typography
+                  sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}
+                >
                   Guías de DC-3, integración WordPress y estado del sistema.
                 </Typography>
               </Box>
@@ -266,7 +306,10 @@ export default function Sidebar({
 
         {role === "HR" && (
           <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
-            <Link href={companyPath(companySlug ?? "", "/consulting")} style={{ textDecoration: "none" }}>
+            <Link
+              href={companyPath(companySlug ?? "", "/consulting")}
+              style={{ textDecoration: "none" }}
+            >
               <Box
                 sx={{
                   borderRadius: "14px",
@@ -279,14 +322,26 @@ export default function Sidebar({
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
                   <CalendarClock size={15} strokeWidth={2} color="#3579F5" />
-                  <Typography sx={{ fontSize: "0.6875rem", fontWeight: 700, color: "#3579F5", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.6875rem",
+                      fontWeight: 700,
+                      color: "#3579F5",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
                     Consultoría
                   </Typography>
                 </Box>
-                <Typography sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}>
+                <Typography
+                  sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}
+                >
                   Agenda una sesión en vivo
                 </Typography>
-                <Typography sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}>
+                <Typography
+                  sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}
+                >
                   Habla con nuestro equipo de consultores sobre CTPAT, OEA, DC-3 y más.
                 </Typography>
               </Box>

@@ -27,7 +27,7 @@ async function createNotifications(usuarioIds: string[], content: NotifyContent)
 }
 
 export async function notifySuperadmins(
-  content: NotifyContent & { excludeUsuarioId?: string | null }
+  content: NotifyContent & { excludeUsuarioId?: string | null },
 ) {
   const superadmins = await prisma.user.findMany({
     where: {
@@ -37,7 +37,10 @@ export async function notifySuperadmins(
     },
     select: { id: true },
   })
-  await createNotifications(superadmins.map((u) => u.id), content)
+  await createNotifications(
+    superadmins.map((u) => u.id),
+    content,
+  )
 }
 
 export async function notifyCompanyHr(companyId: string, content: NotifyContent) {
@@ -45,7 +48,10 @@ export async function notifyCompanyHr(companyId: string, content: NotifyContent)
     where: { company_id: companyId, role: "HR", active: true },
     select: { id: true },
   })
-  await createNotifications(hrUsers.map((u) => u.id), content)
+  await createNotifications(
+    hrUsers.map((u) => u.id),
+    content,
+  )
 }
 
 export async function notifyUsuarioByEmail(email: string, content: NotifyContent) {
@@ -56,7 +62,7 @@ export async function notifyUsuarioByEmail(email: string, content: NotifyContent
 
 export async function notifyEmployeeNewCertificates(
   employeeId: string,
-  certificates: { courseName: string; certificateUrl: string }[]
+  certificates: { courseName: string; certificateUrl: string }[],
 ) {
   if (certificates.length === 0) return
   const employee = await prisma.employee.findUnique({
@@ -126,7 +132,7 @@ export async function checkAndNotifyExpiringPackages() {
 
     const days = Math.max(
       0,
-      Math.ceil((ep.expiration_date!.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+      Math.ceil((ep.expiration_date!.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
     )
     const daysLabel = `${days} día${days === 1 ? "" : "s"}`
 

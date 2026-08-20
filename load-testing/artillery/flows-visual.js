@@ -69,7 +69,9 @@ async function assertRealPage(page, marker, timeoutMs = 10000) {
     throw new Error(`Redirigido a /login en vez de la pagina esperada (url=${page.url()})`)
   }
   try {
-    await page.waitForFunction((m) => document.body.innerText.includes(m), marker, { timeout: timeoutMs })
+    await page.waitForFunction((m) => document.body.innerText.includes(m), marker, {
+      timeout: timeoutMs,
+    })
   } catch (_err) {
     const url = page.url()
     if (url.includes("/login")) {
@@ -104,7 +106,11 @@ async function employeeVisualJourney(page, vuContext, events, test) {
 
   const destinations = [
     { name: "certificados", path: "/employee/certificates", marker: "Mis constancias" },
-    { name: "cursos_revisita", path: "/employee/courses", marker: "Tu ruta de capacitación activa" },
+    {
+      name: "cursos_revisita",
+      path: "/employee/courses",
+      marker: "Tu ruta de capacitación activa",
+    },
   ]
   const extra = pagesAfterLanding()
   for (let i = 0; i < extra; i++) {
@@ -131,9 +137,17 @@ async function rhVisualJourney(page, vuContext, events, test) {
   await watch(page, 3000)
 
   const destinations = [
-    { name: "empleados", path: `/company/${slug}/employees`, marker: "Gestión de la plantilla de colaboradores" },
+    {
+      name: "empleados",
+      path: `/company/${slug}/employees`,
+      marker: "Gestión de la plantilla de colaboradores",
+    },
     { name: "asignaciones", path: `/company/${slug}/assignments`, marker: "Asignación de cursos" },
-    { name: "progreso", path: `/company/${slug}/progress`, marker: "Avance y actividad de cursos por colaborador" },
+    {
+      name: "progreso",
+      path: `/company/${slug}/progress`,
+      marker: "Avance y actividad de cursos por colaborador",
+    },
     { name: "constancias", path: `/company/${slug}/certificates`, marker: "Constancias DC-3" },
   ]
   const extra = Math.min(pagesAfterLanding(), destinations.length)
@@ -162,7 +176,11 @@ async function superadminVisualJourney(page, vuContext, events, test) {
     { name: "reports", path: "/superadmin/reports", marker: "Reportes globales" },
     { name: "packages", path: "/superadmin/packages", marker: "Gestión de paquetes" },
     { name: "access", path: "/superadmin/access", marker: "Control de accesos" },
-    { name: "integration", path: "/superadmin/integration", marker: "Integración WordPress / Tutor" },
+    {
+      name: "integration",
+      path: "/superadmin/integration",
+      marker: "Integración WordPress / Tutor",
+    },
   ]
   const extra = Math.min(pagesAfterLanding(), destinations.length)
   for (let i = 0; i < extra; i++) {

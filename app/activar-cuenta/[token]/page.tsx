@@ -34,10 +34,15 @@ export default async function ActivateAccountPage({ params, searchParams }: Page
             <header className="login-form-head">
               <h2 className="login-form-title">Enlace no válido</h2>
               <p className="login-form-subtitle">
-                Este enlace de activación ya venció o ya fue utilizado. Pide a tu empresa que te reenvíe la invitación.
+                Este enlace de activación ya venció o ya fue utilizado. Pide a tu empresa que te
+                reenvíe la invitación.
               </p>
             </header>
-            <Link href="/login" className="login-submit-btn" style={{ display: "block", textAlign: "center" }}>
+            <Link
+              href="/login"
+              className="login-submit-btn"
+              style={{ display: "block", textAlign: "center" }}
+            >
               Ir al login
             </Link>
           </div>

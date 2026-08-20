@@ -35,8 +35,7 @@ export default async function CuentaSuspendidaPage({
 
         <div className="space-y-5 px-6 py-5">
           <p className="text-sm leading-6 text-slate-700">
-            Contacta a Desarrolla360 por WhatsApp o correo para reactivar el acceso de tu
-            empresa.
+            Contacta a Desarrolla360 por WhatsApp o correo para reactivar el acceso de tu empresa.
           </p>
 
           <div className="flex justify-end">

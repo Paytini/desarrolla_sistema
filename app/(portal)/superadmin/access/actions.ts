@@ -7,10 +7,7 @@ import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { getCompanyBranding } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
-import {
-  deleteEmployeeRecord,
-  togglePortalUserStatus,
-} from "@/lib/access-control"
+import { deleteEmployeeRecord, togglePortalUserStatus } from "@/lib/access-control"
 import { isUuid } from "@/lib/uuid"
 
 function getInt(formData: FormData, key: string) {

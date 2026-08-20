@@ -9,11 +9,7 @@ export type TutorEnrollmentRecord = {
 }
 
 function getTutorApiKey() {
-  return (
-    process.env.TUTORLMS_API_KEY?.trim() ??
-    process.env.TUTORLMS_API_PASSWORD?.trim() ??
-    ""
-  )
+  return process.env.TUTORLMS_API_KEY?.trim() ?? process.env.TUTORLMS_API_PASSWORD?.trim() ?? ""
 }
 
 function getTutorApiSecret() {
@@ -74,8 +70,7 @@ async function tutorApiRequest<T>(path: string, init?: RequestInit): Promise<T> 
       if (errorBody.message) {
         message = errorBody.message
       }
-    } catch {
-    }
+    } catch {}
 
     throw new Error(message)
   }
@@ -83,10 +78,7 @@ async function tutorApiRequest<T>(path: string, init?: RequestInit): Promise<T> 
   return (await response.json()) as T
 }
 
-function extractFirstNumber(
-  item: Record<string, unknown>,
-  keys: string[]
-) {
+function extractFirstNumber(item: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     const value = item[key]
 
@@ -105,10 +97,7 @@ function extractFirstNumber(
   return null
 }
 
-function extractFirstString(
-  item: Record<string, unknown>,
-  keys: string[]
-) {
+function extractFirstString(item: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
     const value = item[key]
 
@@ -123,9 +112,13 @@ function extractFirstString(
 function normalizeEnrollmentList(payload: unknown) {
   const items = Array.isArray(payload)
     ? payload
-    : payload && typeof payload === "object" && Array.isArray((payload as { data?: unknown[] }).data)
+    : payload &&
+        typeof payload === "object" &&
+        Array.isArray((payload as { data?: unknown[] }).data)
       ? (payload as { data: unknown[] }).data
-      : payload && typeof payload === "object" && Array.isArray((payload as { enrollments?: unknown[] }).enrollments)
+      : payload &&
+          typeof payload === "object" &&
+          Array.isArray((payload as { enrollments?: unknown[] }).enrollments)
         ? (payload as { enrollments: unknown[] }).enrollments
         : []
 
@@ -137,12 +130,7 @@ function normalizeEnrollmentList(payload: unknown) {
     }
 
     const raw = item as Record<string, unknown>
-    const enrollmentId = extractFirstNumber(raw, [
-      "enrollment_id",
-      "id",
-      "ID",
-      "order_id",
-    ])
+    const enrollmentId = extractFirstNumber(raw, ["enrollment_id", "id", "ID", "order_id"])
 
     if (!enrollmentId) {
       continue
@@ -190,7 +178,7 @@ export async function ensureTutorEnrollmentAccess(userId: number, courseIds: num
 
     if (!matchedEnrollment) {
       throw new Error(
-        `Tutor LMS no devolvio una matricula para el usuario ${userId} en el curso ${courseId}`
+        `Tutor LMS no devolvio una matricula para el usuario ${userId} en el curso ${courseId}`,
       )
     }
 

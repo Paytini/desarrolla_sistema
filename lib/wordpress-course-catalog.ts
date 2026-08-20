@@ -6,7 +6,7 @@ const getCachedCatalog = unstable_cache(
   ["wordpress-course-catalog"],
   {
     revalidate: 60 * 10,
-  }
+  },
 )
 
 export async function getWordPressCourseCatalog() {

@@ -1,10 +1,64 @@
-const FIRST = ["Ana","Luis","Maria","Jose","Carmen","Juan","Laura","Pedro","Sofia","Diego","Elena","Miguel","Rosa","Carlos","Julia","Raul","Diana","Oscar","Nora","Ivan"]
-const LAST = ["Garcia","Lopez","Martinez","Hernandez","Ramirez","Torres","Flores","Rivera","Gomez","Diaz","Cruz","Morales","Ortiz","Vargas","Castillo","Jimenez","Romero","Soto","Delgado","Aguilar"]
-const COMPANY = ["Logistica Norte","Aduanas del Pacifico","Transportes Frontera","Manufactura Baja","Cadena Segura","Exportadora Cali","Industrial Tijuana","Comercio Global","Almacenes Unidos","Distribuidora Meridian"]
+const FIRST = [
+  "Ana",
+  "Luis",
+  "Maria",
+  "Jose",
+  "Carmen",
+  "Juan",
+  "Laura",
+  "Pedro",
+  "Sofia",
+  "Diego",
+  "Elena",
+  "Miguel",
+  "Rosa",
+  "Carlos",
+  "Julia",
+  "Raul",
+  "Diana",
+  "Oscar",
+  "Nora",
+  "Ivan",
+]
+const LAST = [
+  "Garcia",
+  "Lopez",
+  "Martinez",
+  "Hernandez",
+  "Ramirez",
+  "Torres",
+  "Flores",
+  "Rivera",
+  "Gomez",
+  "Diaz",
+  "Cruz",
+  "Morales",
+  "Ortiz",
+  "Vargas",
+  "Castillo",
+  "Jimenez",
+  "Romero",
+  "Soto",
+  "Delgado",
+  "Aguilar",
+]
+const COMPANY = [
+  "Logistica Norte",
+  "Aduanas del Pacifico",
+  "Transportes Frontera",
+  "Manufactura Baja",
+  "Cadena Segura",
+  "Exportadora Cali",
+  "Industrial Tijuana",
+  "Comercio Global",
+  "Almacenes Unidos",
+  "Distribuidora Meridian",
+]
 
 module.exports = {
   firstName: (i) => FIRST[i % FIRST.length],
   lastName: (i) => LAST[Math.floor(i / FIRST.length) % LAST.length] || LAST[i % LAST.length],
   companyName: (i) => `LT ${COMPANY[i % COMPANY.length]} ${String(i + 1).padStart(2, "0")}`,
-  curp: (i) => `LTAA${String(900101 + (i % 99)).slice(2)}HBC${String(i).padStart(6, "0").slice(-6)}`,
+  curp: (i) =>
+    `LTAA${String(900101 + (i % 99)).slice(2)}HBC${String(i).padStart(6, "0").slice(-6)}`,
 }

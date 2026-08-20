@@ -52,12 +52,16 @@ export type EmployeeLearningBridgeSnapshot = {
 }
 
 function hasWpCourseId<T extends { wp_course_id?: number | null }>(
-  item: T
+  item: T,
 ): item is T & { wp_course_id: number } {
   return Number.isInteger(item.wp_course_id) && Number(item.wp_course_id) > 0
 }
 
-function buildCertificateFolio(folioSequence: number, courseId: number, completedAt?: string | null) {
+function buildCertificateFolio(
+  folioSequence: number,
+  courseId: number,
+  completedAt?: string | null,
+) {
   const baseDate = parseBridgeDate(completedAt) ?? new Date()
   const year = baseDate.getUTCFullYear()
   const month = String(baseDate.getUTCMonth() + 1).padStart(2, "0")
@@ -89,7 +93,7 @@ function deriveCertificatesFromCourses(courses: BridgeStudentCourse[]): BridgeSt
 
 function mergeBridgeCertificates(
   primaryCertificates: BridgeStudentCertificate[],
-  fallbackCertificates: BridgeStudentCertificate[]
+  fallbackCertificates: BridgeStudentCertificate[],
 ) {
   const mergedByCourseId = new Map<number, BridgeStudentCertificate>()
 
@@ -119,47 +123,42 @@ function mergeBridgeCertificates(
   })
 }
 
-async function upsertEmployeeCoursesFromBridge(
-  employeeId: string,
-  courses: BridgeStudentCourse[]
-) {
+async function upsertEmployeeCoursesFromBridge(employeeId: string, courses: BridgeStudentCourse[]) {
   const now = new Date()
-  const upsertOperations = courses
-    .filter(hasWpCourseId)
-    .map((course) => {
-      const startedAt = parseBridgeDate(course.started_at)
-      const completedAt = parseBridgeDate(course.completed_at)
+  const upsertOperations = courses.filter(hasWpCourseId).map((course) => {
+    const startedAt = parseBridgeDate(course.started_at)
+    const completedAt = parseBridgeDate(course.completed_at)
 
-      return prisma.employeeCourse.upsert({
-        where: {
-          employee_id_wp_course_id: {
-            employee_id: employeeId,
-            wp_course_id: course.wp_course_id,
-          },
-        },
-        update: {
-          course_name: decodeHtmlEntities(course.title),
-          progress_pct: course.progress_pct,
-          completed: course.completed,
-          access_status: "ACTIVE",
-          access_error: null,
-          course_start_date: startedAt,
-          completed_at: completedAt,
-          last_synced_at: now,
-        },
-        create: {
+    return prisma.employeeCourse.upsert({
+      where: {
+        employee_id_wp_course_id: {
           employee_id: employeeId,
           wp_course_id: course.wp_course_id,
-          course_name: decodeHtmlEntities(course.title),
-          progress_pct: course.progress_pct,
-          completed: course.completed,
-          access_status: "ACTIVE",
-          course_start_date: startedAt,
-          completed_at: completedAt,
-          last_synced_at: now,
         },
-      })
+      },
+      update: {
+        course_name: decodeHtmlEntities(course.title),
+        progress_pct: course.progress_pct,
+        completed: course.completed,
+        access_status: "ACTIVE",
+        access_error: null,
+        course_start_date: startedAt,
+        completed_at: completedAt,
+        last_synced_at: now,
+      },
+      create: {
+        employee_id: employeeId,
+        wp_course_id: course.wp_course_id,
+        course_name: decodeHtmlEntities(course.title),
+        progress_pct: course.progress_pct,
+        completed: course.completed,
+        access_status: "ACTIVE",
+        course_start_date: startedAt,
+        completed_at: completedAt,
+        last_synced_at: now,
+      },
     })
+  })
 
   if (upsertOperations.length > 0) {
     await prisma.$transaction(upsertOperations)
@@ -168,7 +167,7 @@ async function upsertEmployeeCoursesFromBridge(
 
 async function upsertEmployeeCertificatesFromBridge(
   employeeId: string,
-  certificates: BridgeStudentCertificate[]
+  certificates: BridgeStudentCertificate[],
 ) {
   const syncedAt = new Date()
   const existingCertificates = await prisma.certificate.findMany({
@@ -176,20 +175,20 @@ async function upsertEmployeeCertificatesFromBridge(
   })
 
   const certificateByCourseId = new Map(
-    existingCertificates.map((certificate) => [certificate.wp_course_id, certificate])
+    existingCertificates.map((certificate) => [certificate.wp_course_id, certificate]),
   )
 
   const newCertificates: { courseName: string; certificateUrl: string }[] = []
 
-  const operations: Array<ReturnType<typeof prisma.certificate.update> | ReturnType<typeof prisma.certificate.create>> = []
+  const operations: Array<
+    ReturnType<typeof prisma.certificate.update> | ReturnType<typeof prisma.certificate.create>
+  > = []
 
   for (const certificate of certificates.filter(hasWpCourseId)) {
     const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
     const certificateUrl = certificate.certificate_url?.trim() || null
     const issuedAt =
-      parseBridgeDate(certificate.completed_at) ??
-      existingCertificate?.issued_at ??
-      syncedAt
+      parseBridgeDate(certificate.completed_at) ?? existingCertificate?.issued_at ?? syncedAt
 
     if (existingCertificate) {
       operations.push(
@@ -200,7 +199,7 @@ async function upsertEmployeeCertificatesFromBridge(
             certificate_url: certificateUrl ?? existingCertificate.certificate_url,
             issued_at: issuedAt,
           },
-        })
+        }),
       )
       continue
     }
@@ -212,7 +211,9 @@ async function upsertEmployeeCertificatesFromBridge(
     const courseName = decodeHtmlEntities(certificate.title)
     newCertificates.push({ courseName, certificateUrl })
 
-    const [{ nextval }] = await prisma.$queryRaw<{ nextval: bigint }[]>`SELECT nextval('certificates_folio_sequence_seq') AS nextval`
+    const [{ nextval }] = await prisma.$queryRaw<
+      { nextval: bigint }[]
+    >`SELECT nextval('certificates_folio_sequence_seq') AS nextval`
     const folioSequence = Number(nextval)
 
     operations.push(
@@ -222,11 +223,15 @@ async function upsertEmployeeCertificatesFromBridge(
           wp_course_id: certificate.wp_course_id,
           course_name: courseName,
           folio_sequence: folioSequence,
-          reference_number: buildCertificateFolio(folioSequence, certificate.wp_course_id, issuedAt.toISOString()),
+          reference_number: buildCertificateFolio(
+            folioSequence,
+            certificate.wp_course_id,
+            issuedAt.toISOString(),
+          ),
           certificate_url: certificateUrl,
           issued_at: issuedAt,
         },
-      })
+      }),
     )
   }
 
@@ -237,10 +242,7 @@ async function upsertEmployeeCertificatesFromBridge(
         await notifyEmployeeNewCertificates(employeeId, newCertificates).catch(() => {})
       }
     } catch (err) {
-      if (
-        err instanceof Error &&
-        (err as { code?: string }).code !== "P2002"
-      ) {
+      if (err instanceof Error && (err as { code?: string }).code !== "P2002") {
         throw err
       }
     }
@@ -292,9 +294,10 @@ export async function syncEmployeeLearningFromBridgeSnapshot(input: {
 
   await upsertEmployeeCoursesFromBridge(employeeId, input.snapshot.courses)
 
-  const certificatesUpdated = normalizedCertificates.length > 0
-    ? await upsertEmployeeCertificatesFromBridge(employeeId, normalizedCertificates)
-    : 0
+  const certificatesUpdated =
+    normalizedCertificates.length > 0
+      ? await upsertEmployeeCertificatesFromBridge(employeeId, normalizedCertificates)
+      : 0
 
   return {
     employeeId,
@@ -307,7 +310,7 @@ export async function syncEmployeeLearningByEmail(
   email: string,
   options?: {
     force?: boolean
-  }
+  },
 ) {
   const employee = await fetchEmployeeLearningRecord(email)
 
@@ -375,9 +378,8 @@ function shouldSyncEmployeeLearning(employee: {
 
 function getLatestCourseSyncTimestamp(courses: Array<{ last_synced_at: Date }>) {
   return courses.reduce<number>(
-    (currentLatest, course) =>
-      Math.max(currentLatest, new Date(course.last_synced_at).getTime()),
-    0
+    (currentLatest, course) => Math.max(currentLatest, new Date(course.last_synced_at).getTime()),
+    0,
   )
 }
 
@@ -398,11 +400,7 @@ async function fetchEmployeeLearningRecord(email: string) {
         },
       },
       courses: {
-        orderBy: [
-          { completed: "asc" },
-          { progress_pct: "desc" },
-          { course_name: "asc" },
-        ],
+        orderBy: [{ completed: "asc" }, { progress_pct: "desc" }, { course_name: "asc" }],
       },
       certificates: {
         orderBy: [{ issued_at: "desc" }, { course_name: "asc" }],
@@ -423,11 +421,7 @@ async function fetchEmployeeLearningRecordById(employeeId: string) {
         },
       },
       courses: {
-        orderBy: [
-          { completed: "asc" },
-          { progress_pct: "desc" },
-          { course_name: "asc" },
-        ],
+        orderBy: [{ completed: "asc" }, { progress_pct: "desc" }, { course_name: "asc" }],
       },
       certificates: {
         orderBy: [{ issued_at: "desc" }, { course_name: "asc" }],
@@ -503,9 +497,7 @@ async function scheduleEmployeeLearningSync(employeeId: string) {
   return true
 }
 
-export async function syncStaleEmployeeLearningBatch(options?: {
-  limit?: number
-}) {
+export async function syncStaleEmployeeLearningBatch(options?: { limit?: number }) {
   return syncEmployeeLearningBatchInternal({
     limit: options?.limit,
     staleOnly: true,
@@ -517,7 +509,7 @@ export async function syncCompanyEmployeeLearningBatch(
   options?: {
     limit?: number
     staleOnly?: boolean
-  }
+  },
 ) {
   return syncEmployeeLearningBatchInternal({
     companyId,
@@ -558,15 +550,17 @@ async function syncEmployeeLearningBatchInternal(options?: {
     },
   })
 
-  const selectedEmployees = (staleOnly ? activeEmployees.filter((employee) =>
-      shouldSyncEmployeeLearning({
-        wp_user_id: employee.wp_user_id,
-        courses: employee.courses,
-      })
-    ) : activeEmployees)
-    .filter((employee) =>
-      options?.companyId ? employee.company_id === options.companyId : true
-    )
+  const selectedEmployees = (
+    staleOnly
+      ? activeEmployees.filter((employee) =>
+          shouldSyncEmployeeLearning({
+            wp_user_id: employee.wp_user_id,
+            courses: employee.courses,
+          }),
+        )
+      : activeEmployees
+  )
+    .filter((employee) => (options?.companyId ? employee.company_id === options.companyId : true))
     .slice(0, limit)
 
   const results: Array<{
@@ -578,7 +572,11 @@ async function syncEmployeeLearningBatchInternal(options?: {
   for (const employee of selectedEmployees) {
     const lockUntil = await claimEmployeeSyncLock(employee.id)
     if (!lockUntil) {
-      results.push({ employeeId: employee.id, status: "skipped", message: "Sincronización en curso" })
+      results.push({
+        employeeId: employee.id,
+        status: "skipped",
+        message: "Sincronización en curso",
+      })
       continue
     }
 
@@ -606,9 +604,7 @@ async function syncEmployeeLearningBatchInternal(options?: {
   }
 }
 
-export function scheduleStaleEmployeeLearningBatch(options?: {
-  limit?: number
-}) {
+export function scheduleStaleEmployeeLearningBatch(options?: { limit?: number }) {
   return scheduleEmployeeLearningBatch({
     key: `stale:${Math.max(1, Math.min(options?.limit ?? 25, 100))}`,
     runner: () =>
@@ -624,7 +620,7 @@ export function scheduleCompanyEmployeeLearningBatch(
   options?: {
     limit?: number
     staleOnly?: boolean
-  }
+  },
 ) {
   if (!companyId) {
     return false
@@ -644,10 +640,7 @@ export function scheduleCompanyEmployeeLearningBatch(
   })
 }
 
-function scheduleEmployeeLearningBatch(options: {
-  key: string
-  runner: () => Promise<unknown>
-}) {
+function scheduleEmployeeLearningBatch(options: { key: string; runner: () => Promise<unknown> }) {
   if (backgroundBatchSyncsInFlight.has(options.key)) {
     return false
   }
@@ -672,7 +665,7 @@ function scheduleEmployeeLearningBatch(options: {
 
 function mergeEmployeeCoursesWithBridgeData(
   employee: NonNullable<Awaited<ReturnType<typeof fetchEmployeeLearningRecord>>>,
-  bridgeCourses: BridgeStudentCourse[]
+  bridgeCourses: BridgeStudentCourse[],
 ) {
   if (bridgeCourses.length === 0) {
     return employee
@@ -719,7 +712,7 @@ export async function getEmployeeLearningData(
   email: string,
   options?: {
     forceSync?: boolean
-  }
+  },
 ) {
   let employee = await fetchEmployeeLearningRecord(email)
 
@@ -758,9 +751,11 @@ export async function getEmployeeLearningData(
 
   employee = mergeEmployeeCoursesWithBridgeData(employee, latestBridgeCourses)
 
-  const completedCourseIds = new Set(employee.certificates.map((certificate) => certificate.wp_course_id))
+  const completedCourseIds = new Set(
+    employee.certificates.map((certificate) => certificate.wp_course_id),
+  )
   const pendingCertificates = employee.courses.filter(
-    (course) => course.completed && !completedCourseIds.has(course.wp_course_id)
+    (course) => course.completed && !completedCourseIds.has(course.wp_course_id),
   )
 
   return {

@@ -15,9 +15,9 @@ function Inner({ children, sx, ...props }: SubmitButtonProps) {
       type="submit"
       disabled={pending}
       startIcon={
-        pending
-          ? <Loader2 size={13} strokeWidth={2} style={{ animation: "spin 0.8s linear infinite" }} />
-          : undefined
+        pending ? (
+          <Loader2 size={13} strokeWidth={2} style={{ animation: "spin 0.8s linear infinite" }} />
+        ) : undefined
       }
       sx={{ gap: 0.5, ...sx }}
       {...props}

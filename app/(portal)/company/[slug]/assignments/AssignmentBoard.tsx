@@ -30,7 +30,14 @@ type AssignmentBoardProps = {
 }
 
 const COLOR_ROTATION: KpiColorKey[] = [
-  "primary", "emerald", "amber", "orange", "violet", "pink", "rose", "charcoal",
+  "primary",
+  "emerald",
+  "amber",
+  "orange",
+  "violet",
+  "pink",
+  "rose",
+  "charcoal",
 ]
 
 function cloneAssignments(source: Record<number, string[]>): Record<number, Set<string>> {
@@ -41,26 +48,42 @@ function cloneAssignments(source: Record<number, string[]>): Record<number, Set<
   return result
 }
 
-export default function AssignmentBoard({ courses, employees, initialAssignments }: AssignmentBoardProps) {
-  const [savedAssignments, setSavedAssignments] = useState(() => cloneAssignments(initialAssignments))
-  const [workingAssignments, setWorkingAssignments] = useState(() => cloneAssignments(initialAssignments))
-  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(courses[0]?.wp_course_id ?? null)
+export default function AssignmentBoard({
+  courses,
+  employees,
+  initialAssignments,
+}: AssignmentBoardProps) {
+  const [savedAssignments, setSavedAssignments] = useState(() =>
+    cloneAssignments(initialAssignments),
+  )
+  const [workingAssignments, setWorkingAssignments] = useState(() =>
+    cloneAssignments(initialAssignments),
+  )
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(
+    courses[0]?.wp_course_id ?? null,
+  )
   const [courseSearch, setCourseSearch] = useState("")
   const [employeeSearch, setEmployeeSearch] = useState("")
   const [department, setDepartment] = useState("")
   const [position, setPosition] = useState("")
   const [employeePage, setEmployeePage] = useState(1)
-  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null)
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(
+    null,
+  )
   const [isPending, startTransition] = useTransition()
   const scrollerRef = useRef<HTMLDivElement>(null)
 
   const departments = useMemo(
-    () => [...new Set(employees.map((e) => e.department).filter((v): v is string => Boolean(v)))].sort(),
-    [employees]
+    () =>
+      [
+        ...new Set(employees.map((e) => e.department).filter((v): v is string => Boolean(v))),
+      ].sort(),
+    [employees],
   )
   const positions = useMemo(
-    () => [...new Set(employees.map((e) => e.position).filter((v): v is string => Boolean(v)))].sort(),
-    [employees]
+    () =>
+      [...new Set(employees.map((e) => e.position).filter((v): v is string => Boolean(v)))].sort(),
+    [employees],
   )
 
   const filteredCourses = useMemo(() => {
@@ -95,11 +118,19 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
     totalResults: employeeTotalResults,
   } = paginate(filteredEmployees, employeePage, EMPLOYEES_PAGE_SIZE)
 
-  const workingSet = selectedCourseId != null ? workingAssignments[selectedCourseId] ?? new Set<string>() : new Set<string>()
-  const savedSet = selectedCourseId != null ? savedAssignments[selectedCourseId] ?? new Set<string>() : new Set<string>()
-  const isDirty = workingSet.size !== savedSet.size || [...workingSet].some((id) => !savedSet.has(id))
+  const workingSet =
+    selectedCourseId != null
+      ? (workingAssignments[selectedCourseId] ?? new Set<string>())
+      : new Set<string>()
+  const savedSet =
+    selectedCourseId != null
+      ? (savedAssignments[selectedCourseId] ?? new Set<string>())
+      : new Set<string>()
+  const isDirty =
+    workingSet.size !== savedSet.size || [...workingSet].some((id) => !savedSet.has(id))
   const pendingChangeCount =
-    [...workingSet].filter((id) => !savedSet.has(id)).length + [...savedSet].filter((id) => !workingSet.has(id)).length
+    [...workingSet].filter((id) => !savedSet.has(id)).length +
+    [...savedSet].filter((id) => !workingSet.has(id)).length
 
   function selectCourse(courseId: number) {
     setSelectedCourseId(courseId)
@@ -169,7 +200,10 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
 
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search
+                size={14}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
               <input
                 value={courseSearch}
                 onChange={(e) => setCourseSearch(e.target.value)}
@@ -207,7 +241,8 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
               const colorKey = COLOR_ROTATION[originalIndex % COLOR_ROTATION.length]
               const color = kpiColorMap[colorKey]
               const assignedCount = savedAssignments[course.wp_course_id]?.size ?? 0
-              const pct = employees.length > 0 ? Math.round((assignedCount / employees.length) * 100) : 0
+              const pct =
+                employees.length > 0 ? Math.round((assignedCount / employees.length) * 100) : 0
               const isSelected = course.wp_course_id === selectedCourseId
 
               return (
@@ -216,7 +251,9 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
                   type="button"
                   onClick={() => selectCourse(course.wp_course_id)}
                   className={`relative flex w-72 shrink-0 flex-col overflow-hidden rounded-2xl border bg-white text-left transition ${
-                    isSelected ? "border-[#3579F5]/50 ring-2 ring-[#3579F5]/15" : "border-[#efefef] hover:border-[#3579F5]/30"
+                    isSelected
+                      ? "border-[#3579F5]/50 ring-2 ring-[#3579F5]/15"
+                      : "border-[#efefef] hover:border-[#3579F5]/30"
                   }`}
                 >
                   <div className="relative h-36 w-full shrink-0">
@@ -244,7 +281,10 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
                     </p>
 
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "#3579F5" }} />
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, background: "#3579F5" }}
+                      />
                     </div>
 
                     <p className="text-xs font-medium text-slate-400">
@@ -282,7 +322,10 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[200px]">
-              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search
+                size={14}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
               <input
                 value={employeeSearch}
                 onChange={(e) => setEmployeeSearch(e.target.value)}
@@ -297,7 +340,9 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
             >
               <option value="">Todos los departamentos</option>
               {departments.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d} value={d}>
+                  {d}
+                </option>
               ))}
             </select>
             <select
@@ -307,7 +352,9 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
             >
               <option value="">Todos los puestos</option>
               {positions.map((p) => (
-                <option key={p} value={p}>{p}</option>
+                <option key={p} value={p}>
+                  {p}
+                </option>
               ))}
             </select>
             <button
@@ -329,7 +376,9 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
           {feedback && (
             <div
               className={`rounded-lg px-4 py-2.5 text-sm ${
-                feedback.tone === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                feedback.tone === "success"
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-red-50 text-red-700"
               }`}
             >
               {feedback.message}
@@ -359,13 +408,19 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
                       {employee.initials}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-slate-900">{employee.name}</p>
+                      <p className="truncate text-sm font-semibold text-slate-900">
+                        {employee.name}
+                      </p>
                       <p className="truncate text-xs text-slate-400">
                         {employee.department ?? "Sin depto."} · {employee.position ?? "Sin puesto"}
                       </p>
                     </div>
                     <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-[#3579F5] group-has-[:checked]:bg-[#3579F5]">
-                      <Check size={10} className="hidden text-white group-has-[:checked]:block" strokeWidth={3} />
+                      <Check
+                        size={10}
+                        className="hidden text-white group-has-[:checked]:block"
+                        strokeWidth={3}
+                      />
                     </div>
                   </label>
                 )
@@ -376,7 +431,8 @@ export default function AssignmentBoard({ courses, employees, initialAssignments
           {employeeTotalPages > 1 && (
             <div className="flex items-center justify-between gap-3 text-sm">
               <p className="text-slate-500">
-                {employeeTotalResults} resultado{employeeTotalResults !== 1 ? "s" : ""} · página {employeeCurrentPage} de {employeeTotalPages}
+                {employeeTotalResults} resultado{employeeTotalResults !== 1 ? "s" : ""} · página{" "}
+                {employeeCurrentPage} de {employeeTotalPages}
               </p>
               <div className="flex items-center gap-2">
                 <button

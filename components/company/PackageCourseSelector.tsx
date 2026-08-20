@@ -30,13 +30,13 @@ export default function PackageCourseSelector({
   inputName = "selected_courses_json",
   initialCourses = [],
 }: PackageCourseSelectorProps) {
-  const [courses, setCourses]     = useState<CourseOption[]>(initialCourses)
+  const [courses, setCourses] = useState<CourseOption[]>(initialCourses)
   const [selectedIds, setSelectedIds] = useState<number[]>(
-    initialCourses.map((c) => c.wp_course_id)
+    initialCourses.map((c) => c.wp_course_id),
   )
-  const [query, setQuery]         = useState("")
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState("")
+  const [query, setQuery] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
   useEffect(() => {
     let active = true
@@ -48,32 +48,39 @@ export default function PackageCourseSelector({
         const payload = (await res.json()) as { courses?: CourseOption[]; message?: string }
         if (!res.ok) throw new Error(payload.message ?? "No fue posible cargar los cursos")
         if (active) {
-          const fetched = (payload.courses ?? []).filter((c) => (c.status ? c.status === "publish" : true))
+          const fetched = (payload.courses ?? []).filter((c) =>
+            c.status ? c.status === "publish" : true,
+          )
           // Keep any already-assigned course visible even if WordPress no longer
           // lists it as published, so editing never silently drops it.
           const fetchedIds = new Set(fetched.map((c) => c.wp_course_id))
           const missingInitial = initialCourses
             .filter((c) => !fetchedIds.has(c.wp_course_id))
-            .map((c) => ({ wp_course_id: c.wp_course_id, title: c.title, thumbnail_url: c.thumbnail_url ?? null }))
+            .map((c) => ({
+              wp_course_id: c.wp_course_id,
+              title: c.title,
+              thumbnail_url: c.thumbnail_url ?? null,
+            }))
           setCourses([...fetched, ...missingInitial])
         }
       } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : "No fue posible cargar los cursos")
+        if (active)
+          setError(err instanceof Error ? err.message : "No fue posible cargar los cursos")
       } finally {
         if (active) setLoading(false)
       }
     }
     loadCourses()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const filteredCourses = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return courses
-    return courses.filter((c) =>
-      `${c.wp_course_id} ${c.title}`.toLowerCase().includes(q)
-    )
+    return courses.filter((c) => `${c.wp_course_id} ${c.title}`.toLowerCase().includes(q))
   }, [courses, query])
 
   const selectedPayload = useMemo(
@@ -82,18 +89,16 @@ export default function PackageCourseSelector({
         courses
           .filter((c) => selectedIds.includes(c.wp_course_id))
           .map((c) => ({
-            wp_course_id:  c.wp_course_id,
-            nombre_curso:  c.title,
-            portada_url:   c.thumbnail_url ?? null,
-          }))
+            wp_course_id: c.wp_course_id,
+            nombre_curso: c.title,
+            portada_url: c.thumbnail_url ?? null,
+          })),
       ),
-    [courses, selectedIds]
+    [courses, selectedIds],
   )
 
   function toggleCourse(id: number) {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    )
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]))
   }
 
   return (
@@ -117,7 +122,8 @@ export default function PackageCourseSelector({
           sx={{ flexGrow: 1 }}
         />
         <Typography variant="body2" sx={{ color: "text.secondary", flexShrink: 0 }}>
-          {selectedIds.length} curso{selectedIds.length === 1 ? "" : "s"} seleccionado{selectedIds.length === 1 ? "" : "s"}
+          {selectedIds.length} curso{selectedIds.length === 1 ? "" : "s"} seleccionado
+          {selectedIds.length === 1 ? "" : "s"}
         </Typography>
       </Box>
 
@@ -180,7 +186,12 @@ export default function PackageCourseSelector({
                     size="small"
                     onChange={() => toggleCourse(course.wp_course_id)}
                     onClick={(e) => e.stopPropagation()}
-                    sx={{ p: 0, mt: 0.25, color: "divider", "&.Mui-checked": { color: "primary.main" } }}
+                    sx={{
+                      p: 0,
+                      mt: 0.25,
+                      color: "divider",
+                      "&.Mui-checked": { color: "primary.main" },
+                    }}
                   />
                   <Box>
                     <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>

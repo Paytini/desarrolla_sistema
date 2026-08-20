@@ -16,15 +16,14 @@ type StoredWebhookStatusPayload = {
   certificates_updated?: number | null
 }
 
-export async function recordTutorLearningWebhookEvent(
-  payload: StoredWebhookStatusPayload
-) {
+export async function recordTutorLearningWebhookEvent(payload: StoredWebhookStatusPayload) {
   const existing = await prisma.integrationState.findUnique({
     where: { key: TUTOR_WEBHOOK_STATUS_KEY },
     select: { updated_at: true },
   })
 
-  const isStale = !existing || Date.now() - existing.updated_at.getTime() >= HEARTBEAT_SAMPLE_INTERVAL_MS
+  const isStale =
+    !existing || Date.now() - existing.updated_at.getTime() >= HEARTBEAT_SAMPLE_INTERVAL_MS
   if (!isStale) return
 
   await prisma.integrationState.upsert({
@@ -51,11 +50,15 @@ export async function isDuplicateTutorLearningWebhook(wpUserId: number, sourceHa
     select: { payload: true },
   })
 
-  const existingHash = (existing?.payload as { source_hash?: string | null } | null)?.source_hash ?? null
+  const existingHash =
+    (existing?.payload as { source_hash?: string | null } | null)?.source_hash ?? null
   return existingHash === sourceHash
 }
 
-export async function recordTutorLearningWebhookProcessed(wpUserId: number, sourceHash: string | null) {
+export async function recordTutorLearningWebhookProcessed(
+  wpUserId: number,
+  sourceHash: string | null,
+) {
   if (!sourceHash) return
 
   const key = studentIdempotencyKey(wpUserId)
@@ -88,7 +91,8 @@ export async function getTutorLearningWebhookDiagnostics() {
           tutor_rest_available: false,
           service_user_configured: false,
           learning_webhook_configured: false,
-          error_message: error instanceof Error ? error.message : "No fue posible consultar WordPress.",
+          error_message:
+            error instanceof Error ? error.message : "No fue posible consultar WordPress.",
         }))
       : Promise.resolve(null),
   ])
@@ -98,7 +102,7 @@ export async function getTutorLearningWebhookDiagnostics() {
   return {
     bridgeConfigured: isWordPressBridgeConfigured(),
     webhookSecretConfigured: Boolean(
-      process.env.BRIDGE_WEBHOOK_SECRET?.trim() || process.env.WP_BRIDGE_WEBHOOK_SECRET?.trim()
+      process.env.BRIDGE_WEBHOOK_SECRET?.trim() || process.env.WP_BRIDGE_WEBHOOK_SECRET?.trim(),
     ),
     syncIntervalMs: Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "15000", 10) || 15000,
     webhookUrlPath: "/api/internal/webhooks/tutor-learning",

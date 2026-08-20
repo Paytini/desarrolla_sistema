@@ -30,6 +30,6 @@ export async function sendEmail({
           Text: { Data: text, Charset: "UTF-8" },
         },
       },
-    })
+    }),
   )
 }

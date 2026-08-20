@@ -1,39 +1,35 @@
-import { Suspense } from "react";
-import { PortalThemeProvider } from "@/components/providers/PortalThemeProvider";
-import { PageSkeleton } from "@/components/shared/PageSkeleton";
-import EmployeeSearchBar from "@/components/search/EmployeeSearchBar";
-import { FullscreenToggle } from "@/components/layout/FullscreenToggle";
-import { MobileNav } from "@/components/layout/MobileNav";
-import { NotificationBell } from "@/components/layout/NotificationBell";
-import { PortalGreeting } from "@/components/layout/PortalGreeting";
-import HrSearchBar from "@/components/search/HrSearchBar";
-import SuperadminSearchBar from "@/components/search/SuperadminSearchBar";
-import Sidebar from "@/components/layout/Sidebar";
-import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu";
-import { OnboardingTour } from "@/components/layout/OnboardingTour";
-import { getSession } from "@/lib/session";
-import { redirect } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { getCompanyBranding } from "@/lib/company-branding";
+import { Suspense } from "react"
+import { PortalThemeProvider } from "@/components/providers/PortalThemeProvider"
+import { PageSkeleton } from "@/components/shared/PageSkeleton"
+import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
+import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
+import { MobileNav } from "@/components/layout/MobileNav"
+import { NotificationBell } from "@/components/layout/NotificationBell"
+import { PortalGreeting } from "@/components/layout/PortalGreeting"
+import HrSearchBar from "@/components/search/HrSearchBar"
+import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
+import Sidebar from "@/components/layout/Sidebar"
+import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu"
+import { OnboardingTour } from "@/components/layout/OnboardingTour"
+import { getSession } from "@/lib/session"
+import { redirect } from "next/navigation"
+import { cn } from "@/lib/utils"
+import { getCompanyBranding } from "@/lib/company-branding"
 
-export default async function PortalLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const session = await getSession();
-  if (!session) redirect("/login");
+export default async function PortalLayout({ children }: { children: React.ReactNode }) {
+  const session = await getSession()
+  if (!session) redirect("/login")
 
-  const role = session.user.role as "SUPERADMIN" | "HR" | "EMPLOYEE";
-  const name = session.user.nombre as string;
-  const email = session.user.email ?? name;
-  const company = session.user.empresa as string | undefined;
-  const isSuperAdmin = role === "SUPERADMIN";
+  const role = session.user.role as "SUPERADMIN" | "HR" | "EMPLOYEE"
+  const name = session.user.nombre as string
+  const email = session.user.email ?? name
+  const company = session.user.empresa as string | undefined
+  const isSuperAdmin = role === "SUPERADMIN"
 
   const branding =
     (role === "HR" || role === "EMPLOYEE") && session.user.empresa_id
       ? await getCompanyBranding(session.user.empresa_id)
-      : null;
+      : null
 
   const content = (
     <div className={cn("flex h-screen overflow-hidden", "portal-v4")}>
@@ -64,9 +60,7 @@ export default async function PortalLayout({
           <div className="flex-1" />
 
           <div className="flex shrink-0 items-center gap-2">
-            {role === "HR" && branding?.slug && (
-              <HrSearchBar companySlug={branding.slug} />
-            )}
+            {role === "HR" && branding?.slug && <HrSearchBar companySlug={branding.slug} />}
             {role === "EMPLOYEE" && <EmployeeSearchBar />}
             <NotificationBell />
             <FullscreenToggle />
@@ -78,11 +72,9 @@ export default async function PortalLayout({
         </main>
       </div>
 
-      {(role === "HR" || role === "EMPLOYEE") && (
-        <OnboardingTour role={role} userId={email} />
-      )}
+      {(role === "HR" || role === "EMPLOYEE") && <OnboardingTour role={role} userId={email} />}
     </div>
-  );
+  )
 
-  return <PortalThemeProvider>{content}</PortalThemeProvider>;
+  return <PortalThemeProvider>{content}</PortalThemeProvider>
 }

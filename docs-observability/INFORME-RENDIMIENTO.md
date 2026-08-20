@@ -5,6 +5,7 @@
 **Meta:** escalar de MVP funcional a empresa mediana (~100,000 usuarios tomando cursos).
 
 **URLs del sistema:**
+
 - Portal en producción: **https://empresas.desarrolla360.com** (login: `/login`)
 - Despliegue interno Vercel: https://desarrolla-sistema.vercel.app
 - WordPress / Tutor LMS (beta): https://betatutorlms.desarrolla360.com
@@ -20,10 +21,10 @@ Informe complementario: [INFORME-CAPACIDAD.md](INFORME-CAPACIDAD.md) — estimac
 
 El MVP tiene una arquitectura de base **correcta** (espejo local de datos académicos, JWT sin estado, streaming de cursos delegado a Tutor LMS), pero hay **4 hallazgos graves** que hoy limitan la app y hacen fallar operaciones administrativas medianas (sincronizar un paquete a 40+ empleados, importar CSV de 200 filas, descargar ZIP de constancias de una empresa grande):
 
-1. **Ninguna llamada HTTP a WordPress tiene timeout** — un WP lento congela la petición del usuario hasta que Vercel mata la función. ✅ *Confirmado: bajo carga, las llamadas salientes fallaron masivamente.*
-2. **Enrolamiento masivo secuencial**: 3 llamadas HTTP a WP *por empleado*, una tras otra, sin `maxDuration`. ✅ *Confirmado y peor de lo estimado: **144 s de media** para 40 empleados.*
-3. **Pool de conexiones a Supabase sin límites reales** — `connection_limit=1` en la URL es ignorado por el adapter `pg`; cada lambda abre hasta 10 conexiones y en producción ni siquiera se reutiliza el singleton. ✅ *Confirmado: conexiones acumulándose de 12 a 20 sin liberarse, y error `EAUTHTIMEOUT / 08006` en el log. La instancia tiene `max_connections = 60`.*
-4. **Ruta ZIP de constancias**: genera N PDFs en serie, sin tope, todo en memoria. ⚠️ *Confirmado en dirección (~500 ms por PDF, sin paralelismo), no se reprodujo el OOM por falta de datos a escala.*
+1. **Ninguna llamada HTTP a WordPress tiene timeout** — un WP lento congela la petición del usuario hasta que Vercel mata la función. ✅ _Confirmado: bajo carga, las llamadas salientes fallaron masivamente._
+2. **Enrolamiento masivo secuencial**: 3 llamadas HTTP a WP _por empleado_, una tras otra, sin `maxDuration`. ✅ _Confirmado y peor de lo estimado: **144 s de media** para 40 empleados._
+3. **Pool de conexiones a Supabase sin límites reales** — `connection_limit=1` en la URL es ignorado por el adapter `pg`; cada lambda abre hasta 10 conexiones y en producción ni siquiera se reutiliza el singleton. ✅ _Confirmado: conexiones acumulándose de 12 a 20 sin liberarse, y error `EAUTHTIMEOUT / 08006` en el log. La instancia tiene `max_connections = 60`._
+4. **Ruta ZIP de constancias**: genera N PDFs en serie, sin tope, todo en memoria. ⚠️ _Confirmado en dirección (~500 ms por PDF, sin paralelismo), no se reprodujo el OOM por falta de datos a escala._
 
 ~~5. La caché del dashboard superadmin se destruye cada 15 segundos por el polling.~~ **Refutado por medición** — ver G-4.
 
@@ -33,29 +34,29 @@ Nada de esto requiere romper el monolito. Las soluciones recomendadas son cambio
 
 ## 2. Lo que está bien hecho (conservar)
 
-| Aspecto | Evidencia | Por qué importa |
-|---|---|---|
-| **Streaming de cursos delegado a Tutor LMS** | Playwright: el video de la portada (7.2 MB) lo sirve directamente `betatutorlms.desarrolla360.com`; el portal nunca proxya media | Confirmado: el contenido pesado (video de cursos) **no pasa por Vercel ni por la DB del portal**. Es la decisión que más protege la escalabilidad. Mantenerla. |
-| **Espejo local de datos académicos** | `empleado_cursos`, `constancias` con `ultima_sincronizacion` | Las páginas leen Postgres local, no WordPress en caliente. Sin esto, cada page view dependería de la latencia de WP. |
-| **Sesión JWT sin estado** | `auth.ts:22`, callbacks sin queries ([auth.ts:23-42](../auth.ts#L23-L42)) | El middleware (`proxy.ts`) no toca la DB en ninguna navegación. Cero costo de sesión por request. |
-| **Caché con tags en dashboards** | `lib/dashboard-cache.ts` (7 snapshots con `unstable_cache` + tags de `lib/cache-tags.ts`) | La infraestructura de invalidación por tags ya existe — solo hay que afinar granularidad (ver H-4). |
-| **Inserciones batch donde cuenta** | CSV: `createMany` + checks con `email: { in: [...] }` ([employees/actions.ts:622-738](<../app/(portal)/company/[slug]/employees/actions.ts#L622>)) | Sin N+1 en la escritura DB del import. |
-| **Llamadas a WP fuera de transacciones DB** | `course-sync.ts` | Un WP lento no mantiene transacciones Postgres abiertas. |
-| **Webhook con HMAC + ventana de frescura** | [tutor-learning/route.ts:40-61](../app/api/internal/webhooks/tutor-learning/route.ts#L40) | Seguridad correcta en el canal de sync entrante. |
-| **`after()` ya en uso** | `lib/employee-learning.ts:451-472` | El patrón de trabajo post-respuesta ya está adoptado; es la base para diferir emails y syncs (ver plan). |
-| **Buffers binarios en el pipeline PDF** | `lib/dc3-pdf.ts` usa `Buffer`/`Uint8Array`, nunca base64 | Evita el 33% de sobrecosto de memoria de base64. |
-| **`react.cache` en sesión y branding** | `lib/session.ts:4`, `lib/company-branding.ts:7` | Deduplicación intra-request correcta (aunque hay bypass, ver M-3). |
+| Aspecto                                      | Evidencia                                                                                                                                          | Por qué importa                                                                                                                                                |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Streaming de cursos delegado a Tutor LMS** | Playwright: el video de la portada (7.2 MB) lo sirve directamente `betatutorlms.desarrolla360.com`; el portal nunca proxya media                   | Confirmado: el contenido pesado (video de cursos) **no pasa por Vercel ni por la DB del portal**. Es la decisión que más protege la escalabilidad. Mantenerla. |
+| **Espejo local de datos académicos**         | `empleado_cursos`, `constancias` con `ultima_sincronizacion`                                                                                       | Las páginas leen Postgres local, no WordPress en caliente. Sin esto, cada page view dependería de la latencia de WP.                                           |
+| **Sesión JWT sin estado**                    | `auth.ts:22`, callbacks sin queries ([auth.ts:23-42](../auth.ts#L23-L42))                                                                          | El middleware (`proxy.ts`) no toca la DB en ninguna navegación. Cero costo de sesión por request.                                                              |
+| **Caché con tags en dashboards**             | `lib/dashboard-cache.ts` (7 snapshots con `unstable_cache` + tags de `lib/cache-tags.ts`)                                                          | La infraestructura de invalidación por tags ya existe — solo hay que afinar granularidad (ver H-4).                                                            |
+| **Inserciones batch donde cuenta**           | CSV: `createMany` + checks con `email: { in: [...] }` ([employees/actions.ts:622-738](<../app/(portal)/company/[slug]/employees/actions.ts#L622>)) | Sin N+1 en la escritura DB del import.                                                                                                                         |
+| **Llamadas a WP fuera de transacciones DB**  | `course-sync.ts`                                                                                                                                   | Un WP lento no mantiene transacciones Postgres abiertas.                                                                                                       |
+| **Webhook con HMAC + ventana de frescura**   | [tutor-learning/route.ts:40-61](../app/api/internal/webhooks/tutor-learning/route.ts#L40)                                                          | Seguridad correcta en el canal de sync entrante.                                                                                                               |
+| **`after()` ya en uso**                      | `lib/employee-learning.ts:451-472`                                                                                                                 | El patrón de trabajo post-respuesta ya está adoptado; es la base para diferir emails y syncs (ver plan).                                                       |
+| **Buffers binarios en el pipeline PDF**      | `lib/dc3-pdf.ts` usa `Buffer`/`Uint8Array`, nunca base64                                                                                           | Evita el 33% de sobrecosto de memoria de base64.                                                                                                               |
+| **`react.cache` en sesión y branding**       | `lib/session.ts:4`, `lib/company-branding.ts:7`                                                                                                    | Deduplicación intra-request correcta (aunque hay bypass, ver M-3).                                                                                             |
 
 ---
 
 ## 3. Mediciones reales (Playwright + curl, 2026-08-01)
 
-| Sitio | TTFB | Carga completa | Peso | Notas |
-|---|---|---|---|---|
-| **`empresas.desarrolla360.com/login` (el portal)** | **0.15–0.17 s** (constante, 3 muestras; igual vía `desarrolla-sistema.vercel.app`) | — | 15 KB el documento | El shell de login responde rápido y estable desde el edge de Vercel. Los cuellos de este informe están en las rutas autenticadas (queries, bridge, bcrypt), no en la entrega estática. |
-| `desarrolla360.com` | **1.1–1.4 s** (constante, 3 muestras) | 3.0 s (FCP 1.9 s) | ~1.9–2.5 MB, 108 recursos | TTFB alto y estable ⇒ **no hay caché de página completa / CDN** delante de WordPress. 30 hojas de estilo + 40 scripts. |
-| `betatutorlms.desarrolla360.com` | **0.3 s caliente / 6.5–7.6 s frío** | 7.7 s en frío | ~8 MB (7.2 MB es el video, servido por WP — ver "lo que está bien") | La variación 0.3 s ↔ 7.6 s indica caché de página que expira; cuando expira, PHP tarda ~6+ s en generar. Ese mismo servidor PHP atiende las llamadas del bridge. |
-| `betatutorlms/wp-json/` | 0.14–7.6 s | — | **2 MB** el índice | El índice REST completo está expuesto y pesa 2 MB; síntoma de muchos plugins registrando rutas. |
+| Sitio                                              | TTFB                                                                               | Carga completa    | Peso                                                                | Notas                                                                                                                                                                                  |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`empresas.desarrolla360.com/login` (el portal)** | **0.15–0.17 s** (constante, 3 muestras; igual vía `desarrolla-sistema.vercel.app`) | —                 | 15 KB el documento                                                  | El shell de login responde rápido y estable desde el edge de Vercel. Los cuellos de este informe están en las rutas autenticadas (queries, bridge, bcrypt), no en la entrega estática. |
+| `desarrolla360.com`                                | **1.1–1.4 s** (constante, 3 muestras)                                              | 3.0 s (FCP 1.9 s) | ~1.9–2.5 MB, 108 recursos                                           | TTFB alto y estable ⇒ **no hay caché de página completa / CDN** delante de WordPress. 30 hojas de estilo + 40 scripts.                                                                 |
+| `betatutorlms.desarrolla360.com`                   | **0.3 s caliente / 6.5–7.6 s frío**                                                | 7.7 s en frío     | ~8 MB (7.2 MB es el video, servido por WP — ver "lo que está bien") | La variación 0.3 s ↔ 7.6 s indica caché de página que expira; cuando expira, PHP tarda ~6+ s en generar. Ese mismo servidor PHP atiende las llamadas del bridge.                       |
+| `betatutorlms/wp-json/`                            | 0.14–7.6 s                                                                         | —                 | **2 MB** el índice                                                  | El índice REST completo está expuesto y pesa 2 MB; síntoma de muchos plugins registrando rutas.                                                                                        |
 
 **Implicación clave:** toda la integración (enroll, sync, upsert de empleados) depende de ese PHP que en frío tarda 6+ s. Cualquier estrategia de escala necesita (a) timeouts del lado del portal y (b) caché de objetos/página + CDN del lado de WordPress.
 
@@ -74,6 +75,7 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Impacto:** el bridge está en el camino crítico de crear empleado, asignar cursos, borrar empleado (que además **bloquea el borrado** si WP no responde — `lib/access-control.ts:54-64`), sync batch y webhook. Con el TTFB de 6.5 s en frío medido arriba, una petición de usuario puede colgarse minutos (undici no tiene timeout de request por defecto) hasta que Vercel mata la función. Bajo carga, las lambdas colgadas se acumulan y agotan concurrencia + conexiones DB.
 
 **Soluciones (elegir 1; ordenadas por preferencia monolítica):**
+
 1. **(Recomendada)** En `bridgeRequest`: `signal: AbortSignal.timeout(15_000)` + 1 reintento con backoff (500 ms → 2 s) solo para métodos idempotentes (GET, upsert). ~20 líneas, cero infra nueva.
 2. Lo anterior + **circuit breaker** persistido en `integracion_estados`: tras 5 fallos consecutivos, marcar el bridge "caído" 60 s y degradar rápido (las acciones ya degradan bien: `empleado_creado_bridge_error`). Evita tormentas de timeouts.
 3. Mover toda llamada al bridge a una cola gestionada (QStash/Inngest). Más robusto pero rompe la preferencia monolítica; dejar para Fase 3 si hace falta.
@@ -87,6 +89,7 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Impacto:** 50 empleados × 3 llamadas × ~1 s = **150 s** en una sola server action → Vercel la mata mucho antes → estado mitad-sincronizado (el catch por-empleado marca `ERROR`, pero los empleados después del corte quedan `PENDING` sin intento). Es la operación que un cliente mediano ejecuta el primer día.
 
 **Soluciones:**
+
 1. **(Recomendada — patrón job monolítico)** Convertir en job asíncrono: la action inserta un registro en una tabla `jobs` (o en `integracion_estados`) y responde de inmediato; un **Vercel Cron cada minuto** (ya usan crons) procesa chunks de ~20 empleados con concurrencia 5 (`mapWithConcurrency` ya existe en el codebase) y `maxDuration: 300`. La UI de reports ya muestra estados `PENDING/ERROR` — solo hay que leerlos.
 2. **Endpoint batch en el plugin**: un solo `POST /enrollments/company-batch` que reciba N empleados × C cursos y haga el loop en PHP (allí los timeouts internos ya existen). Reduce 3N round-trips a ⌈N/50⌉. Combina bien con la opción 1.
 3. Paralelizar en la misma action con `Promise.allSettled` en chunks de 5 + `export const maxDuration = 300`. Arreglo mínimo (una tarde), aguanta hasta ~200 empleados; insuficiente para 1,000+.
@@ -100,6 +103,7 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Impacto:** cada instancia lambda puede abrir hasta 10 conexiones (default de `pg`). Con 60 lambdas concurrentes (un pico de logins de inicio de jornada) son ~600 conexiones cliente contra el pooler de Supabase → `max clients reached` → **errores 500 en cascada justo en el momento de más tráfico**. Este es el techo duro de escala actual.
 
 **Soluciones:**
+
 1. **(Recomendada)** Configurar el pool: `max: 3, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 10_000`; asignar el singleton `globalThis` **también en producción**; sacar el import de Prisma del camino del proxy (el proxy solo necesita `auth` sin adapter — separar la config de NextAuth en `auth.config.ts` sin Prisma, patrón estándar de NextAuth v5 para edge/proxy).
 2. Lo anterior + subir el límite de clientes de Supavisor en Supabase (plan Pro lo permite) y monitorear `pg_stat_activity`.
 3. Prisma Accelerate (pooling gestionado + caché). Costo extra; solo si la opción 1 se queda corta más allá de 10k concurrentes.
@@ -112,15 +116,17 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 
 **Lo que se afirmó:** que cada poll de empleado destruía la caché de los 5 dashboards de superadmin, obligando a re-ejecutar la query más pesada de la app cada 15 s.
 
-**Por qué era incorrecto:** la llamada es `revalidateTag(SUPERADMIN_GLOBAL_TAG, **"max"**)` ([refresh/route.ts:60](../app/api/employee/learning/refresh/route.ts#L60)). En Next.js 16 ese segundo argumento cambia por completo el mecanismo: con un perfil (`"max"`) el tag se marca **stale** y se sirve con *stale-while-revalidate* — el contenido viejo sale de inmediato y la actualización ocurre en segundo plano. Solo **sin** el segundo argumento (forma ya deprecada) se produce la expiración inmediata y el fallo de caché bloqueante que yo asumí. Verificado en la documentación oficial de Next.js y en el código fuente de `revalidate.ts`.
+**Por qué era incorrecto:** la llamada es `revalidateTag(SUPERADMIN_GLOBAL_TAG, **"max"**)` ([refresh/route.ts:60](../app/api/employee/learning/refresh/route.ts#L60)). En Next.js 16 ese segundo argumento cambia por completo el mecanismo: con un perfil (`"max"`) el tag se marca **stale** y se sirve con _stale-while-revalidate_ — el contenido viejo sale de inmediato y la actualización ocurre en segundo plano. Solo **sin** el segundo argumento (forma ya deprecada) se produce la expiración inmediata y el fallo de caché bloqueante que yo asumí. Verificado en la documentación oficial de Next.js y en el código fuente de `revalidate.ts`.
 
 **Medición que lo confirma:** dos corridas completas con 60 empleados haciendo poll al intervalo real de 15 s, contra una corrida de control sin ningún poller. **Delta en la latencia de las páginas de superadmin: ~0 ms.** El `git blame` confirma que el argumento `"max"` está en el código desde mayo de 2026, o sea antes de esta auditoría.
 
 **Lo que sí queda en pie (por eso Media y no Baja):**
+
 - El **volumen de polling** es real y desperdiciado: cada pestaña de empleado abierta genera 4 POST/min, cada uno con sus queries de cooldown y su recálculo. Con 10,000 pestañas son 40,000 POST/min que no aportan nada mientras no haya cambios.
 - El **recálculo en segundo plano** de la query sin `take` sigue costando CPU y base de datos; simplemente no bloquea al usuario que pide la página. No se midió su costo — haría falta instrumentación del lado de la base de datos.
 
 **Soluciones (revisadas a la baja):**
+
 1. **(Recomendada)** Subir el poll a 60 s + jitter y pausarlo con la pestaña oculta (ya detectan visibilidad). Reduce el tráfico inútil ÷4 sin tocar el mecanismo de caché.
 2. Refresco dirigido por webhook en vez de polling: el webhook de Tutor ya avisa cuándo cambió algo; el cliente solo consulta cuando `latestSyncAt` cambia (endpoint ligero con ETag).
 3. Acotar la query de [dashboard-cache.ts:18-54](../lib/dashboard-cache.ts#L18) (ver A-4) para que el recálculo en segundo plano sea barato. Es la solución de fondo.
@@ -134,6 +140,7 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Impacto:** empresa con 500 constancias ≈ 500 × (~300–800 ms + varios MB) → timeout y/o OOM de la función. Falla justo para los clientes grandes que son la meta.
 
 **Soluciones:**
+
 1. **(Recomendada)** Combinar con la solución de A-3 (PDF almacenado en Blob): el ZIP pasa a ser "descargar N archivos ya generados del Blob y empaquetar en streaming" (`archiver` en modo stream, en vez de JSZip en memoria) + `maxDuration: 300` + tope de N con paginación (ej. por rango de fechas).
 2. Job asíncrono (misma tabla `jobs` de G-2): generar el ZIP en background, subirlo a Blob, notificar al RH con el link (patrón "tu descarga está lista").
 3. Tope duro inmediato (`take: 100` + mensaje) mientras llega 1 o 2 — parche de un día que elimina el riesgo de OOM.
@@ -147,6 +154,7 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Impacto:** latencia de login percibida 1–2 s+; en bursts (8:00 AM de un cliente de 10k empleados) el costo CPU de bcrypt multiplica lambdas concurrentes → presión directa sobre G-3.
 
 **Soluciones:**
+
 1. **(Recomendada)** Paquete de 4 cambios en el monolito: (a) cambiar `bcryptjs` → `bcrypt` nativo (API compatible, ~10× más rápido; ya está en `serverExternalPackages` el patrón) — o argon2id; (b) mover `last_access` a `after()`; (c) eliminar la query duplicada añadiendo `active` + paquete activo al `include` del paso 2; (d) quitar el `fetch("/api/auth/session")` del cliente usando el callback de NextAuth para devolver el rol en la URL de redirect. Resultado esperado: login < 500 ms.
 2. Solo bajar el costo de bcrypt a 10 (sigue siendo OWASP-aceptable) sin cambiar de librería — mejora 4×, cero riesgo de build nativo.
 3. Paralelizar Turnstile con el lookup de usuario (`Promise.all`) — ahorra 50–200 ms extra; combinable con 1 o 2.
@@ -160,6 +168,7 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Impacto:** con el límite actual de 200 filas, la action excede cualquier `maxDuration` razonable; el onboarding masivo (el caso de negocio de 100k usuarios) es imposible vía UI.
 
 **Soluciones:**
+
 1. **(Recomendada)** bcrypt nativo (de A-1) baja los 200 hashes a ~5–8 s; + `maxDuration: 300` en la action; + el upsert a WP movido al job asíncrono de G-2 (el import ya tolera `bridgeWarnings`).
 2. Diferir la provisión: importar filas sin password (hash al primer login vía flujo "establecer contraseña" con token) — elimina el 100% del costo bcrypt del import y es mejor práctica de seguridad (RH deja de conocer contraseñas).
 3. Elevar el límite por archivo pero procesar el CSV completo como job en chunks de 50 (tabla `jobs` + cron) con barra de progreso — necesario de todas formas para importar 10,000 empleados.
@@ -173,6 +182,7 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Impacto:** ~300–800 ms de CPU + red por PDF. Con 100k usuarios descargando su constancia, es carga repetida sin valor (el PDF es inmutable una vez emitido).
 
 **Soluciones:**
+
 1. **(Recomendada)** Generar **una vez al emitir** la constancia, subir a Vercel Blob, guardar la URL en `constancias` (columna nueva), servir con `Cache-Control: private, max-age=31536000, immutable`. Regenerar solo si cambia la metadata DC-3 (invalidación explícita).
 2. Cachés a nivel módulo sin almacenar: template bytes + logo procesado en variables de módulo (sobreviven entre invocaciones calientes), y `Cache-Control: private, max-age=3600` en la respuesta. Mejora 3–4× con ~15 líneas; no elimina el costo en frío.
 3. Ambas: 2 ahora (una tarde), 1 en Fase 2.
@@ -186,10 +196,12 @@ Escala: 🔴 **Grave** (rompe operaciones hoy o tumba el servicio bajo carga) ·
 **Impacto:** el costo crece linealmente con el total de datos del sistema, no con lo que se muestra. A 100k empleados × ~5 cursos = 500k filas serializadas por render de dashboard (cuando la caché está fría — que con G-4 es siempre).
 
 **Soluciones:**
+
 1. Reescribir KPIs con `prisma.$queryRaw` o `groupBy`/`count` (Postgres hace esto en milisegundos con los índices de M-2) y paginar en SQL (`take/skip` + `where` de búsqueda). Mantener `unstable_cache` encima.
 2. **(Recomendada)** Tabla de resumen (`empresa_stats`) actualizada por el cron existente cada 5 min — lectura O(1) por dashboard; acepta 5 min de staleness en KPIs.
 
 **Ejemplo:**
+
 ```sql
 -- Crear tabla de resumen
 CREATE TABLE empresa_stats (
@@ -220,7 +232,7 @@ CREATE TABLE empresa_stats (
  value:60
  type:int
 }
- ```
+```
 
 3. Vistas materializadas de Postgres refrescadas por cron — igual que 2 pero en la DB; menos código de app, más operación de DB.
 
@@ -233,6 +245,7 @@ CREATE TABLE empresa_stats (
 **Impacto:** un curso completado por 1,000 alumnos ⇒ 1,000 POSTs con ~6–9 statements cada uno, serializados en una fila caliente, con hasta 1,000 llamadas SES inline (límite SES: 14/s por defecto) → colas de webhooks lentos → el plugin de WP reintenta o descarta.
 
 **Soluciones:**
+
 1. **(Recomendada)** (a) mover el envío SES a `after()` (1 línea de concepto, el patrón ya existe); (b) muestrear la escritura de diagnóstico (escribir 1 de cada N o solo si cambió el estado); (c) guardar y comparar `source_hash` para descartar duplicados sin escribir; (d) invalidar solo tags de la empresa afectada.
 2. Endpoint batch en el plugin: agrupar snapshots (hasta 50 estudiantes por POST) — reduce requests 50×; requiere tocar PHP.
 3. Encolar el payload crudo (tabla `webhook_inbox` + cron que procesa) — respuesta del webhook en <50 ms siempre; el patrón outbox/inbox monolítico de G-2 reutilizado.
@@ -249,18 +262,18 @@ CREATE TABLE empresa_stats (
 
 Los que las queries actuales necesitan (evidencia en el análisis de `prisma/schema.prisma` vs queries):
 
-| Modelo | Índice | Query que lo necesita |
-|---|---|---|
-| `Employee` | `(company_id, active)` | todas las páginas de empresa |
-| `Employee` | parcial `(active) WHERE wp_user_id IS NOT NULL` | scan del sync batch |
-| `EmployeeCourse` | `(employee_id, last_synced_at)` | staleness check por vista de página |
-| `EmployeeCourse` | `(access_status)`, `(completed)` | KPIs cuando pasen a SQL (A-4) |
-| `CompanyPackage` | `(company_id, active, created_at)` | paquete activo — repetido en 7 sitios |
-| `CompanyPackage` | `(expiration_date)` | cron de expiración |
-| `User` | `(role, active)` | notificaciones a superadmins/RH |
-| `Notification` | `(type, entity_id)` | dedupe del cron (hoy N+1 sin índice) |
-| `PackageCourse` | `(wp_course_id)` | lookup por curso en página de empleado |
-| `Certificate` | `(wp_course_id)` | reconciliación de constancias |
+| Modelo           | Índice                                          | Query que lo necesita                  |
+| ---------------- | ----------------------------------------------- | -------------------------------------- |
+| `Employee`       | `(company_id, active)`                          | todas las páginas de empresa           |
+| `Employee`       | parcial `(active) WHERE wp_user_id IS NOT NULL` | scan del sync batch                    |
+| `EmployeeCourse` | `(employee_id, last_synced_at)`                 | staleness check por vista de página    |
+| `EmployeeCourse` | `(access_status)`, `(completed)`                | KPIs cuando pasen a SQL (A-4)          |
+| `CompanyPackage` | `(company_id, active, created_at)`              | paquete activo — repetido en 7 sitios  |
+| `CompanyPackage` | `(expiration_date)`                             | cron de expiración                     |
+| `User`           | `(role, active)`                                | notificaciones a superadmins/RH        |
+| `Notification`   | `(type, entity_id)`                             | dedupe del cron (hoy N+1 sin índice)   |
+| `PackageCourse`  | `(wp_course_id)`                                | lookup por curso en página de empleado |
+| `Certificate`    | `(wp_course_id)`                                | reconciliación de constancias          |
 
 Una sola migración; riesgo nulo. Sin ellos, A-4 no rinde.
 
@@ -286,8 +299,11 @@ Se importa en `lib/dc3-pdf.ts:3` y en el upload de firmas sin estar declarado. V
 > Nota: durante las pruebas de carga se detectó que `@aws-sdk/client-ses` tenía el mismo problema **y sí rompía el build**. Ya fue corregido — está declarado en `package.json`. Ver [INFORME-LOADTEST-BASELINE.md §6](INFORME-LOADTEST-BASELINE.md).
 
 ### 🟢 B-1. `lib/tutorlms-api.ts` es código muerto en la app Next (cero imports; la lógica vive en el plugin PHP). Borrarlo o documentarlo como reserva.
+
 ### 🟢 B-2. Imágenes sin `next/image` (thumbnails de cursos con `<img>` crudo; `remotePatterns` solo permite `avatar.iran.liara.run`). Añadir el host de WP y migrar a `next/image`.
+
 ### 🟢 B-3. ~40 `revalidatePath` que no purgan nada (todas las rutas son dinámicas por cookies); solo los `revalidateTag` trabajan. Limpieza cosmética.
+
 ### 🟢 B-4. WordPress: índice `wp-json` de 2 MB expuesto; `desarrolla360.com` sin CDN/caché de página (TTFB 1.2 s constante). Recomendar Cloudflare + object cache Redis + revisar plugins que registran REST.
 
 ---
@@ -308,35 +324,38 @@ Pregunta directa del negocio: **sí se puede, y sin salir del monolito.** Herram
 ## 6. Plan de acción priorizado
 
 ### Fase 1 — Quick wins (≈1 semana de trabajo, sin cambios de arquitectura)
-| # | Acción | Resuelve |
-|---|---|---|
-| 1 | Timeout + retry en `bridgeRequest` | G-1 |
-| 2 | Pool `pg` configurado + singleton en prod + Prisma fuera del proxy | G-3 |
-| 3 | Poll a 60 s + jitter + pausa con pestaña oculta (ya NO hace falta tocar `revalidateTag`: ver corrección en G-4) | G-4 |
-| 4 | `bcrypt` nativo + `last_access` en `after()` + quitar fetch de sesión redundante | A-1, A-2 (parcial) |
-| 5 | Migración de índices | M-2 |
-| 6 | `regions` + `maxDuration` en vercel.json/rutas | M-4 |
-| 7 | Tope `take: 100` en ruta ZIP (parche) | G-5 (parcial) |
-| 8 | `npm i sharp` | M-6 |
+
+| #   | Acción                                                                                                          | Resuelve           |
+| --- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
+| 1   | Timeout + retry en `bridgeRequest`                                                                              | G-1                |
+| 2   | Pool `pg` configurado + singleton en prod + Prisma fuera del proxy                                              | G-3                |
+| 3   | Poll a 60 s + jitter + pausa con pestaña oculta (ya NO hace falta tocar `revalidateTag`: ver corrección en G-4) | G-4                |
+| 4   | `bcrypt` nativo + `last_access` en `after()` + quitar fetch de sesión redundante                                | A-1, A-2 (parcial) |
+| 5   | Migración de índices                                                                                            | M-2                |
+| 6   | `regions` + `maxDuration` en vercel.json/rutas                                                                  | M-4                |
+| 7   | Tope `take: 100` en ruta ZIP (parche)                                                                           | G-5 (parcial)      |
+| 8   | `npm i sharp`                                                                                                   | M-6                |
 
 ### Fase 2 — Escalabilidad estructural (≈3-4 semanas)
-| # | Acción | Resuelve |
-|---|---|---|
-| 9 | Tabla `jobs` + cron procesador (enrolamiento masivo, import CSV en chunks) | G-2, A-2 |
-| 10 | DC-3 generado una vez → Vercel Blob → ZIP en streaming desde Blob | A-3, G-5 |
-| 11 | KPIs a SQL (`count`/`groupBy`) + paginación en SQL | A-4 |
-| 12 | `email_outbox` + cron de envío | M-1, A-5 (parcial) |
-| 13 | Webhook: SES a `after()`, idempotencia por `source_hash`, diagnóstico muestreado, tags por empresa | A-5 |
-| 14 | `react.cache`/`unstable_cache` en status y branding | M-3 |
-| 15 | Lock de sync en DB | M-5 |
+
+| #   | Acción                                                                                             | Resuelve           |
+| --- | -------------------------------------------------------------------------------------------------- | ------------------ |
+| 9   | Tabla `jobs` + cron procesador (enrolamiento masivo, import CSV en chunks)                         | G-2, A-2           |
+| 10  | DC-3 generado una vez → Vercel Blob → ZIP en streaming desde Blob                                  | A-3, G-5           |
+| 11  | KPIs a SQL (`count`/`groupBy`) + paginación en SQL                                                 | A-4                |
+| 12  | `email_outbox` + cron de envío                                                                     | M-1, A-5 (parcial) |
+| 13  | Webhook: SES a `after()`, idempotencia por `source_hash`, diagnóstico muestreado, tags por empresa | A-5                |
+| 14  | `react.cache`/`unstable_cache` en status y branding                                                | M-3                |
+| 15  | Lock de sync en DB                                                                                 | M-5                |
 
 ### Fase 3 — Camino a 100k (≈1-2 meses, coordinado con WordPress)
-| # | Acción | Resuelve |
-|---|---|---|
-| 16 | Endpoints batch en el plugin (enroll y webhook agrupados) | G-2, A-5 |
-| 17 | Onboarding sin password (link de activación) | A-2 |
-| 18 | WordPress: Cloudflare delante, object cache Redis, PHP workers dimensionados | mediciones §3 |
-| 19 | Tabla de resumen para dashboards si A-4 no basta | A-4 |
-| 20 | Evaluar Vercel Queues/Inngest solo si el cron-por-minuto satura | — |
+
+| #   | Acción                                                                       | Resuelve      |
+| --- | ---------------------------------------------------------------------------- | ------------- |
+| 16  | Endpoints batch en el plugin (enroll y webhook agrupados)                    | G-2, A-5      |
+| 17  | Onboarding sin password (link de activación)                                 | A-2           |
+| 18  | WordPress: Cloudflare delante, object cache Redis, PHP workers dimensionados | mediciones §3 |
+| 19  | Tabla de resumen para dashboards si A-4 no basta                             | A-4           |
+| 20  | Evaluar Vercel Queues/Inngest solo si el cron-por-minuto satura              | —             |
 
 **Estimación de capacidad en cada fase:** ver [INFORME-CAPACIDAD.md](INFORME-CAPACIDAD.md).

@@ -6,36 +6,36 @@ import { put } from "@vercel/blob"
 import { prisma } from "@/lib/prisma"
 
 const POS = {
-  name:             { x: 40,  y: 590, size: 10 },
-  curpStartX:       31,
-  curpY:            559,
-  curpStep:         14.6,
-  occupation:       { x: 305, y: 559, size: 9 },
-  position:         { x: 40,  y: 535, size: 10 },
-  companyLegalName: { x: 40,  y: 475, size: 10 },
-  rfcStartX:        32,
-  rfcY:             442,
-  rfcStep:          14,
-  course:           { x: 32,  y: 390, size: 9  },
-  duration:         { x: 32,  y: 364, size: 10 },
+  name: { x: 40, y: 590, size: 10 },
+  curpStartX: 31,
+  curpY: 559,
+  curpStep: 14.6,
+  occupation: { x: 305, y: 559, size: 9 },
+  position: { x: 40, y: 535, size: 10 },
+  companyLegalName: { x: 40, y: 475, size: 10 },
+  rfcStartX: 32,
+  rfcY: 442,
+  rfcStep: 14,
+  course: { x: 32, y: 390, size: 9 },
+  duration: { x: 32, y: 364, size: 10 },
   dates: {
     y: 362,
     step: 17,
-    startYearX:  250,
+    startYearX: 250,
     startMonthX: 322,
-    startDayX:   363,
-    endYearX:    426,
-    endMonthX:   505,
-    endDayX:     545,
+    startDayX: 363,
+    endYearX: 426,
+    endMonthX: 505,
+    endDayX: 545,
   },
-  subjectArea:      { x: 32,  y: 339, size: 10 },
-  trainingAgent:    { x: 32,  y: 313, size: 10 },
-  instructorSignature: { x: 85,  y: 220, w: 90,  h: 27 },
-  instructorName:   { x: 90,  y: 216, size: 7 },
+  subjectArea: { x: 32, y: 339, size: 10 },
+  trainingAgent: { x: 32, y: 313, size: 10 },
+  instructorSignature: { x: 85, y: 220, w: 90, h: 27 },
+  instructorName: { x: 90, y: 216, size: 7 },
   logoImage: { x: 32, y: 735, w: 140, h: 42 },
   logoMask: { x: 0, y: 715, w: 612, h: 78 },
-  folio:            { x: 430, y: 60,  size: 8 },
-  issuedDate:       { x: 430, y: 50,  size: 8 },
+  folio: { x: 430, y: 60, size: 8 },
+  issuedDate: { x: 430, y: 50, size: 8 },
 } as const
 
 const TEXT_COLOR = rgb(0.04, 0.18, 0.62)
@@ -140,7 +140,12 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
     draw(rfc[i], POS.rfcStartX + i * POS.rfcStep, POS.rfcY, 10)
   }
 
-  draw(truncate(metadata?.course_name || certificate.course_name, 90), POS.course.x, POS.course.y, POS.course.size)
+  draw(
+    truncate(metadata?.course_name || certificate.course_name, 90),
+    POS.course.x,
+    POS.course.y,
+    POS.course.size,
+  )
 
   if (metadata?.duration_hours != null) {
     draw(formatHours(metadata.duration_hours), POS.duration.x, POS.duration.y, POS.duration.size)
@@ -148,7 +153,16 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
 
   const start = splitDate(startDate)
   const end = splitDate(endDate)
-  const { y: fy, step: dateStep, startYearX, startMonthX, startDayX, endYearX, endMonthX, endDayX } = POS.dates
+  const {
+    y: fy,
+    step: dateStep,
+    startYearX,
+    startMonthX,
+    startDayX,
+    endYearX,
+    endMonthX,
+    endDayX,
+  } = POS.dates
   const drawDigits = (digits: string, startX: number) => {
     for (let i = 0; i < digits.length; i++) {
       draw(digits[i], startX + i * dateStep, fy, 10)
@@ -179,7 +193,12 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
     await drawInstructorSignature(pdf, page, metadata.instructor_signature_url)
   }
   if (metadata?.instructor_name) {
-    draw(metadata.instructor_name, POS.instructorName.x, POS.instructorName.y, POS.instructorName.size)
+    draw(
+      metadata.instructor_name,
+      POS.instructorName.x,
+      POS.instructorName.y,
+      POS.instructorName.size,
+    )
   }
 
   draw(`FOLIO: ${certificate.reference_number}`, POS.folio.x, POS.folio.y, POS.folio.size)
@@ -197,7 +216,9 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
   return await pdf.save()
 }
 
-export async function getOrCreateDc3PdfBytes({ certificateId }: Dc3GenerateInput): Promise<Uint8Array> {
+export async function getOrCreateDc3PdfBytes({
+  certificateId,
+}: Dc3GenerateInput): Promise<Uint8Array> {
   const cached = await prisma.certificate.findUnique({
     where: { id: certificateId },
     select: {
@@ -215,7 +236,10 @@ export async function getOrCreateDc3PdfBytes({ certificateId }: Dc3GenerateInput
     try {
       return await fetchImageBytes(cached.dc3_pdf_url)
     } catch (err) {
-      console.warn(`[dc3] no se pudo leer el PDF cacheado de constancia ${certificateId}, regenerando:`, err)
+      console.warn(
+        `[dc3] no se pudo leer el PDF cacheado de constancia ${certificateId}, regenerando:`,
+        err,
+      )
     }
   }
 
@@ -235,7 +259,10 @@ export async function getOrCreateDc3PdfBytes({ certificateId }: Dc3GenerateInput
       data: { dc3_pdf_url: blob.url },
     })
   } catch (err) {
-    console.error(`[dc3] no se pudo subir a Blob el PDF de constancia ${certificateId}, se sirve sin cachear:`, err)
+    console.error(
+      `[dc3] no se pudo subir a Blob el PDF de constancia ${certificateId}, se sirve sin cachear:`,
+      err,
+    )
   }
 
   return pdfBytes
@@ -286,7 +313,9 @@ async function fetchImageBytes(urlOrPath: string): Promise<Buffer> {
       parsed.hostname.endsWith(".vercel-storage.com")
 
     if (!isVercelBlob) {
-      throw new Error(`URL de imagen no permitida. Solo se aceptan imágenes de Vercel Blob: ${urlOrPath}`)
+      throw new Error(
+        `URL de imagen no permitida. Solo se aceptan imágenes de Vercel Blob: ${urlOrPath}`,
+      )
     }
 
     const headers: HeadersInit = {}

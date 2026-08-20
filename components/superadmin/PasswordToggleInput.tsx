@@ -49,10 +49,7 @@ export function PasswordToggleInput({
                 edge="end"
                 sx={{ color: "text.secondary", "&:hover": { color: "text.primary" } }}
               >
-                {visible
-                  ? <EyeOff size={14} strokeWidth={2} />
-                  : <Eye    size={14} strokeWidth={2} />
-                }
+                {visible ? <EyeOff size={14} strokeWidth={2} /> : <Eye size={14} strokeWidth={2} />}
               </IconButton>
             </InputAdornment>
           ),

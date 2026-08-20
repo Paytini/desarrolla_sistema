@@ -1,7 +1,15 @@
 "use client"
 
 import { TrendingDown, TrendingUp } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
 
 export type LearningActivityPoint = {
   label: string
@@ -37,13 +45,19 @@ export function LearningActivityChart({ data, changeVsPreviousWeek }: LearningAc
     <div className="rounded-lg bg-white p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Actividad semanal</p>
-          <h2 className="text-base font-semibold text-slate-950">Finalizaciones de cursos por día</h2>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+            Actividad semanal
+          </p>
+          <h2 className="text-base font-semibold text-slate-950">
+            Finalizaciones de cursos por día
+          </h2>
         </div>
         {changeVsPreviousWeek !== null ? (
           <span
             className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-              changeVsPreviousWeek >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+              changeVsPreviousWeek >= 0
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-rose-50 text-rose-700"
             }`}
           >
             {changeVsPreviousWeek >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
@@ -63,7 +77,12 @@ export function LearningActivityChart({ data, changeVsPreviousWeek }: LearningAc
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} stroke="#E5E7EB" strokeDasharray="4 4" />
-            <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#94a3b8" }} />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: "#94a3b8" }}
+            />
             <YAxis
               axisLine={false}
               tickLine={false}

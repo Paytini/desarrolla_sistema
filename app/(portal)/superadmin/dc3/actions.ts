@@ -5,14 +5,11 @@ import { SUPERADMIN_DC3_TAG, SUPERADMIN_GLOBAL_TAG } from "@/lib/cache-tags"
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
-import {
-  bridgeGetCourseDetails,
-  isWordPressBridgeConfigured,
-} from "@/lib/wordpress-bridge"
+import { bridgeGetCourseDetails, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
 
 function preferBridgeValue(
   incoming: string | number | null | undefined,
-  current: string | number | null | undefined
+  current: string | number | null | undefined,
 ) {
   if (typeof incoming === "number" && Number.isFinite(incoming)) {
     return incoming
@@ -26,7 +23,7 @@ function preferBridgeValue(
 }
 
 export async function saveDc3MetadataAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<{ ok: boolean; error?: string }> {
   const session = await getSession()
   if (!session || session.user.role !== "SUPERADMIN") {
@@ -44,7 +41,8 @@ export async function saveDc3MetadataAction(
   const thematicAreaName = (formData.get("area_tematica_nombre") as string)?.trim() || null
   const thematicAreaCode = (formData.get("area_tematica_clave") as string)?.trim() || null
   const trainingAgentName = (formData.get("agente_capacitador_nombre") as string)?.trim() || null
-  const trainingAgentRegistry = (formData.get("agente_capacitador_registro") as string)?.trim() || null
+  const trainingAgentRegistry =
+    (formData.get("agente_capacitador_registro") as string)?.trim() || null
   const instructorName = (formData.get("instructor_nombre") as string)?.trim() || null
   const signatureUrl = (formData.get("firma_url") as string)?.trim() || null
 
@@ -93,7 +91,7 @@ export async function saveDc3MetadataAction(
 }
 
 export async function syncDc3MetadataAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<{ ok: boolean; error?: string }> {
   const session = await getSession()
   if (!session || session.user.role !== "SUPERADMIN") {
@@ -125,34 +123,36 @@ export async function syncDc3MetadataAction(
     await prisma.courseDc3Metadata.upsert({
       where: { wp_course_id: wpCourseId },
       update: {
-        course_name: decodeHtmlEntities(details.title || courseName || existingMetadata?.course_name || "") || null,
+        course_name:
+          decodeHtmlEntities(details.title || courseName || existingMetadata?.course_name || "") ||
+          null,
         duration_hours: preferBridgeValue(
           details.duration_hours,
-          existingMetadata?.duration_hours
+          existingMetadata?.duration_hours,
         ) as number | null,
         subject_area_name: preferBridgeValue(
           details.thematic_area_name,
-          existingMetadata?.subject_area_name
+          existingMetadata?.subject_area_name,
         ) as string | null,
         subject_area_code: preferBridgeValue(
           details.thematic_area_code,
-          existingMetadata?.subject_area_code
+          existingMetadata?.subject_area_code,
         ) as string | null,
         training_agent_name: preferBridgeValue(
           details.training_agent_name,
-          existingMetadata?.training_agent_name
+          existingMetadata?.training_agent_name,
         ) as string | null,
         training_agent_registration: preferBridgeValue(
           details.training_agent_registry,
-          existingMetadata?.training_agent_registration
+          existingMetadata?.training_agent_registration,
         ) as string | null,
         instructor_name: preferBridgeValue(
           details.instructor_name,
-          existingMetadata?.instructor_name
+          existingMetadata?.instructor_name,
         ) as string | null,
         instructor_signature_url: preferBridgeValue(
           details.instructor_signature_url,
-          existingMetadata?.instructor_signature_url
+          existingMetadata?.instructor_signature_url,
         ) as string | null,
         source: "WORDPRESS_BRIDGE",
         last_synced_at: new Date(),

@@ -11,9 +11,9 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 
-type CourseResult      = { id: number; course_name: string; progress_pct: number; completed: boolean }
+type CourseResult = { id: number; course_name: string; progress_pct: number; completed: boolean }
 type CertificateResult = { id: number; course_name: string; reference_number: string }
-type SearchResults     = { courses: CourseResult[]; certificates: CertificateResult[] }
+type SearchResults = { courses: CourseResult[]; certificates: CertificateResult[] }
 
 export default function EmployeeSearchBar() {
   return (

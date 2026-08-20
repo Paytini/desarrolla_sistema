@@ -24,7 +24,15 @@ function DayChip({ days }: { days: number }) {
       <Chip
         label="Vencido"
         size="small"
-        sx={{ height: 20, borderRadius: "4px", fontSize: 10, fontWeight: 600, bgcolor: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}
+        sx={{
+          height: 20,
+          borderRadius: "4px",
+          fontSize: 10,
+          fontWeight: 600,
+          bgcolor: "#fef2f2",
+          color: "#dc2626",
+          border: "1px solid #fecaca",
+        }}
       />
     )
   }
@@ -33,7 +41,15 @@ function DayChip({ days }: { days: number }) {
       <Chip
         label={`${days}d`}
         size="small"
-        sx={{ height: 20, borderRadius: "4px", fontSize: 10, fontWeight: 600, bgcolor: "#fffbeb", color: "#b45309", border: "1px solid #fde68a" }}
+        sx={{
+          height: 20,
+          borderRadius: "4px",
+          fontSize: 10,
+          fontWeight: 600,
+          bgcolor: "#fffbeb",
+          color: "#b45309",
+          border: "1px solid #fde68a",
+        }}
       />
     )
   }
@@ -41,7 +57,15 @@ function DayChip({ days }: { days: number }) {
     <Chip
       label={`${days}d`}
       size="small"
-      sx={{ height: 20, borderRadius: "4px", fontSize: 10, fontWeight: 600, bgcolor: "#f8fafc", color: "#64748b", border: "1px solid #e2e8f0" }}
+      sx={{
+        height: 20,
+        borderRadius: "4px",
+        fontSize: 10,
+        fontWeight: 600,
+        bgcolor: "#f8fafc",
+        color: "#64748b",
+        border: "1px solid #e2e8f0",
+      }}
     />
   )
 }
@@ -49,7 +73,7 @@ function DayChip({ days }: { days: number }) {
 export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
   const sorted = [...renewals]
-    .sort((a, b) => sortDir === "asc" ? a.days - b.days : b.days - a.days)
+    .sort((a, b) => (sortDir === "asc" ? a.days - b.days : b.days - a.days))
     .slice(0, 6)
 
   return (
@@ -62,7 +86,13 @@ export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
           <Typography
             component={Link}
             href="/superadmin/reports"
-            sx={{ fontSize: 11, fontWeight: 600, color: "primary.main", textDecoration: "none", "&:hover": { opacity: 0.75 } }}
+            sx={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: "primary.main",
+              textDecoration: "none",
+              "&:hover": { opacity: 0.75 },
+            }}
           >
             Ver todos →
           </Typography>
@@ -80,9 +110,23 @@ export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
         <Box>
           <Stack
             direction="row"
-            sx={{ alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f8fafc", px: 2.5, py: 1 }}
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              borderBottom: "1px solid #f8fafc",
+              px: 2.5,
+              py: 1,
+            }}
           >
-            <Typography sx={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "text.disabled" }}>
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                color: "text.disabled",
+              }}
+            >
               Empresa
             </Typography>
             <Box
@@ -113,16 +157,35 @@ export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
               <Stack
                 key={company.id}
                 direction="row"
-                sx={{ alignItems: "center", justifyContent: "space-between", px: 2.5, py: 1.5, "&:hover": { bgcolor: "action.hover" } }}
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  px: 2.5,
+                  py: 1.5,
+                  "&:hover": { bgcolor: "action.hover" },
+                }}
               >
                 <Box sx={{ minWidth: 0, flex: 1, pr: 1.5 }}>
                   <Typography
-                    sx={{ fontSize: 13, fontWeight: 500, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                    sx={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "text.primary",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
                   >
                     {company.name}
                   </Typography>
                   <Typography
-                    sx={{ fontSize: 11, color: "text.disabled", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                    sx={{
+                      fontSize: 11,
+                      color: "text.disabled",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
                   >
                     {company.packages[0]?.package.name ?? "Sin paquete"}
                   </Typography>

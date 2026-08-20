@@ -49,10 +49,13 @@ const toneSx: Record<ConfirmIconButtonTone, SystemStyleObject<Theme>> = {
   },
 }
 
-const toneButtonProps: Record<ConfirmIconButtonTone, { variant: "contained" | "outlined"; color: "primary" | "inherit" | "error" }> = {
-  brand:                 { variant: "contained", color: "primary" },
-  outline:               { variant: "outlined",  color: "inherit" },
-  "outline-destructive": { variant: "outlined",  color: "error" },
+const toneButtonProps: Record<
+  ConfirmIconButtonTone,
+  { variant: "contained" | "outlined"; color: "primary" | "inherit" | "error" }
+> = {
+  brand: { variant: "contained", color: "primary" },
+  outline: { variant: "outlined", color: "inherit" },
+  "outline-destructive": { variant: "outlined", color: "error" },
 }
 
 export function ConfirmIconButton({

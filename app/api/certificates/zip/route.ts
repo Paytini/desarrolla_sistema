@@ -84,29 +84,36 @@ export async function GET(request: NextRequest) {
   if (constancias.length > MAX_ZIP_CERTIFICATES) {
     const requestedCount = constancias.length
     console.warn(
-      `[constancias/zip] ${requestedCount} constancias solicitadas, recortando a las primeras ${MAX_ZIP_CERTIFICATES}`
+      `[constancias/zip] ${requestedCount} constancias solicitadas, recortando a las primeras ${MAX_ZIP_CERTIFICATES}`,
     )
     constancias = constancias.slice(0, MAX_ZIP_CERTIFICATES)
     zip.file(
       "LEEME.txt",
       `Se solicitaron ${requestedCount} constancias, pero este ZIP incluye solo las primeras ${MAX_ZIP_CERTIFICATES} por un limite tecnico.\n` +
-        `Para descargar el resto, aplica un filtro (departamento o curso) que reduzca el total, o contacta a soporte.`
+        `Para descargar el resto, aplica un filtro (departamento o curso) que reduzca el total, o contacta a soporte.`,
     )
   }
 
-  const pdfResults = await mapWithConcurrency(constancias, PDF_FETCH_CONCURRENCY, async ({ id, folio }) => {
-    try {
-      const pdfBytes = await getOrCreateDc3PdfBytes({ certificateId: id })
-      return { folio, pdfBytes }
-    } catch (err) {
-      if (err instanceof Dc3MissingFieldsError) {
-        console.error(`[constancias/zip] Constancia ${id} (folio: ${folio}) omitida — campos DC-3 faltantes:`, err.fields)
-      } else {
-        console.error(`[constancias/zip] Error generando PDF para constancia ${id}:`, err)
+  const pdfResults = await mapWithConcurrency(
+    constancias,
+    PDF_FETCH_CONCURRENCY,
+    async ({ id, folio }) => {
+      try {
+        const pdfBytes = await getOrCreateDc3PdfBytes({ certificateId: id })
+        return { folio, pdfBytes }
+      } catch (err) {
+        if (err instanceof Dc3MissingFieldsError) {
+          console.error(
+            `[constancias/zip] Constancia ${id} (folio: ${folio}) omitida — campos DC-3 faltantes:`,
+            err.fields,
+          )
+        } else {
+          console.error(`[constancias/zip] Error generando PDF para constancia ${id}:`, err)
+        }
+        return null
       }
-      return null
-    }
-  })
+    },
+  )
 
   for (const result of pdfResults) {
     if (result) {

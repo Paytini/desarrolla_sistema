@@ -4,13 +4,26 @@ const names = require("./lib/names")
 const emails = require("./lib/emails")
 const config = require("../config")
 
-const HEADER = "nombre,apellido,email,curp,departamento,puesto,ocupacion_especifica_clave,ocupacion_especifica,password"
+const HEADER =
+  "nombre,apellido,email,curp,departamento,puesto,ocupacion_especifica_clave,ocupacion_especifica,password"
 
 function buildCsv(rows) {
   const runId = Date.now()
   const lines = [HEADER]
   for (let i = 0; i < rows; i++) {
-    lines.push([names.firstName(i), names.lastName(i), emails.importEmail(runId, i), names.curp(i), "Operaciones", "Analista", "07.2", "Supervision de seguridad", config.seededPassword].join(","))
+    lines.push(
+      [
+        names.firstName(i),
+        names.lastName(i),
+        emails.importEmail(runId, i),
+        names.curp(i),
+        "Operaciones",
+        "Analista",
+        "07.2",
+        "Supervision de seguridad",
+        config.seededPassword,
+      ].join(","),
+    )
   }
   return lines.join("\n")
 }

@@ -8,11 +8,11 @@ Portal B2B en Next.js que administra empresas clientes, sus empleados y el avanc
 
 Tres roles, cada uno con su dashboard:
 
-| Rol | Ruta | Qué hace |
-|---|---|---|
+| Rol          | Ruta          | Qué hace                                                                            |
+| ------------ | ------------- | ----------------------------------------------------------------------------------- |
 | `SUPERADMIN` | `/superadmin` | Alta de empresas, paquetes, asignaciones, monitoreo de integración, DC-3, auditoría |
-| `RH` | `/empresa` | Alta/baja de empleados de su empresa, progreso, constancias, exportes CSV |
-| `EMPLEADO` | `/empleado` | Sus cursos (con salto directo a Tutor LMS) y sus constancias |
+| `RH`         | `/empresa`    | Alta/baja de empleados de su empresa, progreso, constancias, exportes CSV           |
+| `EMPLEADO`   | `/empleado`   | Sus cursos (con salto directo a Tutor LMS) y sus constancias                        |
 
 ## 2. Stack
 
@@ -38,26 +38,26 @@ El acceso es siempre vía Prisma; no hay SQL crudo relevante fuera de las migrac
 
 **Datos de los que el portal es dueño (fuente de verdad):**
 
-| Tabla | Contenido |
-|---|---|
-| `usuarios` | Login del portal para los 3 roles: email, `password_hash` (bcrypt), rol, `empresa_id`, `wp_user_id` opcional |
-| `empresas` | Clientes: datos de contacto, RFC, **cupos** (`asientos_contratados` vs `asientos_usados`), activo/suspendida, notas internas |
-| `paquetes` / `paquete_cursos` | Catálogo de paquetes y qué cursos de Tutor LMS incluye cada uno (`wp_curso_id` + nombre/portada cacheados) |
-| `empresa_paquetes` | Qué paquete contrató cada empresa, con fecha de inicio y vencimiento (vencida ⇒ login bloqueado) |
-| `empleados` | Padrón por empresa: nombre completo, email, CURP, puesto, clave CNO; `wp_user_id` cuando ya existe en WordPress |
-| `notificaciones` | Notificaciones in-app (hoy dirigidas al SuperAdmin, p. ej. constancias nuevas) |
-| `auditoria_eventos` | Bitácora append-only de acciones administrativas (quién, qué, sobre qué entidad, metadata JSON) |
-| `historial_cupos` | Historial de cambios de cupo por empresa (antes/después, actor, empleados suspendidos) |
-| `sesiones_portal` | Tokens de sesión revocables desde el panel SuperAdmin |
+| Tabla                         | Contenido                                                                                                                    |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `usuarios`                    | Login del portal para los 3 roles: email, `password_hash` (bcrypt), rol, `empresa_id`, `wp_user_id` opcional                 |
+| `empresas`                    | Clientes: datos de contacto, RFC, **cupos** (`asientos_contratados` vs `asientos_usados`), activo/suspendida, notas internas |
+| `paquetes` / `paquete_cursos` | Catálogo de paquetes y qué cursos de Tutor LMS incluye cada uno (`wp_curso_id` + nombre/portada cacheados)                   |
+| `empresa_paquetes`            | Qué paquete contrató cada empresa, con fecha de inicio y vencimiento (vencida ⇒ login bloqueado)                             |
+| `empleados`                   | Padrón por empresa: nombre completo, email, CURP, puesto, clave CNO; `wp_user_id` cuando ya existe en WordPress              |
+| `notificaciones`              | Notificaciones in-app (hoy dirigidas al SuperAdmin, p. ej. constancias nuevas)                                               |
+| `auditoria_eventos`           | Bitácora append-only de acciones administrativas (quién, qué, sobre qué entidad, metadata JSON)                              |
+| `historial_cupos`             | Historial de cambios de cupo por empresa (antes/después, actor, empleados suspendidos)                                       |
+| `sesiones_portal`             | Tokens de sesión revocables desde el panel SuperAdmin                                                                        |
 
 **Datos espejo/caché de Tutor LMS** (el dueño real es WordPress; el portal guarda snapshots para no consultar WP en cada página, con `ultima_sincronizacion`):
 
-| Tabla | Contenido |
-|---|---|
-| `empleado_cursos` | Progreso por empleado×curso: `progreso_pct`, `completado`, fechas, y la **máquina de estados de acceso** `acceso_estado` (`PENDING → ACTIVE / ERROR / REQUIRES_REVIEW`) con `acceso_error` |
-| `constancias` | Certificados emitidos: folio propio del portal (`D360-AAAA-MMDD-empleadoId-cursoId`), URL del PDF generado por Tutor LMS |
-| `curso_dc3_metadata` | Ficha oficial DC-3 por curso: duración en horas, área temática (nombre+clave), agente capacitador y registro, instructor y URL de su firma. Fuente `MANUAL` o `WORDPRESS_BRIDGE` |
-| `integracion_estados` | Store clave/valor JSON con el estado de diagnóstico del webhook (`lib/webhook-monitor.ts`) |
+| Tabla                 | Contenido                                                                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `empleado_cursos`     | Progreso por empleado×curso: `progreso_pct`, `completado`, fechas, y la **máquina de estados de acceso** `acceso_estado` (`PENDING → ACTIVE / ERROR / REQUIRES_REVIEW`) con `acceso_error` |
+| `constancias`         | Certificados emitidos: folio propio del portal (`D360-AAAA-MMDD-empleadoId-cursoId`), URL del PDF generado por Tutor LMS                                                                   |
+| `curso_dc3_metadata`  | Ficha oficial DC-3 por curso: duración en horas, área temática (nombre+clave), agente capacitador y registro, instructor y URL de su firma. Fuente `MANUAL` o `WORDPRESS_BRIDGE`           |
+| `integracion_estados` | Store clave/valor JSON con el estado de diagnóstico del webhook (`lib/webhook-monitor.ts`)                                                                                                 |
 
 Los PDFs no se guardan en la BDD: la constancia DC-3 se genera al vuelo con `pdf-lib` (`lib/dc3-pdf.ts`, plantillas en `public/templates`) y las firmas de instructor se suben a **Vercel Blob**.
 
@@ -101,14 +101,14 @@ Los tres caminos convergen en `syncEmployeeLearningFromBridgeSnapshot`: upsert d
 
 ## 5. Variables de entorno (`.env.example`)
 
-| Grupo | Variables |
-|---|---|
-| BDD | `DATABASE_URL` (pooler 6543), `DIRECT_URL` (5432, migraciones) |
-| Auth | `NEXTAUTH_SECRET`/`AUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` |
-| Bridge WP | `WP_BRIDGE_BASE_URL` (…/wp-json/desarrolla360/v1), `WP_BRIDGE_PORTAL_KEY`, `NEXT_PUBLIC_WORDPRESS_SITE_URL` |
-| Tutor oficial | `TUTORLMS_API_KEY` (alias `TUTORLMS_API_PASSWORD`), `TUTORLMS_SECRET` |
-| Sync | `BRIDGE_WEBHOOK_SECRET`, `CRON_SECRET`, `BACKGROUND_SYNC_SECRET`, `EMPLOYEE_SYNC_INTERVAL_MS` |
-| Zona horaria | `PORTAL_TIME_ZONE`, `NEXT_PUBLIC_PORTAL_TIME_ZONE` (América/Tijuana) |
+| Grupo         | Variables                                                                                                   |
+| ------------- | ----------------------------------------------------------------------------------------------------------- |
+| BDD           | `DATABASE_URL` (pooler 6543), `DIRECT_URL` (5432, migraciones)                                              |
+| Auth          | `NEXTAUTH_SECRET`/`AUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`   |
+| Bridge WP     | `WP_BRIDGE_BASE_URL` (…/wp-json/desarrolla360/v1), `WP_BRIDGE_PORTAL_KEY`, `NEXT_PUBLIC_WORDPRESS_SITE_URL` |
+| Tutor oficial | `TUTORLMS_API_KEY` (alias `TUTORLMS_API_PASSWORD`), `TUTORLMS_SECRET`                                       |
+| Sync          | `BRIDGE_WEBHOOK_SECRET`, `CRON_SECRET`, `BACKGROUND_SYNC_SECRET`, `EMPLOYEE_SYNC_INTERVAL_MS`               |
+| Zona horaria  | `PORTAL_TIME_ZONE`, `NEXT_PUBLIC_PORTAL_TIME_ZONE` (América/Tijuana)                                        |
 
 ## 6. Cómo levantar el proyecto
 

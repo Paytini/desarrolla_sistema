@@ -1,5 +1,8 @@
 import KpiCard from "@/components/shared/KpiCard"
-import { LearningActivityChart, type LearningActivityPoint } from "@/components/company/LearningActivityChart"
+import {
+  LearningActivityChart,
+  type LearningActivityPoint,
+} from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
@@ -117,24 +120,29 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
 
   if (!company) redirect("/login")
 
-  const { data: learningActivityData, changeVsPreviousWeek } = await getWeeklyLearningActivity(company.id)
+  const { data: learningActivityData, changeVsPreviousWeek } = await getWeeklyLearningActivity(
+    company.id,
+  )
 
   const packageCourses = company.packages[0]?.package?.courses ?? []
   const thumbnailMap = new Map<number, string>(
-    packageCourses
-      .filter((c) => c.cover_url)
-      .map((c) => [c.wp_course_id, c.cover_url as string])
+    packageCourses.filter((c) => c.cover_url).map((c) => [c.wp_course_id, c.cover_url as string]),
   )
 
   const PAGE_SIZE = 20
   const employees = company.employees
   const filteredEmployees = searchQuery
-    ? employees.filter((e) =>
-        `${e.first_name} ${e.last_name}`.toLowerCase().includes(searchQuery) ||
-        e.email.toLowerCase().includes(searchQuery)
+    ? employees.filter(
+        (e) =>
+          `${e.first_name} ${e.last_name}`.toLowerCase().includes(searchQuery) ||
+          e.email.toLowerCase().includes(searchQuery),
       )
     : employees
-  const { items: pagedEmployees, currentPage, totalPages } = paginate(filteredEmployees, page, PAGE_SIZE)
+  const {
+    items: pagedEmployees,
+    currentPage,
+    totalPages,
+  } = paginate(filteredEmployees, page, PAGE_SIZE)
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
@@ -188,9 +196,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
     .map(([courseId, summary]) => ({
       courseId,
       ...summary,
-      averageProgress: summary.assigned
-        ? Math.round(summary.totalProgress / summary.assigned)
-        : 0,
+      averageProgress: summary.assigned ? Math.round(summary.totalProgress / summary.assigned) : 0,
     }))
     .sort((a, b) => {
       if (a.completed !== b.completed) return b.completed - a.completed
@@ -202,17 +208,47 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
       <PageHeader
         title="Progreso"
         description="Avance y actividad de cursos por colaborador"
-        breadcrumbs={[{ label: "Empresa", href: companyPath(company.slug, "/home") }, { label: "Progreso" }]}
+        breadcrumbs={[
+          { label: "Empresa", href: companyPath(company.slug, "/home") },
+          { label: "Progreso" },
+        ]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Avance promedio" value={`${averageProgress}%`} sub="Todos los cursos" icon={BarChart3} borderColor="orange" />
-        <KpiCard label="Con rezago" value={String(employeesWithDelay)} sub="Avance < 25% o con error" icon={AlertCircle} borderColor="amber" />
-        <KpiCard label="Cursos iniciados" value={String(startedCourses)} sub="Con actividad real" icon={BookOpen} borderColor="charcoal" />
-        <KpiCard label="Cursos completados" value={String(completedCourses)} sub="Cerrados por empleados" icon={CheckCircle} borderColor="emerald" />
+        <KpiCard
+          label="Avance promedio"
+          value={`${averageProgress}%`}
+          sub="Todos los cursos"
+          icon={BarChart3}
+          borderColor="orange"
+        />
+        <KpiCard
+          label="Con rezago"
+          value={String(employeesWithDelay)}
+          sub="Avance < 25% o con error"
+          icon={AlertCircle}
+          borderColor="amber"
+        />
+        <KpiCard
+          label="Cursos iniciados"
+          value={String(startedCourses)}
+          sub="Con actividad real"
+          icon={BookOpen}
+          borderColor="charcoal"
+        />
+        <KpiCard
+          label="Cursos completados"
+          value={String(completedCourses)}
+          sub="Cerrados por empleados"
+          icon={CheckCircle}
+          borderColor="emerald"
+        />
       </div>
 
-      <LearningActivityChart data={learningActivityData} changeVsPreviousWeek={changeVsPreviousWeek} />
+      <LearningActivityChart
+        data={learningActivityData}
+        changeVsPreviousWeek={changeVsPreviousWeek}
+      />
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-lg bg-white p-5">
@@ -220,7 +256,9 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
             <h2 className="text-base font-semibold text-slate-950">
               Avance por empleado
               <span className="ml-2 text-sm font-normal text-slate-400">
-                {searchQuery ? `${filteredEmployees.length} de ${employees.length}` : employees.length}
+                {searchQuery
+                  ? `${filteredEmployees.length} de ${employees.length}`
+                  : employees.length}
               </span>
             </h2>
             <form className="flex gap-2">
@@ -249,7 +287,9 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
 
           {filteredEmployees.length === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
-              {searchQuery ? `Sin resultados para "${searchQuery}".` : "No hay empleados activos con progreso para mostrar."}
+              {searchQuery
+                ? `Sin resultados para "${searchQuery}".`
+                : "No hay empleados activos con progreso para mostrar."}
             </div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
@@ -263,18 +303,11 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                 const errors = courses.filter((c) => c.access_status === "ERROR").length
                 const lastSync = [...courses].sort(
                   (a, b) =>
-                    new Date(b.last_synced_at).getTime() -
-                    new Date(a.last_synced_at).getTime()
+                    new Date(b.last_synced_at).getTime() - new Date(a.last_synced_at).getTime(),
                 )[0]?.last_synced_at
 
                 const statusVariant: "red" | "green" | "amber" | "slate" =
-                  errors > 0
-                    ? "red"
-                    : avg >= 75
-                      ? "green"
-                      : avg > 0
-                        ? "amber"
-                        : "slate"
+                  errors > 0 ? "red" : avg >= 75 ? "green" : avg > 0 ? "amber" : "slate"
 
                 const statusLabel =
                   errors > 0
@@ -297,16 +330,11 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                 const initials = getInitials(`${employee.first_name} ${employee.last_name}`)
 
                 return (
-                  <div
-                    key={employee.id}
-                    className="rounded-lg bg-gray-50 p-4"
-                  >
+                  <div key={employee.id} className="rounded-lg bg-gray-50 p-4">
                     <div className="mb-3 flex items-center gap-2.5">
                       <div
                         className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                          errors > 0
-                            ? "bg-rose-100 text-rose-700"
-                            : "bg-[#EAF1FE] text-[#3579F5]"
+                          errors > 0 ? "bg-rose-100 text-rose-700" : "bg-[#EAF1FE] text-[#3579F5]"
                         }`}
                       >
                         {initials}
@@ -315,9 +343,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                         <p className="truncate text-sm font-semibold text-slate-950">
                           {employee.first_name} {employee.last_name}
                         </p>
-                        <StatusBadge variant={statusVariant}>
-                          {statusLabel}
-                        </StatusBadge>
+                        <StatusBadge variant={statusVariant}>{statusLabel}</StatusBadge>
                       </div>
                       <p className="shrink-0 text-sm font-bold text-slate-950">{avg}%</p>
                     </div>
@@ -330,10 +356,10 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                     </div>
 
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
-                      <span>{completed} completados · {inProgress} en curso</span>
-                      {lastSync && (
-                        <span className="text-right">{formatDateTime(lastSync)}</span>
-                      )}
+                      <span>
+                        {completed} completados · {inProgress} en curso
+                      </span>
+                      {lastSync && <span className="text-right">{formatDateTime(lastSync)}</span>}
                     </div>
                   </div>
                 )
@@ -351,7 +377,9 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
         <section className="rounded-lg bg-white p-5">
           <h2 className="mb-4 text-base font-semibold text-slate-950">
             Resumen por curso
-            <span className="ml-2 text-sm font-normal text-slate-400">{courseSummaries.length}</span>
+            <span className="ml-2 text-sm font-normal text-slate-400">
+              {courseSummaries.length}
+            </span>
           </h2>
 
           {courseSummaries.length === 0 ? (
@@ -376,7 +404,9 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                     )}
                     <div className="p-3">
                       <div className="mb-2 flex items-start justify-between gap-2">
-                        <p className="text-sm font-semibold leading-snug text-slate-950">{course.nombre}</p>
+                        <p className="text-sm font-semibold leading-snug text-slate-950">
+                          {course.nombre}
+                        </p>
                         <span className="shrink-0 text-sm font-bold text-slate-950">
                           {course.averageProgress}%
                         </span>

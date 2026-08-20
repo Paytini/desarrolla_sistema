@@ -2,7 +2,6 @@
 trigger: model_decision
 ---
 
-
 # Principios de Diseño UX para el Desarrollo de Interfaces con IA
 
 ## Instrucción Principal

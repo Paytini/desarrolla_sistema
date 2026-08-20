@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   if (diagnostics.bridgeHealth && !diagnostics.bridgeHealth.ok) {
     problems.push(
-      `El bridge de WordPress no respondio correctamente: ${diagnostics.bridgeHealth.error_message || "sin detalle"}.`
+      `El bridge de WordPress no respondio correctamente: ${diagnostics.bridgeHealth.error_message || "sin detalle"}.`,
     )
   }
 

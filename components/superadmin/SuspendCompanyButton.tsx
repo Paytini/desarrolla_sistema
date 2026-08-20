@@ -60,9 +60,7 @@ export function SuspendCompanyButton({ companyId, active, name }: SuspendCompany
           paper: { sx: { borderRadius: "16px", border: "1px solid", borderColor: "divider" } },
         }}
       >
-        <DialogTitle>
-          {active ? "¿Suspender empresa?" : "¿Reactivar empresa?"}
-        </DialogTitle>
+        <DialogTitle>{active ? "¿Suspender empresa?" : "¿Reactivar empresa?"}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             {active
@@ -74,11 +72,7 @@ export function SuspendCompanyButton({ companyId, active, name }: SuspendCompany
           <Button variant="outlined" onClick={() => setOpen(false)}>
             Cancelar
           </Button>
-          <Button
-            variant="contained"
-            color={active ? "error" : "primary"}
-            onClick={handleConfirm}
-          >
+          <Button variant="contained" color={active ? "error" : "primary"} onClick={handleConfirm}>
             {active ? "Sí, suspender" : "Sí, reactivar"}
           </Button>
         </DialogActions>

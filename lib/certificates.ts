@@ -53,7 +53,7 @@ export function buildIssuedCertificates(employees: CompanyEmployee[]): IssuedCer
       employeeName: `${employee.first_name} ${employee.last_name}`.trim(),
       employeeEmail: employee.email,
       department: employee.department,
-    }))
+    })),
   )
 }
 
@@ -81,13 +81,14 @@ export type IssuedCertificateFilters = {
 
 export function filterIssuedCertificates(
   certificates: IssuedCertificate[],
-  filters: IssuedCertificateFilters
+  filters: IssuedCertificateFilters,
 ): IssuedCertificate[] {
   const q = filters.q?.trim().toLowerCase()
   return certificates.filter((c) => {
     if (filters.department && c.department !== filters.department) return false
     if (filters.course && c.course_name !== filters.course) return false
-    if (q && !c.employeeName.toLowerCase().includes(q) && !c.course_name.toLowerCase().includes(q)) return false
+    if (q && !c.employeeName.toLowerCase().includes(q) && !c.course_name.toLowerCase().includes(q))
+      return false
     return true
   })
 }
@@ -99,18 +100,21 @@ export type PendingCertificateFilters = {
 
 export function filterPendingCertificates(
   certificates: PendingCertificate[],
-  filters: PendingCertificateFilters
+  filters: PendingCertificateFilters,
 ): PendingCertificate[] {
   const q = filters.q?.trim().toLowerCase()
   return certificates.filter((c) => {
     if (filters.department && c.department !== filters.department) return false
-    if (q && !c.employeeName.toLowerCase().includes(q) && !c.courseName.toLowerCase().includes(q)) return false
+    if (q && !c.employeeName.toLowerCase().includes(q) && !c.courseName.toLowerCase().includes(q))
+      return false
     return true
   })
 }
 
 export function getDistinctDepartments(employees: CompanyEmployee[]): string[] {
-  return [...new Set(employees.map((e) => e.department).filter((v): v is string => Boolean(v)))].sort()
+  return [
+    ...new Set(employees.map((e) => e.department).filter((v): v is string => Boolean(v))),
+  ].sort()
 }
 
 export function getDistinctCourseNames(certificates: IssuedCertificate[]): string[] {

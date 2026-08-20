@@ -6,10 +6,7 @@ import { isUuid } from "@/lib/uuid"
 
 export const runtime = "nodejs"
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
   if (!session?.user) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })

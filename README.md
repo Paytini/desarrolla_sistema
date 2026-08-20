@@ -108,12 +108,12 @@ variable de entorno en el proyecto de Vercel — Vercel manda automaticamente
 El proyecto esta en plan **Pro** de Vercel, asi que no hay limite practico de
 cron jobs ni de frecuencia minima. Los cuatro estan activos:
 
-| Ruta | Horario | Que hace |
-| --- | --- | --- |
-| `GET /api/cron/check-expiring-packages` | diario, 13:00 UTC | Notifica a superadmin y RH cuando un paquete de empresa esta por vencer (30 dias antes). |
-| `GET /api/internal/sync/employee-learning?limit=100` | cada 15 min | Respaldo del webhook en tiempo real: sincroniza avances/certificados de hasta 100 alumnos con acceso desactualizado. |
-| `GET|POST /api/cron/process-jobs` | cada minuto | Motor de jobs asincronos (G-2, ver mas abajo). |
-| `GET /api/cron/bridge-health` | cada hora | Revisa que el bridge de WordPress responda y que el webhook no lleve mas de 26h sin recibir eventos, notificando a superadmin con un enfriamiento de 6h entre avisos repetidos. |
+| Ruta                                                 | Horario                      | Que hace                                                                                                                                                                        |
+| ---------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/cron/check-expiring-packages`              | diario, 13:00 UTC            | Notifica a superadmin y RH cuando un paquete de empresa esta por vencer (30 dias antes).                                                                                        |
+| `GET /api/internal/sync/employee-learning?limit=100` | cada 15 min                  | Respaldo del webhook en tiempo real: sincroniza avances/certificados de hasta 100 alumnos con acceso desactualizado.                                                            |
+| `GET                                                 | POST /api/cron/process-jobs` | cada minuto                                                                                                                                                                     | Motor de jobs asincronos (G-2, ver mas abajo). |
+| `GET /api/cron/bridge-health`                        | cada hora                    | Revisa que el bridge de WordPress responda y que el webhook no lleve mas de 26h sin recibir eventos, notificando a superadmin con un enfriamiento de 6h entre avisos repetidos. |
 
 Si el proyecto llegara a bajar a Hobby (maximo 2 cron jobs, minimo diario cada
 uno), habria que recortar esta lista a los dos mas criticos y considerar un

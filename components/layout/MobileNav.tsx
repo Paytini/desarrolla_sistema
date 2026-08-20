@@ -33,7 +33,7 @@ import {
 import { blobProxyUrl } from "@/lib/blob-proxy"
 
 const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)":            "#3579F5",
+  "var(--brand)": "#3579F5",
   "var(--sidebar-accent-2)": "#3579F5",
   "var(--sidebar-accent-3)": "#3579F5",
 }
@@ -51,8 +51,8 @@ function MobileNavLink({
   onClose: () => void
 }) {
   const active = isActive(item.href, pathname, item.exact)
-  const c      = resolveAccent(accentColor)
-  const Icon   = item.icon
+  const c = resolveAccent(accentColor)
+  const Icon = item.icon
 
   return (
     <Link
@@ -80,7 +80,9 @@ function MobileNavLink({
             color: "#fff",
             boxShadow: `3px 0px 0px 0px ${c} inset`,
             "& .nav-icon": { color: "#fff" },
-            "&:hover": { background: `linear-gradient(270deg, ${c}, color-mix(in srgb, ${c} 50%, white))` },
+            "&:hover": {
+              background: `linear-gradient(270deg, ${c}, color-mix(in srgb, ${c} 50%, white))`,
+            },
           },
           "&:hover:not(.Mui-selected)": {
             bgcolor: "action.hover",
@@ -100,7 +102,13 @@ function MobileNavLink({
           primary={item.label}
           slotProps={{
             primary: {
-              sx: { fontSize: "0.875rem", fontWeight: active ? 600 : 400, letterSpacing: "-0.01em", lineHeight: 1, color: "inherit" },
+              sx: {
+                fontSize: "0.875rem",
+                fontWeight: active ? 600 : 400,
+                letterSpacing: "-0.01em",
+                lineHeight: 1,
+                color: "inherit",
+              },
             },
           }}
           sx={{ my: 0 }}
@@ -169,7 +177,11 @@ export function MobileNav({
             borderColor: "divider",
           }}
         >
-          <Link href={homeHref} style={{ display: "flex", alignItems: "center", textDecoration: "none" }} onClick={() => setOpen(false)}>
+          <Link
+            href={homeHref}
+            style={{ display: "flex", alignItems: "center", textDecoration: "none" }}
+            onClick={() => setOpen(false)}
+          >
             {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
               <img
@@ -203,10 +215,22 @@ export function MobileNav({
               borderColor: "divider",
             }}
           >
-            <Typography variant="overline" sx={{ display: "block", color: "primary.main", lineHeight: 1, mb: 0.5 }}>
+            <Typography
+              variant="overline"
+              sx={{ display: "block", color: "primary.main", lineHeight: 1, mb: 0.5 }}
+            >
               Empresa
             </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 600,
+                color: "text.primary",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
               {company}
             </Typography>
           </Box>
@@ -290,12 +314,32 @@ export function MobileNav({
           </Box>
         </Box>
         <Divider />
-        <Box sx={{ flexShrink: 0, px: 1.5, py: 1.5, display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Avatar sx={{ width: 32, height: 32, fontSize: 11, background: "linear-gradient(135deg,#3579F5,#6B9EF8)", color: "#fff", flexShrink: 0 }}>
+        <Box
+          sx={{ flexShrink: 0, px: 1.5, py: 1.5, display: "flex", alignItems: "center", gap: 1.5 }}
+        >
+          <Avatar
+            sx={{
+              width: 32,
+              height: 32,
+              fontSize: 11,
+              background: "linear-gradient(135deg,#3579F5,#6B9EF8)",
+              color: "#fff",
+              flexShrink: 0,
+            }}
+          >
             {initials}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <Typography
+              sx={{
+                fontSize: "0.8125rem",
+                fontWeight: 600,
+                color: "text.primary",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
               {name}
             </Typography>
             <Typography sx={{ fontSize: "0.6875rem", color: "text.secondary" }}>

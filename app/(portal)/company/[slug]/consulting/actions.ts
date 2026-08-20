@@ -7,7 +7,11 @@ import { requireHrSession } from "@/lib/auth-guards"
 import { getCompanyBranding, requireCompanySlug } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { CONSULTING_AREAS } from "@/lib/consulting-areas"
-import { formatConsultingDateTime, isDateSelectable, isTimeSlotValid } from "@/lib/consulting-schedule"
+import {
+  formatConsultingDateTime,
+  isDateSelectable,
+  isTimeSlotValid,
+} from "@/lib/consulting-schedule"
 import { buildConsultingRequestEmail } from "@/lib/email-templates/consulting-request"
 import { notifySuperadmins } from "@/lib/notifications"
 import { enqueueEmailSendJob } from "@/lib/jobs"
@@ -53,7 +57,9 @@ export async function createConsultingRequestAction(
 
   const areaOption = CONSULTING_AREAS.find((option) => option.id === areaId)
   const phoneDigits = contactPhone.replace(/\D/g, "")
-  const isValidContactMethod = VALID_CONTACT_METHODS.includes(contactMethod as ConsultingContactMethod)
+  const isValidContactMethod = VALID_CONTACT_METHODS.includes(
+    contactMethod as ConsultingContactMethod,
+  )
 
   const isValid =
     Boolean(areaOption) &&

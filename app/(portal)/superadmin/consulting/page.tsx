@@ -86,7 +86,8 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
           </p>
           <p className="truncate text-xs text-[#64748b]">
             {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)} ·{" "}
-            {request.contact_phone} · {CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method}
+            {request.contact_phone} ·{" "}
+            {CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method}
           </p>
         </div>
         <StatusBadge variant={STATUS_VARIANT[request.status]} dot>
@@ -109,8 +110,14 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
     <Stack spacing={3}>
       <PageHeader title="Consultorías" description="Solicitudes de sesión de todas las empresas" />
 
-      {success ? <DismissibleAlert severity="success">{successMessages[success] ?? success}</DismissibleAlert> : null}
-      {error ? <DismissibleAlert severity="error">{errorMessages[error] ?? error}</DismissibleAlert> : null}
+      {success ? (
+        <DismissibleAlert severity="success">
+          {successMessages[success] ?? success}
+        </DismissibleAlert>
+      ) : null}
+      {error ? (
+        <DismissibleAlert severity="error">{errorMessages[error] ?? error}</DismissibleAlert>
+      ) : null}
 
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-[#1a1a1a]">

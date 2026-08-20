@@ -37,7 +37,7 @@ try {
   // report is still written if the run itself completed, so don't propagate
   // the exit code.
   console.error(
-    "\nartillery termino con codigo distinto de 0 (probable umbral 'ensure' fallido, o un error real — revisa la salida arriba). El reporte JSON se escribe igual si la corrida llego a completarse."
+    "\nartillery termino con codigo distinto de 0 (probable umbral 'ensure' fallido, o un error real — revisa la salida arriba). El reporte JSON se escribe igual si la corrida llego a completarse.",
   )
 }
 

@@ -70,7 +70,9 @@ function detectType(file) {
   if (file.endsWith(".jsonl")) return "db-watch"
   const data = readJson(file)
   if (data && data.aggregate && data.intermediate) return "artillery"
-  fail(`no reconozco el formato de ${path.basename(file)} (esperaba JSON de Artillery o JSONL de db-watch)`)
+  fail(
+    `no reconozco el formato de ${path.basename(file)} (esperaba JSON de Artillery o JSONL de db-watch)`,
+  )
 }
 
 function newestFile(dir, filter) {
@@ -239,22 +241,30 @@ function renderArtillery(a) {
           `${a.p95} ms`,
           `${a.p99} ms`,
         ],
-      ]
-    )
+      ],
+    ),
   )
   out.push("")
 
   if (pts.length > 1) {
-    out.push(chart("Latencia por ventana de 10 s", "ms", xs, [
-      { name: "p50", values: pts.map((p) => p.p50) },
-      { name: "p95", values: pts.map((p) => p.p95) },
-      { name: "p99", values: pts.map((p) => p.p99) },
-    ]))
+    out.push(
+      chart("Latencia por ventana de 10 s", "ms", xs, [
+        { name: "p50", values: pts.map((p) => p.p50) },
+        { name: "p95", values: pts.map((p) => p.p95) },
+        { name: "p99", values: pts.map((p) => p.p99) },
+      ]),
+    )
     out.push("")
-    out.push(chart("Throughput (req/s)", "req/s", xs, [{ name: "req/s", values: pts.map((p) => p.rps) }]))
+    out.push(
+      chart("Throughput (req/s)", "req/s", xs, [{ name: "req/s", values: pts.map((p) => p.rps) }]),
+    )
     out.push("")
     if (pts.some((p) => p.errores > 0)) {
-      out.push(chart("Errores por ventana", "errores", xs, [{ name: "errores", values: pts.map((p) => p.errores) }]))
+      out.push(
+        chart("Errores por ventana", "errores", xs, [
+          { name: "errores", values: pts.map((p) => p.errores) },
+        ]),
+      )
       out.push("")
     }
   }
@@ -274,8 +284,15 @@ function renderArtillery(a) {
     out.push(
       table(
         ["Endpoint", "Peticiones", "p50", "p95", "p99", "máx"],
-        a.endpoints.map((e) => [`\`${e.url}\``, e.count, `${e.median} ms`, `${e.p95} ms`, `${e.p99} ms`, `${e.max} ms`])
-      )
+        a.endpoints.map((e) => [
+          `\`${e.url}\``,
+          e.count,
+          `${e.median} ms`,
+          `${e.p95} ms`,
+          `${e.p99} ms`,
+          `${e.max} ms`,
+        ]),
+      ),
     )
     out.push("")
   }
@@ -291,17 +308,39 @@ function renderDbWatch(d) {
   out.push("")
   out.push(
     table(
-      ["Muestras", "Duración", "Pico conexiones", "Pico activas", "Pico cluster", "Pico latencia health"],
-      [[d.samples, `${d.durationSec}s`, d.picoConexiones, d.picoActivas, d.picoCluster, `${d.picoHealth} ms`]]
-    )
+      [
+        "Muestras",
+        "Duración",
+        "Pico conexiones",
+        "Pico activas",
+        "Pico cluster",
+        "Pico latencia health",
+      ],
+      [
+        [
+          d.samples,
+          `${d.durationSec}s`,
+          d.picoConexiones,
+          d.picoActivas,
+          d.picoCluster,
+          `${d.picoHealth} ms`,
+        ],
+      ],
+    ),
   )
   out.push("")
-  out.push(chart("Conexiones a Postgres", "conexiones", xs, [
-    { name: "totales", values: pts.map((p) => p.conexiones) },
-    { name: "activas", values: pts.map((p) => p.activas) },
-  ]))
+  out.push(
+    chart("Conexiones a Postgres", "conexiones", xs, [
+      { name: "totales", values: pts.map((p) => p.conexiones) },
+      { name: "activas", values: pts.map((p) => p.activas) },
+    ]),
+  )
   out.push("")
-  out.push(chart("Latencia de /api/health", "ms", xs, [{ name: "health", values: pts.map((p) => p.health) }]))
+  out.push(
+    chart("Latencia de /api/health", "ms", xs, [
+      { name: "health", values: pts.map((p) => p.health) },
+    ]),
+  )
   out.push("")
 
   const first = d.series[0].conexiones
@@ -312,13 +351,13 @@ function renderDbWatch(d) {
   if (crecimiento >= 4 || (first > 0 && crecimiento / first >= 0.5)) {
     out.push(
       `> Las conexiones empezaron en **${first}** y terminaron en **${last}** (pico ${d.picoConexiones}), ` +
-        `sin liberarse al bajar la carga. Eso es acumulación, no uso transitorio — el síntoma del hallazgo G-3.`
+        `sin liberarse al bajar la carga. Eso es acumulación, no uso transitorio — el síntoma del hallazgo G-3.`,
     )
     out.push("")
   } else {
     out.push(
       `> Conexiones estables (${first} → ${last}, pico ${d.picoConexiones}). ` +
-        `Sin señal de acumulación en esta corrida.`
+        `Sin señal de acumulación en esta corrida.`,
     )
     out.push("")
   }
@@ -334,8 +373,12 @@ function main() {
 
   if (args.length === 0) {
     artilleryFile = newestFile(path.join(config.reportsDir, "raw"), (f) => f.endsWith(".json"))
-    dbWatchFile = newestFile(config.reportsDir, (f) => f.startsWith("db-watch") && f.endsWith(".jsonl"))
-    if (!artilleryFile && !dbWatchFile) fail("no encontre resultados en reports/. Corre un escenario primero.")
+    dbWatchFile = newestFile(
+      config.reportsDir,
+      (f) => f.startsWith("db-watch") && f.endsWith(".jsonl"),
+    )
+    if (!artilleryFile && !dbWatchFile)
+      fail("no encontre resultados en reports/. Corre un escenario primero.")
     console.log("sin argumentos: tomando lo mas reciente de reports/")
   } else {
     for (const a of args) {
@@ -378,12 +421,16 @@ function main() {
     if (Number(a.errorPct) >= 50) {
       parts.push(
         `- **${a.errorPct}% de usuarios fallaron.** Con esta tasa no se mide capacidad, solo se confirma saturación. ` +
-          `Baja \`LT_HTTP_ARRIVAL_RATE\` hasta que \`vusers.failed\` sea 0 y sube desde ahí.`
+          `Baja \`LT_HTTP_ARRIVAL_RATE\` hasta que \`vusers.failed\` sea 0 y sube desde ahí.`,
       )
     } else if (Number(a.errorPct) > 5) {
-      parts.push(`- **${a.errorPct}% de error**: por encima del umbral del 5%. Estás cerca del techo de la máquina.`)
+      parts.push(
+        `- **${a.errorPct}% de error**: por encima del umbral del 5%. Estás cerca del techo de la máquina.`,
+      )
     } else {
-      parts.push(`- **${a.errorPct}% de error**: dentro del umbral. Este punto de carga es sostenible.`)
+      parts.push(
+        `- **${a.errorPct}% de error**: dentro del umbral. Este punto de carga es sostenible.`,
+      )
     }
     if (a.p95 > 3000) parts.push(`- **p95 de ${a.p95} ms**, por encima del umbral de 3000 ms.`)
     else parts.push(`- **p95 de ${a.p95} ms**, dentro del umbral de 3000 ms.`)
@@ -395,15 +442,16 @@ function main() {
   if (d) {
     parts.push(
       `- Conexiones a Postgres: pico de **${d.picoConexiones}** (cluster ${d.picoCluster}). ` +
-        `El límite de la instancia es 60.`
+        `El límite de la instancia es 60.`,
     )
-    if (d.picoHealth > 1000) parts.push(`- \`/api/health\` llegó a **${d.picoHealth} ms** — el servidor estaba encolando.`)
+    if (d.picoHealth > 1000)
+      parts.push(`- \`/api/health\` llegó a **${d.picoHealth} ms** — el servidor estaba encolando.`)
   }
   parts.push("")
   parts.push(
     "> Estos números salen de una máquina que corre la app **y** el generador de carga a la vez. " +
       "Sirven para comparar antes/después de un cambio, no como capacidad de producción " +
-      "(ver [TARGET-REMOTO.md](../TARGET-REMOTO.md))."
+      "(ver [TARGET-REMOTO.md](../TARGET-REMOTO.md)).",
   )
   parts.push("")
 

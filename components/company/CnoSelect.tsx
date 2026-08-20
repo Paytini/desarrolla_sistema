@@ -1,39 +1,37 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Autocomplete from "@mui/material/Autocomplete";
-import Box from "@mui/material/Box";
-import ListSubheader from "@mui/material/ListSubheader";
-import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import { CNO_AREAS, CNO_CATALOG } from "@/lib/cno-catalog";
+import { useState } from "react"
+import Autocomplete from "@mui/material/Autocomplete"
+import Box from "@mui/material/Box"
+import ListSubheader from "@mui/material/ListSubheader"
+import TextField from "@mui/material/TextField"
+import Typography from "@mui/material/Typography"
+import { CNO_AREAS, CNO_CATALOG } from "@/lib/cno-catalog"
 
-type CnoEntry = (typeof CNO_CATALOG)[number];
+type CnoEntry = (typeof CNO_CATALOG)[number]
 
 type Props = {
-  defaultCode?: string | null;
-  defaultName?: string | null;
-};
+  defaultCode?: string | null
+  defaultName?: string | null
+}
 
 export default function CnoSelect({ defaultCode, defaultName }: Props) {
   const initialEntry = defaultCode
     ? (CNO_CATALOG.find((e) => e.clave === defaultCode) ?? null)
-    : null;
+    : null
 
-  const [selected, setSelected] = useState<CnoEntry | null>(initialEntry);
+  const [selected, setSelected] = useState<CnoEntry | null>(initialEntry)
 
-  const options = CNO_CATALOG.filter((e) => !e.esArea);
+  const options = CNO_CATALOG.filter((e) => !e.esArea)
 
   function getAreaLabel(code: string): string {
-    const area = CNO_AREAS.find((a) => code.startsWith(a.clave + "."));
-    return area ? `${area.clave} — ${area.denominacion}` : "";
+    const area = CNO_AREAS.find((a) => code.startsWith(a.clave + "."))
+    return area ? `${area.clave} — ${area.denominacion}` : ""
   }
 
   return (
     <Box>
-      <Typography
-        sx={{ mb: 1, fontSize: 14, fontWeight: 400, color: "#334155" }}
-      >
+      <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 400, color: "#334155" }}>
         Ocupación
       </Typography>
 
@@ -46,10 +44,7 @@ export default function CnoSelect({ defaultCode, defaultName }: Props) {
         size="small"
         noOptionsText="Sin resultados"
         renderInput={(params) => (
-          <TextField
-            {...params}
-            placeholder="Busca por clave (03.4) o nombre (Instalación...)"
-          />
+          <TextField {...params} placeholder="Busca por clave (03.4) o nombre (Instalación...)" />
         )}
         renderGroup={(params) => (
           <li key={params.key}>
@@ -73,8 +68,7 @@ export default function CnoSelect({ defaultCode, defaultName }: Props) {
           </li>
         )}
         renderOption={(props, option) => {
-          const { key, ...rest } =
-            props as React.HTMLAttributes<HTMLLIElement> & { key: React.Key };
+          const { key, ...rest } = props as React.HTMLAttributes<HTMLLIElement> & { key: React.Key }
           return (
             <li key={key} {...rest}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
@@ -94,7 +88,7 @@ export default function CnoSelect({ defaultCode, defaultName }: Props) {
                 </Typography>
               </Box>
             </li>
-          );
+          )
         }}
         slotProps={{
           paper: {
@@ -108,16 +102,12 @@ export default function CnoSelect({ defaultCode, defaultName }: Props) {
         }}
       />
 
-      <input
-        type="hidden"
-        name="ocupacion_especifica_clave"
-        value={selected?.clave ?? ""}
-      />
+      <input type="hidden" name="ocupacion_especifica_clave" value={selected?.clave ?? ""} />
       <input
         type="hidden"
         name="ocupacion_especifica"
         value={selected?.denominacion ?? defaultName ?? ""}
       />
     </Box>
-  );
+  )
 }

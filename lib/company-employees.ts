@@ -9,7 +9,9 @@ type EmployeeSearchable = {
   active: boolean
 }
 
-export function normalizeEmployeeFilterStatus(value: string | null | undefined): EmployeeFilterStatus {
+export function normalizeEmployeeFilterStatus(
+  value: string | null | undefined,
+): EmployeeFilterStatus {
   if (value === "active" || value === "inactive") {
     return value
   }
@@ -26,7 +28,7 @@ export function matchesEmployeeFilters(
   options: {
     query?: string | null | undefined
     status?: EmployeeFilterStatus
-  }
+  },
 ) {
   const query = normalizeEmployeeSearchQuery(options.query)
   const status = options.status ?? "all"

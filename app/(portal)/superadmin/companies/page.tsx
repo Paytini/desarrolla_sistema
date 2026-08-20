@@ -19,15 +19,15 @@ import Typography from "@mui/material/Typography"
 import { SearchInput } from "@/components/shared/SearchInput"
 
 const successMessages: Record<string, string> = {
-  empresa_creada:     "Empresa creada correctamente con su usuario HR inicial.",
+  empresa_creada: "Empresa creada correctamente con su usuario HR inicial.",
   empresa_suspendida: "Empresa suspendida.",
-  empresa_activada:   "Empresa reactivada correctamente.",
+  empresa_activada: "Empresa reactivada correctamente.",
 }
 const errorMessages: Record<string, string> = {
-  datos:      "Faltan datos obligatorios.",
-  email_hr:   "Ese correo HR ya está ligado a una empresa.",
+  datos: "Faltan datos obligatorios.",
+  email_hr: "Ese correo HR ya está ligado a una empresa.",
   usuario_hr: "Ese correo ya existe como usuario del portal.",
-  empresa:    "No se encontró la empresa.",
+  empresa: "No se encontró la empresa.",
 }
 
 const TH_SX = {
@@ -48,30 +48,31 @@ type PageProps = {
 const PAGE_SIZE = 20
 
 export default async function CompaniesPage({ searchParams }: PageProps) {
-  const params       = await searchParams
-  const success      = readSearchParam(params, "success")
-  const error        = readSearchParam(params, "error")
-  const q            = readSearchParam(params, "q")?.toLowerCase() ?? ""
+  const params = await searchParams
+  const success = readSearchParam(params, "success")
+  const error = readSearchParam(params, "error")
+  const q = readSearchParam(params, "q")?.toLowerCase() ?? ""
   const statusFilter = readSearchParam(params, "status") ?? "all"
-  const page         = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
   const { empresas: companies } = await getSuperadminCompaniesSnapshot()
 
   const filteredCompanies = companies.filter((e) => {
-    const matchQ =
-      q
-        ? e.name.toLowerCase().includes(q) ||
-          (e.rfc?.toLowerCase().includes(q) ?? false) ||
-          e.hr_email.toLowerCase().includes(q)
-        : true
+    const matchQ = q
+      ? e.name.toLowerCase().includes(q) ||
+        (e.rfc?.toLowerCase().includes(q) ?? false) ||
+        e.hr_email.toLowerCase().includes(q)
+      : true
     const matchStatus =
-      statusFilter === "activa"     ? e.active  :
-      statusFilter === "suspendida" ? !e.active :
-      true
+      statusFilter === "activa" ? e.active : statusFilter === "suspendida" ? !e.active : true
     return matchQ && matchStatus
   })
 
-  const { items: pagedCompanies, currentPage, totalPages } = paginate(filteredCompanies, page, PAGE_SIZE)
+  const {
+    items: pagedCompanies,
+    currentPage,
+    totalPages,
+  } = paginate(filteredCompanies, page, PAGE_SIZE)
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
@@ -88,11 +89,11 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         title="Empresas clientes"
         description="Gestiona las organizaciones activas en la plataforma."
         action={
-          <Link href="/superadmin/companies/new" style={{ textDecoration: 'none' }}>
+          <Link href="/superadmin/companies/new" style={{ textDecoration: "none" }}>
             <Button
               variant="contained"
               startIcon={<Plus size={14} strokeWidth={2.5} />}
-              sx={{ height: 44, px: 3, borderRadius: '10px' }}
+              sx={{ height: 44, px: 3, borderRadius: "10px" }}
             >
               Nueva empresa
             </Button>
@@ -106,35 +107,40 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         </DismissibleAlert>
       )}
       {error && (
-        <DismissibleAlert severity="error">
-          {errorMessages[error] ?? error}
-        </DismissibleAlert>
+        <DismissibleAlert severity="error">{errorMessages[error] ?? error}</DismissibleAlert>
       )}
 
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1.5 }}>
-        <Box component="form" method="GET" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
-          <SearchInput
-            name="q"
-            defaultValue={q}
-            placeholder="Buscar empresa o RFC…"
-            width={224}
-          />
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1.5,
+        }}
+      >
+        <Box
+          component="form"
+          method="GET"
+          sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
+        >
+          <SearchInput name="q" defaultValue={q} placeholder="Buscar empresa o RFC…" width={224} />
           <Box
             component="select"
             name="status"
             defaultValue={statusFilter}
             sx={{
               height: 40,
-              borderRadius: '8px',
-              border: '1px solid',
-              borderColor: 'divider',
-              bgcolor: '#FFFFFF',
+              borderRadius: "8px",
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "#FFFFFF",
               px: 1.5,
-              fontSize: '13px',
-              color: 'text.primary',
-              outline: 'none',
-              cursor: 'pointer',
-              '&:focus': { borderColor: 'primary.main' },
+              fontSize: "13px",
+              color: "text.primary",
+              outline: "none",
+              cursor: "pointer",
+              "&:focus": { borderColor: "primary.main" },
             }}
           >
             <option value="all">Todos</option>
@@ -145,7 +151,14 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
             type="submit"
             variant="outlined"
             size="small"
-            sx={{ bgcolor: '#FFFFFF', height: 40, px: 1.5, fontSize: 13, borderColor: "divider", color: "text.secondary" }}
+            sx={{
+              bgcolor: "#FFFFFF",
+              height: 40,
+              px: 1.5,
+              fontSize: 13,
+              borderColor: "divider",
+              color: "text.secondary",
+            }}
           >
             Filtrar
           </Button>
@@ -177,10 +190,21 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         noPadding
       >
         {filteredCompanies.length === 0 ? (
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5, py: 8, textAlign: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1.5,
+              py: 8,
+              textAlign: "center",
+            }}
+          >
             <Building2 size={28} style={{ color: "#cbd5e1" }} />
             <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-              {q || statusFilter !== "all" ? "Sin resultados para ese filtro." : "Aún no hay empresas registradas."}
+              {q || statusFilter !== "all"
+                ? "Sin resultados para ese filtro."
+                : "Aún no hay empresas registradas."}
             </Typography>
           </Box>
         ) : (
@@ -188,10 +212,16 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
             <TableHead>
               <TableRow>
                 <TableCell sx={TH_SX}>Empresa</TableCell>
-                <TableCell sx={{ ...TH_SX, display: { xs: "none", sm: "table-cell" } }}>RFC</TableCell>
-                <TableCell sx={{ ...TH_SX, display: { xs: "none", md: "table-cell" } }}>Plan</TableCell>
+                <TableCell sx={{ ...TH_SX, display: { xs: "none", sm: "table-cell" } }}>
+                  RFC
+                </TableCell>
+                <TableCell sx={{ ...TH_SX, display: { xs: "none", md: "table-cell" } }}>
+                  Plan
+                </TableCell>
                 <TableCell sx={TH_SX}>Cupos</TableCell>
-                <TableCell sx={{ ...TH_SX, display: { xs: "none", lg: "table-cell" } }}>Alta</TableCell>
+                <TableCell sx={{ ...TH_SX, display: { xs: "none", lg: "table-cell" } }}>
+                  Alta
+                </TableCell>
                 <TableCell sx={TH_SX}>Estado</TableCell>
                 <TableCell sx={{ ...TH_SX, textAlign: "right" }}>Acciones</TableCell>
               </TableRow>

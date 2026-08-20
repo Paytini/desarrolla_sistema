@@ -17,8 +17,18 @@ import {
 const WEEKDAY_LETTERS = ["L", "M", "M", "J", "V", "S", "D"]
 
 const MONTH_LABELS = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
 ]
 
 function buildMonthGrid(year: number, month: number): (string | null)[] {
@@ -60,7 +70,14 @@ type ScheduleStepProps = {
   onNext: () => void
 }
 
-export function ScheduleStep({ date, time, onChangeDate, onChangeTime, onBack, onNext }: ScheduleStepProps) {
+export function ScheduleStep({
+  date,
+  time,
+  onChangeDate,
+  onChangeTime,
+  onBack,
+  onNext,
+}: ScheduleStepProps) {
   const minDate = useMemo(() => getMinSelectableDate(), [])
   const maxDate = useMemo(() => getMaxSelectableDate(), [])
   const lastSelectableMaxDate = useMemo(() => findLastSelectableDate(maxDate), [maxDate])
@@ -95,7 +112,16 @@ export function ScheduleStep({ date, time, onChangeDate, onChangeTime, onBack, o
 
   return (
     <Box>
-      <Typography sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#3579F5", mb: 1 }}>
+      <Typography
+        sx={{
+          fontSize: 11,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: "#3579F5",
+          mb: 1,
+        }}
+      >
         Paso 3 · Fecha y hora
       </Typography>
       <Typography sx={{ fontSize: 26, fontWeight: 800, color: "text.primary", mb: 0.5 }}>
@@ -106,21 +132,36 @@ export function ScheduleStep({ date, time, onChangeDate, onChangeTime, onBack, o
       </Typography>
 
       <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-          <IconButton size="small" onClick={goPrevMonth} disabled={!canGoPrev} aria-label="Mes anterior">
+        <Box
+          sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}
+        >
+          <IconButton
+            size="small"
+            onClick={goPrevMonth}
+            disabled={!canGoPrev}
+            aria-label="Mes anterior"
+          >
             <ChevronLeft size={18} />
           </IconButton>
           <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
             {MONTH_LABELS[viewMonth]} {viewYear}
           </Typography>
-          <IconButton size="small" onClick={goNextMonth} disabled={!canGoNext} aria-label="Mes siguiente">
+          <IconButton
+            size="small"
+            onClick={goNextMonth}
+            disabled={!canGoNext}
+            aria-label="Mes siguiente"
+          >
             <ChevronRight size={18} />
           </IconButton>
         </Box>
 
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 0.5, mb: 0.5 }}>
           {WEEKDAY_LETTERS.map((label, i) => (
-            <Typography key={i} sx={{ fontSize: 11, fontWeight: 700, color: "text.secondary", textAlign: "center" }}>
+            <Typography
+              key={i}
+              sx={{ fontSize: 11, fontWeight: 700, color: "text.secondary", textAlign: "center" }}
+            >
               {label}
             </Typography>
           ))}
@@ -150,7 +191,9 @@ export function ScheduleStep({ date, time, onChangeDate, onChangeTime, onBack, o
                   color: selected ? "#FFFFFF" : selectable ? "text.primary" : "#D1D5DB",
                   fontWeight: selected ? 700 : 500,
                   fontSize: 13,
-                  "&:hover": selectable ? { bgcolor: selected ? "#3579F5" : "rgba(53, 121, 245, 0.08)" } : undefined,
+                  "&:hover": selectable
+                    ? { bgcolor: selected ? "#3579F5" : "rgba(53, 121, 245, 0.08)" }
+                    : undefined,
                 }}
               >
                 {day}
@@ -195,7 +238,16 @@ export function ScheduleStep({ date, time, onChangeDate, onChangeTime, onBack, o
         </Box>
       ) : null}
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          mt: 4,
+          pt: 3,
+          borderTop: "1px solid",
+          borderColor: "divider",
+        }}
+      >
         <Button type="button" variant="outlined" onClick={onBack}>
           ← Atrás
         </Button>

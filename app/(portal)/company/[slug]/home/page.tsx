@@ -1,7 +1,15 @@
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { RingChart } from "@/components/shared/RingChart"
-import { Award, BarChart3, ChevronRight, ClipboardList, Package, Users, type LucideIcon } from "lucide-react"
+import {
+  Award,
+  BarChart3,
+  ChevronRight,
+  ClipboardList,
+  Package,
+  Users,
+  type LucideIcon,
+} from "lucide-react"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
@@ -106,8 +114,18 @@ export default async function CompanyHome() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
         <div className="grid gap-3 sm:grid-cols-2">
-          <QuickLink href={companyPath(company.slug, "/employees")} label="Gestión de empleados" Icon={Users} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
-          <QuickLink href={companyPath(company.slug, "/assignments")} label="Asignación de cursos" Icon={ClipboardList} iconCls="bg-[#EAF1FE] text-[#3579F5]" />
+          <QuickLink
+            href={companyPath(company.slug, "/employees")}
+            label="Gestión de empleados"
+            Icon={Users}
+            iconCls="bg-[#EAF1FE] text-[#3579F5]"
+          />
+          <QuickLink
+            href={companyPath(company.slug, "/assignments")}
+            label="Asignación de cursos"
+            Icon={ClipboardList}
+            iconCls="bg-[#EAF1FE] text-[#3579F5]"
+          />
           <QuickLink
             href={companyPath(company.slug, "/progress")}
             label="Progreso y trayectorias"
@@ -123,12 +141,7 @@ export default async function CompanyHome() {
         </div>
 
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-white px-10 py-6">
-          <RingChart
-            pct={averageProgress}
-            size={96}
-            sw={9}
-            color="#3579F5"
-          />
+          <RingChart pct={averageProgress} size={96} sw={9} color="#3579F5" />
           <p className="text-xs font-medium text-slate-500">Avance global</p>
         </div>
       </div>

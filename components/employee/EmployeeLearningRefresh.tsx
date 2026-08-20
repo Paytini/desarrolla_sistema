@@ -21,48 +21,51 @@ export default function EmployeeLearningRefresh({
   const requestInFlight = useRef(false)
   const latestSyncAtRef = useRef<string | null>(null)
 
-  const refreshLearning = useCallback(async (force: boolean) => {
-    if (requestInFlight.current) {
-      return
-    }
-
-    requestInFlight.current = true
-
-    try {
-      const response = await fetch("/api/employee/learning/refresh", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-skip-global-loading": "1",
-        },
-        body: JSON.stringify({ force }),
-      })
-      const payload = await response.json().catch(() => null) as {
-        ok?: boolean
-        latestSyncAt?: string | null
-      } | null
-
-      if (!response.ok || !payload?.ok) {
+  const refreshLearning = useCallback(
+    async (force: boolean) => {
+      if (requestInFlight.current) {
         return
       }
 
-      const latestSyncAt = payload.latestSyncAt ?? null
-      const shouldRefresh = force || (latestSyncAt && latestSyncAt !== latestSyncAtRef.current)
+      requestInFlight.current = true
 
-      if (latestSyncAt) {
-        latestSyncAtRef.current = latestSyncAt
-      }
-
-      if (shouldRefresh) {
-        startTransition(() => {
-          router.refresh()
+      try {
+        const response = await fetch("/api/employee/learning/refresh", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-skip-global-loading": "1",
+          },
+          body: JSON.stringify({ force }),
         })
+        const payload = (await response.json().catch(() => null)) as {
+          ok?: boolean
+          latestSyncAt?: string | null
+        } | null
+
+        if (!response.ok || !payload?.ok) {
+          return
+        }
+
+        const latestSyncAt = payload.latestSyncAt ?? null
+        const shouldRefresh = force || (latestSyncAt && latestSyncAt !== latestSyncAtRef.current)
+
+        if (latestSyncAt) {
+          latestSyncAtRef.current = latestSyncAt
+        }
+
+        if (shouldRefresh) {
+          startTransition(() => {
+            router.refresh()
+          })
+        }
+      } catch {
+      } finally {
+        requestInFlight.current = false
       }
-    } catch {
-    } finally {
-      requestInFlight.current = false
-    }
-  }, [router])
+    },
+    [router],
+  )
 
   useEffect(() => {
     if (!autoRefresh || didAutoRefresh.current) {

@@ -63,7 +63,16 @@ export function ConfirmStep({
 
   return (
     <Box>
-      <Typography sx={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#3579F5", mb: 1 }}>
+      <Typography
+        sx={{
+          fontSize: 11,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          color: "#3579F5",
+          mb: 1,
+        }}
+      >
         Paso 4 · Confirmación
       </Typography>
       <Typography sx={{ fontSize: 26, fontWeight: 800, color: "text.primary", mb: 0.5 }}>
@@ -79,7 +88,9 @@ export function ConfirmStep({
         </Alert>
       ) : null}
 
-      <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 2.5, mb: 3 }}>
+      <Box
+        sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", p: 2.5, mb: 3 }}
+      >
         {summaryRows.map((row) => (
           <Box
             key={row.label}
@@ -93,10 +104,19 @@ export function ConfirmStep({
             }}
           >
             <Box>
-              <Typography sx={{ fontSize: 11, color: "text.secondary", mb: 0.25 }}>{row.label}</Typography>
-              <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: "text.primary" }}>{row.value}</Typography>
+              <Typography sx={{ fontSize: 11, color: "text.secondary", mb: 0.25 }}>
+                {row.label}
+              </Typography>
+              <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: "text.primary" }}>
+                {row.value}
+              </Typography>
             </Box>
-            <Button size="small" type="button" onClick={() => onEditStep(row.step)} sx={{ fontSize: 12, flexShrink: 0 }}>
+            <Button
+              size="small"
+              type="button"
+              onClick={() => onEditStep(row.step)}
+              sx={{ fontSize: 12, flexShrink: 0 }}
+            >
               Editar
             </Button>
           </Box>
@@ -149,11 +169,24 @@ export function ConfirmStep({
         })}
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          pt: 3,
+          borderTop: "1px solid",
+          borderColor: "divider",
+        }}
+      >
         <Button type="button" variant="outlined" onClick={onBack}>
           ← Atrás
         </Button>
-        <Button type="submit" variant="contained" disabled={!isValid || pending} sx={{ "&.Mui-disabled": { opacity: 0.7 } }}>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={!isValid || pending}
+          sx={{ "&.Mui-disabled": { opacity: 0.7 } }}
+        >
           {pending ? "Agendando…" : "Agendar consultoría"}
         </Button>
       </Box>

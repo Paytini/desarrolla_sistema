@@ -15,7 +15,7 @@ async function runSync(request: Request) {
         ok: false,
         message: "No autorizado para ejecutar sincronizacion en segundo plano.",
       },
-      { status: 401 }
+      { status: 401 },
     )
   }
 
@@ -27,7 +27,8 @@ async function runSync(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    sync_interval_ms: Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "15000", 10) || 15000,
+    sync_interval_ms:
+      Number.parseInt(process.env.EMPLOYEE_SYNC_INTERVAL_MS ?? "15000", 10) || 15000,
     ...result,
   })
 }
@@ -40,4 +41,3 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   return runSync(request)
 }
-

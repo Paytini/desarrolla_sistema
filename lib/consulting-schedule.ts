@@ -14,15 +14,7 @@ export const CONSULTING_TIME_SLOTS = [
 
 const BOOKING_HORIZON_DAYS = 42 // 6 weeks
 
-const WEEKDAY_NAMES = [
-  "domingo",
-  "lunes",
-  "martes",
-  "miércoles",
-  "jueves",
-  "viernes",
-  "sábado",
-]
+const WEEKDAY_NAMES = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"]
 
 const MONTH_NAMES = [
   "enero",
@@ -61,9 +53,7 @@ export function isBusinessDayString(dateStr: string): boolean {
   const [year, month, day] = dateStr.split("-").map(Number)
   const date = new Date(Date.UTC(year, month - 1, day))
   const isValidCalendarDate =
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() + 1 === month &&
-    date.getUTCDate() === day
+    date.getUTCFullYear() === year && date.getUTCMonth() + 1 === month && date.getUTCDate() === day
   if (!isValidCalendarDate) return false
   const weekday = date.getUTCDay()
   return weekday >= 1 && weekday <= 5

@@ -65,13 +65,34 @@ export default async function CompanyAssignmentsPage() {
       <PageHeader
         title="Asignación de cursos"
         description="Elige un curso en la fila superior y marca a los colaboradores que lo tomarán"
-        breadcrumbs={[{ label: "Empresa", href: companyPath(company.slug, "/home") }, { label: "Asignaciones" }]}
+        breadcrumbs={[
+          { label: "Empresa", href: companyPath(company.slug, "/home") },
+          { label: "Asignaciones" },
+        ]}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <KpiCard label="Paquete activo" value={activePackage?.name ?? "Sin paquete"} sub="Catálogo disponible" icon={Package} borderColor="amber" />
-        <KpiCard label="Cursos disponibles" value={String(packageCourses.length)} sub="Para asignar a empleados" icon={BookOpen} borderColor="orange" />
-        <KpiCard label="Empleados activos" value={String(allEmployees.length)} sub="Elegibles para asignación" icon={Users} borderColor="charcoal" />
+        <KpiCard
+          label="Paquete activo"
+          value={activePackage?.name ?? "Sin paquete"}
+          sub="Catálogo disponible"
+          icon={Package}
+          borderColor="amber"
+        />
+        <KpiCard
+          label="Cursos disponibles"
+          value={String(packageCourses.length)}
+          sub="Para asignar a empleados"
+          icon={BookOpen}
+          borderColor="orange"
+        />
+        <KpiCard
+          label="Empleados activos"
+          value={String(allEmployees.length)}
+          sub="Elegibles para asignación"
+          icon={Users}
+          borderColor="charcoal"
+        />
       </div>
 
       {!activePackage ? (
@@ -82,7 +103,11 @@ export default async function CompanyAssignmentsPage() {
       ) : null}
 
       {activePackage && packageCourses.length > 0 ? (
-        <AssignmentBoard courses={courses} employees={employees} initialAssignments={initialAssignments} />
+        <AssignmentBoard
+          courses={courses}
+          employees={employees}
+          initialAssignments={initialAssignments}
+        />
       ) : null}
     </div>
   )

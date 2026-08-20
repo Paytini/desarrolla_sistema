@@ -28,7 +28,11 @@ type ConsultingWizardProps = {
   requesterEmail: string
 }
 
-export function ConsultingWizard({ companySlug, requesterName, requesterEmail }: ConsultingWizardProps) {
+export function ConsultingWizard({
+  companySlug,
+  requesterName,
+  requesterEmail,
+}: ConsultingWizardProps) {
   const [step, setStep] = useState(0)
   const [area, setArea] = useState<ConsultingAreaId | null>(null)
   const [context, setContext] = useState("")
@@ -90,14 +94,27 @@ export function ConsultingWizard({ companySlug, requesterName, requesterEmail }:
   return (
     <Paper
       elevation={0}
-      sx={{ maxWidth: 760, mx: "auto", border: "1px solid", borderColor: "divider", borderRadius: "16px", p: { xs: 3, sm: 5 } }}
+      sx={{
+        maxWidth: 760,
+        mx: "auto",
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: "16px",
+        p: { xs: 3, sm: 5 },
+      }}
     >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 4 }}>
-        <Link href={dashboardHref} style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}>
+        <Link
+          href={dashboardHref}
+          style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}
+        >
           ← Volver al inicio
         </Link>
         <ProgressDots steps={4} activeStep={step} />
-        <Link href={dashboardHref} style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}>
+        <Link
+          href={dashboardHref}
+          style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}
+        >
           Cancelar
         </Link>
       </Box>
@@ -113,7 +130,12 @@ export function ConsultingWizard({ companySlug, requesterName, requesterEmail }:
         {step === 0 && <AreaStep value={area} onChange={setArea} onNext={() => setStep(1)} />}
 
         {step === 1 && (
-          <ContextStep value={context} onChange={setContext} onBack={() => setStep(0)} onNext={() => setStep(2)} />
+          <ContextStep
+            value={context}
+            onChange={setContext}
+            onBack={() => setStep(0)}
+            onNext={() => setStep(2)}
+          />
         )}
 
         {step === 2 && (

@@ -63,7 +63,5 @@ function escapeCsvValue(value: string | number | boolean | null | undefined) {
 }
 
 export function toCsvText(rows: Array<Array<string | number | boolean | null | undefined>>) {
-  return rows
-    .map((row) => row.map((value) => escapeCsvValue(value)).join(","))
-    .join("\n")
+  return rows.map((row) => row.map((value) => escapeCsvValue(value)).join(",")).join("\n")
 }

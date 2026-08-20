@@ -286,7 +286,9 @@ function getHeaders(): BridgeHeaders {
 }
 
 export function isWordPressBridgeConfigured() {
-  return Boolean(getBaseUrl() && (process.env.WP_BRIDGE_PORTAL_KEY || process.env.WP_BRIDGE_BASIC_USER))
+  return Boolean(
+    getBaseUrl() && (process.env.WP_BRIDGE_PORTAL_KEY || process.env.WP_BRIDGE_BASIC_USER),
+  )
 }
 
 type BridgeRequestInit = RequestInit & { retryable?: boolean }
@@ -344,8 +346,7 @@ async function bridgeRequest<T>(path: string, init?: BridgeRequestInit): Promise
       if (errorBody.message) {
         message = errorBody.message
       }
-    } catch {
-    }
+    } catch {}
 
     const httpError = new Error(message)
     const isRetryableStatus = response.status >= 500 || response.status === 429
@@ -441,21 +442,23 @@ export async function bridgeEnsureStudentAccess(studentId: number, courseIds: nu
 
 export function assertEnrollmentSucceeded(
   response: BridgeEnrollmentResponse,
-  requestedCourseIds: number[]
+  requestedCourseIds: number[],
 ) {
   const failedIds = new Set(response.failed_course_ids.map((item) => item.course_id))
   const enrolledIds = new Set(response.enrolled_course_ids)
-  const missingIds = requestedCourseIds.filter((courseId) => !enrolledIds.has(courseId) && !failedIds.has(courseId))
+  const missingIds = requestedCourseIds.filter(
+    (courseId) => !enrolledIds.has(courseId) && !failedIds.has(courseId),
+  )
 
   if (response.failed_course_ids.length === 0 && missingIds.length === 0) {
     return
   }
 
   const failedMessages = response.failed_course_ids.map(
-    (item) => `Curso ${item.course_id}: ${item.message}`
+    (item) => `Curso ${item.course_id}: ${item.message}`,
   )
   const missingMessages = missingIds.map(
-    (courseId) => `Curso ${courseId}: Tutor LMS no confirmo la inscripcion`
+    (courseId) => `Curso ${courseId}: Tutor LMS no confirmo la inscripcion`,
   )
 
   throw new Error([...failedMessages, ...missingMessages].join(" | "))
@@ -463,24 +466,23 @@ export function assertEnrollmentSucceeded(
 
 export function assertAccessConfirmationSucceeded(
   response: BridgeEnsureAccessResponse,
-  requestedCourseIds: number[]
+  requestedCourseIds: number[],
 ) {
-  const okIds = new Set([
-    ...response.completed_course_ids,
-    ...response.already_active_ids,
-  ])
+  const okIds = new Set([...response.completed_course_ids, ...response.already_active_ids])
   const failedIds = new Set(response.failed_course_ids.map((item) => item.course_id))
-  const missingIds = requestedCourseIds.filter((courseId) => !okIds.has(courseId) && !failedIds.has(courseId))
+  const missingIds = requestedCourseIds.filter(
+    (courseId) => !okIds.has(courseId) && !failedIds.has(courseId),
+  )
 
   if (response.failed_course_ids.length === 0 && missingIds.length === 0) {
     return
   }
 
   const failedMessages = response.failed_course_ids.map(
-    (item) => `Curso ${item.course_id}: ${item.message}`
+    (item) => `Curso ${item.course_id}: ${item.message}`,
   )
   const missingMessages = missingIds.map(
-    (courseId) => `Curso ${courseId}: no se pudo confirmar acceso academico`
+    (courseId) => `Curso ${courseId}: no se pudo confirmar acceso academico`,
   )
 
   throw new Error([...failedMessages, ...missingMessages].join(" | "))
@@ -488,7 +490,7 @@ export function assertAccessConfirmationSucceeded(
 
 export function assertStudentHasCourses(
   studentCourses: BridgeStudentCoursesResponse,
-  requiredCourseIds: number[]
+  requiredCourseIds: number[],
 ) {
   const existingIds = new Set(studentCourses.courses.map((course) => course.wp_course_id))
   const missingIds = requiredCourseIds.filter((courseId) => !existingIds.has(courseId))
@@ -498,7 +500,7 @@ export function assertStudentHasCourses(
   }
 
   throw new Error(
-    `Los cursos no quedaron visibles para el alumno en Tutor LMS: ${missingIds.join(", ")}`
+    `Los cursos no quedaron visibles para el alumno en Tutor LMS: ${missingIds.join(", ")}`,
   )
 }
 
@@ -517,9 +519,12 @@ export async function bridgeGetStudentCertificates(studentId: number) {
 export async function bridgeGetStudentDiagnostics(studentId: number, courseId?: number) {
   const query = courseId ? `?course_id=${courseId}` : ""
 
-  return bridgeRequest<BridgeStudentDiagnosticsResponse>(`/students/${studentId}/diagnostics${query}`, {
-    method: "GET",
-  })
+  return bridgeRequest<BridgeStudentDiagnosticsResponse>(
+    `/students/${studentId}/diagnostics${query}`,
+    {
+      method: "GET",
+    },
+  )
 }
 
 export async function bridgeListCourses() {

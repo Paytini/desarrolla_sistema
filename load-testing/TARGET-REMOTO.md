@@ -8,12 +8,12 @@ Para medir capacidad de verdad hay que apuntar la suite a un **despliegue real e
 
 ## Preview o producción: qué cambia
 
-| | Preview | `empresas.desarrolla360.com` |
-|---|---|---|
-| Base de datos | Puedes usar una branch de Supabase aparte | **La base real** — aunque el portal esté en modo de prueba |
-| Turnstile | Despliegas con las claves de prueba | Depende de cómo esté configurado hoy |
-| Bridge WordPress | Lo apuntas al mock | Apunta al WordPress real salvo que lo cambies |
-| Impacto de un error | Ninguno | Datos y servicio reales |
+|                     | Preview                                   | `empresas.desarrolla360.com`                               |
+| ------------------- | ----------------------------------------- | ---------------------------------------------------------- |
+| Base de datos       | Puedes usar una branch de Supabase aparte | **La base real** — aunque el portal esté en modo de prueba |
+| Turnstile           | Despliegas con las claves de prueba       | Depende de cómo esté configurado hoy                       |
+| Bridge WordPress    | Lo apuntas al mock                        | Apunta al WordPress real salvo que lo cambies              |
+| Impacto de un error | Ninguno                                   | Datos y servicio reales                                    |
 
 **Estado actual (2026-08-02):** `empresas.desarrolla360.com` está en modo de prueba, sin clientes reales usándolo. Eso hace que apuntarle una carga sea **posible**, no automáticamente inocuo. Antes de hacerlo, comprueba tres cosas:
 
@@ -31,7 +31,7 @@ Si las tres respuestas te convienen, adelante. Si alguna no, un preview te da el
 
 ## Preparación del preview
 
-### 1. Variables de entorno del preview (en el dashboard de Vercel, scope *Preview*)
+### 1. Variables de entorno del preview (en el dashboard de Vercel, scope _Preview_)
 
 ```bash
 # Turnstile: claves de PRUEBA de Cloudflare (siempre pasan)

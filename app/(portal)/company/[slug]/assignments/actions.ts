@@ -21,7 +21,7 @@ function parseEmployeeIds(values: string[]) {
 
 export async function setCourseAssignmentsAction(
   courseId: number,
-  employeeIds: string[]
+  employeeIds: string[],
 ): Promise<CourseAssignmentResult> {
   const session = await requireHrSession()
   const companyId = session.user.empresa_id as string
@@ -60,7 +60,7 @@ export async function setCourseAssignmentsAction(
   }
 
   const validEmployeeIds = parseEmployeeIds(employeeIds).filter((id) =>
-    company.employees.some((employee) => employee.id === id)
+    company.employees.some((employee) => employee.id === id),
   )
 
   const { addedEmployees, removedCount, bridgeErrors } = await setCourseAssignment(
@@ -68,7 +68,7 @@ export async function setCourseAssignmentsAction(
     courseId,
     course.course_name,
     validEmployeeIds,
-    activePackage.package.delivery_mode
+    activePackage.package.delivery_mode,
   )
 
   for (const employee of addedEmployees) {

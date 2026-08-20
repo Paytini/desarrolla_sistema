@@ -121,13 +121,34 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
       <PageHeader
         title="Constancias DC-3"
         description="Constancias de habilidades laborales para cumplimiento STPS"
-        breadcrumbs={[{ label: "Empresa", href: companyPath(company.slug, "/home") }, { label: "Constancias DC-3" }]}
+        breadcrumbs={[
+          { label: "Empresa", href: companyPath(company.slug, "/home") },
+          { label: "Constancias DC-3" },
+        ]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard label="Constancias emitidas" value={String(certificates.length)} sub="Total registradas" icon={Award} borderColor="orange" />
-        <KpiCard label="Empleados con constancia" value={String(employeesWithCertificates)} sub="Al menos una emitida" icon={Users} borderColor="charcoal" />
-        <KpiCard label="Pendientes" value={String(pendingCertificates.length)} sub="Cursos sin constancia aún" icon={Clock} borderColor="amber" />
+        <KpiCard
+          label="Constancias emitidas"
+          value={String(certificates.length)}
+          sub="Total registradas"
+          icon={Award}
+          borderColor="orange"
+        />
+        <KpiCard
+          label="Empleados con constancia"
+          value={String(employeesWithCertificates)}
+          sub="Al menos una emitida"
+          icon={Users}
+          borderColor="charcoal"
+        />
+        <KpiCard
+          label="Pendientes"
+          value={String(pendingCertificates.length)}
+          sub="Cursos sin constancia aún"
+          icon={Clock}
+          borderColor="amber"
+        />
       </div>
 
       <div className="space-y-5">
@@ -136,7 +157,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
             <h2 className="text-base font-semibold text-[#1a1a1a]">
               Constancias emitidas
               <span className="ml-2 text-sm font-normal text-[#94a3b8]">
-                {issuedHasFilters ? `${filteredCertificates.length} de ${certificates.length}` : certificates.length}
+                {issuedHasFilters
+                  ? `${filteredCertificates.length} de ${certificates.length}`
+                  : certificates.length}
               </span>
             </h2>
             {certificates.length > 0 ? (
@@ -150,7 +173,12 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
 
           {certificates.length > 0 ? (
             <form className="mb-4 flex flex-wrap items-center gap-2">
-              <SearchInput name="q" defaultValue={issuedQuery} placeholder="Buscar empleado o curso..." width={220} />
+              <SearchInput
+                name="q"
+                defaultValue={issuedQuery}
+                placeholder="Buscar empleado o curso..."
+                width={220}
+              />
               <select
                 name="dept"
                 defaultValue={issuedDept}
@@ -158,7 +186,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               >
                 <option value="">Todos los departamentos</option>
                 {departments.map((d) => (
-                  <option key={d} value={d}>{d}</option>
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
                 ))}
               </select>
               <select
@@ -168,7 +198,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               >
                 <option value="">Todos los cursos</option>
                 {courseNames.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
               <button
@@ -213,7 +245,10 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                   {pagedCertificates.map((certificate) => {
                     const initials = getInitials(certificate.employeeName)
                     return (
-                      <tr key={certificate.id} className="border-b border-[#f5f5f5] transition hover:bg-gray-50">
+                      <tr
+                        key={certificate.id}
+                        className="border-b border-[#f5f5f5] transition hover:bg-gray-50"
+                      >
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2.5">
                             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EAF1FE] text-[11px] font-bold text-[#3579F5]">
@@ -224,9 +259,13 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                             </span>
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-[#64748b]">{certificate.department ?? "—"}</td>
+                        <td className="px-3 py-3 text-[#64748b]">
+                          {certificate.department ?? "—"}
+                        </td>
                         <td className="px-3 py-3 text-[#1a1a1a]">{certificate.course_name}</td>
-                        <td className="px-3 py-3 font-mono text-xs text-[#64748b]">{certificate.reference_number}</td>
+                        <td className="px-3 py-3 font-mono text-xs text-[#64748b]">
+                          {certificate.reference_number}
+                        </td>
                         <td className="hidden px-3 py-3 text-xs text-[#94a3b8] sm:table-cell">
                           {formatDateTime(certificate.issued_at)}
                         </td>
@@ -272,14 +311,21 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
             <h2 className="text-base font-semibold text-[#1a1a1a]">
               Pendientes por aparecer
               <span className="ml-2 text-sm font-normal text-[#94a3b8]">
-                {pendingHasFilters ? `${filteredPending.length} de ${pendingCertificates.length}` : pendingCertificates.length}
+                {pendingHasFilters
+                  ? `${filteredPending.length} de ${pendingCertificates.length}`
+                  : pendingCertificates.length}
               </span>
             </h2>
           </div>
 
           {pendingCertificates.length > 0 ? (
             <form className="mb-4 flex flex-wrap items-center gap-2">
-              <SearchInput name="pq" defaultValue={pendingQuery} placeholder="Buscar empleado o curso..." width={220} />
+              <SearchInput
+                name="pq"
+                defaultValue={pendingQuery}
+                placeholder="Buscar empleado o curso..."
+                width={220}
+              />
               <select
                 name="pdept"
                 defaultValue={pendingDept}
@@ -287,7 +333,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               >
                 <option value="">Todos los departamentos</option>
                 {departments.map((d) => (
-                  <option key={d} value={d}>{d}</option>
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
                 ))}
               </select>
               <button
@@ -332,9 +380,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                     <p className="truncate text-xs text-amber-700">
                       {item.employeeName}
                       {item.department ? ` · ${item.department}` : ""}
-                      {item.completedAt
-                        ? ` · Completado: ${formatDateTime(item.completedAt)}`
-                        : ""}
+                      {item.completedAt ? ` · Completado: ${formatDateTime(item.completedAt)}` : ""}
                     </p>
                   </div>
                   <span className="shrink-0 rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold text-amber-900">

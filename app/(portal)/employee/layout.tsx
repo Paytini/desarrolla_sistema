@@ -2,11 +2,7 @@ import { getSession } from "@/lib/session"
 import { getCompanyAccessStatus } from "@/lib/company-status"
 import { redirect } from "next/navigation"
 
-export default async function EmployeeLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function EmployeeLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   if (!session || session.user.role !== "EMPLOYEE" || !session.user.empresa_id) redirect("/login")
 

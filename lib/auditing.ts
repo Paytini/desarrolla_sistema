@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma"
 
 type JsonPrimitive = string | number | boolean | null
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue | undefined }
-type InputJsonValue = string | number | boolean | JsonValue[] | { [key: string]: JsonValue | undefined }
+type InputJsonValue =
+  string | number | boolean | JsonValue[] | { [key: string]: JsonValue | undefined }
 
 export type AuditActor = {
   userId: string | null

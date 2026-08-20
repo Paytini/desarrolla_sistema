@@ -138,7 +138,7 @@ export async function deleteEmployeeRecord({
 
 export async function togglePortalUserStatus(
   userId: string,
-  callerRole: "SUPERADMIN" | "HR" | "SYSTEM" = "SYSTEM"
+  callerRole: "SUPERADMIN" | "HR" | "SYSTEM" = "SYSTEM",
 ) {
   const user = await prisma.user.findUnique({
     where: { id: userId },

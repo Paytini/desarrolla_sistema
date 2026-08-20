@@ -6,7 +6,10 @@ import { Box, FormControlLabel, Paper, Stack, Switch, Typography } from "@mui/ma
 export type ActivityPoint = { day: string; value: number }
 export type ActivitySeries = { name: string; color: string; data: ActivityPoint[] }
 
-const W = 460, H = 130, PAD_X = 6, PAD_Y = 10
+const W = 460,
+  H = 130,
+  PAD_X = 6,
+  PAD_Y = 10
 
 function buildPath(data: ActivityPoint[], max: number) {
   const w = W - PAD_X * 2
@@ -30,7 +33,7 @@ export function LearningActivityChart({
 
   const series = useMemo<ActivitySeries[]>(
     () => (showByCompany ? byCompany : [{ name: "Global", color: "#3579F5", data: global }]),
-    [showByCompany, byCompany, global]
+    [showByCompany, byCompany, global],
   )
 
   const max = Math.max(...series.flatMap((s) => s.data.map((d) => d.value)), 1)
@@ -49,8 +52,19 @@ export function LearningActivityChart({
       }}
     >
       <Box sx={{ px: "var(--kpi-px, 24px)", pt: "var(--kpi-pt, 24px)", pb: "var(--kpi-pb, 20px)" }}>
-        <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-          <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        <Stack
+          direction="row"
+          sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.5 }}
+        >
+          <Typography
+            sx={{
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+            }}
+          >
             Actividad de aprendizaje · 14 días
           </Typography>
           <FormControlLabel
@@ -62,20 +76,38 @@ export function LearningActivityChart({
                 onChange={(e) => setShowByCompany(e.target.checked)}
                 sx={{
                   "& .MuiSwitch-track": { backgroundColor: "rgba(22,27,35,0.18)", opacity: 1 },
-                  "& .MuiSwitch-thumb": { backgroundColor: "#FFFFFF", boxShadow: "0 1px 2px rgba(22,27,35,0.35)" },
-                  "& .Mui-checked+.MuiSwitch-track": { backgroundColor: "#3579F5 !important", opacity: 1 },
+                  "& .MuiSwitch-thumb": {
+                    backgroundColor: "#FFFFFF",
+                    boxShadow: "0 1px 2px rgba(22,27,35,0.35)",
+                  },
+                  "& .Mui-checked+.MuiSwitch-track": {
+                    backgroundColor: "#3579F5 !important",
+                    opacity: 1,
+                  },
                 }}
               />
             }
             label={
-              <Typography sx={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))" }}>
+              <Typography
+                sx={{
+                  fontSize: "0.6875rem",
+                  fontWeight: 600,
+                  color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))",
+                }}
+              >
                 Por empresa
               </Typography>
             }
           />
         </Stack>
 
-        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden style={{ display: "block", width: "100%", height: H, marginTop: 28 }}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          aria-hidden
+          style={{ display: "block", width: "100%", height: H, marginTop: 28 }}
+        >
           {series.map((s) => (
             <path
               key={s.name}
@@ -95,8 +127,15 @@ export function LearningActivityChart({
           <Stack direction="row" spacing={2} sx={{ mt: 1.5, flexWrap: "wrap", rowGap: 0.75 }}>
             {byCompany.map((s) => (
               <Stack key={s.name} direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
-                <Box sx={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, bgcolor: s.color }} />
-                <Typography sx={{ fontSize: "0.6875rem", color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))" }}>
+                <Box
+                  sx={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, bgcolor: s.color }}
+                />
+                <Typography
+                  sx={{
+                    fontSize: "0.6875rem",
+                    color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))",
+                  }}
+                >
                   {s.name}
                 </Typography>
               </Stack>

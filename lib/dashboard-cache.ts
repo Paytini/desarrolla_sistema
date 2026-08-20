@@ -116,7 +116,7 @@ const getSuperadminReportsSnapshotCached = unstable_cache(
   {
     revalidate: 60,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_REPORTS_TAG],
-  }
+  },
 )
 
 export async function getSuperadminReportsSnapshot() {
@@ -156,7 +156,7 @@ const getSuperadminCourseActivitySnapshotCached = unstable_cache(
   {
     revalidate: 60,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_REPORTS_TAG],
-  }
+  },
 )
 
 export async function getSuperadminCourseActivitySnapshot() {
@@ -201,7 +201,7 @@ const getSuperadminCompaniesSnapshotCached = unstable_cache(
   {
     revalidate: 90,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_COMPANIES_TAG],
-  }
+  },
 )
 
 export async function getSuperadminCompaniesSnapshot() {
@@ -251,17 +251,16 @@ const getSuperadminPackagesSnapshotCached = unstable_cache(
     ])
 
     const courseIds = [
-      ...new Set(
-        packages.flatMap((pkg) => pkg.courses.map((course) => course.wp_course_id))
-      ),
+      ...new Set(packages.flatMap((pkg) => pkg.courses.map((course) => course.wp_course_id))),
     ]
-    const dc3Metadata = courseIds.length > 0
-      ? await prisma.courseDc3Metadata.findMany({
-          where: { wp_course_id: { in: courseIds } },
-        })
-      : []
+    const dc3Metadata =
+      courseIds.length > 0
+        ? await prisma.courseDc3Metadata.findMany({
+            where: { wp_course_id: { in: courseIds } },
+          })
+        : []
     const dc3MetadataByCourseId = Object.fromEntries(
-      dc3Metadata.map((metadata) => [String(metadata.wp_course_id), metadata])
+      dc3Metadata.map((metadata) => [String(metadata.wp_course_id), metadata]),
     )
 
     return { paquetes: packages, empresas: companies, dc3MetadataByCourseId }
@@ -270,7 +269,7 @@ const getSuperadminPackagesSnapshotCached = unstable_cache(
   {
     revalidate: 90,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_PACKAGES_TAG],
-  }
+  },
 )
 
 export async function getSuperadminPackagesSnapshot() {
@@ -298,7 +297,7 @@ const getSuperadminDc3SnapshotCached = unstable_cache(
   {
     revalidate: 90,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_DC3_TAG],
-  }
+  },
 )
 
 export async function getSuperadminDc3Snapshot() {
@@ -333,7 +332,7 @@ const getSuperadminAccessHrSnapshotCached = unstable_cache(
   {
     revalidate: 45,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_ACCESS_TAG],
-  }
+  },
 )
 
 export const EMPLOYEES_ACCESS_PAGE_SIZE = 20
@@ -393,7 +392,7 @@ const getSuperadminAccessEmployeesSnapshotCached = unstable_cache(
   {
     revalidate: 45,
     tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_ACCESS_TAG],
-  }
+  },
 )
 
 export async function getSuperadminAccessSnapshot(employeeQuery: string, employeePage: number) {
@@ -436,7 +435,7 @@ export async function getHrEmployeesSnapshot(companyId: string) {
     {
       revalidate: 45,
       tags: [companyCacheRootTag(companyId), companyEmployeesTag(companyId)],
-    }
+    },
   )
 
   return snapshot()
@@ -479,7 +478,7 @@ export async function getHrAssignmentsSnapshot(companyId: string) {
     {
       revalidate: 45,
       tags: [companyCacheRootTag(companyId), companyAssignmentsTag(companyId)],
-    }
+    },
   )
 
   return snapshot()

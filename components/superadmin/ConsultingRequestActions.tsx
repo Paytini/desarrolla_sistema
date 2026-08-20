@@ -10,7 +10,10 @@ import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
 import MenuItem from "@mui/material/MenuItem"
 import TextField from "@mui/material/TextField"
-import { cancelConsultingRequestAction, confirmConsultingRequestAction } from "@/app/(portal)/superadmin/consulting/actions"
+import {
+  cancelConsultingRequestAction,
+  confirmConsultingRequestAction,
+} from "@/app/(portal)/superadmin/consulting/actions"
 import { CONSULTING_TIME_SLOTS } from "@/lib/consulting-schedule"
 
 type ConsultingRequestActionsProps = {
@@ -39,7 +42,13 @@ export function ConsultingRequestActions({
           variant="contained"
           size="small"
           onClick={() => setDialog("confirm")}
-          sx={{ height: 28, px: 1.5, fontSize: 12, boxShadow: "none", "&:hover": { boxShadow: "none" } }}
+          sx={{
+            height: 28,
+            px: 1.5,
+            fontSize: 12,
+            boxShadow: "none",
+            "&:hover": { boxShadow: "none" },
+          }}
         >
           Confirmar
         </Button>
@@ -66,8 +75,9 @@ export function ConsultingRequestActions({
         <DialogTitle>¿Confirmar esta consultoría?</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2.5 }}>
-            Revisa la fecha y hora antes de confirmar la sesión de {areaLabel} de {companyName} — si el horario que
-            pidieron no funciona, ajústalo aquí. Le avisaremos al HR de la empresa con el horario final.
+            Revisa la fecha y hora antes de confirmar la sesión de {areaLabel} de {companyName} — si
+            el horario que pidieron no funciona, ajústalo aquí. Le avisaremos al HR de la empresa
+            con el horario final.
           </DialogContentText>
           <Box sx={{ display: "flex", gap: 1.5 }}>
             <TextField
@@ -125,8 +135,8 @@ export function ConsultingRequestActions({
         <DialogTitle>¿Cancelar esta consultoría?</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Se marcará la sesión de {areaLabel} de {companyName} como cancelada, y le avisaremos al HR de la
-            empresa.
+            Se marcará la sesión de {areaLabel} de {companyName} como cancelada, y le avisaremos al
+            HR de la empresa.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>

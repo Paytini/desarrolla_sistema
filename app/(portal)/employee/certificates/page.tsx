@@ -20,10 +20,10 @@ export default async function EmployeeCertificatesPage() {
   }
 
   const learningData = await getEmployeeLearningData(session.user.email ?? "")
-  const employee     = learningData?.employee
+  const employee = learningData?.employee
   if (!employee) redirect("/login")
 
-  const certificates        = (employee.certificates ?? []) as PortalCertificateRecord[]
+  const certificates = (employee.certificates ?? []) as PortalCertificateRecord[]
   const pendingCertificates = (learningData?.pendingCertificates ?? []) as PortalCourseRecord[]
 
   return (
@@ -35,27 +35,71 @@ export default async function EmployeeCertificatesPage() {
       />
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
-        <KpiCard label="Emitidas"   value={String(certificates.length)}        sub="Listas para descarga"      icon={Award}  borderColor="orange" />
-        <KpiCard label="Pendientes" value={String(pendingCertificates.length)} sub="Cursos sin constancia aún" icon={Clock}  borderColor="amber" />
+        <KpiCard
+          label="Emitidas"
+          value={String(certificates.length)}
+          sub="Listas para descarga"
+          icon={Award}
+          borderColor="orange"
+        />
+        <KpiCard
+          label="Pendientes"
+          value={String(pendingCertificates.length)}
+          sub="Cursos sin constancia aún"
+          icon={Clock}
+          borderColor="amber"
+        />
       </Box>
 
       <EmployeeLearningRefresh autoRefresh pollIntervalMs={60_000} />
 
       {learningData?.syncError ? (
-        <Alert severity="warning" sx={{ borderRadius: 2, border: "1px solid #fde68a", bgcolor: "#fffbeb", color: "#78350f" }}>
+        <Alert
+          severity="warning"
+          sx={{
+            borderRadius: 2,
+            border: "1px solid #fde68a",
+            bgcolor: "#fffbeb",
+            color: "#78350f",
+          }}
+        >
           No pudimos refrescar tus constancias. Mostramos el último dato guardado.
         </Alert>
       ) : null}
 
       {!learningData?.syncError && learningData?.backgroundSyncQueued ? (
-        <Alert severity="info" sx={{ borderRadius: 2, border: "1px solid #bae6fd", bgcolor: "#f0f9ff", color: "#0c4a6e" }}>
+        <Alert
+          severity="info"
+          sx={{
+            borderRadius: 2,
+            border: "1px solid #bae6fd",
+            bgcolor: "#f0f9ff",
+            color: "#0c4a6e",
+          }}
+        >
           Verificando tus constancias más recientes. La vista se actualizará automáticamente.
         </Alert>
       ) : null}
 
       <Box sx={{ display: "grid", gap: 2.5 }}>
-        <Paper elevation={0} sx={{ borderRadius: 2.5, border: "1px solid #f0f0f0", bgcolor: "background.paper", p: 2.5 }}>
-          <Box sx={{ mb: 2, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 2.5,
+            border: "1px solid #f0f0f0",
+            bgcolor: "background.paper",
+            p: 2.5,
+          }}
+        >
+          <Box
+            sx={{
+              mb: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1,
+            }}
+          >
             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
               <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
                 Constancias disponibles
@@ -203,12 +247,22 @@ export default async function EmployeeCertificatesPage() {
         </Paper>
 
         {pendingCertificates.length > 0 ? (
-          <Paper elevation={0} sx={{ borderRadius: 2.5, border: "1px solid #f0f0f0", bgcolor: "background.paper", p: 2.5 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 2.5,
+              border: "1px solid #f0f0f0",
+              bgcolor: "background.paper",
+              p: 2.5,
+            }}
+          >
             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mb: 2 }}>
               <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
                 Pendientes por aparecer
               </Typography>
-              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>{pendingCertificates.length}</Typography>
+              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
+                {pendingCertificates.length}
+              </Typography>
             </Box>
             <Box sx={{ display: "grid", gap: 1 }}>
               {pendingCertificates.map((course) => (

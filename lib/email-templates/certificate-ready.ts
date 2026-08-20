@@ -44,7 +44,7 @@ export function buildCertificateReadyEmail({
             <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(c.courseName)}</div>
             <a href="${c.certificateUrl}" style="color: #3579F5; text-decoration: none; font-size: 13px;">Descargar constancia →</a>
           </td>
-        </tr>`
+        </tr>`,
           )
           .join("\n        ")}
       </table>

@@ -5,14 +5,14 @@ import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 
 const periodConfig = {
-  morning:   { label: "Buenos días",   icon: Sunrise },
+  morning: { label: "Buenos días", icon: Sunrise },
   afternoon: { label: "Buenas tardes", icon: Sun },
-  evening:   { label: "Buenas noches", icon: Moon },
+  evening: { label: "Buenas noches", icon: Moon },
 } as const
 
 export function PortalGreeting({ name }: { name: string; role: string }) {
-  const hour     = new Date().getHours()
-  const period   = hour < 12 ? "morning" : hour < 19 ? "afternoon" : "evening"
+  const hour = new Date().getHours()
+  const period = hour < 12 ? "morning" : hour < 19 ? "afternoon" : "evening"
   const { label: greeting, icon: Icon } = periodConfig[period]
   const firstName = name.split(" ")[0] ?? name
 

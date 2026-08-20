@@ -28,17 +28,11 @@ export async function POST(request: NextRequest) {
   }
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json(
-      { error: "Formato no válido. Usa PNG, JPG o WebP." },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Formato no válido. Usa PNG, JPG o WebP." }, { status: 400 })
   }
 
   if (file.size > MAX_SIZE_BYTES) {
-    return NextResponse.json(
-      { error: "El archivo supera el límite de 2 MB." },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "El archivo supera el límite de 2 MB." }, { status: 400 })
   }
 
   const arrayBuffer = await file.arrayBuffer()

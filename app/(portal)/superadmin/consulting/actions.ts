@@ -5,7 +5,11 @@ import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { getConsultingArea } from "@/lib/consulting-areas"
-import { formatConsultingDateTime, isBusinessDayString, isTimeSlotValid } from "@/lib/consulting-schedule"
+import {
+  formatConsultingDateTime,
+  isBusinessDayString,
+  isTimeSlotValid,
+} from "@/lib/consulting-schedule"
 import { notifyCompanyHr } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
@@ -21,7 +25,12 @@ export async function confirmConsultingRequestAction(formData: FormData) {
   const preferredDate = String(formData.get("preferred_date") ?? "").trim()
   const preferredTime = String(formData.get("preferred_time") ?? "").trim()
 
-  if (!requestId || !isUuid(requestId) || !isBusinessDayString(preferredDate) || !isTimeSlotValid(preferredTime)) {
+  if (
+    !requestId ||
+    !isUuid(requestId) ||
+    !isBusinessDayString(preferredDate) ||
+    !isTimeSlotValid(preferredTime)
+  ) {
     redirect("/superadmin/consulting?error=solicitud")
   }
 
@@ -31,7 +40,8 @@ export async function confirmConsultingRequestAction(formData: FormData) {
   if (!request) redirect("/superadmin/consulting?error=solicitud")
 
   const originalDateKey = request.preferred_date.toISOString().slice(0, 10)
-  const wasRescheduled = originalDateKey !== preferredDate || request.preferred_time !== preferredTime
+  const wasRescheduled =
+    originalDateKey !== preferredDate || request.preferred_time !== preferredTime
 
   await prisma.consultingRequest.update({
     where: { id: requestId },
@@ -58,7 +68,9 @@ export async function confirmConsultingRequestAction(formData: FormData) {
 
   await notifyCompanyHr(request.company_id, {
     tipo: "CONSULTORIA_CONFIRMADA",
-    titulo: wasRescheduled ? "Tu consultoría fue reagendada y confirmada" : "Tu consultoría fue confirmada",
+    titulo: wasRescheduled
+      ? "Tu consultoría fue reagendada y confirmada"
+      : "Tu consultoría fue confirmada",
     mensaje: wasRescheduled
       ? `Tu sesión de ${areaLabel} quedó confirmada para el ${dateTimeLabel} (cambió el horario).`
       : `Tu sesión de ${areaLabel} fue confirmada para el ${dateTimeLabel}.`,

@@ -9,41 +9,47 @@ type SectionCardProps = {
   children: ReactNode
 }
 
-export function SectionCard({ title, description, action, disableContentPadding, children }: SectionCardProps) {
+export function SectionCard({
+  title,
+  description,
+  action,
+  disableContentPadding,
+  children,
+}: SectionCardProps) {
   return (
     <Paper
       elevation={0}
       sx={{
-        borderRadius: '8px',
-        overflow: 'hidden',
-        backgroundColor: '#FFFFFF',
+        borderRadius: "8px",
+        overflow: "hidden",
+        backgroundColor: "#FFFFFF",
       }}
     >
       <Box
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
           gap: 2,
           px: 3,
           py: 2,
-          backgroundColor: '#F3F4F6',
-          borderBottom: '1px solid #E5E7EB',
+          backgroundColor: "#F3F4F6",
+          borderBottom: "1px solid #E5E7EB",
         }}
       >
         <Box>
           <Typography
             sx={{
               fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
-              fontSize: '1rem',
+              fontSize: "1rem",
               fontWeight: 700,
-              color: '#111827',
+              color: "#111827",
             }}
           >
             {title}
           </Typography>
           {description && (
-            <Typography sx={{ mt: 0.25, fontSize: '0.75rem', color: '#6B7280' }}>
+            <Typography sx={{ mt: 0.25, fontSize: "0.75rem", color: "#6B7280" }}>
               {description}
             </Typography>
           )}

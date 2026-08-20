@@ -23,16 +23,17 @@ function getString(formData: FormData, key: string) {
 
 function getSyncErrorMessage(error: unknown) {
   const rawMessage =
-    error instanceof Error
-      ? error.message
-      : "No fue posible sincronizar el paquete con la empresa."
+    error instanceof Error ? error.message : "No fue posible sincronizar el paquete con la empresa."
   const normalizedMessage = rawMessage.toLowerCase()
 
   if (rawMessage.includes("status 404")) {
     return "El plugin de WordPress no tiene el endpoint nuevo de confirmacion de acceso. Actualiza el plugin Desarrolla360 Bridge en WordPress y vuelve a intentar."
   }
 
-  if (rawMessage.includes("status 401") || normalizedMessage.includes("credenciales insuficientes")) {
+  if (
+    rawMessage.includes("status 401") ||
+    normalizedMessage.includes("credenciales insuficientes")
+  ) {
     return "El bridge de WordPress rechazo la autenticacion. Revisa WP_BRIDGE_PORTAL_KEY y la configuracion del plugin en WordPress."
   }
 
@@ -53,16 +54,17 @@ function getSyncErrorMessage(error: unknown) {
 
 function getBundleErrorMessage(error: unknown) {
   const rawMessage =
-    error instanceof Error
-      ? error.message
-      : "No fue posible crear el bundle en Tutor LMS."
+    error instanceof Error ? error.message : "No fue posible crear el bundle en Tutor LMS."
   const normalizedMessage = rawMessage.toLowerCase()
 
   if (normalizedMessage.includes("wp bridge base url")) {
     return "El bridge de WordPress no esta configurado en el portal. Revisa WP_BRIDGE_BASE_URL y WP_BRIDGE_PORTAL_KEY."
   }
 
-  if (normalizedMessage.includes("course bundle addon") || normalizedMessage.includes("bundle addon")) {
+  if (
+    normalizedMessage.includes("course bundle addon") ||
+    normalizedMessage.includes("bundle addon")
+  ) {
     return "En WordPress no esta activo el addon oficial Course Bundle de Tutor LMS. Activalo y vuelve a intentar."
   }
 
@@ -70,7 +72,10 @@ function getBundleErrorMessage(error: unknown) {
     return "El bridge no pudo detectar el tipo de contenido de bundles en Tutor LMS. Revisa que el addon Course Bundle este activo."
   }
 
-  if (normalizedMessage.includes("credenciales insuficientes") || rawMessage.includes("status 401")) {
+  if (
+    normalizedMessage.includes("credenciales insuficientes") ||
+    rawMessage.includes("status 401")
+  ) {
     return "El bridge de WordPress rechazo la autenticacion al intentar crear el bundle. Revisa WP_BRIDGE_PORTAL_KEY y la configuracion del plugin."
   }
 
@@ -93,7 +98,8 @@ export async function createPackageAction(formData: FormData) {
     redirect("/superadmin/packages/new?error=datos")
   }
 
-  let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> = []
+  let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> =
+    []
 
   try {
     const payload = JSON.parse(selectedCoursesRaw) as Array<{
@@ -124,7 +130,7 @@ export async function createPackageAction(formData: FormData) {
   if (!resolvedBundleId) {
     if (!isWordPressBridgeConfigured()) {
       const detail = encodeURIComponent(
-        "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS."
+        "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS.",
       )
       redirect(`/superadmin/packages/new?error=bundle&detail=${detail}`)
     }
@@ -224,7 +230,8 @@ export async function updatePackageAction(formData: FormData) {
     redirect(`/superadmin/packages/${packageId}/edit?error=datos`)
   }
 
-  let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> = []
+  let parsedCourses: Array<{ wpCourseId: number; nombreCurso: string; portadaUrl: string | null }> =
+    []
 
   try {
     const payload = JSON.parse(selectedCoursesRaw) as Array<{
@@ -260,7 +267,7 @@ export async function updatePackageAction(formData: FormData) {
   if (!resolvedBundleId) {
     if (!isWordPressBridgeConfigured()) {
       const detail = encodeURIComponent(
-        "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS."
+        "Configura el bridge de WordPress para que el paquete pueda crear su bundle automaticamente en Tutor LMS.",
       )
       redirect(`/superadmin/packages/${packageId}/edit?error=bundle&detail=${detail}`)
     }
@@ -297,7 +304,9 @@ export async function updatePackageAction(formData: FormData) {
   const nextWpCourseIds = new Set(parsedCourses.map((course) => course.wpCourseId))
 
   const coursesToDelete = pkg.courses.filter((course) => !nextWpCourseIds.has(course.wp_course_id))
-  const coursesToCreate = parsedCourses.filter((course) => !existingByWpCourseId.has(course.wpCourseId))
+  const coursesToCreate = parsedCourses.filter(
+    (course) => !existingByWpCourseId.has(course.wpCourseId),
+  )
   const coursesToUpdate = parsedCourses.filter((course) => {
     const existing = existingByWpCourseId.get(course.wpCourseId)
     if (!existing) return false
@@ -325,9 +334,11 @@ export async function updatePackageAction(formData: FormData) {
       : []),
     ...coursesToUpdate.map((course) =>
       prisma.packageCourse.update({
-        where: { package_id_wp_course_id: { package_id: packageId, wp_course_id: course.wpCourseId } },
+        where: {
+          package_id_wp_course_id: { package_id: packageId, wp_course_id: course.wpCourseId },
+        },
         data: { course_name: course.nombreCurso, cover_url: course.portadaUrl },
-      })
+      }),
     ),
     ...(coursesToCreate.length > 0
       ? [
@@ -402,11 +413,9 @@ export async function deletePackageAction(formData: FormData) {
   }
 
   if (pkg.companies.length > 0) {
-    const companyNames = pkg.companies
-      .map((assignment) => assignment.company.name)
-      .join(", ")
+    const companyNames = pkg.companies.map((assignment) => assignment.company.name).join(", ")
     const detail = encodeURIComponent(
-      `Primero cambia o desactiva el paquete activo en: ${companyNames}.`
+      `Primero cambia o desactiva el paquete activo en: ${companyNames}.`,
     )
     redirect(`/superadmin/packages?error=paquete_asignado&detail=${detail}`)
   }

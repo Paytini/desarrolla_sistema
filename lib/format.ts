@@ -28,9 +28,7 @@ export function decodeHtmlEntities(text: string): string {
 }
 
 const PORTAL_TIME_ZONE =
-  process.env.PORTAL_TIME_ZONE ||
-  process.env.NEXT_PUBLIC_PORTAL_TIME_ZONE ||
-  "America/Tijuana"
+  process.env.PORTAL_TIME_ZONE || process.env.NEXT_PUBLIC_PORTAL_TIME_ZONE || "America/Tijuana"
 
 type DateInput = Date | string | number | null | undefined
 

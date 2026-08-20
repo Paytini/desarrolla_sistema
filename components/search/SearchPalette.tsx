@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Loader2, Search, X } from "lucide-react"
 
 import Box from "@mui/material/Box"
@@ -18,15 +12,15 @@ import Modal from "@mui/material/Modal"
 import Typography from "@mui/material/Typography"
 
 interface SearchPaletteProps<T> {
-  searchUrl:     (query: string) => string
-  placeholder:   string
-  triggerLabel:  string
-  minChars?:     number
+  searchUrl: (query: string) => string
+  placeholder: string
+  triggerLabel: string
+  minChars?: number
   triggerWidth?: number | string
-  renderGroups:  (results: T, query: string, onClose: () => void) => ReactNode
+  renderGroups: (results: T, query: string, onClose: () => void) => ReactNode
 }
 
-export default function SearchPalette<T,>({
+export default function SearchPalette<T>({
   searchUrl,
   placeholder,
   triggerLabel,
@@ -34,17 +28,15 @@ export default function SearchPalette<T,>({
   triggerWidth,
   renderGroups,
 }: SearchPaletteProps<T>) {
-  const [open, setOpen]           = useState(false)
-  const [query, setQuery]         = useState("")
-  const [results, setResults]     = useState<T | null>(null)
-  const [loading, setLoading]     = useState(false)
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<T | null>(null)
+  const [loading, setLoading] = useState(false)
   const [selectedIdx, setSelectedIdx] = useState(-1)
-  const inputRef   = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
 
-  const isMac =
-    typeof navigator !== "undefined" &&
-    navigator.platform.toUpperCase().includes("MAC")
+  const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().includes("MAC")
   const kbd = isMac ? "⌘K" : "Ctrl K"
 
   const close = useCallback(() => {
@@ -74,7 +66,10 @@ export default function SearchPalette<T,>({
 
   const doSearch = useCallback(
     async (q: string) => {
-      if (q.length < minChars) { setResults(null); return }
+      if (q.length < minChars) {
+        setResults(null)
+        return
+      }
       setLoading(true)
       try {
         const res = await fetch(searchUrl(q))
@@ -84,7 +79,7 @@ export default function SearchPalette<T,>({
         setLoading(false)
       }
     },
-    [searchUrl, minChars]
+    [searchUrl, minChars],
   )
 
   useEffect(() => {
@@ -94,13 +89,14 @@ export default function SearchPalette<T,>({
 
   function getItems() {
     if (!resultsRef.current) return []
-    return Array.from(
-      resultsRef.current.querySelectorAll<HTMLElement>("[data-palette-item]")
-    )
+    return Array.from(resultsRef.current.querySelectorAll<HTMLElement>("[data-palette-item]"))
   }
 
   function handleInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Escape") { close(); return }
+    if (e.key === "Escape") {
+      close()
+      return
+    }
     const items = getItems()
     if (!items.length) return
     if (e.key === "ArrowDown") {
@@ -111,7 +107,10 @@ export default function SearchPalette<T,>({
   }
 
   function handleResultsKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    if (e.key === "Escape") { close(); return }
+    if (e.key === "Escape") {
+      close()
+      return
+    }
     const items = getItems()
     if (!items.length) return
     if (e.key === "ArrowDown") {
@@ -242,7 +241,11 @@ export default function SearchPalette<T,>({
                 <Loader2
                   size={17}
                   strokeWidth={2}
-                  style={{ flexShrink: 0, color: "#3B82F6", animation: "spin 0.8s linear infinite" }}
+                  style={{
+                    flexShrink: 0,
+                    color: "#3B82F6",
+                    animation: "spin 0.8s linear infinite",
+                  }}
                 />
               ) : (
                 <Search size={17} strokeWidth={2} style={{ flexShrink: 0, color: "#9CA3AF" }} />
@@ -319,15 +322,14 @@ export default function SearchPalette<T,>({
                 bgcolor: "rgba(0,0,0,0.015)",
               }}
             >
-              {([
-                { key: "↵", label: "Abrir" },
-                { key: "↑↓", label: "Navegar" },
-                { key: "Esc", label: "Cerrar" },
-              ] as const).map(({ key, label }) => (
-                <Box
-                  key={key}
-                  sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
-                >
+              {(
+                [
+                  { key: "↵", label: "Abrir" },
+                  { key: "↑↓", label: "Navegar" },
+                  { key: "Esc", label: "Cerrar" },
+                ] as const
+              ).map(({ key, label }) => (
+                <Box key={key} sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
                   <Box
                     component="kbd"
                     sx={{

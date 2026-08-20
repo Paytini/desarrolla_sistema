@@ -5,7 +5,11 @@ import { EMPLOYEES_ACCESS_PAGE_SIZE, getSuperadminAccessSnapshot } from "@/lib/d
 import { formatDate, formatDateTime } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
-import { AccessTabs, type EmployeeAccessRow, type HrAccessRow } from "@/components/superadmin/AccessTabs"
+import {
+  AccessTabs,
+  type EmployeeAccessRow,
+  type HrAccessRow,
+} from "@/components/superadmin/AccessTabs"
 import { PageHeader } from "@/components/shared/PageHeader"
 
 const successMessages: Record<string, string> = {
@@ -33,8 +37,13 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
   const q = readSearchParam(params, "q")?.toLowerCase() ?? ""
   const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { hrUsers, employeeUsers, employees, total: employeesTotal, grandTotal: employeesGrandTotal } =
-    await getSuperadminAccessSnapshot(q, page)
+  const {
+    hrUsers,
+    employeeUsers,
+    employees,
+    total: employeesTotal,
+    grandTotal: employeesGrandTotal,
+  } = await getSuperadminAccessSnapshot(q, page)
   const employeesTotalPages = Math.max(1, Math.ceil(employeesTotal / EMPLOYEES_ACCESS_PAGE_SIZE))
   const employeesCurrentPage = Math.min(page, employeesTotalPages)
 
@@ -81,9 +90,7 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
         </DismissibleAlert>
       )}
       {error && (
-        <DismissibleAlert severity="error">
-          {errorMessages[error] ?? error}
-        </DismissibleAlert>
+        <DismissibleAlert severity="error">{errorMessages[error] ?? error}</DismissibleAlert>
       )}
 
       <AccessTabs

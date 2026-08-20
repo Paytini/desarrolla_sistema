@@ -6,7 +6,15 @@ import Button from "@mui/material/Button"
 import Dialog from "@mui/material/Dialog"
 import DialogContent from "@mui/material/DialogContent"
 import Typography from "@mui/material/Typography"
-import { Award, BarChart3, BookOpen, CheckCircle2, ClipboardList, GraduationCap, Users } from "lucide-react"
+import {
+  Award,
+  BarChart3,
+  BookOpen,
+  CheckCircle2,
+  ClipboardList,
+  GraduationCap,
+  Users,
+} from "lucide-react"
 
 type Step = {
   icon: React.ReactNode
@@ -60,13 +68,7 @@ const EMPLOYEE_STEPS: Step[] = [
   },
 ]
 
-export function OnboardingTour({
-  role,
-  userId,
-}: {
-  role: "HR" | "EMPLOYEE"
-  userId: string
-}) {
+export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; userId: string }) {
   const storageKey = `d360_onboarding_v1_${role}_${userId}`
   const steps = role === "HR" ? HR_STEPS : EMPLOYEE_STEPS
 
@@ -93,7 +95,7 @@ export function OnboardingTour({
   }
 
   const current = steps[step]
-  const isLast  = step === steps.length - 1
+  const isLast = step === steps.length - 1
 
   return (
     <Dialog
@@ -134,10 +136,21 @@ export function OnboardingTour({
               {current.icon}
             </Box>
             <Box sx={{ pt: 0.25 }}>
-              <Typography sx={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#9CA3AF", mb: 0.5 }}>
+              <Typography
+                sx={{
+                  fontSize: "0.6875rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "#9CA3AF",
+                  mb: 0.5,
+                }}
+              >
                 Paso {step + 1} de {steps.length}
               </Typography>
-              <Typography sx={{ fontSize: "1.0625rem", fontWeight: 700, color: "#111827", lineHeight: 1.3 }}>
+              <Typography
+                sx={{ fontSize: "1.0625rem", fontWeight: 700, color: "#111827", lineHeight: 1.3 }}
+              >
                 {current.title}
               </Typography>
             </Box>

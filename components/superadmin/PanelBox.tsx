@@ -11,37 +11,45 @@ interface PanelBoxProps {
   id?: string
 }
 
-export function PanelBox({ title, description, count, action, children, noPadding, id }: PanelBoxProps) {
+export function PanelBox({
+  title,
+  description,
+  count,
+  action,
+  children,
+  noPadding,
+  id,
+}: PanelBoxProps) {
   return (
     <Paper
       id={id}
       elevation={0}
       sx={{
-        borderRadius: '8px',
-        overflow: 'hidden',
-        backgroundColor: '#FFFFFF',
+        borderRadius: "8px",
+        overflow: "hidden",
+        backgroundColor: "#FFFFFF",
       }}
     >
       <Box
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
           gap: 2,
           px: 2.5,
           py: 2,
-          backgroundColor: '#F3F4F6',
-          borderBottom: '1px solid #E5E7EB',
+          backgroundColor: "#F3F4F6",
+          borderBottom: "1px solid #E5E7EB",
         }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography
               sx={{
                 fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
-                fontSize: '1rem',
+                fontSize: "1rem",
                 fontWeight: 700,
-                color: '#111827',
+                color: "#111827",
               }}
             >
               {title}
@@ -52,19 +60,19 @@ export function PanelBox({ title, description, count, action, children, noPaddin
                 size="small"
                 sx={{
                   height: 20,
-                  fontSize: '11px',
-                  fontVariantNumeric: 'tabular-nums',
+                  fontSize: "11px",
+                  fontVariantNumeric: "tabular-nums",
                   fontWeight: 700,
-                  backgroundColor: '#3B82F6',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  '& .MuiChip-label': { px: 1 },
+                  backgroundColor: "#3B82F6",
+                  color: "#FFFFFF",
+                  border: "none",
+                  "& .MuiChip-label": { px: 1 },
                 }}
               />
             )}
           </Box>
           {description && (
-            <Typography sx={{ mt: 0.5, fontSize: '12px', color: '#6B7280' }}>
+            <Typography sx={{ mt: 0.5, fontSize: "12px", color: "#6B7280" }}>
               {description}
             </Typography>
           )}
