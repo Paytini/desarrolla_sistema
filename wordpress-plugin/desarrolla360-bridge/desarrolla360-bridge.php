@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Desarrolla360 Bridge
  * Description: REST bridge between the Desarrolla360 portal and WordPress/Tutor LMS.
- * Version: 0.2.4
+ * Version: 0.3.0
  * Author: Desarrolla360
  */
 
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'D360_BRIDGE_VERSION', '0.2.4' );
+define( 'D360_BRIDGE_VERSION', '0.3.0' );
 define( 'D360_BRIDGE_OPTION_KEY', 'd360_bridge_settings' );
 define( 'D360_BRIDGE_WEBHOOK_CRON_HOOK', 'd360_bridge_learning_webhook_tick' );
 define( 'D360_BRIDGE_WEBHOOK_CURSOR_OPTION', 'd360_bridge_learning_webhook_cursor' );
@@ -654,11 +654,11 @@ function d360_bridge_upsert_employee( WP_REST_Request $request ) {
 	}
 
 	if ( isset( $params['employee_id'] ) ) {
-		update_user_meta( $user->ID, 'd360_employee_id', absint( $params['employee_id'] ) );
+		update_user_meta( $user->ID, 'd360_employee_id', sanitize_text_field( (string) $params['employee_id'] ) );
 	}
 
 	if ( isset( $params['company']['id'] ) ) {
-		update_user_meta( $user->ID, 'd360_company_id', absint( $params['company']['id'] ) );
+		update_user_meta( $user->ID, 'd360_company_id', sanitize_text_field( (string) $params['company']['id'] ) );
 	}
 
 	if ( isset( $params['company']['name'] ) ) {
@@ -754,8 +754,8 @@ function d360_bridge_resolve_employee_user( $params ) {
 		}
 	}
 
-	$employee_id = isset( $params['employee_id'] ) ? absint( $params['employee_id'] ) : 0;
-	if ( ! $employee_id ) {
+	$employee_id = isset( $params['employee_id'] ) ? sanitize_text_field( (string) $params['employee_id'] ) : '';
+	if ( '' === $employee_id ) {
 		return null;
 	}
 
@@ -4001,8 +4001,8 @@ function d360_bridge_process_learning_webhook_tick() {
 	$source_hashes = array();
 
 	foreach ( $user_ids as $user_id ) {
-		$employee_id = absint( get_user_meta( $user_id, 'd360_employee_id', true ) );
-		$company_id  = absint( get_user_meta( $user_id, 'd360_company_id', true ) );
+		$employee_id = (string) get_user_meta( $user_id, 'd360_employee_id', true );
+		$company_id  = (string) get_user_meta( $user_id, 'd360_company_id', true );
 		$snapshot    = d360_bridge_build_student_learning_snapshot( $user_id );
 
 		update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
