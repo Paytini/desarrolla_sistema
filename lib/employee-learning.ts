@@ -20,8 +20,28 @@ function getEmployeeSyncIntervalMs() {
 }
 
 const EMPLOYEE_SYNC_INTERVAL_MS = getEmployeeSyncIntervalMs()
-const backgroundSyncsInFlight = new Set<string>()
+const SYNC_LOCK_DURATION_MS = 60_000
 const backgroundBatchSyncsInFlight = new Set<string>()
+
+async function claimEmployeeSyncLock(employeeId: string) {
+  const now = new Date()
+  const claim = await prisma.employee.updateMany({
+    where: {
+      id: employeeId,
+      OR: [{ sync_lock_until: null }, { sync_lock_until: { lt: now } }],
+    },
+    data: { sync_lock_until: new Date(now.getTime() + SYNC_LOCK_DURATION_MS) },
+  })
+
+  return claim.count > 0
+}
+
+async function releaseEmployeeSyncLock(employeeId: string) {
+  await prisma.employee.updateMany({
+    where: { id: employeeId },
+    data: { sync_lock_until: null },
+  })
+}
 
 export type EmployeeLearningData = Awaited<ReturnType<typeof getEmployeeLearningData>>
 export type EmployeeLearningBridgeSnapshot = {
@@ -457,12 +477,15 @@ async function syncEmployeeLearningRecord(employeeId: string) {
   }
 }
 
-function scheduleEmployeeLearningSync(employeeId: string) {
-  if (!employeeId || backgroundSyncsInFlight.has(employeeId)) {
+async function scheduleEmployeeLearningSync(employeeId: string) {
+  if (!employeeId) {
     return false
   }
 
-  backgroundSyncsInFlight.add(employeeId)
+  const claimed = await claimEmployeeSyncLock(employeeId)
+  if (!claimed) {
+    return false
+  }
 
   after(async () => {
     try {
@@ -473,7 +496,7 @@ function scheduleEmployeeLearningSync(employeeId: string) {
         error: error instanceof Error ? error.message : String(error),
       })
     } finally {
-      backgroundSyncsInFlight.delete(employeeId)
+      await releaseEmployeeSyncLock(employeeId)
     }
   })
 
@@ -718,7 +741,7 @@ export async function getEmployeeLearningData(
           : "No fue posible refrescar el progreso del alumno desde Tutor LMS."
     }
   } else if (needsSync) {
-    backgroundSyncQueued = scheduleEmployeeLearningSync(employee.id)
+    backgroundSyncQueued = await scheduleEmployeeLearningSync(employee.id)
   }
 
   if (!employee) {

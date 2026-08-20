@@ -23,8 +23,7 @@ import TableHead from "@mui/material/TableHead"
 import TableRow from "@mui/material/TableRow"
 import Typography from "@mui/material/Typography"
 
-const DAY_MS       = 1000 * 60 * 60 * 24
-const STALE_SYNC_MS = 1000 * 60 * 60 * 24
+const DAY_MS = 1000 * 60 * 60 * 24
 
 const successMessages: Record<string, string> = {
   sync_background_started:        "La sincronización global se envió a segundo plano.",
@@ -90,29 +89,28 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
   const syncPage = Math.max(1, Number(readSearchParam(params, "sync_page") ?? "1"))
 
   const { empresas: companies } = await getSuperadminReportsSnapshot()
-  // eslint-disable-next-line react-hooks/purity
-  const now = Date.now()
 
   const companyStats = companies.map((company) => {
-    const activeEmployees          = company.employees.filter((e) => e.active)
-    const suspendedEmployees       = company.employees.length - activeEmployees.length
-    const employeesWithoutWpUser   = activeEmployees.filter((e) => !e.wp_user_id).length
-    const totalCourses             = activeEmployees.reduce((s, e) => s + e.courses.length, 0)
-    const totalProgress            = activeEmployees.reduce((s, e) => s + e.courses.reduce((cs, c) => cs + c.progress_pct, 0), 0)
-    const averageProgress          = totalCourses ? Math.round(totalProgress / totalCourses) : 0
-    const completedCourses         = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => c.completed).length, 0)
-    const notStartedCourses        = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => !c.completed && c.progress_pct === 0).length, 0)
-    const errorCourses             = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => c.access_status === "ERROR").length, 0)
-    const pendingCourses           = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => c.access_status === "PENDING" || c.access_status === "REQUIRES_REVIEW").length, 0)
-    const staleCourses             = activeEmployees.reduce((s, e) => s + e.courses.filter((c) => now - new Date(c.last_synced_at).getTime() > STALE_SYNC_MS).length, 0)
-    const employeesWithoutCourses  = activeEmployees.filter((e) => e.courses.length === 0).length
+    const {
+      activeEmployees,
+      suspendedEmployees,
+      employeesWithoutWpUser,
+      totalCourses,
+      averageProgress,
+      completedCourses,
+      notStartedCourses,
+      errorCourses,
+      pendingCourses,
+      staleCourses,
+      employeesWithoutCourses,
+    } = company
 
     let syncStatus: SyncStatus = "OK"
     if (!company.active) syncStatus = "SUSPENDIDA"
     else if (errorCourses > 0) syncStatus = "ERROR"
     else if (
       employeesWithoutWpUser > 0 || pendingCourses > 0 || staleCourses > 0 ||
-      (activeEmployees.length > 0 && totalCourses === 0)
+      (activeEmployees > 0 && totalCourses === 0)
     ) syncStatus = "PARCIAL"
 
     const activePackage  = company.packages[0]
@@ -121,7 +119,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
 
     return {
       company,
-      activeEmployees: activeEmployees.length,
+      activeEmployees,
       suspendedEmployees,
       employeesWithoutWpUser,
       totalCourses,

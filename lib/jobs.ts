@@ -4,6 +4,7 @@ import { mapWithConcurrency } from "@/lib/concurrency"
 import { syncSingleEmployeePackageEnrollment, type PackageEnrollmentSyncResult } from "@/lib/course-sync"
 import { bridgeUpsertEmployee } from "@/lib/wordpress-bridge"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
+import { sendEmail } from "@/lib/ses"
 
 const JOB_CHUNK_SIZE = 20
 const JOB_CONCURRENCY = 5
@@ -52,6 +53,66 @@ type CsvEmployeeBridgeSyncPayload = {
   pending: CsvBridgeSyncEmployee[]
   syncedCount: number
   warningCount: number
+}
+
+const EMAIL_SEND_MAX_ATTEMPTS = 5
+
+type EmailSendPayload = {
+  to: string
+  subject: string
+  html: string
+  text: string
+  attempts: number
+}
+
+export async function enqueueEmailSendJob(input: { to: string; subject: string; html: string; text: string }) {
+  const job = await prisma.job.create({
+    data: {
+      type: "EMAIL_SEND",
+      payload: {
+        to: input.to,
+        subject: input.subject,
+        html: encryptJobPayloadSecret(input.html),
+        text: encryptJobPayloadSecret(input.text),
+        attempts: 0,
+      },
+    },
+  })
+
+  return job.id
+}
+
+async function processEmailSendJob(jobId: string, payload: EmailSendPayload) {
+  try {
+    await sendEmail({
+      to: payload.to,
+      subject: payload.subject,
+      html: decryptJobPayloadSecret(payload.html),
+      text: decryptJobPayloadSecret(payload.text),
+    })
+    await prisma.job.update({
+      where: { id: jobId },
+      data: { status: "DONE", completed_at: new Date(), result: { to: payload.to } },
+    })
+  } catch (error) {
+    const attempts = payload.attempts + 1
+    const message = error instanceof Error ? error.message.slice(0, 500) : "Error desconocido enviando el correo."
+    const exhausted = attempts >= EMAIL_SEND_MAX_ATTEMPTS
+
+    if (exhausted) {
+      console.error("EMAIL_SEND: agotados los reintentos, correo no enviado", { to: payload.to, attempts, message })
+    }
+
+    await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        payload: { ...payload, attempts },
+        status: exhausted ? "ERROR" : "PENDING",
+        error: exhausted ? message : null,
+        completed_at: exhausted ? new Date() : null,
+      },
+    })
+  }
 }
 
 export async function enqueueCsvEmployeeBridgeSyncJob(input: {
@@ -298,6 +359,8 @@ export async function processPendingJobs(limit: number = JOBS_PER_CRON_TICK) {
         await processPackageEnrollmentSyncJob(job.id, job.payload as PackageEnrollmentSyncPayload)
       } else if (job.type === "CSV_EMPLOYEE_BRIDGE_SYNC") {
         await processCsvEmployeeBridgeSyncJob(job.id, job.payload as CsvEmployeeBridgeSyncPayload)
+      } else if (job.type === "EMAIL_SEND") {
+        await processEmailSendJob(job.id, job.payload as EmailSendPayload)
       } else {
         throw new Error(`Tipo de job desconocido: ${job.type}`)
       }

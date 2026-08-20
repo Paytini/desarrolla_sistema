@@ -13,47 +13,104 @@ import {
 import { prisma } from "@/lib/prisma"
 import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
 
+const REPORTS_STALE_SYNC_MS = 1000 * 60 * 60 * 24
+
+type CompanyKpiRow = {
+  company_id: string
+  active_employees: number
+  suspended_employees: number
+  employees_without_wp_user: number
+  total_courses: number
+  total_progress: number
+  completed_courses: number
+  not_started_courses: number
+  error_courses: number
+  pending_courses: number
+  stale_courses: number
+  employees_without_courses: number
+}
+
+const EMPTY_COMPANY_KPI: Omit<CompanyKpiRow, "company_id"> = {
+  active_employees: 0,
+  suspended_employees: 0,
+  employees_without_wp_user: 0,
+  total_courses: 0,
+  total_progress: 0,
+  completed_courses: 0,
+  not_started_courses: 0,
+  error_courses: 0,
+  pending_courses: 0,
+  stale_courses: 0,
+  employees_without_courses: 0,
+}
+
 const getSuperadminReportsSnapshotCached = unstable_cache(
   async () => {
-    const companies = await prisma.company.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        packages: {
-          where: { active: true },
-          orderBy: { created_at: "desc" },
-          include: {
-            package: {
-              select: {
-                id: true,
-                name: true,
-                delivery_mode: true,
+    const staleThreshold = new Date(Date.now() - REPORTS_STALE_SYNC_MS)
+
+    const [companies, kpiRows] = await Promise.all([
+      prisma.company.findMany({
+        orderBy: { name: "asc" },
+        include: {
+          packages: {
+            where: { active: true },
+            orderBy: { created_at: "desc" },
+            include: {
+              package: {
+                select: {
+                  id: true,
+                  name: true,
+                  delivery_mode: true,
+                },
               },
             },
-          },
-          take: 1,
-        },
-        employees: {
-          select: {
-            id: true,
-            active: true,
-            wp_user_id: true,
-            first_name: true,
-            last_name: true,
-            courses: {
-              select: {
-                course_name: true,
-                progress_pct: true,
-                completed: true,
-                access_status: true,
-                last_synced_at: true,
-              },
-            },
+            take: 1,
           },
         },
-      },
+      }),
+      prisma.$queryRaw<CompanyKpiRow[]>`
+        SELECT
+          c.id AS company_id,
+          COUNT(DISTINCT CASE WHEN e.active THEN e.id END)::int AS active_employees,
+          COUNT(DISTINCT CASE WHEN NOT e.active THEN e.id END)::int AS suspended_employees,
+          COUNT(DISTINCT CASE WHEN e.active AND e.wp_user_id IS NULL THEN e.id END)::int AS employees_without_wp_user,
+          COUNT(ec.id) FILTER (WHERE e.active)::int AS total_courses,
+          COALESCE(SUM(ec.progress_pct) FILTER (WHERE e.active), 0)::int AS total_progress,
+          COUNT(ec.id) FILTER (WHERE e.active AND ec.completed)::int AS completed_courses,
+          COUNT(ec.id) FILTER (WHERE e.active AND NOT ec.completed AND ec.progress_pct = 0)::int AS not_started_courses,
+          COUNT(ec.id) FILTER (WHERE e.active AND ec.access_status = 'ERROR')::int AS error_courses,
+          COUNT(ec.id) FILTER (WHERE e.active AND ec.access_status IN ('PENDING', 'REQUIRES_REVIEW'))::int AS pending_courses,
+          COUNT(ec.id) FILTER (WHERE e.active AND ec.last_synced_at < ${staleThreshold})::int AS stale_courses,
+          COUNT(DISTINCT CASE WHEN e.active AND ec.id IS NULL THEN e.id END)::int AS employees_without_courses
+        FROM companies c
+        LEFT JOIN employees e ON e.company_id = c.id
+        LEFT JOIN employee_courses ec ON ec.employee_id = e.id
+        GROUP BY c.id
+      `,
+    ])
+
+    const kpiByCompanyId = new Map(kpiRows.map((row) => [row.company_id, row]))
+
+    const empresas = companies.map((company) => {
+      const kpi = kpiByCompanyId.get(company.id) ?? EMPTY_COMPANY_KPI
+
+      return {
+        ...company,
+        activeEmployees: kpi.active_employees,
+        suspendedEmployees: kpi.suspended_employees,
+        employeesWithoutWpUser: kpi.employees_without_wp_user,
+        totalCourses: kpi.total_courses,
+        averageProgress: kpi.total_courses ? Math.round(kpi.total_progress / kpi.total_courses) : 0,
+        completedCourses: kpi.completed_courses,
+        notStartedCourses: kpi.not_started_courses,
+        errorCourses: kpi.error_courses,
+        pendingCourses: kpi.pending_courses,
+        staleCourses: kpi.stale_courses,
+        employeesWithoutCourses: kpi.employees_without_courses,
+      }
     })
 
-    return { empresas: companies }
+    return { empresas }
   },
   ["dashboard-snapshot", "superadmin", "reportes"],
   {
@@ -64,6 +121,46 @@ const getSuperadminReportsSnapshotCached = unstable_cache(
 
 export async function getSuperadminReportsSnapshot() {
   return getSuperadminReportsSnapshotCached()
+}
+
+const ACTIVITY_WINDOW_DAYS = 14
+
+type CompanyActivityRow = {
+  company_id: string
+  sync_day: Date
+  count: number
+}
+
+const getSuperadminCourseActivitySnapshotCached = unstable_cache(
+  async () => {
+    const windowStart = new Date(Date.now() - ACTIVITY_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+
+    const rows = await prisma.$queryRaw<CompanyActivityRow[]>`
+      SELECT c.id AS company_id, DATE(ec.last_synced_at) AS sync_day, COUNT(*)::int AS count
+      FROM employee_courses ec
+      JOIN employees e ON e.id = ec.employee_id
+      JOIN companies c ON c.id = e.company_id
+      WHERE ec.last_synced_at >= ${windowStart}
+      GROUP BY c.id, DATE(ec.last_synced_at)
+    `
+
+    return {
+      byCompanyAndDay: rows.map((row) => ({
+        companyId: row.company_id,
+        day: row.sync_day.toISOString().slice(0, 10),
+        count: row.count,
+      })),
+    }
+  },
+  ["dashboard-snapshot", "superadmin", "actividad"],
+  {
+    revalidate: 60,
+    tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_REPORTS_TAG],
+  }
+)
+
+export async function getSuperadminCourseActivitySnapshot() {
+  return getSuperadminCourseActivitySnapshotCached()
 }
 
 const getSuperadminCompaniesSnapshotCached = unstable_cache(

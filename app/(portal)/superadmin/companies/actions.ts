@@ -13,9 +13,9 @@ import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { companyPath } from "@/lib/company-routes"
 import { notifySuperadmins } from "@/lib/notifications"
+import { enqueueEmailSendJob } from "@/lib/jobs"
 import { prisma } from "@/lib/prisma"
 import { ensureUniqueCompanySlug, slugify } from "@/lib/slug"
-import { sendEmail } from "@/lib/ses"
 import { buildCredentialsEmail } from "@/lib/email-templates/credentials"
 import { isUuid } from "@/lib/uuid"
 
@@ -146,14 +146,14 @@ export async function createCompanyAction(
       email: emailRh,
       password: passwordRh,
     })
-    await sendEmail({ to: emailRh, subject, html, text })
+    await enqueueEmailSendJob({ to: emailRh, subject, html, text })
     await createAuditEvent({
       actor,
-      accion:    "EMAIL_CREDENCIALES_ENVIADO",
+      accion:    "EMAIL_CREDENCIALES_ENCOLADO",
       entityType: "EMPRESA",
       entityId:  createdResult.companyId,
       companyId: createdResult.companyId,
-      resumen:   `Se envio el correo de credenciales a ${emailRh}.`,
+      resumen:   `Se encolo el correo de credenciales para ${emailRh}.`,
     })
   } catch (error) {
     await createAuditEvent({
@@ -162,7 +162,7 @@ export async function createCompanyAction(
       entityType: "EMPRESA",
       entityId:  createdResult.companyId,
       companyId: createdResult.companyId,
-      resumen:   `No se pudo enviar el correo de credenciales a ${emailRh}.`,
+      resumen:   `No se pudo encolar el correo de credenciales para ${emailRh}.`,
       metadata: {
         error: error instanceof Error ? error.message : String(error),
       },

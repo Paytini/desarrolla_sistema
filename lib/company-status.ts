@@ -1,10 +1,11 @@
+import { cache } from "react"
 import { prisma } from "@/lib/prisma"
 
 export type CompanyAccessStatus =
   | { blocked: false; reason: null }
   | { blocked: true; reason: "suspendida" | "vencida" }
 
-export async function getCompanyAccessStatus(companyId: string): Promise<CompanyAccessStatus> {
+export const getCompanyAccessStatus = cache(async (companyId: string): Promise<CompanyAccessStatus> => {
   const company = await prisma.company.findUnique({
     where: { id: companyId },
     select: {
@@ -26,4 +27,4 @@ export async function getCompanyAccessStatus(companyId: string): Promise<Company
   }
 
   return { blocked: false, reason: null }
-}
+})

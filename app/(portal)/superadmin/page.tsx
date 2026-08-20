@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation"
 import { Box, Paper, Stack, Typography } from "@mui/material"
-import { getSuperadminCompaniesSnapshot, getSuperadminReportsSnapshot } from "@/lib/dashboard-cache"
+import {
+  getSuperadminCompaniesSnapshot,
+  getSuperadminCourseActivitySnapshot,
+  getSuperadminReportsSnapshot,
+} from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { ActivityFeed } from "@/components/superadmin/ActivityFeed"
@@ -115,9 +119,10 @@ export default async function SuperadminDashboardPage() {
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
 
-  const [{ empresas: companies }, { empresas: companiesWithCourses }, recentEvents] = await Promise.all([
+  const [{ empresas: companies }, { empresas: companiesWithCourses }, { byCompanyAndDay }, recentEvents] = await Promise.all([
     getSuperadminCompaniesSnapshot(),
     getSuperadminReportsSnapshot(),
+    getSuperadminCourseActivitySnapshot(),
     prisma.auditEvent.findMany({
       orderBy: { created_at: "desc" },
       take: 12,
@@ -127,7 +132,7 @@ export default async function SuperadminDashboardPage() {
 
   const activeCompanies       = companies.filter((e) => e.active).length
   const activeCompaniesPct    = companies.length ? Math.round((activeCompanies / companies.length) * 100) : 0
-  const totalActiveEmployees  = companies.reduce((s, e) => s + e.employees.filter((emp) => emp.active).length, 0)
+  const totalActiveEmployees  = companiesWithCourses.reduce((s, e) => s + e.activeEmployees, 0)
   const totalContractedSeats  = companies.reduce((s, e) => s + e.contracted_seats, 0)
   const totalUsedSeats        = companies.reduce((s, e) => s + e.used_seats, 0)
   const occupancyPct          = totalContractedSeats ? Math.round((totalUsedSeats / totalContractedSeats) * 100) : 0
@@ -138,19 +143,14 @@ export default async function SuperadminDashboardPage() {
     .map((e) => ({ company: e, days: Math.floor((new Date(e.packages[0]!.expiration_date as Date).getTime() - now) / DAY_MS) }))
     .sort((a, b) => a.days - b.days)
 
-  const allCourses   = companiesWithCourses.flatMap((e) => e.employees.flatMap((emp) => emp.courses))
-  const completed    = allCourses.filter((c) => c.completed).length
-  const inProgress   = allCourses.filter((c) => !c.completed && c.progress_pct > 0).length
-  const notStarted   = allCourses.filter((c) => c.progress_pct === 0).length
-  const totalCourses = allCourses.length
+  const totalCourses = companiesWithCourses.reduce((s, e) => s + e.totalCourses, 0)
+  const completed    = companiesWithCourses.reduce((s, e) => s + e.completedCourses, 0)
+  const notStarted   = companiesWithCourses.reduce((s, e) => s + e.notStartedCourses, 0)
+  const inProgress   = totalCourses - completed - notStarted
 
   const companyRanking = companiesWithCourses
-    .map((e) => {
-      const courses = e.employees.flatMap((emp) => emp.courses)
-      const avg     = courses.length ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length) : 0
-      return { name: e.name, avg }
-    })
-    .filter((e) => e.avg > 0 || companiesWithCourses.find((ec) => ec.name === e.name)?.employees.length)
+    .map((e) => ({ name: e.name, avg: e.averageProgress, activeEmployees: e.activeEmployees }))
+    .filter((e) => e.avg > 0 || e.activeEmployees > 0)
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 6)
 
@@ -165,14 +165,15 @@ export default async function SuperadminDashboardPage() {
     new Date(now - (ACTIVITY_DAYS - 1 - i) * DAY_MS).toISOString().slice(0, 10)
   )
 
+  const activityByCompany = new Map<string, Map<string, number>>()
+  for (const row of byCompanyAndDay) {
+    const dayCounts = activityByCompany.get(row.companyId) ?? new Map<string, number>()
+    dayCounts.set(row.day, row.count)
+    activityByCompany.set(row.companyId, dayCounts)
+  }
+
   const companyActivitySeries: ActivitySeries[] = companiesWithCourses.map((e, i) => {
-    const dayCounts = new Map<string, number>()
-    e.employees.forEach((emp) => {
-      emp.courses.forEach((c) => {
-        const key = new Date(c.last_synced_at).toISOString().slice(0, 10)
-        if (activityDayKeys.includes(key)) dayCounts.set(key, (dayCounts.get(key) ?? 0) + 1)
-      })
-    })
+    const dayCounts = activityByCompany.get(e.id) ?? new Map<string, number>()
     return {
       name: e.name,
       color: COMPANY_LINE_COLORS[i % COMPANY_LINE_COLORS.length],

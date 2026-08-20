@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { bridgeHealthCheck, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
 
 const TUTOR_WEBHOOK_STATUS_KEY = "tutor_learning_webhook"
+const HEARTBEAT_SAMPLE_INTERVAL_MS = 30_000
 
 type StoredWebhookStatusPayload = {
   event_type?: string | null
@@ -18,6 +19,14 @@ type StoredWebhookStatusPayload = {
 export async function recordTutorLearningWebhookEvent(
   payload: StoredWebhookStatusPayload
 ) {
+  const existing = await prisma.integrationState.findUnique({
+    where: { key: TUTOR_WEBHOOK_STATUS_KEY },
+    select: { updated_at: true },
+  })
+
+  const isStale = !existing || Date.now() - existing.updated_at.getTime() >= HEARTBEAT_SAMPLE_INTERVAL_MS
+  if (!isStale) return
+
   await prisma.integrationState.upsert({
     where: { key: TUTOR_WEBHOOK_STATUS_KEY },
     update: {
@@ -27,6 +36,33 @@ export async function recordTutorLearningWebhookEvent(
       key: TUTOR_WEBHOOK_STATUS_KEY,
       payload,
     },
+  })
+}
+
+function studentIdempotencyKey(wpUserId: number) {
+  return `tutor_learning_webhook_student:${wpUserId}`
+}
+
+export async function isDuplicateTutorLearningWebhook(wpUserId: number, sourceHash: string | null) {
+  if (!sourceHash) return false
+
+  const existing = await prisma.integrationState.findUnique({
+    where: { key: studentIdempotencyKey(wpUserId) },
+    select: { payload: true },
+  })
+
+  const existingHash = (existing?.payload as { source_hash?: string | null } | null)?.source_hash ?? null
+  return existingHash === sourceHash
+}
+
+export async function recordTutorLearningWebhookProcessed(wpUserId: number, sourceHash: string | null) {
+  if (!sourceHash) return
+
+  const key = studentIdempotencyKey(wpUserId)
+  await prisma.integrationState.upsert({
+    where: { key },
+    update: { payload: { source_hash: sourceHash } },
+    create: { key, payload: { source_hash: sourceHash } },
   })
 }
 

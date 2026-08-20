@@ -37,8 +37,10 @@ export default async function CompanyHome() {
   const session = await getSession()
   if (!session || session.user.rol !== "RH" || !session.user.empresa_id) redirect("/login")
 
+  const companyId = session.user.empresa_id
+
   const company = await prisma.company.findUnique({
-    where: { id: session.user.empresa_id },
+    where: { id: companyId },
     include: {
       packages: {
         where: { active: true },
@@ -46,25 +48,22 @@ export default async function CompanyHome() {
         include: { package: { include: { courses: true } } },
         take: 1,
       },
-      employees: {
-        where: { active: true },
-        include: { courses: true, certificates: true },
-      },
     },
   })
 
   if (!company) redirect("/login")
 
+  const [activeEmployees, totalCertificates, progressAverage] = await Promise.all([
+    prisma.employee.count({ where: { company_id: companyId, active: true } }),
+    prisma.certificate.count({ where: { employee: { company_id: companyId, active: true } } }),
+    prisma.employeeCourse.aggregate({
+      where: { employee: { company_id: companyId, active: true } },
+      _avg: { progress_pct: true },
+    }),
+  ])
+
   const activePackage = company.packages[0]?.package
-  const activeEmployees = company.employees.length
-  const totalCertificates = company.employees.reduce(
-    (sum: number, employee) => sum + employee.certificates.length,
-    0
-  )
-  const allProgress = company.employees.flatMap((employee) => employee.courses.map((course) => course.progress_pct))
-  const averageProgress = allProgress.length
-    ? Math.round(allProgress.reduce((sum: number, p: number) => sum + p, 0) / allProgress.length)
-    : 0
+  const averageProgress = Math.round(progressAverage._avg.progress_pct ?? 0)
 
   return (
     <div className="space-y-6">
