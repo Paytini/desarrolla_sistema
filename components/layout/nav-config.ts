@@ -23,6 +23,7 @@ export type NavItem = {
   icon: LucideIcon
   exact?: boolean
   color: KpiColorKey
+  external?: boolean
 }
 export type NavSection = { heading: string; accent: string; items: NavItem[] }
 
@@ -59,7 +60,13 @@ export const navSuperAdminSections: NavSection[] = [
     accent: "var(--sidebar-accent-3)",
     items: [
       { label: "Integración WP", href: "/superadmin/integration", icon: Share2, color: "pink" },
-      { label: "Documentación API", href: "/superadmin/api-docs", icon: Code2, color: "violet" },
+      {
+        label: "Documentación API",
+        href: "/superadmin/api-docs",
+        icon: Code2,
+        color: "violet",
+        external: true,
+      },
     ],
   },
 ]

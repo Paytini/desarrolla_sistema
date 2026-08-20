@@ -50,10 +50,13 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
   const activeText = `var(--nav-active-text, ${text})`
   const hoverBg = `var(--nav-hover-bg, ${bg}14)`
 
+  const LinkComponent = item.external ? "a" : Link
+  const linkProps = item.external ? {} : { prefetch: true }
+
   return (
-    <Link
+    <LinkComponent
       href={item.href}
-      prefetch
+      {...linkProps}
       style={{ textDecoration: "none", color: "inherit", display: "block" }}
     >
       <ListItemButton
@@ -109,7 +112,7 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
           sx={{ my: 0 }}
         />
       </ListItemButton>
-    </Link>
+    </LinkComponent>
   )
 }
 

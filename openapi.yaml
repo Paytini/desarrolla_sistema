@@ -10,6 +10,7 @@ servers:
   - url: https://empresas.desarrolla360.com
     description: Production
 tags:
+  - name: Auth
   - name: Health
   - name: Internal Search
   - name: Notifications
@@ -54,6 +55,19 @@ components:
           type: string
         message:
           type: string
+
+    SessionUser:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        role: { type: string, enum: [SUPERADMIN, HR, EMPLOYEE] }
+        empresa_id: { type: string, format: uuid, nullable: true }
+        nombre: { type: string }
+        empresa: { type: string, nullable: true }
+        empresa_slug: { type: string, nullable: true }
+        name: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        image: { type: string, nullable: true }
 
     Notification:
       type: object
@@ -110,6 +124,117 @@ components:
       description: Search text. Results are empty for queries shorter than 2 characters.
 
 paths:
+  /api/auth/csrf:
+    get:
+      tags: [Auth]
+      summary: Get a CSRF token
+      description: >
+        Must be fetched first and its value submitted as `csrfToken` on both
+        the sign-in and sign-out requests below.
+      security: []
+      responses:
+        "200":
+          description: A fresh CSRF token, also set as a cookie.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csrfToken: { type: string }
+
+  /api/auth/providers:
+    get:
+      tags: [Auth]
+      summary: List configured auth providers
+      security: []
+      responses:
+        "200":
+          description: Only `credentials` is configured — this portal has no OAuth providers.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    name: { type: string }
+                    type: { type: string }
+
+  /api/auth/session:
+    get:
+      tags: [Auth]
+      summary: Get the caller's current session
+      security: [{ sessionCookie: [] }]
+      responses:
+        "200":
+          description: The session, or an empty object if not authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: "#/components/schemas/SessionUser" }
+                  expires: { type: string, format: date-time }
+
+  /api/auth/callback/credentials:
+    post:
+      tags: [Auth]
+      summary: Sign in with email and password
+      description: >
+        Requires a Cloudflare Turnstile token — logins without one are rejected
+        even in local development. On success, sets the session cookie and
+        redirects to `callbackUrl`; on failure, redirects to `/login` with an
+        `error` query param.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, password, turnstileToken, csrfToken]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                turnstileToken:
+                  type: string
+                  description: Token from the Cloudflare Turnstile widget on `/login`.
+                csrfToken:
+                  type: string
+                  description: Value obtained from `GET /api/auth/csrf`.
+                callbackUrl:
+                  type: string
+                  description: Where to redirect on success.
+      responses:
+        "302":
+          description: >
+            Redirects to `callbackUrl` on success. On failure, redirects to
+            `/login?error=<code>`, where `<code>` is `CredentialsSignin`
+            (bad email/password/captcha), `cuenta_pendiente_activacion`
+            (account not yet activated), `empresa_suspendida`, or
+            `empresa_vencida`.
+
+  /api/auth/signout:
+    post:
+      tags: [Auth]
+      summary: Sign out
+      security: [{ sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [csrfToken]
+              properties:
+                csrfToken:
+                  type: string
+                  description: Value obtained from `GET /api/auth/csrf`.
+      responses:
+        "302":
+          description: Session cookie cleared, redirects to the sign-out confirmation page.
+
   /api/health:
     get:
       tags: [Health]

@@ -54,8 +54,10 @@ function MobileNavLink({
   const c = resolveAccent(accentColor)
   const Icon = item.icon
 
+  const LinkComponent = item.external ? "a" : Link
+
   return (
-    <Link
+    <LinkComponent
       href={item.href}
       style={{ textDecoration: "none", color: "inherit", display: "block" }}
       onClick={onClose}
@@ -114,7 +116,7 @@ function MobileNavLink({
           sx={{ my: 0 }}
         />
       </ListItemButton>
-    </Link>
+    </LinkComponent>
   )
 }
 
