@@ -79,10 +79,12 @@ function getSuccessMessage(
   if (!success) return null;
   if (success === "csv_imported") {
     const created = readSearchParam(params, "created") ?? "0";
-    const synced = readSearchParam(params, "synced") ?? "0";
-    const warnings = readSearchParam(params, "warnings") ?? "0";
+    const queued = readSearchParam(params, "queued") === "1";
     const skipped = readSearchParam(params, "skipped") ?? "0";
-    return `Importacion completada. Creados: ${created}. Con acceso activado: ${synced}. Con advertencia de activacion: ${warnings}. Omitidos: ${skipped}.`;
+    const syncNote = queued
+      ? "El acceso a cursos se esta activando en segundo plano."
+      : "";
+    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. ${syncNote}`.trim();
   }
   return successMessages[success] ?? success;
 }

@@ -1,10 +1,121 @@
 import { prisma } from "@/lib/prisma"
 import { mapWithConcurrency } from "@/lib/concurrency"
 import { syncSingleEmployeePackageEnrollment, type PackageEnrollmentSyncResult } from "@/lib/course-sync"
+import { bridgeUpsertEmployee } from "@/lib/wordpress-bridge"
 
 const JOB_CHUNK_SIZE = 20
 const JOB_CONCURRENCY = 5
 const JOBS_PER_CRON_TICK = 5
+
+const CSV_BRIDGE_CHUNK_SIZE = 20
+const CSV_BRIDGE_CONCURRENCY = 5
+
+type CsvBridgeSyncEmployee = {
+  employeeId: string
+  email: string
+  firstName: string
+  lastName: string
+  password: string
+  department: string | null
+  position: string | null
+}
+
+type CsvEmployeeBridgeSyncPayload = {
+  companyId: string
+  companyName: string
+  // Employees not yet synced to WordPress. Each entry (including its
+  // plaintext password, required by the bridge's upsert endpoint) is
+  // dropped from this list the moment it's processed, so a job's payload
+  // never retains a password past the tick that consumed it.
+  pending: CsvBridgeSyncEmployee[]
+  syncedCount: number
+  warningCount: number
+}
+
+export async function enqueueCsvEmployeeBridgeSyncJob(input: {
+  companyId: string
+  companyName: string
+  employees: CsvBridgeSyncEmployee[]
+}) {
+  if (input.employees.length === 0) return null
+
+  const job = await prisma.job.create({
+    data: {
+      type: "CSV_EMPLOYEE_BRIDGE_SYNC",
+      payload: {
+        companyId: input.companyId,
+        companyName: input.companyName,
+        pending: input.employees,
+        syncedCount: 0,
+        warningCount: 0,
+      },
+    },
+  })
+
+  return job.id
+}
+
+async function processCsvEmployeeBridgeSyncJob(jobId: string, payload: CsvEmployeeBridgeSyncPayload) {
+  const chunk = payload.pending.slice(0, CSV_BRIDGE_CHUNK_SIZE)
+  const remaining = payload.pending.slice(CSV_BRIDGE_CHUNK_SIZE)
+
+  const results = await mapWithConcurrency(chunk, CSV_BRIDGE_CONCURRENCY, async (employee) => {
+    try {
+      const bridgeEmployee = await bridgeUpsertEmployee({
+        employeeId: employee.employeeId,
+        companyId: payload.companyId,
+        companyName: payload.companyName,
+        email: employee.email,
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        password: employee.password,
+        department: employee.department,
+        position: employee.position,
+      })
+      return {
+        employeeId: employee.employeeId,
+        email: employee.email,
+        wpUserId: bridgeEmployee.wp_user_id as number | null,
+        ok: true as const,
+      }
+    } catch {
+      return { employeeId: employee.employeeId, email: employee.email, wpUserId: null, ok: false as const }
+    }
+  })
+
+  const synced = results.filter((result) => result.ok)
+  if (synced.length > 0) {
+    await prisma.$transaction(
+      synced.flatMap((result) => [
+        prisma.employee.update({ where: { id: result.employeeId }, data: { wp_user_id: result.wpUserId } }),
+        prisma.user.updateMany({
+          where: { email: result.email, company_id: payload.companyId },
+          data: { wp_user_id: result.wpUserId },
+        }),
+      ])
+    )
+  }
+
+  const syncedCount = payload.syncedCount + synced.length
+  const warningCount = payload.warningCount + (results.length - synced.length)
+  const isDone = remaining.length === 0
+
+  await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      payload: {
+        companyId: payload.companyId,
+        companyName: payload.companyName,
+        pending: remaining,
+        syncedCount,
+        warningCount,
+      },
+      status: isDone ? "DONE" : "PENDING",
+      completed_at: isDone ? new Date() : null,
+      result: isDone ? { synced: syncedCount, warnings: warningCount } : undefined,
+    },
+  })
+}
 
 type PackageEnrollmentSyncPayload = {
   companyId: string
@@ -130,6 +241,8 @@ export async function processPendingJobs(limit: number = JOBS_PER_CRON_TICK) {
     try {
       if (job.type === "PACKAGE_ENROLLMENT_SYNC") {
         await processPackageEnrollmentSyncJob(job.id, job.payload as PackageEnrollmentSyncPayload)
+      } else if (job.type === "CSV_EMPLOYEE_BRIDGE_SYNC") {
+        await processCsvEmployeeBridgeSyncJob(job.id, job.payload as CsvEmployeeBridgeSyncPayload)
       } else {
         throw new Error(`Tipo de job desconocido: ${job.type}`)
       }

@@ -19,6 +19,7 @@ import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
 import { mapWithConcurrency } from "@/lib/concurrency"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
+import { enqueueCsvEmployeeBridgeSyncJob } from "@/lib/jobs"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
 import {
@@ -30,7 +31,6 @@ const CSV_IMPORT_LIMIT = 200
 // native bcrypt runs on libuv's threadpool (4 threads by default); higher
 // concurrency here just queues without adding real parallelism.
 const CSV_HASH_CONCURRENCY = 4
-const CSV_BRIDGE_CONCURRENCY = 5
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -337,10 +337,6 @@ type NormalizedCsvEmployeeRow = {
   password: string
 }
 
-type CreatedCsvEmployee = NormalizedCsvEmployeeRow & {
-  id: string
-}
-
 function normalizeCsvEmployees(
   dataRows: string[][],
   headers: string[],
@@ -409,77 +405,6 @@ function normalizeCsvEmployees(
     employees,
     skipped,
     missingPassword,
-  }
-}
-
-async function syncCsvEmployeesToWordPress(input: {
-  companyContext: CompanyProvisioningContext
-  employees: CreatedCsvEmployee[]
-}) {
-  if (!isWordPressBridgeConfigured() || input.employees.length === 0) {
-    return {
-      synced: 0,
-      bridgeWarnings: 0,
-    }
-  }
-
-  const results = await mapWithConcurrency(
-    input.employees,
-    CSV_BRIDGE_CONCURRENCY,
-    async (employee) => {
-      try {
-        const bridgeEmployee = await bridgeUpsertEmployee({
-          employeeId: employee.id,
-          companyId: input.companyContext.id,
-          companyName: input.companyContext.name,
-          email: employee.email,
-          firstName: employee.nombre,
-          lastName: employee.apellido,
-          password: employee.password,
-          department: employee.departamento,
-          position: employee.puesto,
-        })
-
-        return {
-          status: "synced" as const,
-          employeeId: employee.id,
-          email: employee.email,
-          wpUserId: bridgeEmployee.wp_user_id,
-        }
-      } catch {
-        return {
-          status: "warning" as const,
-          employeeId: employee.id,
-          email: employee.email,
-          wpUserId: null,
-        }
-      }
-    }
-  )
-
-  const syncedResults = results.filter((result) => result.status === "synced")
-
-  if (syncedResults.length > 0) {
-    await prisma.$transaction(
-      syncedResults.flatMap((result) => [
-        prisma.employee.update({
-          where: { id: result.employeeId },
-          data: { wp_user_id: result.wpUserId },
-        }),
-        prisma.user.updateMany({
-          where: {
-            email: result.email,
-            company_id: input.companyContext.id,
-          },
-          data: { wp_user_id: result.wpUserId },
-        }),
-      ])
-    )
-  }
-
-  return {
-    synced: syncedResults.length,
-    bridgeWarnings: results.length - syncedResults.length,
   }
 }
 
@@ -716,13 +641,25 @@ export async function importEmployeesCsvAction(formData: FormData) {
       })
     : []
 
-  const bridgeResult = await syncCsvEmployeesToWordPress({
-    companyContext,
-    employees: createdEmployees,
-  })
   const created = createdEmployees.length
-  const synced = bridgeResult.synced
-  const bridgeWarnings = bridgeResult.bridgeWarnings
+  let queuedSync = false
+
+  if (isWordPressBridgeConfigured() && createdEmployees.length > 0) {
+    const jobId = await enqueueCsvEmployeeBridgeSyncJob({
+      companyId,
+      companyName: companyContext.name,
+      employees: createdEmployees.map((employee) => ({
+        employeeId: employee.id,
+        email: employee.email,
+        firstName: employee.nombre,
+        lastName: employee.apellido,
+        password: employee.password,
+        department: employee.departamento,
+        position: employee.puesto,
+      })),
+    })
+    queuedSync = jobId !== null
+  }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(companyId)
   if (afterSeatSnapshot && created > 0) {
@@ -745,8 +682,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
     resumen: `${actor.nombre} ejecuto importacion masiva CSV de empleados.`,
     metadata: {
       creados: created,
-      sincronizados: synced,
-      advertencias_bridge: bridgeWarnings,
+      sincronizacion_wp_encolada: queuedSync,
       omitidos: skipped,
     },
   })
@@ -760,7 +696,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
   redirect(
-    employeesPath(slug, `?success=csv_imported&created=${created}&synced=${synced}&warnings=${bridgeWarnings}&skipped=${skipped}`)
+    employeesPath(slug, `?success=csv_imported&created=${created}&queued=${queuedSync ? 1 : 0}&skipped=${skipped}`)
   )
 }
 export async function toggleEmployeeStatusAction(formData: FormData) {
