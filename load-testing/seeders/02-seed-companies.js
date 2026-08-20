@@ -24,7 +24,7 @@ async function main() {
     const companyId = company.rows[0].id
     await query(
       `INSERT INTO users (email, password_hash, role, name, company_id, active, created_at, updated_at)
-       VALUES ($1, $2, 'RH', $3, $4, true, now(), now()) ON CONFLICT (email) DO NOTHING`,
+       VALUES ($1, $2, 'HR', $3, $4, true, now(), now()) ON CONFLICT (email) DO NOTHING`,
       [rhEmail, hash, `RH ${names.companyName(i)}`, companyId],
     )
     const cp = await query(

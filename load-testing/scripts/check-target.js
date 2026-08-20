@@ -33,7 +33,7 @@ async function apiLogin(baseUrl, email, password) {
     headers: { Cookie: cookieHeader() },
   })
   const session = await sessionRes.json()
-  if (!session?.user?.rol)
+  if (!session?.user?.role)
     throw new Error(`login fallido para ${email}: ${JSON.stringify(session)}`)
   return { cookieHeader: cookieHeader(), session }
 }
@@ -46,7 +46,7 @@ async function main() {
   console.log(`GET /api/health → ${health}`)
 
   const admin = await apiLogin(base, config.superadmin.email, config.superadmin.password)
-  console.log(`SUPERADMIN ok: ${admin.session.user.rol}`)
+  console.log(`SUPERADMIN ok: ${admin.session.user.role}`)
 
   const rhCsv = fs
     .readFileSync(path.join(config.dataDir, "payloads", "rh-credentials.csv"), "utf8")
@@ -55,7 +55,7 @@ async function main() {
   const [rhEmail, rhPassword, rhSlug] = rhCsv[1].split(",")
   const rh = await apiLogin(base, rhEmail, rhPassword)
   console.log(
-    `RH ok: ${rh.session.user.rol} empresa=${rh.session.user.empresa_slug} (esperado ${rhSlug})`,
+    `RH ok: ${rh.session.user.role} empresa=${rh.session.user.empresa_slug} (esperado ${rhSlug})`,
   )
 
   const empCsv = fs
@@ -64,7 +64,7 @@ async function main() {
     .split("\n")
   const [empEmail, empPassword] = empCsv[1].split(",")
   const emp = await apiLogin(base, empEmail, empPassword)
-  console.log(`EMPLEADO ok: ${emp.session.user.rol}`)
+  console.log(`EMPLEADO ok: ${emp.session.user.role}`)
   console.log("OK: target listo para carga")
 }
 

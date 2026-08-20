@@ -77,7 +77,7 @@ async function main() {
         chunk.map((r) => [
           r[4],
           hash,
-          "EMPLEADO",
+          "EMPLOYEE",
           `${r[2]} ${r[3]}`,
           company.id,
           r[1],
