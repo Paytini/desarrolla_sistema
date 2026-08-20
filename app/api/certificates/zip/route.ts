@@ -1,8 +1,10 @@
+import { Readable } from "node:stream"
 import { NextRequest, NextResponse } from "next/server"
 import JSZip from "jszip"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
+import { mapWithConcurrency } from "@/lib/concurrency"
 import {
   buildIssuedCertificates,
   filterIssuedCertificates,
@@ -12,9 +14,10 @@ import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning
 
 export const runtime = "nodejs"
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 const MAX_ZIP_CERTIFICATES = 100
+const PDF_FETCH_CONCURRENCY = 5
 
 type CompanyEmployee = {
   id: string
@@ -91,16 +94,23 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  for (const { id, folio } of constancias) {
+  const pdfResults = await mapWithConcurrency(constancias, PDF_FETCH_CONCURRENCY, async ({ id, folio }) => {
     try {
       const pdfBytes = await getOrCreateDc3PdfBytes({ certificateId: id })
-      zip.file(`${folio}.pdf`, pdfBytes)
+      return { folio, pdfBytes }
     } catch (err) {
       if (err instanceof Dc3MissingFieldsError) {
         console.error(`[constancias/zip] Constancia ${id} (folio: ${folio}) omitida — campos DC-3 faltantes:`, err.fields)
       } else {
         console.error(`[constancias/zip] Error generando PDF para constancia ${id}:`, err)
       }
+      return null
+    }
+  })
+
+  for (const result of pdfResults) {
+    if (result) {
+      zip.file(`${result.folio}.pdf`, result.pdfBytes)
     }
   }
 
@@ -108,9 +118,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No se pudo generar ningún PDF" }, { status: 500 })
   }
 
-  const zipBuffer = await zip.generateAsync({ type: "nodebuffer" })
+  const nodeStream = zip.generateNodeStream({ type: "nodebuffer" })
+  const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>
 
-  return new NextResponse(zipBuffer as unknown as BodyInit, {
+  return new NextResponse(webStream, {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": 'attachment; filename="constancias-dc3.zip"',
