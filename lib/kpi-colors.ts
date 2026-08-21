@@ -7,7 +7,7 @@ export const kpiColorMap: Record<KpiColorKey, { bg: string; text: string }> = {
   primary: { bg: "#3B82F6", text: "#FFFFFF" },
   emerald: { bg: "#10B981", text: fd.foreground },
   amber: { bg: "#F59E0B", text: fd.foreground },
-  orange: { bg: "#F97316", text: "#FFFFFF" },
+  orange: { bg: "#F97316", text: fd.foreground },
   violet: { bg: "#8B5CF6", text: "#FFFFFF" },
   pink: { bg: "#F472B6", text: "#FFFFFF" },
   rose: { bg: "#EF4444", text: "#FFFFFF" },
