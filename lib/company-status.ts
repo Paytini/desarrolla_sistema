@@ -4,6 +4,23 @@ import { prisma } from "@/lib/prisma"
 export type CompanyAccessStatus =
   { blocked: false; reason: null } | { blocked: true; reason: "suspendida" | "vencida" }
 
+export type CompanyAccessInput = {
+  active: boolean
+  packages: { expiration_date: Date | null }[]
+} | null
+
+export function deriveCompanyAccessStatus(company: CompanyAccessInput): CompanyAccessStatus {
+  if (!company) return { blocked: false, reason: null }
+  if (!company.active) return { blocked: true, reason: "suspendida" }
+
+  const expirationDate = company.packages[0]?.expiration_date ?? null
+  if (expirationDate && expirationDate < new Date()) {
+    return { blocked: true, reason: "vencida" }
+  }
+
+  return { blocked: false, reason: null }
+}
+
 export const getCompanyAccessStatus = cache(
   async (companyId: string): Promise<CompanyAccessStatus> => {
     const company = await prisma.company.findUnique({
@@ -18,14 +35,6 @@ export const getCompanyAccessStatus = cache(
       },
     })
 
-    if (!company) return { blocked: false, reason: null }
-    if (!company.active) return { blocked: true, reason: "suspendida" }
-
-    const expirationDate = company.packages[0]?.expiration_date ?? null
-    if (expirationDate && expirationDate < new Date()) {
-      return { blocked: true, reason: "vencida" }
-    }
-
-    return { blocked: false, reason: null }
+    return deriveCompanyAccessStatus(company)
   },
 )

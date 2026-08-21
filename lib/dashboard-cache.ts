@@ -8,7 +8,6 @@ import {
   SUPERADMIN_REPORTS_TAG,
   companyAssignmentsTag,
   companyCacheRootTag,
-  companyEmployeesTag,
 } from "@/lib/cache-tags"
 import { prisma } from "@/lib/prisma"
 import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
@@ -401,44 +400,6 @@ export async function getSuperadminAccessSnapshot(employeeQuery: string, employe
     getSuperadminAccessEmployeesSnapshotCached(employeeQuery, employeePage),
   ])
   return { hrUsers, ...employeesData }
-}
-
-export async function getHrEmployeesSnapshot(companyId: string) {
-  const snapshot = unstable_cache(
-    async () =>
-      prisma.company.findUnique({
-        where: { id: companyId },
-        include: {
-          employees: {
-            include: {
-              courses: {
-                select: {
-                  access_status: true,
-                },
-              },
-            },
-            orderBy: { created_at: "desc" },
-          },
-          packages: {
-            where: { active: true },
-            orderBy: { created_at: "desc" },
-            include: {
-              package: {
-                select: { name: true },
-              },
-            },
-            take: 1,
-          },
-        },
-      }),
-    ["dashboard-snapshot", "empresa", "empleados", String(companyId)],
-    {
-      revalidate: 45,
-      tags: [companyCacheRootTag(companyId), companyEmployeesTag(companyId)],
-    },
-  )
-
-  return snapshot()
 }
 
 export async function getHrAssignmentsSnapshot(companyId: string) {
