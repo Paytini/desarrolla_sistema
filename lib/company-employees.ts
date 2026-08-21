@@ -45,15 +45,13 @@ export function matchesEmployeeFilters(
     return true
   }
 
-  const haystack = [
+  const fields = [
     employee.first_name,
     employee.last_name,
     employee.email,
     employee.department ?? "",
     employee.position ?? "",
   ]
-    .join(" ")
-    .toLowerCase()
 
-  return haystack.includes(query)
+  return fields.some((field) => field.toLowerCase().includes(query))
 }

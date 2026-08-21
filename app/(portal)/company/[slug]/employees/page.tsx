@@ -206,21 +206,9 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const searchQuery = (readSearchParam(params, "q") ?? "").trim()
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
-  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
+  const parsedPage = Number(readSearchParam(params, "page") ?? "1")
+  const page = Number.isFinite(parsedPage) ? Math.max(1, Math.trunc(parsedPage)) : 1
   const PAGE_SIZE = 20
-
-  const company = await prisma.company.findUnique({
-    where: { id: companyId },
-    select: { slug: true, contracted_seats: true },
-  })
-  if (!company) redirect("/login")
-
-  const activeCompanyPackage = await prisma.companyPackage.findFirst({
-    where: { company_id: companyId, active: true },
-    orderBy: { created_at: "desc" },
-    select: { package: { select: { name: true } } },
-  })
-  const activePackage = activeCompanyPackage?.package?.name ?? "Sin paquete"
 
   const statusFilter =
     status === "active" ? { active: true } : status === "inactive" ? { active: false } : {}
@@ -241,15 +229,34 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
       : {}),
   }
 
-  const [totalEmployees, activeEmployees, employeesWithAccessIssues, filteredCount] =
-    await Promise.all([
-      prisma.employee.count({ where: { company_id: companyId } }),
-      prisma.employee.count({ where: { company_id: companyId, active: true } }),
-      prisma.employee.count({
-        where: { company_id: companyId, courses: { some: { access_status: "ERROR" } } },
-      }),
-      prisma.employee.count({ where: employeeWhere }),
-    ])
+  const [
+    company,
+    activeCompanyPackage,
+    totalEmployees,
+    activeEmployees,
+    employeesWithAccessIssues,
+    filteredCount,
+  ] = await Promise.all([
+    prisma.company.findUnique({
+      where: { id: companyId },
+      select: { slug: true, contracted_seats: true },
+    }),
+    prisma.companyPackage.findFirst({
+      where: { company_id: companyId, active: true },
+      orderBy: { created_at: "desc" },
+      select: { package: { select: { name: true } } },
+    }),
+    prisma.employee.count({ where: { company_id: companyId } }),
+    prisma.employee.count({ where: { company_id: companyId, active: true } }),
+    prisma.employee.count({
+      where: { company_id: companyId, courses: { some: { access_status: "ERROR" } } },
+    }),
+    prisma.employee.count({ where: employeeWhere }),
+  ])
+
+  if (!company) redirect("/login")
+
+  const activePackage = activeCompanyPackage?.package?.name ?? "Sin paquete"
 
   const inactiveEmployees = totalEmployees - activeEmployees
   const availableSeats = Math.max(company.contracted_seats - activeEmployees, 0)
