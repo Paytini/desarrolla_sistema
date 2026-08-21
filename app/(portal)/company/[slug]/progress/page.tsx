@@ -10,7 +10,6 @@ import { SearchInput } from "@/components/shared/SearchInput"
 import { Pagination } from "@/components/shared/Pagination"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
-import { paginate } from "@/lib/pagination"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -90,59 +89,65 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
+  const companyId = session.user.empresa_id
   const params = await searchParams
   const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
   const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
+  const PAGE_SIZE = 20
 
   const company = await prisma.company.findUnique({
-    where: { id: session.user.empresa_id },
-    include: {
-      employees: {
-        where: { active: true },
-        include: {
-          courses: { orderBy: [{ progress_pct: "desc" }, { course_name: "asc" }] },
-        },
-        orderBy: { first_name: "asc" },
-      },
-      packages: {
-        where: { active: true },
-        include: {
-          package: {
-            include: {
-              courses: { select: { wp_course_id: true, cover_url: true } },
-            },
-          },
-        },
-        take: 1,
-      },
-    },
+    where: { id: companyId },
+    select: { id: true, slug: true },
   })
-
   if (!company) redirect("/login")
 
   const { data: learningActivityData, changeVsPreviousWeek } = await getWeeklyLearningActivity(
     company.id,
   )
 
-  const packageCourses = company.packages[0]?.package?.courses ?? []
+  const activeCompanyPackage = await prisma.companyPackage.findFirst({
+    where: { company_id: companyId, active: true },
+    orderBy: { created_at: "desc" },
+    select: {
+      package: { select: { courses: { select: { wp_course_id: true, cover_url: true } } } },
+    },
+  })
+  const packageCourses = activeCompanyPackage?.package?.courses ?? []
   const thumbnailMap = new Map<number, string>(
     packageCourses.filter((c) => c.cover_url).map((c) => [c.wp_course_id, c.cover_url as string]),
   )
 
-  const PAGE_SIZE = 20
-  const employees = company.employees
-  const filteredEmployees = searchQuery
-    ? employees.filter(
-        (e) =>
-          `${e.first_name} ${e.last_name}`.toLowerCase().includes(searchQuery) ||
-          e.email.toLowerCase().includes(searchQuery),
-      )
-    : employees
-  const {
-    items: pagedEmployees,
-    currentPage,
-    totalPages,
-  } = paginate(filteredEmployees, page, PAGE_SIZE)
+  const employeeWhere = {
+    company_id: companyId,
+    active: true,
+    ...(searchQuery
+      ? {
+          OR: [
+            { first_name: { contains: searchQuery, mode: "insensitive" as const } },
+            { last_name: { contains: searchQuery, mode: "insensitive" as const } },
+            { email: { contains: searchQuery, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  }
+
+  const [totalActiveEmployees, filteredCount] = await Promise.all([
+    prisma.employee.count({ where: { company_id: companyId, active: true } }),
+    prisma.employee.count({ where: employeeWhere }),
+  ])
+
+  const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE))
+  const currentPage = Math.min(Math.max(1, page), totalPages)
+
+  const pagedEmployees = await prisma.employee.findMany({
+    where: employeeWhere,
+    orderBy: { first_name: "asc" },
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    include: {
+      courses: { orderBy: [{ progress_pct: "desc" }, { course_name: "asc" }] },
+    },
+  })
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
@@ -151,53 +156,89 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
     const str = qs.toString()
     return str ? `?${str}` : "?"
   }
-  const allCourses = employees.flatMap((e) => e.courses)
-  const averageProgress = allCourses.length
-    ? Math.round(allCourses.reduce((sum, c) => sum + c.progress_pct, 0) / allCourses.length)
-    : 0
-  const employeesWithDelay = employees.filter((e) => {
-    if (e.courses.length === 0) return false
-    const avg = e.courses.reduce((s, c) => s + c.progress_pct, 0) / e.courses.length
-    return avg < 25 || e.courses.some((c) => c.access_status === "ERROR")
-  }).length
-  const completedCourses = allCourses.filter((c) => c.completed).length
-  const startedCourses = allCourses.filter((c) => c.progress_pct > 0).length
 
-  const courseMap = new Map<
-    number,
-    {
-      nombre: string
-      assigned: number
-      completed: number
-      inProgress: number
-      notStarted: number
-      totalProgress: number
-    }
-  >()
+  const [courseAgg, completedCourses, startedCourses, employeeAverages, employeesWithErrorRows] =
+    await Promise.all([
+      prisma.employeeCourse.aggregate({
+        where: { employee: { company_id: companyId, active: true } },
+        _avg: { progress_pct: true },
+      }),
+      prisma.employeeCourse.count({
+        where: { employee: { company_id: companyId, active: true }, completed: true },
+      }),
+      prisma.employeeCourse.count({
+        where: { employee: { company_id: companyId, active: true }, progress_pct: { gt: 0 } },
+      }),
+      prisma.employeeCourse.groupBy({
+        by: ["employee_id"],
+        where: { employee: { company_id: companyId, active: true } },
+        _avg: { progress_pct: true },
+      }),
+      prisma.employeeCourse.findMany({
+        where: { employee: { company_id: companyId, active: true }, access_status: "ERROR" },
+        select: { employee_id: true },
+        distinct: ["employee_id"],
+      }),
+    ])
 
-  for (const course of allCourses) {
-    const current = courseMap.get(course.wp_course_id) ?? {
-      nombre: course.course_name,
-      assigned: 0,
-      completed: 0,
-      inProgress: 0,
-      notStarted: 0,
-      totalProgress: 0,
-    }
-    current.assigned += 1
-    current.totalProgress += course.progress_pct
-    if (course.completed) current.completed += 1
-    else if (course.progress_pct > 0) current.inProgress += 1
-    else current.notStarted += 1
-    courseMap.set(course.wp_course_id, current)
-  }
+  const averageProgress = Math.round(courseAgg._avg.progress_pct ?? 0)
+  const employeesWithErrorSet = new Set(employeesWithErrorRows.map((r) => r.employee_id))
+  const employeesWithDelay = employeeAverages.filter(
+    (row) => (row._avg.progress_pct ?? 0) < 25 || employeesWithErrorSet.has(row.employee_id),
+  ).length
 
-  const courseSummaries = [...courseMap.entries()]
-    .map(([courseId, summary]) => ({
-      courseId,
-      ...summary,
-      averageProgress: summary.assigned ? Math.round(summary.totalProgress / summary.assigned) : 0,
-    }))
+  const [assignedByCourse, completedByCourse, inProgressByCourse, courseNameRows] =
+    await Promise.all([
+      prisma.employeeCourse.groupBy({
+        by: ["wp_course_id"],
+        where: { employee: { company_id: companyId, active: true } },
+        _count: { _all: true },
+        _avg: { progress_pct: true },
+      }),
+      prisma.employeeCourse.groupBy({
+        by: ["wp_course_id"],
+        where: { employee: { company_id: companyId, active: true }, completed: true },
+        _count: { _all: true },
+      }),
+      prisma.employeeCourse.groupBy({
+        by: ["wp_course_id"],
+        where: {
+          employee: { company_id: companyId, active: true },
+          completed: false,
+          progress_pct: { gt: 0 },
+        },
+        _count: { _all: true },
+      }),
+      prisma.employeeCourse.findMany({
+        where: { employee: { company_id: companyId, active: true } },
+        select: { wp_course_id: true, course_name: true },
+        distinct: ["wp_course_id"],
+      }),
+    ])
+
+  const nameByCourse = new Map(courseNameRows.map((r) => [r.wp_course_id, r.course_name]))
+  const completedByCourseMap = new Map(
+    completedByCourse.map((r) => [r.wp_course_id, r._count._all]),
+  )
+  const inProgressByCourseMap = new Map(
+    inProgressByCourse.map((r) => [r.wp_course_id, r._count._all]),
+  )
+
+  const courseSummaries = assignedByCourse
+    .map((row) => {
+      const assigned = row._count._all
+      const completed = completedByCourseMap.get(row.wp_course_id) ?? 0
+      const inProgress = inProgressByCourseMap.get(row.wp_course_id) ?? 0
+      return {
+        courseId: row.wp_course_id,
+        nombre: nameByCourse.get(row.wp_course_id) ?? "",
+        assigned,
+        completed,
+        inProgress,
+        notStarted: assigned - completed - inProgress,
+        averageProgress: Math.round(row._avg.progress_pct ?? 0),
+      }
+    })
     .sort((a, b) => {
       if (a.completed !== b.completed) return b.completed - a.completed
       return a.nombre.localeCompare(b.nombre, "es-MX")
@@ -256,9 +297,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
             <h2 className="text-base font-semibold text-slate-950">
               Avance por empleado
               <span className="ml-2 text-sm font-normal text-slate-400">
-                {searchQuery
-                  ? `${filteredEmployees.length} de ${employees.length}`
-                  : employees.length}
+                {searchQuery ? `${filteredCount} de ${totalActiveEmployees}` : totalActiveEmployees}
               </span>
             </h2>
             <form className="flex gap-2">
@@ -285,7 +324,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
             </form>
           </div>
 
-          {filteredEmployees.length === 0 ? (
+          {filteredCount === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
               {searchQuery
                 ? `Sin resultados para "${searchQuery}".`
@@ -369,7 +408,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            totalResults={filteredEmployees.length}
+            totalResults={filteredCount}
             buildPageUrl={pageUrl}
           />
         </section>
