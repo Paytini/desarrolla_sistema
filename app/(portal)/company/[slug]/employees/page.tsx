@@ -10,13 +10,11 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import StatusToast from "@/components/shared/StatusToast"
 import { AlertCircle, Package, ShieldCheck, Users, UserX } from "lucide-react"
 import {
-  matchesEmployeeFilters,
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
 } from "@/lib/company-employees"
-import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate, getInitials } from "@/lib/format"
-import { paginate } from "@/lib/pagination"
+import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -201,6 +199,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const session = await getSession()
   if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
+  const companyId = session.user.empresa_id
   const params = await searchParams
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
@@ -208,29 +207,69 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
   const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
+  const PAGE_SIZE = 20
 
-  const company = await getHrEmployeesSnapshot(session.user.empresa_id)
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { slug: true, contracted_seats: true },
+  })
   if (!company) redirect("/login")
 
-  const activeEmployees = company.employees.filter((e) => e.active).length
-  const inactiveEmployees = company.employees.length - activeEmployees
+  const activeCompanyPackage = await prisma.companyPackage.findFirst({
+    where: { company_id: companyId, active: true },
+    orderBy: { created_at: "desc" },
+    select: { package: { select: { name: true } } },
+  })
+  const activePackage = activeCompanyPackage?.package?.name ?? "Sin paquete"
+
+  const statusFilter =
+    status === "active" ? { active: true } : status === "inactive" ? { active: false } : {}
+
+  const employeeWhere = {
+    company_id: companyId,
+    ...statusFilter,
+    ...(query
+      ? {
+          OR: [
+            { first_name: { contains: query, mode: "insensitive" as const } },
+            { last_name: { contains: query, mode: "insensitive" as const } },
+            { email: { contains: query, mode: "insensitive" as const } },
+            { department: { contains: query, mode: "insensitive" as const } },
+            { position: { contains: query, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  }
+
+  const [totalEmployees, activeEmployees, employeesWithAccessIssues, filteredCount] =
+    await Promise.all([
+      prisma.employee.count({ where: { company_id: companyId } }),
+      prisma.employee.count({ where: { company_id: companyId, active: true } }),
+      prisma.employee.count({
+        where: { company_id: companyId, courses: { some: { access_status: "ERROR" } } },
+      }),
+      prisma.employee.count({ where: employeeWhere }),
+    ])
+
+  const inactiveEmployees = totalEmployees - activeEmployees
   const availableSeats = Math.max(company.contracted_seats - activeEmployees, 0)
-  const activePackage = company.packages[0]?.package?.name ?? "Sin paquete"
-  const employeesWithAccessIssues = company.employees.filter((e) =>
-    e.courses.some((c) => c.access_status === "ERROR"),
-  ).length
-  const filteredEmployees = company.employees.filter((e) =>
-    matchesEmployeeFilters(e, { query, status }),
-  )
-  const PAGE_SIZE = 20
-  const {
-    items: pagedEmployees,
-    currentPage,
-    totalPages,
-  } = paginate(filteredEmployees, page, PAGE_SIZE)
+
+  const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE))
+  const currentPage = Math.min(Math.max(1, page), totalPages)
+
+  const pagedEmployees = await prisma.employee.findMany({
+    where: employeeWhere,
+    orderBy: { created_at: "desc" },
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    include: {
+      courses: { select: { access_status: true } },
+    },
+  })
+
   const employeesBasePath = companyPath(company.slug, "/employees")
   const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status, currentPage)
-  const exportHref = `/api/company/employees/export${
+  const exportHref = `/api/company/empleados/export${
     currentListPath === employeesBasePath ? "" : currentListPath.replace(employeesBasePath, "")
   }`
 
@@ -303,7 +342,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
           <h2 className="text-base font-semibold text-slate-950">
             Plantilla actual{" "}
             <span className="ml-2 text-sm font-normal text-slate-400">
-              {filteredEmployees.length} de {company.employees.length}
+              {filteredCount} de {totalEmployees}
             </span>
           </h2>
           <a
@@ -321,13 +360,13 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
         />
 
         <div className="space-y-2">
-          {company.employees.length === 0 ? (
+          {totalEmployees === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               Aún no hay empleados registrados para esta empresa.
             </div>
           ) : null}
 
-          {company.employees.length > 0 && filteredEmployees.length === 0 ? (
+          {totalEmployees > 0 && filteredCount === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
               No encontramos empleados que coincidan con ese filtro.
             </div>
@@ -427,7 +466,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalResults={filteredEmployees.length}
+          totalResults={filteredCount}
           buildPageUrl={(p) => buildEmployeeListPath(company.slug, searchQuery, status, p)}
         />
       </section>
