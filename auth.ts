@@ -5,7 +5,7 @@ import { after } from "next/server"
 import bcrypt from "bcrypt"
 import { prisma } from "@/lib/prisma"
 import { verifyTurnstileToken } from "@/lib/turnstile"
-import { getCompanyAccessStatus } from "@/lib/company-status"
+import { deriveCompanyAccessStatus } from "@/lib/company-status"
 import { authConfig } from "@/auth.config"
 
 class EmpresaBloqueadaError extends CredentialsSignin {
@@ -52,7 +52,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             where: { email: credentials.email as string },
             include: {
               company: {
-                select: { name: true, slug: true },
+                select: {
+                  name: true,
+                  slug: true,
+                  active: true,
+                  packages: {
+                    where: { active: true },
+                    select: { expiration_date: true },
+                    take: 1,
+                  },
+                },
               },
             },
           })
@@ -67,7 +76,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (!valida) return null
 
           if (usuario.role !== "SUPERADMIN" && usuario.company_id) {
-            const status = await getCompanyAccessStatus(usuario.company_id)
+            const status = deriveCompanyAccessStatus(usuario.company)
             if (status.blocked) {
               throw new EmpresaBloqueadaError(status.reason)
             }
