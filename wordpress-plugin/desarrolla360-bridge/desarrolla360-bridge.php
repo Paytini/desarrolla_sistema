@@ -2569,6 +2569,7 @@ function d360_bridge_enrich_student_courses( $student_id, $courses ) {
 		}
 
 		$course['raw']['d360_certificate'] = d360_bridge_get_course_certificate_debug_data( $student_id, $course_id );
+		$course['quiz_attempts'] = d360_bridge_get_course_quiz_attempts( $student_id, $course_id );
 
 		$enriched_courses[] = $course;
 	}
@@ -3856,8 +3857,8 @@ function d360_bridge_get_course_quiz_attempts( $student_id, $course_id ) {
 			'total_marks'              => isset( $row['total_marks'] ) ? (float) $row['total_marks'] : 0,
 			'earned_marks'             => isset( $row['earned_marks'] ) ? (float) $row['earned_marks'] : 0,
 			'attempt_status'           => isset( $row['attempt_status'] ) ? $row['attempt_status'] : null,
-			'attempt_started_at'       => isset( $row['attempt_started_at'] ) ? $row['attempt_started_at'] : null,
-			'attempt_ended_at'         => isset( $row['attempt_ended_at'] ) ? $row['attempt_ended_at'] : null,
+			'attempt_started_at'       => isset( $row['attempt_started_at'] ) ? d360_bridge_normalize_datetime_to_iso( $row['attempt_started_at'] ) : null,
+			'attempt_ended_at'         => isset( $row['attempt_ended_at'] ) ? d360_bridge_normalize_datetime_to_iso( $row['attempt_ended_at'] ) : null,
 			'result'                   => isset( $row['result'] ) ? $row['result'] : null,
 		);
 	}
