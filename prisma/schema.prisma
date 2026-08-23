@@ -294,6 +294,7 @@ model Employee {
   company      Company          @relation(fields: [company_id], references: [id])
   courses      EmployeeCourse[]
   certificates Certificate[]
+  quizAttempts QuizAttempt[]
 
   @@index([company_id, active])
   @@map("employees")
@@ -330,6 +331,30 @@ model EmployeeCourse {
   @@index([access_status])
   @@index([completed])
   @@map("employee_courses")
+}
+
+model QuizAttempt {
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id               String    @db.Uuid
+  wp_course_id              Int
+  wp_quiz_id                Int
+  wp_attempt_id             Int       @unique
+  quiz_name                 String?
+  total_questions           Int       @default(0)
+  total_answered_questions  Int       @default(0)
+  total_marks               Float     @default(0)
+  earned_marks              Float     @default(0)
+  attempt_status            String?
+  result                    String? // pass | fail | pending (Tutor LMS's own values)
+  attempt_started_at        DateTime?
+  attempt_ended_at          DateTime?
+  last_synced_at            DateTime  @default(now())
+
+  employee Employee @relation(fields: [employee_id], references: [id])
+
+  @@index([employee_id])
+  @@index([employee_id, wp_course_id])
+  @@map("quiz_attempts")
 }
 
 // ─────────────────────────────────────────────────────────────
