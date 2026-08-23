@@ -1,4 +1,4 @@
-import { FileQuestion } from "lucide-react"
+import { CheckCircle2, FileQuestion } from "lucide-react"
 import { BackButton } from "@/components/shared/BackButton"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
@@ -71,12 +71,16 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
       courses: { orderBy: [{ progress_pct: "desc" }, { course_name: "asc" }] },
       certificates: { orderBy: { issued_at: "desc" } },
       quizAttempts: { orderBy: { attempt_started_at: "desc" } },
+      lessonCompletions: { orderBy: { completed_at: "desc" } },
     },
   })
 
   if (!employee) redirect(companyPath(slug, "/employees"))
 
   const totalCourses = employee.courses.length
+  const courseNameByWpId = new Map(
+    employee.courses.map((course) => [course.wp_course_id, course.course_name]),
+  )
 
   const employeeName = `${employee.first_name} ${employee.last_name}`.trim()
 
@@ -261,6 +265,46 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
                 </div>
               )
             })}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-lg bg-white p-5">
+        <h2 className="mb-4 text-base font-semibold text-slate-950">
+          Lecciones completadas
+          <span className="ml-2 text-sm font-normal text-slate-400">
+            {employee.lessonCompletions.length}
+          </span>
+        </h2>
+
+        {employee.lessonCompletions.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+            <CheckCircle2 size={28} className="text-slate-300" />
+            <p className="text-sm font-medium text-slate-600">Sin lecciones completadas</p>
+            <p className="max-w-md text-xs text-slate-500">
+              Este empleado aún no ha completado ninguna lección en sus cursos asignados.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {employee.lessonCompletions.map((lesson) => (
+              <div
+                key={lesson.id}
+                className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 p-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-950">
+                    {lesson.lesson_name ?? "Lección"}
+                  </p>
+                  <p className="truncate text-xs text-slate-500">
+                    {courseNameByWpId.get(lesson.wp_course_id) ?? "Curso"}
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs text-slate-500">
+                  {lesson.completed_at ? formatDate(lesson.completed_at) : "—"}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </section>
