@@ -35,6 +35,28 @@ function InfoField({ label, value }: { label: string; value: string }) {
   )
 }
 
+const QUIZ_RESULT_VARIANT: Record<string, "green" | "amber" | "red" | "slate"> = {
+  pass: "green",
+  fail: "red",
+  pending: "amber",
+}
+
+const QUIZ_RESULT_LABEL: Record<string, string> = {
+  pass: "Aprobado",
+  fail: "No aprobado",
+  pending: "Pendiente de revisión",
+}
+
+function formatQuizDuration(startedAt: Date | null, endedAt: Date | null) {
+  if (!startedAt || !endedAt) return null
+  const minutes = Math.round((endedAt.getTime() - startedAt.getTime()) / 60000)
+  if (minutes < 1) return "Menos de 1 min"
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  return remainder > 0 ? `${hours} h ${remainder} min` : `${hours} h`
+}
+
 export default async function EmployeeProfilePage({ params }: PageProps) {
   const session = await getSession()
   if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
@@ -47,6 +69,7 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
     include: {
       courses: { orderBy: [{ progress_pct: "desc" }, { course_name: "asc" }] },
       certificates: { orderBy: { issued_at: "desc" } },
+      quizAttempts: { orderBy: { attempt_started_at: "desc" } },
     },
   })
 
@@ -209,15 +232,62 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
       </section>
 
       <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">Intentos de examen</h2>
-        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-          <FileQuestion size={28} className="text-slate-300" />
-          <p className="text-sm font-medium text-slate-600">Aún no disponible</p>
-          <p className="max-w-md text-xs text-slate-500">
-            Esta información requiere una integración adicional con Tutor LMS que todavía no se ha
-            construido.
-          </p>
-        </div>
+        <h2 className="mb-4 text-base font-semibold text-slate-950">
+          Intentos de examen
+          <span className="ml-2 text-sm font-normal text-slate-400">
+            {employee.quizAttempts.length}
+          </span>
+        </h2>
+
+        {employee.quizAttempts.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+            <FileQuestion size={28} className="text-slate-300" />
+            <p className="text-sm font-medium text-slate-600">Sin intentos registrados</p>
+            <p className="max-w-md text-xs text-slate-500">
+              Este empleado aún no ha presentado ningún examen en sus cursos asignados.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {employee.quizAttempts.map((attempt) => {
+              const scorePct = attempt.total_marks
+                ? Math.round((attempt.earned_marks / attempt.total_marks) * 100)
+                : 0
+              const duration = formatQuizDuration(
+                attempt.attempt_started_at,
+                attempt.attempt_ended_at,
+              )
+
+              return (
+                <div key={attempt.id} className="rounded-lg bg-gray-50 p-4">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-950">
+                      {attempt.quiz_name ?? "Examen"}
+                    </p>
+                    {attempt.result ? (
+                      <StatusBadge variant={QUIZ_RESULT_VARIANT[attempt.result] ?? "slate"} dot>
+                        {QUIZ_RESULT_LABEL[attempt.result] ?? attempt.result}
+                      </StatusBadge>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
+                    <span>
+                      Puntaje: {attempt.earned_marks}/{attempt.total_marks} ({scorePct}%)
+                    </span>
+                    <span>
+                      Preguntas respondidas: {attempt.total_answered_questions}/
+                      {attempt.total_questions}
+                    </span>
+                    {duration ? <span>Tiempo: {duration}</span> : null}
+                    {attempt.attempt_started_at ? (
+                      <span>Fecha: {formatDate(attempt.attempt_started_at)}</span>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </section>
     </div>
   )
