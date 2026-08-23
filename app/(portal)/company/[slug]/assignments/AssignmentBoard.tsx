@@ -188,7 +188,7 @@ export default function AssignmentBoard({
           <div className="flex items-center gap-2.5">
             <span
               className="flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: "#3579F5" }}
+              style={{ background: "var(--portal-blue)" }}
             >
               1
             </span>
@@ -208,13 +208,13 @@ export default function AssignmentBoard({
                 value={courseSearch}
                 onChange={(e) => setCourseSearch(e.target.value)}
                 placeholder="Buscar curso..."
-                className="w-56 rounded-lg border border-[#E5E7EB] py-2 pl-8 pr-3 text-sm outline-none transition focus:border-[#3579F5]"
+                className="w-56 rounded-lg border border-portal-border py-2 pl-8 pr-3 text-sm outline-none transition focus:border-portal-blue"
               />
             </div>
             <button
               type="button"
               onClick={() => scrollCourses(-1)}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] text-slate-500 transition hover:bg-gray-50"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-portal-border text-slate-500 transition hover:bg-gray-50"
               aria-label="Desplazar cursos a la izquierda"
             >
               <ChevronLeft size={16} />
@@ -222,7 +222,7 @@ export default function AssignmentBoard({
             <button
               type="button"
               onClick={() => scrollCourses(1)}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] text-slate-500 transition hover:bg-gray-50"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full border border-portal-border text-slate-500 transition hover:bg-gray-50"
               aria-label="Desplazar cursos a la derecha"
             >
               <ChevronRight size={16} />
@@ -252,8 +252,8 @@ export default function AssignmentBoard({
                   onClick={() => selectCourse(course.wp_course_id)}
                   className={`relative flex w-72 shrink-0 flex-col overflow-hidden rounded-2xl border bg-white text-left transition ${
                     isSelected
-                      ? "border-[#3579F5]/50 ring-2 ring-[#3579F5]/15"
-                      : "border-[#efefef] hover:border-[#3579F5]/30"
+                      ? "border-portal-blue/50 ring-2 ring-portal-blue/15"
+                      : "border-[#efefef] hover:border-portal-blue/30"
                   }`}
                 >
                   <div className="relative h-36 w-full shrink-0">
@@ -269,7 +269,7 @@ export default function AssignmentBoard({
                       </div>
                     )}
                     {isSelected && (
-                      <span className="absolute right-2.5 top-2.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[#3579F5] text-white shadow">
+                      <span className="absolute right-2.5 top-2.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-portal-blue text-white shadow">
                         <Check size={13} strokeWidth={3} />
                       </span>
                     )}
@@ -283,7 +283,7 @@ export default function AssignmentBoard({
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                       <div
                         className="h-full rounded-full"
-                        style={{ width: `${pct}%`, background: "#3579F5" }}
+                        style={{ width: `${pct}%`, background: "var(--portal-blue)" }}
                       />
                     </div>
 
@@ -304,7 +304,7 @@ export default function AssignmentBoard({
             <div className="flex items-center gap-2.5">
               <span
                 className="flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                style={{ background: "#3579F5" }}
+                style={{ background: "var(--portal-blue)" }}
               >
                 2
               </span>
@@ -330,13 +330,13 @@ export default function AssignmentBoard({
                 value={employeeSearch}
                 onChange={(e) => setEmployeeSearch(e.target.value)}
                 placeholder="Buscar colaborador..."
-                className="w-full rounded-lg border border-[#E5E7EB] py-2 pl-8 pr-3 text-sm outline-none transition focus:border-[#3579F5]"
+                className="w-full rounded-lg border border-portal-border py-2 pl-8 pr-3 text-sm outline-none transition focus:border-portal-blue"
               />
             </div>
             <select
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-slate-600 outline-none"
+              className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
             >
               <option value="">Todos los departamentos</option>
               {departments.map((d) => (
@@ -348,7 +348,7 @@ export default function AssignmentBoard({
             <select
               value={position}
               onChange={(e) => setPosition(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-slate-600 outline-none"
+              className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
             >
               <option value="">Todos los puestos</option>
               {positions.map((p) => (
@@ -360,14 +360,14 @@ export default function AssignmentBoard({
             <button
               type="button"
               onClick={() => bulkSetVisible(true)}
-              className="whitespace-nowrap rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
+              className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
               Asignar visibles
             </button>
             <button
               type="button"
               onClick={() => bulkSetVisible(false)}
-              className="whitespace-nowrap rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
+              className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
               Quitar visibles
             </button>
@@ -396,7 +396,7 @@ export default function AssignmentBoard({
                 return (
                   <label
                     key={employee.id}
-                    className="group relative flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-[#3579F5]/30 hover:bg-[#F3F8FE] has-[:checked]:border-[#3579F5]/40 has-[:checked]:bg-[#F3F8FE]"
+                    className="group relative flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-portal-blue/30 hover:bg-[#F3F8FE] has-[:checked]:border-portal-blue/40 has-[:checked]:bg-[#F3F8FE]"
                   >
                     <input
                       type="checkbox"
@@ -404,7 +404,7 @@ export default function AssignmentBoard({
                       onChange={() => toggleEmployee(employee.id)}
                       className="sr-only"
                     />
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF1FE] text-xs font-bold text-[#3579F5]">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-portal-blue-soft text-xs font-bold text-portal-blue">
                       {employee.initials}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -415,7 +415,7 @@ export default function AssignmentBoard({
                         {employee.department ?? "Sin depto."} · {employee.position ?? "Sin puesto"}
                       </p>
                     </div>
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-[#3579F5] group-has-[:checked]:bg-[#3579F5]">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-portal-blue group-has-[:checked]:bg-portal-blue">
                       <Check
                         size={10}
                         className="hidden text-white group-has-[:checked]:block"
@@ -439,7 +439,7 @@ export default function AssignmentBoard({
                   type="button"
                   onClick={() => setEmployeePage((p) => Math.max(1, p - 1))}
                   disabled={employeeCurrentPage <= 1}
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-medium text-[#374151] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-portal-border bg-white px-3 py-1.5 text-xs font-medium text-[#374151] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   ← Anterior
                 </button>
@@ -447,7 +447,7 @@ export default function AssignmentBoard({
                   type="button"
                   onClick={() => setEmployeePage((p) => Math.min(employeeTotalPages, p + 1))}
                   disabled={employeeCurrentPage >= employeeTotalPages}
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-xs font-medium text-[#374151] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-portal-border bg-white px-3 py-1.5 text-xs font-medium text-[#374151] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Siguiente →
                 </button>
@@ -469,7 +469,7 @@ export default function AssignmentBoard({
               type="button"
               onClick={handleSave}
               disabled={!isDirty || isPending}
-              className="flex items-center gap-2 rounded-full bg-[#3579F5] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#2A61D6] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+              className="flex items-center gap-2 rounded-full bg-portal-blue px-5 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
             >
               {isPending ? "Guardando..." : "Guardar asignación"}
             </button>

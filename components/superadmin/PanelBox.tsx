@@ -39,7 +39,7 @@ export function PanelBox({
           px: 2.5,
           py: 2,
           backgroundColor: "#F3F4F6",
-          borderBottom: "1px solid #E5E7EB",
+          borderBottom: "1px solid var(--portal-border)",
         }}
       >
         <Box sx={{ minWidth: 0 }}>

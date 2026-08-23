@@ -40,7 +40,7 @@ export default async function PortalLayout({ children }: { children: React.React
         companyLogoUrl={branding?.logo_url}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="relative flex h-16 shrink-0 items-center gap-3 border-b border-[#E5E7EB] bg-white px-4 md:px-6">
+        <header className="relative flex h-16 shrink-0 items-center gap-3 border-b border-portal-border bg-white px-4 md:px-6">
           <MobileNav
             role={role}
             name={name}

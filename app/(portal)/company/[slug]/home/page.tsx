@@ -88,6 +88,7 @@ export default async function CompanyHome() {
           sub={`${activePackage?.courses.length ?? 0} cursos`}
           icon={Package}
           borderColor="amber"
+          valueSize="sm"
         />
         <KpiCard
           label="Avance promedio"
@@ -118,30 +119,30 @@ export default async function CompanyHome() {
             href={companyPath(company.slug, "/employees")}
             label="Gestión de empleados"
             Icon={Users}
-            iconCls="bg-[#EAF1FE] text-[#3579F5]"
+            iconCls="bg-portal-blue-soft text-portal-blue"
           />
           <QuickLink
             href={companyPath(company.slug, "/assignments")}
             label="Asignación de cursos"
             Icon={ClipboardList}
-            iconCls="bg-[#EAF1FE] text-[#3579F5]"
+            iconCls="bg-portal-blue-soft text-portal-blue"
           />
           <QuickLink
             href={companyPath(company.slug, "/progress")}
             label="Progreso y trayectorias"
             Icon={BarChart3}
-            iconCls="bg-[#EAF1FE] text-[#3579F5]"
+            iconCls="bg-portal-blue-soft text-portal-blue"
           />
           <QuickLink
             href={companyPath(company.slug, "/certificates")}
             label="Constancias DC-3"
             Icon={Award}
-            iconCls="bg-[#EAF1FE] text-[#3579F5]"
+            iconCls="bg-portal-blue-soft text-portal-blue"
           />
         </div>
 
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-white px-10 py-6">
-          <RingChart pct={averageProgress} size={96} sw={9} color="#3579F5" />
+          <RingChart pct={averageProgress} size={96} sw={9} color="var(--portal-blue)" />
           <p className="text-xs font-medium text-slate-500">Avance global</p>
         </div>
       </div>

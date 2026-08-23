@@ -12,7 +12,7 @@ export function ProgressDots({ steps, activeStep }: { steps: number; activeStep:
             height: 6,
             width: i === activeStep ? 20 : 6,
             borderRadius: "999px",
-            bgcolor: i === activeStep ? "#3579F5" : "#E5E7EB",
+            bgcolor: i === activeStep ? "var(--portal-blue)" : "var(--portal-border)",
             transition: "width 220ms ease, background-color 220ms ease",
           }}
         />

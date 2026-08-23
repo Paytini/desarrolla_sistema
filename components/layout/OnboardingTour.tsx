@@ -109,7 +109,7 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
           sx: {
             borderRadius: "16px",
             overflow: "hidden",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--portal-border)",
             boxShadow: "0 24px 64px rgba(0,0,0,0.12)",
           },
         },
@@ -168,7 +168,7 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
                   height: 6,
                   width: i === step ? 20 : 6,
                   borderRadius: "999px",
-                  bgcolor: i === step ? "#3B82F6" : "#E5E7EB",
+                  bgcolor: i === step ? "#3B82F6" : "var(--portal-border)",
                   transition: "width 220ms ease, background-color 220ms ease",
                 }}
               />
@@ -201,7 +201,7 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
                     textTransform: "none",
                     fontWeight: 600,
                     fontSize: "0.8125rem",
-                    borderColor: "#E5E7EB",
+                    borderColor: "var(--portal-border)",
                     color: "#374151",
                     borderRadius: "8px",
                     px: 2,

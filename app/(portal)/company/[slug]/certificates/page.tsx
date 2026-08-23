@@ -182,7 +182,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               <select
                 name="dept"
                 defaultValue={issuedDept}
-                className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-slate-600 outline-none"
+                className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
               >
                 <option value="">Todos los departamentos</option>
                 {departments.map((d) => (
@@ -194,7 +194,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               <select
                 name="course"
                 defaultValue={issuedCourse}
-                className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-slate-600 outline-none"
+                className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
               >
                 <option value="">Todos los cursos</option>
                 {courseNames.map((c) => (
@@ -205,14 +205,14 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               </select>
               <button
                 type="submit"
-                className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
+                className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
               >
                 Filtrar
               </button>
               {issuedHasFilters ? (
                 <a
                   href="?"
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
+                  className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
                 >
                   Limpiar
                 </a>
@@ -251,7 +251,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                       >
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#EAF1FE] text-[11px] font-bold text-[#3579F5]">
+                            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-[11px] font-bold text-portal-blue">
                               {initials}
                             </div>
                             <span className="min-w-0 truncate font-medium text-[#1a1a1a]">
@@ -285,7 +285,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                               href={`/api/certificates/${certificate.id}/dc3`}
                               target="_blank"
                               rel="noreferrer"
-                              className="rounded-xl bg-[#3579F5] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#2A61D6]"
+                              className="rounded-xl bg-portal-blue px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-portal-blue-hover"
                             >
                               DC-3
                             </a>
@@ -329,7 +329,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               <select
                 name="pdept"
                 defaultValue={pendingDept}
-                className="rounded-lg border border-[#E5E7EB] px-3 py-2 text-sm text-slate-600 outline-none"
+                className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
               >
                 <option value="">Todos los departamentos</option>
                 {departments.map((d) => (
@@ -340,14 +340,14 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               </select>
               <button
                 type="submit"
-                className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
+                className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
               >
                 Filtrar
               </button>
               {pendingHasFilters ? (
                 <a
                   href="?"
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
+                  className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
                 >
                   Limpiar
                 </a>

@@ -118,7 +118,7 @@ export function ScheduleStep({
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#3579F5",
+          color: "var(--portal-blue)",
           mb: 1,
         }}
       >
@@ -187,12 +187,12 @@ export function ScheduleStep({
                   borderRadius: "8px",
                   border: "none",
                   cursor: selectable ? "pointer" : "default",
-                  bgcolor: selected ? "#3579F5" : "transparent",
+                  bgcolor: selected ? "var(--portal-blue)" : "transparent",
                   color: selected ? "#FFFFFF" : selectable ? "text.primary" : "#D1D5DB",
                   fontWeight: selected ? 700 : 500,
                   fontSize: 13,
                   "&:hover": selectable
-                    ? { bgcolor: selected ? "#3579F5" : "rgba(53, 121, 245, 0.08)" }
+                    ? { bgcolor: selected ? "var(--portal-blue)" : "rgba(53, 121, 245, 0.08)" }
                     : undefined,
                 }}
               >
@@ -222,9 +222,9 @@ export function ScheduleStep({
                     py: 0.75,
                     borderRadius: "999px",
                     border: "1.5px solid",
-                    borderColor: selected ? "#3579F5" : "#E5E7EB",
+                    borderColor: selected ? "var(--portal-blue)" : "var(--portal-border)",
                     bgcolor: selected ? "rgba(53, 121, 245, 0.08)" : "transparent",
-                    color: selected ? "#3579F5" : "text.primary",
+                    color: selected ? "var(--portal-blue)" : "text.primary",
                     fontWeight: 600,
                     fontSize: 13,
                     cursor: "pointer",

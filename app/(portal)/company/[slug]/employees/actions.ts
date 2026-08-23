@@ -423,7 +423,17 @@ export async function createEmployeeAction(formData: FormData) {
   const ocupacionEspecificaClave = getString(formData, "ocupacion_especifica_clave")
   const ocupacionEspecifica = getString(formData, "ocupacion_especifica")
 
-  if (!nombre || !apellido || !email) {
+  if (
+    !nombre ||
+    !apellido ||
+    !apellidoMaterno ||
+    !email ||
+    !curp ||
+    !departamento ||
+    !puesto ||
+    !ocupacionEspecificaClave ||
+    !ocupacionEspecifica
+  ) {
     redirect(employeesPath(slug, "?error=datos"))
   }
 

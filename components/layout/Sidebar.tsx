@@ -36,9 +36,9 @@ const SIDEBAR_OVERLAY =
   "var(--sidebar-overlay-v4, linear-gradient(to bottom, rgba(139,92,246,0) 0%, rgba(139,92,246,0.10) 45%, rgba(139,92,246,0.55) 100%))"
 
 const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)": "#3579F5",
-  "var(--sidebar-accent-2)": "#3579F5",
-  "var(--sidebar-accent-3)": "#3579F5",
+  "var(--brand)": "var(--portal-blue)",
+  "var(--sidebar-accent-2)": "var(--portal-blue)",
+  "var(--sidebar-accent-3)": "var(--portal-blue)",
 }
 const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
@@ -279,12 +279,12 @@ export default function Sidebar({
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
-                  <LifeBuoy size={15} strokeWidth={2} color="#3579F5" />
+                  <LifeBuoy size={15} strokeWidth={2} color="var(--portal-blue)" />
                   <Typography
                     sx={{
                       fontSize: "0.6875rem",
                       fontWeight: 700,
-                      color: "#3579F5",
+                      color: "var(--portal-blue)",
                       textTransform: "uppercase",
                       letterSpacing: "0.08em",
                     }}
@@ -324,12 +324,12 @@ export default function Sidebar({
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
-                  <CalendarClock size={15} strokeWidth={2} color="#3579F5" />
+                  <CalendarClock size={15} strokeWidth={2} color="var(--portal-blue)" />
                   <Typography
                     sx={{
                       fontSize: "0.6875rem",
                       fontWeight: 700,
-                      color: "#3579F5",
+                      color: "var(--portal-blue)",
                       textTransform: "uppercase",
                       letterSpacing: "0.08em",
                     }}

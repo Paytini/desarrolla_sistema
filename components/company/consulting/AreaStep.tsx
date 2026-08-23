@@ -21,7 +21,7 @@ export function AreaStep({ value, onChange, onNext }: AreaStepProps) {
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#3579F5",
+          color: "var(--portal-blue)",
           mb: 1,
         }}
       >
@@ -50,7 +50,7 @@ export function AreaStep({ value, onChange, onNext }: AreaStepProps) {
                 textAlign: "left",
                 cursor: "pointer",
                 border: "2px solid",
-                borderColor: selected ? "#3579F5" : "#E5E7EB",
+                borderColor: selected ? "var(--portal-blue)" : "var(--portal-border)",
                 bgcolor: selected ? "rgba(53, 121, 245, 0.06)" : "background.paper",
                 borderRadius: "12px",
                 p: 2,
@@ -59,7 +59,7 @@ export function AreaStep({ value, onChange, onNext }: AreaStepProps) {
                 alignItems: "flex-start",
                 transition: "border-color 150ms, background-color 150ms",
                 font: "inherit",
-                "&:hover": { borderColor: "#3579F5" },
+                "&:hover": { borderColor: "var(--portal-blue)" },
               }}
             >
               <Box

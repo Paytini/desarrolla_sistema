@@ -13,9 +13,10 @@ type CnoEntry = (typeof CNO_CATALOG)[number]
 type Props = {
   defaultCode?: string | null
   defaultName?: string | null
+  required?: boolean
 }
 
-export default function CnoSelect({ defaultCode, defaultName }: Props) {
+export default function CnoSelect({ defaultCode, defaultName, required = false }: Props) {
   const initialEntry = defaultCode
     ? (CNO_CATALOG.find((e) => e.clave === defaultCode) ?? null)
     : null
@@ -32,7 +33,7 @@ export default function CnoSelect({ defaultCode, defaultName }: Props) {
   return (
     <Box>
       <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 400, color: "#334155" }}>
-        Ocupación
+        Ocupación {required && <Box component="span" sx={{ color: "#f43f5e" }}>*</Box>}
       </Typography>
 
       <Autocomplete
@@ -44,7 +45,11 @@ export default function CnoSelect({ defaultCode, defaultName }: Props) {
         size="small"
         noOptionsText="Sin resultados"
         renderInput={(params) => (
-          <TextField {...params} placeholder="Busca por clave (03.4) o nombre (Instalación...)" />
+          <TextField
+            {...params}
+            required={required}
+            placeholder="Busca por clave (03.4) o nombre (Instalación...)"
+          />
         )}
         renderGroup={(params) => (
           <li key={params.key}>
@@ -102,7 +107,12 @@ export default function CnoSelect({ defaultCode, defaultName }: Props) {
         }}
       />
 
-      <input type="hidden" name="ocupacion_especifica_clave" value={selected?.clave ?? ""} />
+      <input
+        type="hidden"
+        name="ocupacion_especifica_clave"
+        value={selected?.clave ?? ""}
+        required={required}
+      />
       <input
         type="hidden"
         name="ocupacion_especifica"

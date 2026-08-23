@@ -78,6 +78,7 @@ export default async function CompanyAssignmentsPage() {
           sub="Catálogo disponible"
           icon={Package}
           borderColor="amber"
+          valueSize="sm"
         />
         <KpiCard
           label="Cursos disponibles"

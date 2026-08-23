@@ -229,7 +229,7 @@ export default async function SuperadminDashboardPage() {
 
   const ACTIVITY_DAYS = 14
   const COMPANY_LINE_COLORS = [
-    "#3579F5",
+    "var(--portal-blue)",
     "#161B23",
     "rgba(53,121,245,0.5)",
     "rgba(22,27,35,0.4)",

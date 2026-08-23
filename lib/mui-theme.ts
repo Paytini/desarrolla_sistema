@@ -11,7 +11,7 @@ export const muiTheme = createTheme({
     info: { main: "#3B82F6" },
     background: { default: "#F3F4F6", paper: "#FFFFFF" },
     text: { primary: "#111827", secondary: "#6B7280" },
-    divider: "#E5E7EB",
+    divider: "var(--portal-border)",
     action: { hover: "rgba(59,130,246,0.06)", selected: "rgba(59,130,246,0.10)" },
   },
   shadows: Array(25).fill("none") as Shadows,
@@ -126,7 +126,7 @@ export const muiTheme = createTheme({
       styleOverrides: { paper: { border: "none", backgroundImage: "none" } },
     },
     MuiDivider: {
-      styleOverrides: { root: { borderColor: "#E5E7EB" } },
+      styleOverrides: { root: { borderColor: "var(--portal-border)" } },
     },
     MuiListItemButton: {
       styleOverrides: {
@@ -143,7 +143,7 @@ export const muiTheme = createTheme({
           "& .MuiOutlinedInput-root": {
             borderRadius: "8px",
             backgroundColor: "#FFFFFF",
-            "& fieldset": { borderColor: "#E5E7EB", borderWidth: "1px" },
+            "& fieldset": { borderColor: "var(--portal-border)", borderWidth: "1px" },
             "&:hover fieldset": { borderColor: "#D1D5DB", borderWidth: "1px" },
             "&.Mui-focused fieldset": {
               borderColor: "#3B82F6",
@@ -213,7 +213,7 @@ export const muiTheme = createTheme({
       },
     },
     MuiTableCell: {
-      styleOverrides: { root: { borderColor: "#E5E7EB", fontSize: "0.875rem" } },
+      styleOverrides: { root: { borderColor: "var(--portal-border)", fontSize: "0.875rem" } },
     },
     MuiTableRow: {
       styleOverrides: {
@@ -271,7 +271,7 @@ export const muiTheme = createTheme({
     },
     MuiLinearProgress: {
       styleOverrides: {
-        root: { borderRadius: "9999px", backgroundColor: "#E5E7EB" },
+        root: { borderRadius: "9999px", backgroundColor: "var(--portal-border)" },
         bar: { borderRadius: "9999px" },
       },
     },
@@ -281,8 +281,8 @@ export const muiTheme = createTheme({
 // designV4: monochrome + single-accent palette, shared by all portal roles.
 export const muiThemeV4 = createTheme(muiTheme, {
   palette: {
-    primary: { main: "#3579F5", dark: "#2A61D6", light: "#6B9EF8", contrastText: "#FFFFFF" },
-    info: { main: "#3579F5" },
+    primary: { main: "var(--portal-blue)", dark: "var(--portal-blue-hover)", light: "#6B9EF8", contrastText: "#FFFFFF" },
+    info: { main: "var(--portal-blue)" },
     background: { default: "#F8F9FC", paper: "#FEFEFE" },
     text: { primary: "#161B23", secondary: "#6B7280" },
     divider: "#CED5E0",

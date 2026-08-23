@@ -169,10 +169,10 @@ export default async function EmployeeCertificatesPage() {
                       height: 36,
                       flexShrink: 0,
                       borderRadius: 2,
-                      bgcolor: "#EAF1FE",
+                      bgcolor: "var(--portal-blue-soft)",
                       fontSize: "11px",
                       fontWeight: 700,
-                      color: "#3579F5",
+                      color: "var(--portal-blue)",
                     }}
                   >
                     {certificate.course_name.charAt(0).toUpperCase()}
@@ -232,9 +232,9 @@ export default async function EmployeeCertificatesPage() {
                         borderRadius: 2,
                         fontSize: 11,
                         fontWeight: 600,
-                        bgcolor: "#3579F5",
+                        bgcolor: "var(--portal-blue)",
                         color: "#fff",
-                        "&:hover": { bgcolor: "#2A61D6" },
+                        "&:hover": { bgcolor: "var(--portal-blue-hover)" },
                       }}
                     >
                       Descargar DC-3

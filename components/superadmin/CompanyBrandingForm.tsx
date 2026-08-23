@@ -58,7 +58,7 @@ export function CompanyBrandingForm({
             width: 180,
             height: 180,
             borderRadius: "14px",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--portal-border)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

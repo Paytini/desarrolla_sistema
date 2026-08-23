@@ -307,14 +307,14 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
               />
               <button
                 type="submit"
-                className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
+                className="rounded-lg border border-portal-border bg-white px-3 py-1.5 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
               >
                 Buscar
               </button>
               {searchQuery && (
                 <a
                   href="?"
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-1.5 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
+                  className="rounded-lg border border-portal-border bg-white px-3 py-1.5 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
                 >
                   Limpiar
                 </a>
@@ -359,7 +359,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                   errors > 0
                     ? "bg-rose-500"
                     : avg >= 75
-                      ? "bg-[#3579F5]"
+                      ? "bg-portal-blue"
                       : avg > 0
                         ? "bg-amber-500"
                         : "bg-slate-300"
@@ -371,7 +371,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                     <div className="mb-3 flex items-center gap-2.5">
                       <div
                         className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                          errors > 0 ? "bg-rose-100 text-rose-700" : "bg-[#EAF1FE] text-[#3579F5]"
+                          errors > 0 ? "bg-rose-100 text-rose-700" : "bg-portal-blue-soft text-portal-blue"
                         }`}
                       >
                         {initials}
@@ -433,8 +433,8 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={thumb} alt="" className="h-[90px] w-full object-cover" />
                     ) : (
-                      <div className="flex h-[56px] items-center justify-center bg-[#EAF1FE]">
-                        <span className="text-xl font-bold text-[#3579F5]/20">
+                      <div className="flex h-[56px] items-center justify-center bg-portal-blue-soft">
+                        <span className="text-xl font-bold text-portal-blue/20">
                           {course.nombre.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -450,13 +450,13 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                       </div>
                       <div className="mb-2 h-2 overflow-hidden rounded-full bg-slate-200">
                         <div
-                          className="h-full rounded-full bg-[#3579F5]"
+                          className="h-full rounded-full bg-portal-blue"
                           style={{ width: `${course.averageProgress}%` }}
                         />
                       </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
                         <span>{course.assigned} asignados</span>
-                        <span className="text-[#3579F5]">{course.completed} completados</span>
+                        <span className="text-portal-blue">{course.completed} completados</span>
                         <span>{course.inProgress} en curso</span>
                         <span>{course.notStarted} sin iniciar</span>
                       </div>

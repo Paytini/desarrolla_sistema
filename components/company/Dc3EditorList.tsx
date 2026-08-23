@@ -661,7 +661,7 @@ function CourseEditorCard({
                   sx={{
                     borderRadius: "12px",
                     border: "2px dashed",
-                    borderColor: uploadingSignature ? "#3579F5" : "#CBD5E1",
+                    borderColor: uploadingSignature ? "var(--portal-blue)" : "#CBD5E1",
                     bgcolor: uploadingSignature ? "rgba(53,121,245,0.03)" : "#fafafa",
                     cursor: uploadingSignature ? "default" : "pointer",
                     display: "flex",
@@ -674,7 +674,7 @@ function CourseEditorCard({
                     "&:hover": uploadingSignature
                       ? {}
                       : {
-                          borderColor: "#3579F5",
+                          borderColor: "var(--portal-blue)",
                           bgcolor: "rgba(53,121,245,0.04)",
                         },
                   }}
@@ -687,12 +687,12 @@ function CourseEditorCard({
                           height: 32,
                           borderRadius: "50%",
                           border: "2.5px solid #e2e8f0",
-                          borderTopColor: "#3579F5",
+                          borderTopColor: "var(--portal-blue)",
                           animation: "spin 0.7s linear infinite",
                           "@keyframes spin": { to: { transform: "rotate(360deg)" } },
                         }}
                       />
-                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#3579F5" }}>
+                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: "var(--portal-blue)" }}>
                         Subiendo firma…
                       </Typography>
                     </>

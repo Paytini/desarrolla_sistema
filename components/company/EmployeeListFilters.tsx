@@ -43,13 +43,13 @@ export default function EmployeeListFilters({
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Nombre, correo, área o puesto..."
         aria-label="Buscar empleados"
-        className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#3579F5]"
+        className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-portal-blue"
       />
       <select
         value={status}
         onChange={(e) => setStatus(e.target.value)}
         aria-label="Filtrar por estado"
-        className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#3579F5]"
+        className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-portal-blue"
       >
         <option value="all">Todos</option>
         <option value="active">Activos</option>

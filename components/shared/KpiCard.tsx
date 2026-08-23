@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import { Paper, Box, Typography } from "@mui/material"
 import { RingChart } from "@/components/shared/RingChart"
 import { fd } from "@/lib/theme-tokens"
@@ -14,6 +15,8 @@ type KpiCardProps = {
   borderColor?: KpiBorderColor
   alert?: boolean
   ring?: number
+  /** "sm" for long text values (e.g. a package name) so they don't wrap and blow out the card height next to numeric KPIs. */
+  valueSize?: "lg" | "sm"
 }
 
 export default function KpiCard({
@@ -24,6 +27,7 @@ export default function KpiCard({
   borderColor = "violet",
   alert = false,
   ring,
+  valueSize = "lg",
 }: KpiCardProps) {
   const { bg, text } = kpiColorMap[alert ? "rose" : borderColor]
 
@@ -32,9 +36,22 @@ export default function KpiCard({
   const ringArc = isLight ? "rgba(17,24,39,0.75)" : "rgba(255,255,255,0.92)"
   const ringTrack = isLight ? "rgba(17,24,39,0.15)" : "rgba(255,255,255,0.22)"
 
+  // The shared --kpi-* tokens (designV4) flatten every card to the same
+  // monochrome look, so an "alert" card needs its own override to actually
+  // stand out instead of silently no-oping under that theme.
+  const alertStyle = alert
+    ? ({
+        "--kpi-border": "#EF4444",
+        "--kpi-icon-display": "flex",
+        "--kpi-icon-bg": "rgba(239, 68, 68, 0.12)",
+        "--kpi-icon-color": "#EF4444",
+      } as CSSProperties)
+    : undefined
+
   return (
     <Paper
       elevation={0}
+      style={alertStyle}
       sx={{
         borderRadius: "var(--kpi-radius, 8px)",
         backgroundColor: `var(--kpi-bg, ${bg})`,
@@ -98,9 +115,9 @@ export default function KpiCard({
           <Typography
             sx={{
               fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
-              fontSize: "2rem",
+              fontSize: valueSize === "sm" ? "1.25rem" : "2rem",
               fontWeight: 800,
-              lineHeight: 1.1,
+              lineHeight: 1.25,
               fontVariantNumeric: "tabular-nums",
               color: `var(--kpi-text, ${text})`,
             }}

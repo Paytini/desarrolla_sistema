@@ -77,7 +77,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
         key={request.id}
         className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
       >
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF1FE] text-[#3579F5]">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-portal-blue-soft text-portal-blue">
           <Icon size={18} />
         </div>
         <div className="min-w-0 flex-1">

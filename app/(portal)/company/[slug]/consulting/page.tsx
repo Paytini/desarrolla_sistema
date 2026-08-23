@@ -81,7 +81,7 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
         key={request.id}
         className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
       >
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF1FE] text-[#3579F5]">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-portal-blue-soft text-portal-blue">
           <Icon size={18} />
         </div>
         <div className="min-w-0 flex-1">
@@ -119,7 +119,7 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
         action={
           <Link
             href={companyPath(branding.slug, "/consulting/new")}
-            className="inline-flex items-center rounded-xl bg-[#3579F5] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2A61D6]"
+            className="inline-flex items-center rounded-xl bg-portal-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
           >
             Agendar nueva consultoría
           </Link>

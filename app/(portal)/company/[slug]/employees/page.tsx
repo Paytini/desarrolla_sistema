@@ -1,19 +1,16 @@
 import CnoSelect from "@/components/company/CnoSelect"
 import CsvEmployeeImportForm from "@/components/company/CsvEmployeeImportForm"
 import CurpInfoButton from "@/components/company/CurpInfoButton"
-import DeleteEmployeeButton from "@/components/company/DeleteEmployeeButton"
 import EmployeeListFilters from "@/components/company/EmployeeListFilters"
+import EmployeeRowActionsMenu from "@/components/company/EmployeeRowActionsMenu"
 import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModal"
-import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import StatusToast from "@/components/shared/StatusToast"
-import { AlertCircle, Package, ShieldCheck, Users, UserX } from "lucide-react"
 import {
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
 } from "@/lib/company-employees"
-import { formatDate, getInitials } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -25,7 +22,6 @@ import {
   deleteEmployeeAction,
   resendActivationAction,
   toggleEmployeeStatusAction,
-  triggerCompanyLearningSyncAction,
 } from "./actions"
 
 export const maxDuration = 300
@@ -98,42 +94,48 @@ function ManualEmployeeForm() {
     <form action={createEmployeeAction} autoComplete="off" className="grid gap-3">
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">Apellido paterno</span>
+          <span className="text-[14px] font-normal text-slate-700">
+            Apellido paterno <span style={{ color: "#f43f5e" }}>*</span>
+          </span>
           <input
             name="apellido"
             required
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
           />
         </label>
         <label className="grid gap-1 text-sm">
           <span className="text-[14px] font-normal text-slate-700">
-            Apellido materno{" "}
-            <span className="text-[12px] font-normal text-slate-400">(opcional)</span>
+            Apellido materno <span style={{ color: "#f43f5e" }}>*</span>
           </span>
           <input
             name="apellido_materno"
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
+            required
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
           />
         </label>
       </div>
 
       <label className="grid gap-1 text-sm">
-        <span className="text-[14px] font-normal text-slate-700">Nombre(s)</span>
+        <span className="text-[14px] font-normal text-slate-700">
+          Nombre(s) <span style={{ color: "#f43f5e" }}>*</span>
+        </span>
         <input
           name="nombre"
           required
-          className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
+          className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
         />
       </label>
 
       <label className="grid gap-1 text-sm">
-        <span className="text-[14px] font-normal text-slate-700">Correo electrónico</span>
+        <span className="text-[14px] font-normal text-slate-700">
+          Correo electrónico <span style={{ color: "#f43f5e" }}>*</span>
+        </span>
         <input
           name="email"
           type="email"
           required
           autoComplete="off"
-          className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
+          className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
         />
       </label>
 
@@ -142,43 +144,44 @@ function ManualEmployeeForm() {
       </p>
 
       <div className="rounded-lg bg-gray-50 p-3">
-        <p className="mb-2 text-xs text-slate-500">
-          Constancia DC-3 <span className="text-slate-400">(opcional)</span>
-        </p>
+        <p className="mb-2 text-xs text-slate-500">Constancia DC-3</p>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span className="flex items-center gap-1.5 text-[14px] font-normal text-slate-700">
-              CURP
+              CURP <span style={{ color: "#f43f5e" }}>*</span>
               <CurpInfoButton />
             </span>
             <input
               name="curp"
+              required
               maxLength={18}
               placeholder="18 caracteres"
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 uppercase outline-none transition focus:border-[#3579F5]"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 uppercase outline-none transition focus:border-portal-blue"
             />
           </label>
-          <CnoSelect />
+          <CnoSelect required />
         </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-1 text-sm">
           <span className="text-[14px] font-normal text-slate-700">
-            Departamento <span className="text-[12px] font-normal text-slate-400">(opcional)</span>
+            Departamento <span style={{ color: "#f43f5e" }}>*</span>
           </span>
           <input
             name="departamento"
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
+            required
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
           />
         </label>
         <label className="grid gap-1 text-sm">
           <span className="text-[14px] font-normal text-slate-700">
-            Puesto <span className="text-[12px] font-normal text-slate-400">(opcional)</span>
+            Puesto <span style={{ color: "#f43f5e" }}>*</span>
           </span>
           <input
             name="puesto"
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-[#3579F5]"
+            required
+            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
           />
         </label>
       </div>
@@ -186,7 +189,7 @@ function ManualEmployeeForm() {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="inline-flex items-center rounded-full bg-[#3579F5] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#2A61D6]"
+          className="inline-flex items-center rounded-full bg-portal-blue px-5 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
         >
           Crear empleado
         </button>
@@ -208,7 +211,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
   const parsedPage = Number(readSearchParam(params, "page") ?? "1")
   const page = Number.isFinite(parsedPage) ? Math.max(1, Math.trunc(parsedPage)) : 1
-  const PAGE_SIZE = 20
+  const PAGE_SIZE = 5
 
   const statusFilter =
     status === "active" ? { active: true } : status === "inactive" ? { active: false } : {}
@@ -229,37 +232,16 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
       : {}),
   }
 
-  const [
-    company,
-    activeCompanyPackage,
-    totalEmployees,
-    activeEmployees,
-    employeesWithAccessIssues,
-    filteredCount,
-  ] = await Promise.all([
+  const [company, totalEmployees, filteredCount] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
       select: { slug: true, contracted_seats: true },
     }),
-    prisma.companyPackage.findFirst({
-      where: { company_id: companyId, active: true },
-      orderBy: { created_at: "desc" },
-      select: { package: { select: { name: true } } },
-    }),
     prisma.employee.count({ where: { company_id: companyId } }),
-    prisma.employee.count({ where: { company_id: companyId, active: true } }),
-    prisma.employee.count({
-      where: { company_id: companyId, courses: { some: { access_status: "ERROR" } } },
-    }),
     prisma.employee.count({ where: employeeWhere }),
   ])
 
   if (!company) redirect("/login")
-
-  const activePackage = activeCompanyPackage?.package?.name ?? "Sin paquete"
-
-  const inactiveEmployees = totalEmployees - activeEmployees
-  const availableSeats = Math.max(company.contracted_seats - activeEmployees, 0)
 
   const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE))
   const currentPage = Math.min(Math.max(1, page), totalPages)
@@ -270,7 +252,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
     skip: (currentPage - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
     include: {
-      courses: { select: { access_status: true } },
+      courses: { select: { progress_pct: true } },
     },
   })
 
@@ -290,21 +272,10 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
           { label: "Empleados" },
         ]}
         action={
-          <div className="flex items-center gap-2">
-            <form action={triggerCompanyLearningSyncAction}>
-              <button
-                type="submit"
-                title="Obtén el progreso y las constancias más recientes de tu equipo"
-                className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                Actualizar
-              </button>
-            </form>
-            <EmployeeOnboardingModal
-              manualContent={<ManualEmployeeForm />}
-              csvContent={<CsvEmployeeImportForm />}
-            />
-          </div>
+          <EmployeeOnboardingModal
+            manualContent={<ManualEmployeeForm />}
+            csvContent={<CsvEmployeeImportForm />}
+          />
         }
       />
 
@@ -312,37 +283,6 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
         <StatusToast tone="success" message={getSuccessMessage(success, params) ?? success} />
       ) : null}
       {error ? <StatusToast tone="error" message={errorMessages[error] ?? error} /> : null}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard label="Paquete activo" value={activePackage} icon={Package} borderColor="violet" />
-        <KpiCard
-          label="Activos"
-          value={String(activeEmployees)}
-          sub="Con acceso vigente"
-          icon={Users}
-          borderColor="emerald"
-        />
-        <KpiCard
-          label="Cupos disponibles"
-          value={String(availableSeats)}
-          sub="Antes del límite"
-          icon={ShieldCheck}
-          borderColor="charcoal"
-        />
-        <KpiCard
-          label="Suspendidos"
-          value={String(inactiveEmployees)}
-          icon={UserX}
-          borderColor="rose"
-        />
-        <KpiCard
-          label="Con alertas"
-          value={String(employeesWithAccessIssues)}
-          sub="Error de acceso"
-          icon={AlertCircle}
-          borderColor="amber"
-        />
-      </div>
 
       <section className="rounded-lg bg-white p-5">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -363,113 +303,140 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
         <EmployeeListFilters
           basePath={employeesBasePath}
           initialQuery={searchQuery}
-          initialStatus={status}
+          initialStatus={"active"} // fixed status to "active" employees
         />
 
-        <div className="space-y-2">
-          {totalEmployees === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-              Aún no hay empleados registrados para esta empresa.
-            </div>
-          ) : null}
+        {totalEmployees === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            Aún no hay empleados registrados para esta empresa.
+          </div>
+        ) : null}
 
-          {totalEmployees > 0 && filteredCount === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-              No encontramos empleados que coincidan con ese filtro.
-            </div>
-          ) : null}
+        {totalEmployees > 0 && filteredCount === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            No encontramos empleados que coincidan con ese filtro.
+          </div>
+        ) : null}
 
-          {pagedEmployees.map((employee) => {
-            const activeCourseCount = employee.courses.filter(
-              (c) => c.access_status === "ACTIVE",
-            ).length
-            const errorCourseCount = employee.courses.filter(
-              (c) => c.access_status === "ERROR",
-            ).length
-            const initials = getInitials(`${employee.first_name} ${employee.last_name}`)
+        {filteredCount > 0 ? (
+          <div className="overflow-x-auto">
+            <table
+              className="w-full border-separate border-spacing-y-2"
+              aria-label="Plantilla de empleados"
+            >
+              <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                  >
+                    Empleado
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                  >
+                    Correo
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
+                  >
+                    Puesto
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
+                  >
+                    Departamento
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
+                  >
+                    Estado
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
+                  >
+                    Avance
+                  </th>
+                  <th scope="col" className="px-4 pb-2">
+                    <span className="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedEmployees.map((employee) => {
+                  const avgProgress = employee.courses.length
+                    ? Math.round(
+                        employee.courses.reduce((sum, c) => sum + c.progress_pct, 0) /
+                          employee.courses.length,
+                      )
+                    : 0
 
-            return (
-              <div
-                key={employee.id}
-                className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
-              >
-                <div
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
-                    errorCourseCount > 0
-                      ? "bg-rose-50 text-rose-700"
-                      : employee.active
-                        ? "bg-[#EAF1FE] text-[#3579F5]"
-                        : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {initials}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <p className="truncate text-sm font-semibold text-slate-950">
-                      {employee.first_name} {employee.last_name}
-                    </p>
-                    <StatusBadge variant={employee.active ? "green" : "slate"} dot>
-                      {employee.active ? "Activo" : "Suspendido"}
-                    </StatusBadge>
-                    {errorCourseCount > 0 && (
-                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800">
-                        {errorCourseCount} error
-                        {errorCourseCount > 1 ? "es" : ""}
-                      </span>
-                    )}
-                  </div>
-                  <p className="truncate text-xs text-slate-500">
-                    {employee.email}
-                    {employee.department ? ` · ${employee.department}` : ""}
-                    {employee.position ? ` · ${employee.position}` : ""}
-                  </p>
-                </div>
-
-                <div className="hidden text-right text-xs text-slate-500 md:block">
-                  <p className="text-[14px] font-normal text-slate-700">
-                    {activeCourseCount} cursos activos
-                  </p>
-                  <p>Alta: {formatDate(employee.created_at)}</p>
-                </div>
-
-                <div className="flex shrink-0 gap-1.5">
-                  <form action={resendActivationAction}>
-                    <input type="hidden" name="empleado_id" value={employee.id} />
-                    <input type="hidden" name="return_to" value={currentListPath} />
-                    <button
-                      type="submit"
-                      className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-gray-200"
+                  return (
+                    <tr
+                      key={employee.id}
+                      className="bg-white transition-colors hover:bg-gray-50"
                     >
-                      Reenviar activación
-                    </button>
-                  </form>
-                  <form action={toggleEmployeeStatusAction}>
-                    <input type="hidden" name="empleado_id" value={employee.id} />
-                    <input type="hidden" name="return_to" value={currentListPath} />
-                    <button
-                      type="submit"
-                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                        employee.active
-                          ? "bg-[#1a1a1a] text-white hover:bg-[#333]"
-                          : "bg-[#3579F5] text-white hover:bg-[#2A61D6]"
-                      }`}
-                    >
-                      {employee.active ? "Suspender" : "Reactivar"}
-                    </button>
-                  </form>
-                  <DeleteEmployeeButton
-                    action={deleteEmployeeAction}
-                    employeeId={employee.id}
-                    employeeName={`${employee.first_name} ${employee.last_name}`.trim()}
-                    returnTo={currentListPath}
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                      <td className="min-w-0 rounded-l-lg py-3 pl-4">
+                        <p className="truncate text-sm font-semibold text-slate-950">
+                          {employee.first_name} {employee.last_name}
+                        </p>
+                      </td>
+                      <td className="truncate px-4 py-3 text-sm text-slate-500">
+                        {employee.email}
+                      </td>
+                      <td className="hidden px-4 py-3 text-sm text-slate-700 md:table-cell">
+                        {employee.position ?? "—"}
+                      </td>
+                      <td className="hidden px-4 py-3 text-sm text-slate-700 md:table-cell">
+                        {employee.department ?? "—"}
+                      </td>
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        <StatusBadge variant={employee.active ? "green" : "slate"} dot>
+                          {employee.active ? "Activo" : "Suspendido"}
+                        </StatusBadge>
+                      </td>
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-16 shrink-0 overflow-hidden rounded-full border border-slate-300 bg-slate-100">
+                            <div
+                              className={`h-full rounded-full ${
+                                avgProgress >= 75
+                                  ? "bg-portal-blue"
+                                  : avgProgress > 0
+                                    ? "bg-amber-500"
+                                    : "bg-slate-300"
+                              }`}
+                              style={{ width: `${avgProgress}%` }}
+                            />
+                          </div>
+                          <span className="w-9 shrink-0 text-sm tabular-nums text-slate-700">
+                            {avgProgress}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="rounded-r-lg py-3 pr-2 text-right">
+                        <EmployeeRowActionsMenu
+                          employeeId={employee.id}
+                          employeeName={`${employee.first_name} ${employee.last_name}`.trim()}
+                          employeeActive={employee.active}
+                          returnTo={currentListPath}
+                          resendActivationAction={resendActivationAction}
+                          toggleEmployeeStatusAction={toggleEmployeeStatusAction}
+                          deleteEmployeeAction={deleteEmployeeAction}
+                        />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

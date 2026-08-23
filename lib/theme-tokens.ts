@@ -3,7 +3,7 @@ export const fd = {
   secondary: "#10B981",
   accent: "#F59E0B",
   muted: "#F3F4F6",
-  border: "#E5E7EB",
+  border: "var(--portal-border)",
   foreground: "#111827",
   background: "#FFFFFF",
 } as const

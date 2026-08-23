@@ -232,7 +232,7 @@ export function AccessTabs({
       <Tabs
         value={tab}
         onChange={(_, value: "hr" | "employees") => handleTabChange(value)}
-        sx={{ px: 2.5, pt: 1, borderBottom: "1px solid #E5E7EB" }}
+        sx={{ px: 2.5, pt: 1, borderBottom: "1px solid var(--portal-border)" }}
       >
         <Tab value="hr" label={`Usuarios HR (${hrUsers.length})`} />
         <Tab value="employees" label={`Empleados (${employeesGrandTotal})`} />

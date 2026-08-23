@@ -32,7 +32,7 @@ export function LearningActivityChart({
   const [showByCompany, setShowByCompany] = useState(false)
 
   const series = useMemo<ActivitySeries[]>(
-    () => (showByCompany ? byCompany : [{ name: "Global", color: "#3579F5", data: global }]),
+    () => (showByCompany ? byCompany : [{ name: "Global", color: "var(--portal-blue)", data: global }]),
     [showByCompany, byCompany, global],
   )
 
@@ -81,7 +81,7 @@ export function LearningActivityChart({
                     boxShadow: "0 1px 2px rgba(22,27,35,0.35)",
                   },
                   "& .Mui-checked+.MuiSwitch-track": {
-                    backgroundColor: "#3579F5 !important",
+                    backgroundColor: "var(--portal-blue) !important",
                     opacity: 1,
                   },
                 }}
