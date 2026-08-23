@@ -111,6 +111,12 @@ export type BridgeQuizAttempt = {
   result: string | null
 }
 
+export type BridgeLessonCompletion = {
+  wp_lesson_id: number
+  title: string | null
+  completed_at: string | null
+}
+
 export type BridgeStudentCourse = {
   wp_course_id: number
   title: string
@@ -120,6 +126,7 @@ export type BridgeStudentCourse = {
   completed_at?: string | null
   certificate_url?: string | null
   quiz_attempts?: BridgeQuizAttempt[]
+  lesson_completions?: BridgeLessonCompletion[]
   raw?: Record<string, unknown>
 }
 

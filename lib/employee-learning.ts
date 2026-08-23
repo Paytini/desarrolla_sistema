@@ -210,6 +210,42 @@ async function upsertQuizAttemptsFromBridge(employeeId: string, courses: BridgeS
   }
 }
 
+async function upsertLessonCompletionsFromBridge(employeeId: string, courses: BridgeStudentCourse[]) {
+  const now = new Date()
+  const upsertOperations = courses.filter(hasWpCourseId).flatMap((course) => {
+    const completions = course.lesson_completions ?? []
+
+    return completions.map((completion) =>
+      prisma.lessonCompletion.upsert({
+        where: {
+          employee_id_wp_lesson_id: {
+            employee_id: employeeId,
+            wp_lesson_id: completion.wp_lesson_id,
+          },
+        },
+        update: {
+          wp_course_id: course.wp_course_id,
+          lesson_name: completion.title ? decodeHtmlEntities(completion.title) : null,
+          completed_at: parseBridgeDate(completion.completed_at),
+          last_synced_at: now,
+        },
+        create: {
+          employee_id: employeeId,
+          wp_course_id: course.wp_course_id,
+          wp_lesson_id: completion.wp_lesson_id,
+          lesson_name: completion.title ? decodeHtmlEntities(completion.title) : null,
+          completed_at: parseBridgeDate(completion.completed_at),
+          last_synced_at: now,
+        },
+      }),
+    )
+  })
+
+  if (upsertOperations.length > 0) {
+    await prisma.$transaction(upsertOperations)
+  }
+}
+
 async function upsertEmployeeCertificatesFromBridge(
   employeeId: string,
   certificates: BridgeStudentCertificate[],
@@ -339,6 +375,7 @@ export async function syncEmployeeLearningFromBridgeSnapshot(input: {
 
   await upsertEmployeeCoursesFromBridge(employeeId, input.snapshot.courses)
   await upsertQuizAttemptsFromBridge(employeeId, input.snapshot.courses)
+  await upsertLessonCompletionsFromBridge(employeeId, input.snapshot.courses)
 
   const certificatesUpdated =
     normalizedCertificates.length > 0
