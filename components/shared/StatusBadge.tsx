@@ -1,7 +1,7 @@
 import Chip from "@mui/material/Chip"
 import Box from "@mui/material/Box"
 
-type BadgeVariant = "green" | "amber" | "red" | "slate" | "blue"
+export type BadgeVariant = "green" | "amber" | "red" | "slate" | "blue"
 
 type StatusBadgeProps = {
   variant: BadgeVariant

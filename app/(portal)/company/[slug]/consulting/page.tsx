@@ -5,12 +5,13 @@ import { CalendarClock } from "lucide-react"
 import { cancelConsultingRequestAction } from "./actions"
 import { CancelConsultingRequestButton } from "@/components/company/consulting/CancelConsultingRequestButton"
 import { PageHeader } from "@/components/shared/PageHeader"
-import StatusBadge from "@/components/shared/StatusBadge"
+import { StatusLabel } from "@/components/shared/StatusLabel"
 import StatusToast from "@/components/shared/StatusToast"
 import { getCompanyBranding } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { getConsultingArea } from "@/lib/consulting-areas"
 import { formatConsultingDateTime, getTodayInConsultingTimeZone } from "@/lib/consulting-schedule"
+import { CONSULTING_STATUS_LABEL, CONSULTING_STATUS_VARIANT } from "@/lib/consulting-status"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -22,18 +23,6 @@ const successMessages: Record<string, string> = {
 const errorMessages: Record<string, string> = {
   solicitud: "No se encontró la solicitud o ya no se puede cancelar.",
 }
-
-const STATUS_VARIANT = {
-  PENDING: "amber",
-  CONFIRMED: "green",
-  CANCELLED: "red",
-} as const
-
-const STATUS_LABEL = {
-  PENDING: "Pendiente",
-  CONFIRMED: "Confirmada",
-  CANCELLED: "Cancelada",
-} as const
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
@@ -92,9 +81,11 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
           </p>
         </div>
-        <StatusBadge variant={STATUS_VARIANT[request.status]} dot>
-          {STATUS_LABEL[request.status]}
-        </StatusBadge>
+        <StatusLabel
+          status={request.status}
+          variantMap={CONSULTING_STATUS_VARIANT}
+          labelMap={CONSULTING_STATUS_LABEL}
+        />
         {request.status === "PENDING" ? (
           <CancelConsultingRequestButton
             action={cancelConsultingRequestAction}

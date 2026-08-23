@@ -1,7 +1,8 @@
-import { Award, BarChart3, BookOpen, CheckCircle, FileQuestion } from "lucide-react"
-import KpiCard from "@/components/shared/KpiCard"
+import { FileQuestion } from "lucide-react"
+import { BackButton } from "@/components/shared/BackButton"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
+import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company-routes"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
@@ -76,15 +77,13 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
   if (!employee) redirect(companyPath(slug, "/employees"))
 
   const totalCourses = employee.courses.length
-  const completedCourses = employee.courses.filter((c) => c.completed).length
-  const averageProgress = totalCourses
-    ? Math.round(employee.courses.reduce((sum, c) => sum + c.progress_pct, 0) / totalCourses)
-    : 0
 
   const employeeName = `${employee.first_name} ${employee.last_name}`.trim()
 
   return (
     <div className="space-y-6">
+      <BackButton href={companyPath(slug, "/employees")} label="Empleados" />
+
       <PageHeader
         title={employeeName}
         description={employee.email}
@@ -112,34 +111,6 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          label="Avance promedio"
-          value={`${averageProgress}%`}
-          sub="Todos los cursos"
-          icon={BarChart3}
-          borderColor="orange"
-        />
-        <KpiCard
-          label="Cursos asignados"
-          value={String(totalCourses)}
-          icon={BookOpen}
-          borderColor="charcoal"
-        />
-        <KpiCard
-          label="Cursos completados"
-          value={String(completedCourses)}
-          icon={CheckCircle}
-          borderColor="emerald"
-        />
-        <KpiCard
-          label="Constancias emitidas"
-          value={String(employee.certificates.length)}
-          icon={Award}
-          borderColor="violet"
-        />
-      </div>
-
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-slate-950">
           Progreso por curso
@@ -156,9 +127,11 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               <div key={course.id} className="rounded-lg bg-gray-50 p-4">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-slate-950">{course.course_name}</p>
-                  <StatusBadge variant={ACCESS_STATUS_VARIANT[course.access_status] ?? "slate"} dot>
-                    {ACCESS_STATUS_LABEL[course.access_status] ?? course.access_status}
-                  </StatusBadge>
+                  <StatusLabel
+                    status={course.access_status}
+                    variantMap={ACCESS_STATUS_VARIANT}
+                    labelMap={ACCESS_STATUS_LABEL}
+                  />
                 </div>
                 <div className="mb-2 flex items-center gap-2">
                   <div className="h-2 flex-1 overflow-hidden rounded-full border border-slate-300 bg-slate-100">
@@ -265,9 +238,11 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
                       {attempt.quiz_name ?? "Examen"}
                     </p>
                     {attempt.result ? (
-                      <StatusBadge variant={QUIZ_RESULT_VARIANT[attempt.result] ?? "slate"} dot>
-                        {QUIZ_RESULT_LABEL[attempt.result] ?? attempt.result}
-                      </StatusBadge>
+                      <StatusLabel
+                        status={attempt.result}
+                        variantMap={QUIZ_RESULT_VARIANT}
+                        labelMap={QUIZ_RESULT_LABEL}
+                      />
                     ) : null}
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">

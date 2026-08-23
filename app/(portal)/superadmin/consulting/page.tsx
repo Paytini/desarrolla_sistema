@@ -5,9 +5,10 @@ import Stack from "@mui/material/Stack"
 import { ConsultingRequestActions } from "@/components/superadmin/ConsultingRequestActions"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { PageHeader } from "@/components/shared/PageHeader"
-import StatusBadge from "@/components/shared/StatusBadge"
+import { StatusLabel } from "@/components/shared/StatusLabel"
 import { getConsultingArea } from "@/lib/consulting-areas"
 import { formatConsultingDateTime } from "@/lib/consulting-schedule"
+import { CONSULTING_STATUS_LABEL, CONSULTING_STATUS_VARIANT } from "@/lib/consulting-status"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -20,18 +21,6 @@ const successMessages: Record<string, string> = {
 const errorMessages: Record<string, string> = {
   solicitud: "No se encontró la solicitud o ya no está pendiente.",
 }
-
-const STATUS_VARIANT = {
-  PENDING: "amber",
-  CONFIRMED: "green",
-  CANCELLED: "red",
-} as const
-
-const STATUS_LABEL = {
-  PENDING: "Pendiente",
-  CONFIRMED: "Confirmada",
-  CANCELLED: "Cancelada",
-} as const
 
 const CONTACT_METHOD_LABELS: Record<string, string> = {
   CALL: "Llamada",
@@ -90,9 +79,11 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
             {CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method}
           </p>
         </div>
-        <StatusBadge variant={STATUS_VARIANT[request.status]} dot>
-          {STATUS_LABEL[request.status]}
-        </StatusBadge>
+        <StatusLabel
+          status={request.status}
+          variantMap={CONSULTING_STATUS_VARIANT}
+          labelMap={CONSULTING_STATUS_LABEL}
+        />
         {request.status === "PENDING" ? (
           <ConsultingRequestActions
             requestId={request.id}
