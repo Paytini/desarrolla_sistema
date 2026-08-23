@@ -165,6 +165,51 @@ async function upsertEmployeeCoursesFromBridge(employeeId: string, courses: Brid
   }
 }
 
+async function upsertQuizAttemptsFromBridge(employeeId: string, courses: BridgeStudentCourse[]) {
+  const now = new Date()
+  const upsertOperations = courses.filter(hasWpCourseId).flatMap((course) => {
+    const attempts = course.quiz_attempts ?? []
+
+    return attempts.map((attempt) =>
+      prisma.quizAttempt.upsert({
+        where: { wp_attempt_id: attempt.attempt_id },
+        update: {
+          quiz_name: attempt.quiz_name ? decodeHtmlEntities(attempt.quiz_name) : null,
+          total_questions: attempt.total_questions,
+          total_answered_questions: attempt.total_answered_questions,
+          total_marks: attempt.total_marks,
+          earned_marks: attempt.earned_marks,
+          attempt_status: attempt.attempt_status,
+          result: attempt.result,
+          attempt_started_at: parseBridgeDate(attempt.attempt_started_at),
+          attempt_ended_at: parseBridgeDate(attempt.attempt_ended_at),
+          last_synced_at: now,
+        },
+        create: {
+          employee_id: employeeId,
+          wp_course_id: course.wp_course_id,
+          wp_quiz_id: attempt.quiz_id,
+          wp_attempt_id: attempt.attempt_id,
+          quiz_name: attempt.quiz_name ? decodeHtmlEntities(attempt.quiz_name) : null,
+          total_questions: attempt.total_questions,
+          total_answered_questions: attempt.total_answered_questions,
+          total_marks: attempt.total_marks,
+          earned_marks: attempt.earned_marks,
+          attempt_status: attempt.attempt_status,
+          result: attempt.result,
+          attempt_started_at: parseBridgeDate(attempt.attempt_started_at),
+          attempt_ended_at: parseBridgeDate(attempt.attempt_ended_at),
+          last_synced_at: now,
+        },
+      }),
+    )
+  })
+
+  if (upsertOperations.length > 0) {
+    await prisma.$transaction(upsertOperations)
+  }
+}
+
 async function upsertEmployeeCertificatesFromBridge(
   employeeId: string,
   certificates: BridgeStudentCertificate[],
@@ -293,6 +338,7 @@ export async function syncEmployeeLearningFromBridgeSnapshot(input: {
   const normalizedCertificates = normalizeBridgeSnapshotCertificates(input.snapshot)
 
   await upsertEmployeeCoursesFromBridge(employeeId, input.snapshot.courses)
+  await upsertQuizAttemptsFromBridge(employeeId, input.snapshot.courses)
 
   const certificatesUpdated =
     normalizedCertificates.length > 0
