@@ -291,10 +291,11 @@ model Employee {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  company      Company          @relation(fields: [company_id], references: [id])
-  courses      EmployeeCourse[]
-  certificates Certificate[]
-  quizAttempts QuizAttempt[]
+  company           Company            @relation(fields: [company_id], references: [id])
+  courses           EmployeeCourse[]
+  certificates      Certificate[]
+  quizAttempts      QuizAttempt[]
+  lessonCompletions LessonCompletion[]
 
   @@index([company_id, active])
   @@map("employees")
@@ -355,6 +356,23 @@ model QuizAttempt {
   @@index([employee_id])
   @@index([employee_id, wp_course_id])
   @@map("quiz_attempts")
+}
+
+model LessonCompletion {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id    String    @db.Uuid
+  wp_course_id   Int
+  wp_lesson_id   Int
+  lesson_name    String?
+  completed_at   DateTime?
+  last_synced_at DateTime  @default(now())
+
+  employee Employee @relation(fields: [employee_id], references: [id])
+
+  @@unique([employee_id, wp_lesson_id])
+  @@index([employee_id])
+  @@index([employee_id, wp_course_id])
+  @@map("lesson_completions")
 }
 
 // ─────────────────────────────────────────────────────────────

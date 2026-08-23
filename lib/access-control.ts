@@ -95,6 +95,10 @@ export async function deleteEmployeeRecord({
       where: { employee_id: employee.id },
     })
 
+    await tx.lessonCompletion.deleteMany({
+      where: { employee_id: employee.id },
+    })
+
     await tx.employee.delete({
       where: { id: employee.id },
     })
