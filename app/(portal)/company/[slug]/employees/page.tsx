@@ -7,6 +7,8 @@ import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModa
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import StatusToast from "@/components/shared/StatusToast"
+import { Eye } from "lucide-react"
+import Link from "next/link"
 import {
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
@@ -354,13 +356,13 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                     scope="col"
                     className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
                   >
-                    Estado
+                    Avance
                   </th>
                   <th
                     scope="col"
                     className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
                   >
-                    Avance
+                    Estado
                   </th>
                   <th scope="col" className="px-4 pb-2">
                     <span className="sr-only">Acciones</span>
@@ -396,11 +398,6 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                         {employee.department ?? "—"}
                       </td>
                       <td className="hidden px-4 py-3 md:table-cell">
-                        <StatusBadge variant={employee.active ? "green" : "slate"} dot>
-                          {employee.active ? "Activo" : "Suspendido"}
-                        </StatusBadge>
-                      </td>
-                      <td className="hidden px-4 py-3 md:table-cell">
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-16 shrink-0 overflow-hidden rounded-full border border-slate-300 bg-slate-100">
                             <div
@@ -419,16 +416,30 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                           </span>
                         </div>
                       </td>
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        <StatusBadge variant={employee.active ? "green" : "slate"} dot>
+                          {employee.active ? "Activo" : "Suspendido"}
+                        </StatusBadge>
+                      </td>
                       <td className="rounded-r-lg py-3 pr-2 text-right">
-                        <EmployeeRowActionsMenu
-                          employeeId={employee.id}
-                          employeeName={`${employee.first_name} ${employee.last_name}`.trim()}
-                          employeeActive={employee.active}
-                          returnTo={currentListPath}
-                          resendActivationAction={resendActivationAction}
-                          toggleEmployeeStatusAction={toggleEmployeeStatusAction}
-                          deleteEmployeeAction={deleteEmployeeAction}
-                        />
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={companyPath(company.slug, `/employees/${employee.id}`)}
+                            aria-label={`Ver perfil de ${employee.first_name} ${employee.last_name}`}
+                            className="inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
+                          >
+                            <Eye size={18} strokeWidth={2} />
+                          </Link>
+                          <EmployeeRowActionsMenu
+                            employeeId={employee.id}
+                            employeeName={`${employee.first_name} ${employee.last_name}`.trim()}
+                            employeeActive={employee.active}
+                            returnTo={currentListPath}
+                            resendActivationAction={resendActivationAction}
+                            toggleEmployeeStatusAction={toggleEmployeeStatusAction}
+                            deleteEmployeeAction={deleteEmployeeAction}
+                          />
+                        </div>
                       </td>
                     </tr>
                   )
