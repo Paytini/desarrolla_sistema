@@ -23,7 +23,7 @@ import {
   enqueueEmailSendJob,
   enqueueEmailSendJobs,
 } from "@/lib/jobs"
-import { buildActivationUrl, buildPendingActivationFields } from "@/lib/onboarding"
+import { buildActivationUrl, buildPendingActivationFields, hashPassword } from "@/lib/onboarding"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
 import { bridgeUpsertEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
@@ -82,6 +82,7 @@ type EmployeeProvisioningInput = {
   puesto?: string | null
   ocupacionEspecificaClave?: string | null
   ocupacionEspecifica?: string | null
+  password?: string
   companyContext?: CompanyProvisioningContext
   actor: AuditActor
 }
@@ -159,7 +160,10 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
     }
   }
 
-  const pendingActivation = buildPendingActivationFields()
+  const pendingActivation = input.password ? null : buildPendingActivationFields()
+  const passwordHash = input.password
+    ? await hashPassword(input.password)
+    : pendingActivation!.passwordHash
   const activePackage = companyContext.packages[0]
   const hasActivePackage = Boolean(activePackage)
 
@@ -192,9 +196,10 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       await tx.user.create({
         data: {
           email,
-          password_hash: pendingActivation.passwordHash,
-          activation_token: pendingActivation.activationToken,
-          activation_token_expires_at: pendingActivation.activationTokenExpiresAt,
+          password_hash: passwordHash,
+          activation_token: pendingActivation?.activationToken ?? null,
+          activation_token_expires_at: pendingActivation?.activationTokenExpiresAt ?? null,
+          must_change_password: Boolean(input.password),
           name: `${input.nombre} ${input.apellido}`.trim(),
           role: "EMPLOYEE",
           company_id: input.companyId,
@@ -220,19 +225,21 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
   }
 
   let activationEmailQueued = false
-  try {
-    const { subject, html, text } = buildActivationEmail({
-      nombreEmpleado: input.nombre,
-      nombreEmpresa: companyContext.name,
-      activationUrl: buildActivationUrl(pendingActivation.activationToken),
-    })
-    await enqueueEmailSendJob({ to: email, subject, html, text })
-    activationEmailQueued = true
-  } catch (error) {
-    console.error("No se pudo encolar el correo de activación", {
-      employeeId: createdEmployee.id,
-      error: error instanceof Error ? error.message : String(error),
-    })
+  if (pendingActivation) {
+    try {
+      const { subject, html, text } = buildActivationEmail({
+        nombreEmpleado: input.nombre,
+        nombreEmpresa: companyContext.name,
+        activationUrl: buildActivationUrl(pendingActivation.activationToken),
+      })
+      await enqueueEmailSendJob({ to: email, subject, html, text })
+      activationEmailQueued = true
+    } catch (error) {
+      console.error("No se pudo encolar el correo de activación", {
+        employeeId: createdEmployee.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(input.companyId)
@@ -275,6 +282,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
         email,
         firstName: input.nombre,
         lastName: input.apellido,
+        password: input.password,
         department: input.departamento ?? null,
         position: input.puesto ?? null,
       })
@@ -422,6 +430,7 @@ export async function createEmployeeAction(formData: FormData) {
   const puesto = getString(formData, "puesto")
   const ocupacionEspecificaClave = getString(formData, "ocupacion_especifica_clave")
   const ocupacionEspecifica = getString(formData, "ocupacion_especifica")
+  const password = getString(formData, "password")
 
   if (
     !nombre ||
@@ -432,7 +441,8 @@ export async function createEmployeeAction(formData: FormData) {
     !departamento ||
     !puesto ||
     !ocupacionEspecificaClave ||
-    !ocupacionEspecifica
+    !ocupacionEspecifica ||
+    password.length < 8
   ) {
     redirect(employeesPath(slug, "?error=datos"))
   }
@@ -448,6 +458,7 @@ export async function createEmployeeAction(formData: FormData) {
     puesto: puesto || null,
     ocupacionEspecificaClave: ocupacionEspecificaClave || null,
     ocupacionEspecifica: ocupacionEspecifica || null,
+    password,
     actor,
   })
 

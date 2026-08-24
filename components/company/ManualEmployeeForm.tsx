@@ -1,6 +1,6 @@
 "use client"
 
-import { Info } from "lucide-react"
+import { Eye, EyeOff, Info } from "lucide-react"
 import { useRef, useState } from "react"
 import { createEmployeeAction } from "@/app/(portal)/company/[slug]/employees/actions"
 import CnoSelect, { type CnoEntry } from "@/components/company/CnoSelect"
@@ -15,6 +15,7 @@ type PreviewState = {
   ocupacion: string
   departamento: string
   puesto: string
+  password: string
 }
 
 const EMPTY_PREVIEW: PreviewState = {
@@ -26,6 +27,7 @@ const EMPTY_PREVIEW: PreviewState = {
   ocupacion: "",
   departamento: "",
   puesto: "",
+  password: "",
 }
 
 function PreviewField({ label, value }: { label: string; value: string }) {
@@ -42,6 +44,7 @@ export default function ManualEmployeeForm() {
   const confirmHeadingRef = useRef<HTMLHeadingElement>(null)
   const [step, setStep] = useState<"form" | "confirm">("form")
   const [preview, setPreview] = useState<PreviewState>(EMPTY_PREVIEW)
+  const [showPassword, setShowPassword] = useState(false)
 
   function updatePreview(field: keyof PreviewState) {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,8 +128,31 @@ export default function ManualEmployeeForm() {
           />
         </label>
 
+        <label className="grid gap-1 text-sm">
+          <span className="text-[14px] font-normal text-slate-700">Contraseña inicial</span>
+          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 pr-2 focus-within:border-portal-blue">
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={8}
+              autoComplete="new-password"
+              onChange={updatePreview("password")}
+              className="min-w-0 flex-1 border-0 px-3 py-1.5 text-sm outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              className="shrink-0 text-slate-400 transition-colors hover:text-portal-blue"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </label>
+
         <p className="text-xs text-slate-500">
-          El empleado recibirá un correo para crear su propia contraseña y activar su cuenta.
+          El empleado deberá cambiar esta contraseña la primera vez que inicie sesión.
         </p>
 
         <fieldset className="m-0 border-0 p-0">
@@ -198,6 +224,7 @@ export default function ManualEmployeeForm() {
             <PreviewField label="Ocupación (CNO)" value={preview.ocupacion} />
             <PreviewField label="Departamento" value={preview.departamento} />
             <PreviewField label="Puesto" value={preview.puesto} />
+            <PreviewField label="Contraseña inicial" value={preview.password ? "Definida" : ""} />
           </div>
         </div>
       ) : null}

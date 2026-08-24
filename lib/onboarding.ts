@@ -6,6 +6,7 @@ import { getPortalBaseUrl } from "@/lib/email-templates/shared"
 
 const ACTIVATION_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const PENDING_ACTIVATION_PASSWORD_HASH = "pending-activation"
+const PASSWORD_HASH_ROUNDS = 12
 
 export function buildPendingActivationFields() {
   return {
@@ -13,6 +14,14 @@ export function buildPendingActivationFields() {
     activationToken: randomBytes(32).toString("base64url"),
     activationTokenExpiresAt: new Date(Date.now() + ACTIVATION_TOKEN_TTL_MS),
   }
+}
+
+export function hashPassword(password: string) {
+  return bcrypt.hash(password, PASSWORD_HASH_ROUNDS)
+}
+
+export function generateRandomPassword() {
+  return randomBytes(9).toString("base64url")
 }
 
 export function buildActivationUrl(token: string) {

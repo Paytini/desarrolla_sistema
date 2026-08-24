@@ -28,9 +28,9 @@ export const maxDuration = 300
 
 const successMessages: Record<string, string> = {
   empleado_creado:
-    "El empleado se creo correctamente. Le enviamos un correo para que active su cuenta.",
+    "El empleado se creo correctamente. Ya puede iniciar sesion con la contrasena que capturaste.",
   empleado_creado_sync:
-    "El empleado se creo y su acceso ya quedo activo. Le enviamos un correo para que active su cuenta. El siguiente paso es asignarle cursos desde HR > Asignaciones.",
+    "El empleado se creo y su acceso ya quedo activo, con la contrasena que capturaste. El siguiente paso es asignarle cursos desde HR > Asignaciones.",
   empleado_suspendido: "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
   empleado_eliminado: "El empleado se elimino del portal y su cupo fue liberado.",
