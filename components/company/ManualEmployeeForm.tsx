@@ -214,7 +214,7 @@ export default function ManualEmployeeForm() {
               Confirma la información antes de crear al empleado
             </h3>
             <p className="mt-1 text-xs text-slate-500">
-              El empleado recibirá un correo para activar su cuenta en cuanto confirmes.
+              El empleado podrá iniciar sesión de inmediato con la contraseña que capturaste.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
