@@ -169,6 +169,45 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
 
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-slate-950">
+          Constancias
+          <span className="ml-2 text-sm font-normal text-slate-400">
+            {employee.certificates.length}
+          </span>
+        </h2>
+
+        {employee.certificates.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            Aún no se han emitido constancias para este empleado.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {employee.certificates.map((cert) => (
+              <div
+                key={cert.id}
+                className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 p-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-950">
+                    {cert.course_name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Folio {cert.reference_number} · Emitida {formatDate(cert.issued_at)}
+                  </p>
+                </div>
+                <a
+                  href={`/api/certificates/${cert.id}/dc3`}
+                  className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-white"
+                >
+                  Descargar
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-lg bg-white p-5">
+        <h2 className="mb-4 text-base font-semibold text-slate-950">
           Intentos de examen
           <span className="ml-2 text-sm font-normal text-slate-400">
             {employee.quizAttempts.length}
@@ -278,45 +317,6 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               </tr>
             ))}
           />
-        )}
-      </section>
-
-      <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Constancias
-          <span className="ml-2 text-sm font-normal text-slate-400">
-            {employee.certificates.length}
-          </span>
-        </h2>
-
-        {employee.certificates.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-            Aún no se han emitido constancias para este empleado.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {employee.certificates.map((cert) => (
-              <div
-                key={cert.id}
-                className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 p-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-950">
-                    {cert.course_name}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    Folio {cert.reference_number} · Emitida {formatDate(cert.issued_at)}
-                  </p>
-                </div>
-                <a
-                  href={`/api/certificates/${cert.id}/dc3`}
-                  className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-white"
-                >
-                  Descargar
-                </a>
-              </div>
-            ))}
-          </div>
         )}
       </section>
     </div>
