@@ -43,7 +43,7 @@ export default function EmployeeOnboardingModal({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-full bg-[#3579F5] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2A61D6]"
+        className="inline-flex items-center gap-2 rounded-full bg-portal-blue px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
       >
         <UserPlus size={16} />
         Agregar empleados

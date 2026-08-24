@@ -117,7 +117,7 @@ export default function HrSearchBar({ companySlug }: { companySlug: string }) {
                           flexShrink: 0,
                         }}
                       >
-                        <BookOpen size={11} strokeWidth={2} style={{ color: "#3579F5" }} />
+                        <BookOpen size={11} strokeWidth={2} style={{ color: "var(--portal-blue)" }} />
                       </Avatar>
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                         {c.course_name}

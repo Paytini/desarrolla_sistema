@@ -26,7 +26,7 @@ export function ContextStep({ value, onChange, onBack, onNext }: ContextStepProp
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#3579F5",
+          color: "var(--portal-blue)",
           mb: 1,
         }}
       >

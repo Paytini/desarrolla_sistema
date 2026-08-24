@@ -78,7 +78,7 @@ export function ConsultingWizard({
               px: 3,
               py: 1.25,
               borderRadius: "10px",
-              bgcolor: "#3579F5",
+              bgcolor: "var(--portal-blue)",
               color: "#FFFFFF",
               fontWeight: 700,
               fontSize: 14,

@@ -196,7 +196,7 @@ function ResultRow({
 
 function LetterAvatar({ letter, variant }: { letter: string; variant: "blue" | "slate" }) {
   const colors = {
-    blue: { bgcolor: "rgba(53,121,245,0.1)", color: "#3579F5" },
+    blue: { bgcolor: "rgba(53,121,245,0.1)", color: "var(--portal-blue)" },
     slate: { bgcolor: "#f1f5f9", color: "#64748b" },
   }[variant]
 

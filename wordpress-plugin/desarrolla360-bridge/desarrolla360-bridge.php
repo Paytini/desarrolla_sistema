@@ -2569,6 +2569,8 @@ function d360_bridge_enrich_student_courses( $student_id, $courses ) {
 		}
 
 		$course['raw']['d360_certificate'] = d360_bridge_get_course_certificate_debug_data( $student_id, $course_id );
+		$course['quiz_attempts'] = d360_bridge_get_course_quiz_attempts( $student_id, $course_id );
+		$course['lesson_completions'] = d360_bridge_get_course_lesson_completions( $student_id, $course_id );
 
 		$enriched_courses[] = $course;
 	}
@@ -3814,6 +3816,129 @@ function d360_bridge_get_cached_course_certificate_url( $student_id, $course_id 
 	return $resolved;
 }
 
+function d360_bridge_get_course_quiz_attempts( $student_id, $course_id ) {
+	global $wpdb;
+
+	$student_id = absint( $student_id );
+	$course_id  = absint( $course_id );
+
+	if ( ! $student_id || ! $course_id ) {
+		return array();
+	}
+
+	$table = $wpdb->prefix . 'tutor_quiz_attempts';
+
+	$rows = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT attempt_id, quiz_id, total_questions, total_answered_questions, total_marks, earned_marks, attempt_status, attempt_started_at, attempt_ended_at, result
+			 FROM {$table}
+			 WHERE user_id = %d AND course_id = %d
+			 ORDER BY attempt_started_at DESC",
+			$student_id,
+			$course_id
+		),
+		ARRAY_A
+	);
+
+	if ( empty( $rows ) ) {
+		return array();
+	}
+
+	$attempts = array();
+
+	foreach ( $rows as $row ) {
+		$quiz_title = get_the_title( (int) $row['quiz_id'] );
+
+		$attempts[] = array(
+			'attempt_id'               => (int) $row['attempt_id'],
+			'quiz_id'                  => (int) $row['quiz_id'],
+			'quiz_name'                => $quiz_title ? wp_strip_all_tags( $quiz_title ) : null,
+			'total_questions'          => isset( $row['total_questions'] ) ? (int) $row['total_questions'] : 0,
+			'total_answered_questions' => isset( $row['total_answered_questions'] ) ? (int) $row['total_answered_questions'] : 0,
+			'total_marks'              => isset( $row['total_marks'] ) ? (float) $row['total_marks'] : 0,
+			'earned_marks'             => isset( $row['earned_marks'] ) ? (float) $row['earned_marks'] : 0,
+			'attempt_status'           => isset( $row['attempt_status'] ) ? $row['attempt_status'] : null,
+			'attempt_started_at'       => isset( $row['attempt_started_at'] ) ? d360_bridge_normalize_datetime_to_iso( $row['attempt_started_at'] ) : null,
+			'attempt_ended_at'         => isset( $row['attempt_ended_at'] ) ? d360_bridge_normalize_datetime_to_iso( $row['attempt_ended_at'] ) : null,
+			'result'                   => isset( $row['result'] ) ? $row['result'] : null,
+		);
+	}
+
+	return $attempts;
+}
+
+function d360_bridge_get_tutor_time_offset_seconds() {
+	$gmt_offset_hours = (float) get_option( 'gmt_offset', 0 );
+
+	return (int) round( $gmt_offset_hours * HOUR_IN_SECONDS );
+}
+
+function d360_bridge_tutor_time_to_iso( $value ) {
+	if ( ! is_numeric( $value ) ) {
+		return null;
+	}
+
+	$timestamp = (int) $value;
+	if ( $timestamp <= 0 ) {
+		return null;
+	}
+
+	$utc_timestamp = $timestamp - d360_bridge_get_tutor_time_offset_seconds();
+
+	return gmdate( 'c', $utc_timestamp );
+}
+
+function d360_bridge_get_course_lesson_completions( $student_id, $course_id ) {
+	global $wpdb;
+
+	$student_id = absint( $student_id );
+	$course_id  = absint( $course_id );
+
+	if ( ! $student_id || ! $course_id ) {
+		return array();
+	}
+
+	$lessons = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT content.ID, content.post_title
+			 FROM {$wpdb->posts} course
+			 INNER JOIN {$wpdb->posts} topic ON course.ID = topic.post_parent
+			 INNER JOIN {$wpdb->posts} content ON topic.ID = content.post_parent
+			 WHERE course.ID = %d AND content.post_type = 'lesson'",
+			$course_id
+		),
+		ARRAY_A
+	);
+
+	if ( empty( $lessons ) ) {
+		return array();
+	}
+
+	$completions = array();
+
+	foreach ( $lessons as $lesson ) {
+		$lesson_id = (int) $lesson['ID'];
+
+		$raw_completed_at = get_user_meta( $student_id, '_tutor_completed_lesson_id_' . $lesson_id, true );
+		if ( '' === $raw_completed_at || false === $raw_completed_at ) {
+			continue;
+		}
+
+		$completed_at = d360_bridge_tutor_time_to_iso( $raw_completed_at );
+		if ( ! $completed_at ) {
+			continue;
+		}
+
+		$completions[] = array(
+			'wp_lesson_id' => $lesson_id,
+			'title'        => wp_strip_all_tags( (string) $lesson['post_title'] ),
+			'completed_at' => $completed_at,
+		);
+	}
+
+	return $completions;
+}
+
 function d360_bridge_enrich_student_courses_for_sync( $student_id, $courses ) {
 	if ( ! is_array( $courses ) ) {
 		return array();
@@ -3850,13 +3975,15 @@ function d360_bridge_enrich_student_courses_for_sync( $student_id, $courses ) {
 		}
 
 		$enriched_courses[] = array(
-			'wp_course_id'    => $course_id,
-			'title'           => isset( $course['title'] ) ? wp_strip_all_tags( (string) $course['title'] ) : '',
-			'progress_pct'    => isset( $course['progress_pct'] ) ? max( 0, min( 100, (int) $course['progress_pct'] ) ) : 0,
-			'completed'       => ! empty( $course['completed'] ),
-			'started_at'      => isset( $course['started_at'] ) ? $course['started_at'] : null,
-			'completed_at'    => isset( $course['completed_at'] ) ? $course['completed_at'] : null,
-			'certificate_url' => isset( $course['certificate_url'] ) ? $course['certificate_url'] : null,
+			'wp_course_id'       => $course_id,
+			'title'              => isset( $course['title'] ) ? wp_strip_all_tags( (string) $course['title'] ) : '',
+			'progress_pct'       => isset( $course['progress_pct'] ) ? max( 0, min( 100, (int) $course['progress_pct'] ) ) : 0,
+			'completed'          => ! empty( $course['completed'] ),
+			'started_at'         => isset( $course['started_at'] ) ? $course['started_at'] : null,
+			'completed_at'       => isset( $course['completed_at'] ) ? $course['completed_at'] : null,
+			'certificate_url'    => isset( $course['certificate_url'] ) ? $course['certificate_url'] : null,
+			'quiz_attempts'      => d360_bridge_get_course_quiz_attempts( $student_id, $course_id ),
+			'lesson_completions' => d360_bridge_get_course_lesson_completions( $student_id, $course_id ),
 		);
 	}
 

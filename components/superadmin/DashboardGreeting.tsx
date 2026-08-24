@@ -20,7 +20,7 @@ export function DashboardGreeting({ name }: { name: string }) {
         sx={{
           fontSize: "0.75rem",
           fontWeight: 700,
-          color: "var(--kpi-icon-color, #3579F5)",
+          color: "var(--kpi-icon-color, var(--portal-blue))",
           textTransform: "uppercase",
           letterSpacing: "0.1em",
           mb: 0.75,

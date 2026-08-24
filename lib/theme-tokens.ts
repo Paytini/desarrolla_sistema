@@ -7,3 +7,10 @@ export const fd = {
   foreground: "#111827",
   background: "#FFFFFF",
 } as const
+
+export const portalColors = {
+  blue: "#3579F5",
+  blueHover: "#2A61D6",
+  blueSoft: "#EAF1FE",
+  border: "#E5E7EB",
+} as const

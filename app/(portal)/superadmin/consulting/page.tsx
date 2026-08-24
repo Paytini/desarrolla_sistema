@@ -5,9 +5,10 @@ import Stack from "@mui/material/Stack"
 import { ConsultingRequestActions } from "@/components/superadmin/ConsultingRequestActions"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { PageHeader } from "@/components/shared/PageHeader"
-import StatusBadge from "@/components/shared/StatusBadge"
+import { StatusLabel } from "@/components/shared/StatusLabel"
 import { getConsultingArea } from "@/lib/consulting-areas"
 import { formatConsultingDateTime } from "@/lib/consulting-schedule"
+import { CONSULTING_STATUS_LABEL, CONSULTING_STATUS_VARIANT } from "@/lib/consulting-status"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -20,18 +21,6 @@ const successMessages: Record<string, string> = {
 const errorMessages: Record<string, string> = {
   solicitud: "No se encontró la solicitud o ya no está pendiente.",
 }
-
-const STATUS_VARIANT = {
-  PENDING: "amber",
-  CONFIRMED: "green",
-  CANCELLED: "red",
-} as const
-
-const STATUS_LABEL = {
-  PENDING: "Pendiente",
-  CONFIRMED: "Confirmada",
-  CANCELLED: "Cancelada",
-} as const
 
 const CONTACT_METHOD_LABELS: Record<string, string> = {
   CALL: "Llamada",
@@ -77,7 +66,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
         key={request.id}
         className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
       >
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF1FE] text-[#3579F5]">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-portal-blue-soft text-portal-blue">
           <Icon size={18} />
         </div>
         <div className="min-w-0 flex-1">
@@ -90,9 +79,11 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
             {CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method}
           </p>
         </div>
-        <StatusBadge variant={STATUS_VARIANT[request.status]} dot>
-          {STATUS_LABEL[request.status]}
-        </StatusBadge>
+        <StatusLabel
+          status={request.status}
+          variantMap={CONSULTING_STATUS_VARIANT}
+          labelMap={CONSULTING_STATUS_LABEL}
+        />
         {request.status === "PENDING" ? (
           <ConsultingRequestActions
             requestId={request.id}

@@ -136,7 +136,6 @@ export default async function EmployeeCourses() {
       <PageHeader
         title={`¡Hola, ${employee.first_name}!`}
         description="Tu ruta de capacitación activa"
-        breadcrumbs={[{ label: "Mi espacio" }, { label: "Mis cursos" }]}
       />
 
       <Box
@@ -175,7 +174,7 @@ export default async function EmployeeCourses() {
             overflow: "hidden",
             borderRadius: 2.5,
             border: "1px solid #f0f0f0",
-            borderLeft: "4px solid #3579F5",
+            borderLeft: "4px solid var(--portal-blue)",
             bgcolor: "background.paper",
             p: 2.5,
           }}
@@ -198,7 +197,7 @@ export default async function EmployeeCourses() {
           </Typography>
           <Typography sx={{ mt: 0.5, fontSize: 11, color: "#64748b" }}>promedio</Typography>
           <Box sx={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
-            <RingChart pct={averageProgress} size={72} sw={7} color="#3579F5" />
+            <RingChart pct={averageProgress} size={72} sw={7} color="var(--portal-blue)" />
           </Box>
         </Paper>
       </Box>
@@ -267,7 +266,7 @@ export default async function EmployeeCourses() {
             const pkgMeta = pkgCourseMap.get(course.wp_course_id)
             const hasError = course.access_status === "ERROR"
             const inProgress = !course.completed && course.progress_pct > 0
-            const barColor = course.progress_pct > 0 ? "#3579F5" : "#94a3b8"
+            const barColor = course.progress_pct > 0 ? "var(--portal-blue)" : "#94a3b8"
             const duracionLabel = dc3Meta?.duration_hours
               ? `${Math.round(dc3Meta.duration_hours)}h`
               : null
@@ -321,11 +320,11 @@ export default async function EmployeeCourses() {
                       height: 96,
                       alignItems: "center",
                       justifyContent: "center",
-                      bgcolor: "#EAF1FE",
+                      bgcolor: "var(--portal-blue-soft)",
                     }}
                   >
                     <Typography
-                      sx={{ fontSize: 30, fontWeight: 800, color: "#3579F5", opacity: 0.4 }}
+                      sx={{ fontSize: 30, fontWeight: 800, color: "var(--portal-blue)", opacity: 0.4 }}
                     >
                       {course.course_name.charAt(0).toUpperCase()}
                     </Typography>
@@ -404,7 +403,7 @@ export default async function EmployeeCourses() {
                         </Typography>
                       )}
                       {hasDc3 && (
-                        <Typography sx={{ fontSize: "11px", fontWeight: 600, color: "#3579F5" }}>
+                        <Typography sx={{ fontSize: "11px", fontWeight: 600, color: "var(--portal-blue)" }}>
                           🏅 DC-3
                         </Typography>
                       )}
@@ -472,9 +471,9 @@ export default async function EmployeeCourses() {
                           py: 1.25,
                           fontSize: 13,
                           fontWeight: 600,
-                          bgcolor: course.completed ? "#3579F5" : "#1a1a1a",
+                          bgcolor: course.completed ? "var(--portal-blue)" : "#1a1a1a",
                           color: "#fff",
-                          "&:hover": { bgcolor: course.completed ? "#2A61D6" : "#333" },
+                          "&:hover": { bgcolor: course.completed ? "var(--portal-blue-hover)" : "#333" },
                         }}
                       >
                         {course.completed
@@ -519,8 +518,8 @@ export default async function EmployeeCourses() {
               height: 36,
               flexShrink: 0,
               borderRadius: 2,
-              bgcolor: "#EAF1FE",
-              color: "#3579F5",
+              bgcolor: "var(--portal-blue-soft)",
+              color: "var(--portal-blue)",
             }}
           >
             <Award size={16} strokeWidth={2} />
@@ -546,9 +545,9 @@ export default async function EmployeeCourses() {
               py: 1,
               fontSize: 13,
               fontWeight: 600,
-              bgcolor: "#3579F5",
+              bgcolor: "var(--portal-blue)",
               color: "#fff",
-              "&:hover": { bgcolor: "#2A61D6" },
+              "&:hover": { bgcolor: "var(--portal-blue-hover)" },
             }}
           >
             Ver constancias

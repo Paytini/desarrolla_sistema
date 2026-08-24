@@ -80,7 +80,7 @@ export default function CsvEmployeeImportForm() {
           <button
             type="button"
             onClick={() => setShowExample((v) => !v)}
-            className="mt-3 text-xs font-semibold text-[#2A61D6] hover:underline"
+            className="mt-3 text-xs font-semibold text-portal-blue-hover hover:underline"
           >
             {showExample ? "Ocultar ejemplo de la plantilla" : "Ver ejemplo de la plantilla"}
           </button>
@@ -115,7 +115,7 @@ export default function CsvEmployeeImportForm() {
                             <span
                               className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                 column.required
-                                  ? "bg-[#EAF1FE] text-[#2A61D6]"
+                                  ? "bg-portal-blue-soft text-portal-blue-hover"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
@@ -128,7 +128,7 @@ export default function CsvEmployeeImportForm() {
                   </thead>
                   <tbody className="text-slate-700">
                     {SAMPLE_ROWS.map((row, rowIndex) => (
-                      <tr key={row.email} className="transition hover:bg-[#EAF1FE]/40">
+                      <tr key={row.email} className="transition hover:bg-portal-blue-soft/40">
                         <td className="border-b border-r border-slate-200 bg-slate-50 px-3 py-3 text-center text-xs font-semibold text-slate-500">
                           {rowIndex + 2}
                         </td>
@@ -190,7 +190,7 @@ export default function CsvEmployeeImportForm() {
 
           <button
             type="submit"
-            className="inline-flex w-fit items-center rounded-full bg-[#3579F5] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#2A61D6]"
+            className="inline-flex w-fit items-center rounded-full bg-portal-blue px-5 py-3 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
           >
             Importar empleados
           </button>

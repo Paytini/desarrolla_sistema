@@ -33,9 +33,9 @@ import {
 import { blobProxyUrl } from "@/lib/blob-proxy"
 
 const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)": "#3579F5",
-  "var(--sidebar-accent-2)": "#3579F5",
-  "var(--sidebar-accent-3)": "#3579F5",
+  "var(--brand)": "var(--portal-blue)",
+  "var(--sidebar-accent-2)": "var(--portal-blue)",
+  "var(--sidebar-accent-3)": "var(--portal-blue)",
 }
 const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
@@ -324,7 +324,7 @@ export function MobileNav({
               width: 32,
               height: 32,
               fontSize: 11,
-              background: "linear-gradient(135deg,#3579F5,#6B9EF8)",
+              background: "linear-gradient(135deg,var(--portal-blue),#6B9EF8)",
               color: "#fff",
               flexShrink: 0,
             }}

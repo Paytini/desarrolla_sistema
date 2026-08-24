@@ -97,6 +97,26 @@ export type BridgeEnsureAccessResponse = {
   }>
 }
 
+export type BridgeQuizAttempt = {
+  attempt_id: number
+  quiz_id: number
+  quiz_name: string | null
+  total_questions: number
+  total_answered_questions: number
+  total_marks: number
+  earned_marks: number
+  attempt_status: string | null
+  attempt_started_at: string | null
+  attempt_ended_at: string | null
+  result: string | null
+}
+
+export type BridgeLessonCompletion = {
+  wp_lesson_id: number
+  title: string | null
+  completed_at: string | null
+}
+
 export type BridgeStudentCourse = {
   wp_course_id: number
   title: string
@@ -105,6 +125,8 @@ export type BridgeStudentCourse = {
   started_at?: string | null
   completed_at?: string | null
   certificate_url?: string | null
+  quiz_attempts?: BridgeQuizAttempt[]
+  lesson_completions?: BridgeLessonCompletion[]
   raw?: Record<string, unknown>
 }
 

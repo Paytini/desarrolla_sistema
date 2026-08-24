@@ -5,12 +5,13 @@ import { CalendarClock } from "lucide-react"
 import { cancelConsultingRequestAction } from "./actions"
 import { CancelConsultingRequestButton } from "@/components/company/consulting/CancelConsultingRequestButton"
 import { PageHeader } from "@/components/shared/PageHeader"
-import StatusBadge from "@/components/shared/StatusBadge"
+import { StatusLabel } from "@/components/shared/StatusLabel"
 import StatusToast from "@/components/shared/StatusToast"
 import { getCompanyBranding } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { getConsultingArea } from "@/lib/consulting-areas"
 import { formatConsultingDateTime, getTodayInConsultingTimeZone } from "@/lib/consulting-schedule"
+import { CONSULTING_STATUS_LABEL, CONSULTING_STATUS_VARIANT } from "@/lib/consulting-status"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -22,18 +23,6 @@ const successMessages: Record<string, string> = {
 const errorMessages: Record<string, string> = {
   solicitud: "No se encontró la solicitud o ya no se puede cancelar.",
 }
-
-const STATUS_VARIANT = {
-  PENDING: "amber",
-  CONFIRMED: "green",
-  CANCELLED: "red",
-} as const
-
-const STATUS_LABEL = {
-  PENDING: "Pendiente",
-  CONFIRMED: "Confirmada",
-  CANCELLED: "Cancelada",
-} as const
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
@@ -81,7 +70,7 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
         key={request.id}
         className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 transition-all duration-200 hover:bg-gray-50"
       >
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF1FE] text-[#3579F5]">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-portal-blue-soft text-portal-blue">
           <Icon size={18} />
         </div>
         <div className="min-w-0 flex-1">
@@ -92,9 +81,11 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
           </p>
         </div>
-        <StatusBadge variant={STATUS_VARIANT[request.status]} dot>
-          {STATUS_LABEL[request.status]}
-        </StatusBadge>
+        <StatusLabel
+          status={request.status}
+          variantMap={CONSULTING_STATUS_VARIANT}
+          labelMap={CONSULTING_STATUS_LABEL}
+        />
         {request.status === "PENDING" ? (
           <CancelConsultingRequestButton
             action={cancelConsultingRequestAction}
@@ -112,14 +103,10 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
       <PageHeader
         title="Consultoría"
         description="Sesiones en vivo con nuestro equipo de consultores"
-        breadcrumbs={[
-          { label: "Empresa", href: companyPath(branding.slug, "/home") },
-          { label: "Consultoría" },
-        ]}
         action={
           <Link
             href={companyPath(branding.slug, "/consulting/new")}
-            className="inline-flex items-center rounded-xl bg-[#3579F5] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2A61D6]"
+            className="inline-flex items-center rounded-xl bg-portal-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
           >
             Agendar nueva consultoría
           </Link>

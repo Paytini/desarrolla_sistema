@@ -10,6 +10,11 @@
   --brand-warm: #d96b20;
   --brand-ink: #000022;
 
+  --portal-blue: #3579f5;
+  --portal-blue-hover: #2a61d6;
+  --portal-blue-soft: #eaf1fe;
+  --portal-border: #e5e7eb;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.068 0.018 18);
   --card: oklch(1 0 0);
@@ -60,6 +65,10 @@
   --color-brand: var(--brand);
   --color-brand-warm: var(--brand-warm);
   --color-brand-ink: var(--brand-ink);
+  --color-portal-blue: var(--portal-blue);
+  --color-portal-blue-hover: var(--portal-blue-hover);
+  --color-portal-blue-soft: var(--portal-blue-soft);
+  --color-portal-border: var(--portal-border);
   --font-sans: var(--font-inter), "Inter", system-ui, "Segoe UI", Arial, sans-serif;
   --font-heading: var(--font-inter), "Inter", sans-serif;
   --font-mono: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;

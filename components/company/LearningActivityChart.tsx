@@ -31,9 +31,9 @@ function ActivityTooltip({ active, payload, label }: ActivityTooltipProps) {
   if (!active || !payload?.length) return null
 
   return (
-    <div className="rounded-xl border border-[#E5E7EB] bg-white px-4 py-3 shadow-lg">
+    <div className="rounded-xl border border-portal-border bg-white px-4 py-3 shadow-lg">
       <p className="text-sm font-semibold text-[#1a1a1a]">{label}</p>
-      <p className="text-sm text-[#3579F5]">
+      <p className="text-sm text-portal-blue">
         finalizaciones: <span className="font-semibold">{payload[0].value}</span>
       </p>
     </div>
@@ -72,11 +72,11 @@ export function LearningActivityChart({ data, changeVsPreviousWeek }: LearningAc
           <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
             <defs>
               <linearGradient id="learningActivityFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3579F5" stopOpacity={0.28} />
-                <stop offset="100%" stopColor="#3579F5" stopOpacity={0} />
+                <stop offset="0%" stopColor="var(--portal-blue)" stopOpacity={0.28} />
+                <stop offset="100%" stopColor="var(--portal-blue)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="#E5E7EB" strokeDasharray="4 4" />
+            <CartesianGrid vertical={false} stroke="var(--portal-border)" strokeDasharray="4 4" />
             <XAxis
               dataKey="label"
               axisLine={false}
@@ -94,11 +94,11 @@ export function LearningActivityChart({ data, changeVsPreviousWeek }: LearningAc
             <Area
               type="monotone"
               dataKey="completions"
-              stroke="#3579F5"
+              stroke="var(--portal-blue)"
               strokeWidth={2}
               fill="url(#learningActivityFill)"
-              dot={{ r: 3, fill: "#3579F5", strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: "#3579F5", strokeWidth: 2, stroke: "#FFFFFF" }}
+              dot={{ r: 3, fill: "var(--portal-blue)", strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: "var(--portal-blue)", strokeWidth: 2, stroke: "#FFFFFF" }}
             />
           </AreaChart>
         </ResponsiveContainer>

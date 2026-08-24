@@ -69,7 +69,7 @@ export function ConfirmStep({
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          color: "#3579F5",
+          color: "var(--portal-blue)",
           mb: 1,
         }}
       >
@@ -156,9 +156,9 @@ export function ConfirmStep({
                 py: 1.5,
                 borderRadius: "12px",
                 border: "1.5px solid",
-                borderColor: selected ? "#3579F5" : "#E5E7EB",
+                borderColor: selected ? "var(--portal-blue)" : "var(--portal-border)",
                 bgcolor: selected ? "rgba(53, 121, 245, 0.06)" : "transparent",
-                color: selected ? "#3579F5" : "text.primary",
+                color: selected ? "var(--portal-blue)" : "text.primary",
                 cursor: "pointer",
               }}
             >
