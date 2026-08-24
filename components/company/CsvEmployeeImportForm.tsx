@@ -12,6 +12,7 @@ const COLUMNS = [
   { key: "puesto", label: "puesto", required: true },
   { key: "ocupacion_especifica_clave", label: "ocupacion_especifica_clave", required: true },
   { key: "ocupacion_especifica", label: "ocupacion_especifica", required: true },
+  { key: "password", label: "password", required: false },
 ]
 
 const SAMPLE_ROWS = [
@@ -24,6 +25,7 @@ const SAMPLE_ROWS = [
     puesto: "Supervisor",
     ocupacion_especifica_clave: "03.4",
     ocupacion_especifica: "Instalacion y mantenimiento",
+    password: "",
   },
   {
     nombre: "Luis",
@@ -34,6 +36,7 @@ const SAMPLE_ROWS = [
     puesto: "Supervisor",
     ocupacion_especifica_clave: "07.2",
     ocupacion_especifica: "Supervision de seguridad",
+    password: "",
   },
 ]
 
@@ -159,8 +162,10 @@ export default function CsvEmployeeImportForm() {
                   Nota
                 </span>
                 <p>
-                  Cada empleado recibirá un correo para crear su propia contraseña y activar su
-                  cuenta.
+                  La columna password es opcional: si la llenas, esa sera la contrasena inicial
+                  del empleado; si la dejas vacia, se genera una automaticamente y se te muestra
+                  al terminar la carga. En ambos casos, el empleado debera cambiarla en su primer
+                  inicio de sesion.
                 </p>
               </div>
             </div>

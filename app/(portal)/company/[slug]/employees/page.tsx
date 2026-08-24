@@ -12,6 +12,7 @@ import {
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
 } from "@/lib/company-employees"
+import { cookies } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -28,9 +29,9 @@ export const maxDuration = 300
 
 const successMessages: Record<string, string> = {
   empleado_creado:
-    "El empleado se creo correctamente. Le enviamos un correo para que active su cuenta.",
+    "El empleado se creo correctamente. Ya puede iniciar sesion con la contrasena que capturaste.",
   empleado_creado_sync:
-    "El empleado se creo y su acceso ya quedo activo. Le enviamos un correo para que active su cuenta. El siguiente paso es asignarle cursos desde HR > Asignaciones.",
+    "El empleado se creo y su acceso ya quedo activo, con la contrasena que capturaste. El siguiente paso es asignarle cursos desde HR > Asignaciones.",
   empleado_suspendido: "El empleado fue suspendido y su acceso al portal quedo inhabilitado.",
   empleado_activado: "El empleado fue reactivado correctamente.",
   empleado_eliminado: "El empleado se elimino del portal y su cupo fue liberado.",
@@ -47,7 +48,7 @@ const errorMessages: Record<string, string> = {
   cupos: "La empresa ya alcanzo el limite de empleados contratados.",
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
-  ya_activado: "Este empleado ya activó su cuenta.",
+  ya_activado: "Este empleado no tiene una activación pendiente. Ya puede iniciar sesión con su contraseña.",
   activation_email: "No se pudo reenviar el correo de activación. Intenta de nuevo.",
   bridge_sync:
     "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
@@ -74,7 +75,7 @@ function getSuccessMessage(
     const queued = readSearchParam(params, "queued") === "1"
     const skipped = readSearchParam(params, "skipped") ?? "0"
     const syncNote = queued ? "El acceso a cursos se esta activando en segundo plano." : ""
-    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado recibira un correo para activar su cuenta. ${syncNote}`.trim()
+    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado ya puede iniciar sesion con la contrasena capturada o generada. ${syncNote}`.trim()
   }
   return successMessages[success] ?? success
 }
@@ -97,6 +98,13 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const params = await searchParams
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
+  const generatedPasswordsCookie = (await cookies()).get("d360_csv_generated_passwords")?.value
+  const generatedPasswordsPayload: { passwords: Array<{ email: string; password: string }>; omittedCount: number } =
+    generatedPasswordsCookie
+      ? JSON.parse(generatedPasswordsCookie)
+      : { passwords: [], omittedCount: 0 }
+  const generatedPasswords = generatedPasswordsPayload.passwords
+  const omittedGeneratedPasswordsCount = generatedPasswordsPayload.omittedCount
   const searchQuery = (readSearchParam(params, "q") ?? "").trim()
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
@@ -168,6 +176,33 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
 
       {success ? (
         <StatusToast tone="success" message={getSuccessMessage(success, params) ?? success} />
+      ) : null}
+      {generatedPasswords.length > 0 ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="mb-2 text-sm font-semibold text-amber-950">
+            Contraseñas generadas automáticamente
+          </p>
+          <p className="mb-3 text-xs text-amber-900">
+            Estas filas del CSV no traían contraseña, así que se generó una por empleado.
+            Compártela por un canal seguro — no volverá a mostrarse.
+          </p>
+          <ul className="grid gap-1 text-xs text-amber-950">
+            {generatedPasswords.map((item) => (
+              <li key={item.email} className="font-mono">
+                {item.email}: {item.password}
+              </li>
+            ))}
+          </ul>
+          {omittedGeneratedPasswordsCount > 0 ? (
+            <p className="mt-2 text-xs font-semibold text-amber-950">
+              No se pudieron mostrar {omittedGeneratedPasswordsCount} contraseña
+              {omittedGeneratedPasswordsCount === 1 ? "" : "s"} generada
+              {omittedGeneratedPasswordsCount === 1 ? "" : "s"} más por límites del navegador.
+              Vuelve a importar en lotes más pequeños, o especifica las contraseñas manualmente en
+              el CSV para esos empleados.
+            </p>
+          ) : null}
+        </div>
       ) : null}
       {error ? <StatusToast tone="error" message={errorMessages[error] ?? error} /> : null}
 

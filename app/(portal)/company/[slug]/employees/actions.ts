@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath, revalidateTag } from "next/cache"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { deleteEmployeeRecord } from "@/lib/access-control"
 import {
@@ -18,12 +19,13 @@ import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
 import { buildActivationEmail } from "@/lib/email-templates/activation"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
+import { enqueueCsvEmployeeBridgeSyncJob, enqueueEmailSendJob } from "@/lib/jobs"
 import {
-  enqueueCsvEmployeeBridgeSyncJob,
-  enqueueEmailSendJob,
-  enqueueEmailSendJobs,
-} from "@/lib/jobs"
-import { buildActivationUrl, buildPendingActivationFields } from "@/lib/onboarding"
+  buildActivationUrl,
+  buildPendingActivationFields,
+  generateRandomPassword,
+  hashPassword,
+} from "@/lib/onboarding"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
 import { bridgeUpsertEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
@@ -82,6 +84,7 @@ type EmployeeProvisioningInput = {
   puesto?: string | null
   ocupacionEspecificaClave?: string | null
   ocupacionEspecifica?: string | null
+  password?: string
   companyContext?: CompanyProvisioningContext
   actor: AuditActor
 }
@@ -159,7 +162,10 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
     }
   }
 
-  const pendingActivation = buildPendingActivationFields()
+  const pendingActivation = input.password ? null : buildPendingActivationFields()
+  const passwordHash = input.password
+    ? await hashPassword(input.password)
+    : pendingActivation!.passwordHash
   const activePackage = companyContext.packages[0]
   const hasActivePackage = Boolean(activePackage)
 
@@ -192,9 +198,10 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       await tx.user.create({
         data: {
           email,
-          password_hash: pendingActivation.passwordHash,
-          activation_token: pendingActivation.activationToken,
-          activation_token_expires_at: pendingActivation.activationTokenExpiresAt,
+          password_hash: passwordHash,
+          activation_token: pendingActivation?.activationToken ?? null,
+          activation_token_expires_at: pendingActivation?.activationTokenExpiresAt ?? null,
+          must_change_password: Boolean(input.password),
           name: `${input.nombre} ${input.apellido}`.trim(),
           role: "EMPLOYEE",
           company_id: input.companyId,
@@ -220,19 +227,21 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
   }
 
   let activationEmailQueued = false
-  try {
-    const { subject, html, text } = buildActivationEmail({
-      nombreEmpleado: input.nombre,
-      nombreEmpresa: companyContext.name,
-      activationUrl: buildActivationUrl(pendingActivation.activationToken),
-    })
-    await enqueueEmailSendJob({ to: email, subject, html, text })
-    activationEmailQueued = true
-  } catch (error) {
-    console.error("No se pudo encolar el correo de activación", {
-      employeeId: createdEmployee.id,
-      error: error instanceof Error ? error.message : String(error),
-    })
+  if (pendingActivation) {
+    try {
+      const { subject, html, text } = buildActivationEmail({
+        nombreEmpleado: input.nombre,
+        nombreEmpresa: companyContext.name,
+        activationUrl: buildActivationUrl(pendingActivation.activationToken),
+      })
+      await enqueueEmailSendJob({ to: email, subject, html, text })
+      activationEmailQueued = true
+    } catch (error) {
+      console.error("No se pudo encolar el correo de activación", {
+        employeeId: createdEmployee.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(input.companyId)
@@ -275,6 +284,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
         email,
         firstName: input.nombre,
         lastName: input.apellido,
+        password: input.password,
         department: input.departamento ?? null,
         position: input.puesto ?? null,
       })
@@ -349,6 +359,7 @@ type NormalizedCsvEmployeeRow = {
   puesto: string | null
   ocupacionEspecificaClave: string | null
   ocupacionEspecifica: string | null
+  password: string | null
 }
 
 function normalizeCsvEmployees(dataRows: string[][], headers: string[]) {
@@ -376,8 +387,9 @@ function normalizeCsvEmployees(dataRows: string[][], headers: string[]) {
       ]) || null
     const ocupacionEspecifica =
       csvField(row, ["ocupacion_especifica", "ocupacion", "ocupacion_cno"]) || null
+    const password = csvField(row, ["password", "contrasena", "contraseña"]) || null
 
-    if (!nombre || !apellido || !email) {
+    if (!nombre || !apellido || !email || (password !== null && password.length < 8)) {
       skipped += 1
       continue
     }
@@ -398,6 +410,7 @@ function normalizeCsvEmployees(dataRows: string[][], headers: string[]) {
       puesto,
       ocupacionEspecificaClave,
       ocupacionEspecifica,
+      password,
     })
   }
 
@@ -422,6 +435,7 @@ export async function createEmployeeAction(formData: FormData) {
   const puesto = getString(formData, "puesto")
   const ocupacionEspecificaClave = getString(formData, "ocupacion_especifica_clave")
   const ocupacionEspecifica = getString(formData, "ocupacion_especifica")
+  const password = getString(formData, "password")
 
   if (
     !nombre ||
@@ -432,7 +446,8 @@ export async function createEmployeeAction(formData: FormData) {
     !departamento ||
     !puesto ||
     !ocupacionEspecificaClave ||
-    !ocupacionEspecifica
+    !ocupacionEspecifica ||
+    password.length < 8
   ) {
     redirect(employeesPath(slug, "?error=datos"))
   }
@@ -448,6 +463,7 @@ export async function createEmployeeAction(formData: FormData) {
     puesto: puesto || null,
     ocupacionEspecificaClave: ocupacionEspecificaClave || null,
     ocupacionEspecifica: ocupacionEspecifica || null,
+    password,
     actor,
   })
 
@@ -573,8 +589,20 @@ export async function importEmployeesCsvAction(formData: FormData) {
   const employeesToCreate = availableEmployees.slice(0, availableSeats)
   skipped += Math.max(availableEmployees.length - employeesToCreate.length, 0)
 
-  const activationByEmail = new Map(
-    employeesToCreate.map((employee) => [employee.email, buildPendingActivationFields()]),
+  const generatedPasswords: Array<{ email: string; password: string }> = []
+  const credentialsByEmail = new Map(
+    await Promise.all(
+      employeesToCreate.map(async (employee) => {
+        const plainPassword = employee.password ?? generateRandomPassword()
+        if (!employee.password) {
+          generatedPasswords.push({ email: employee.email, password: plainPassword })
+        }
+        return [
+          employee.email,
+          { passwordHash: await hashPassword(plainPassword), plainPassword },
+        ] as const
+      }),
+    ),
   )
 
   const createdEmployees =
@@ -598,12 +626,13 @@ export async function importEmployeesCsvAction(formData: FormData) {
 
             await tx.user.createMany({
               data: employeesToCreate.map((employee) => {
-                const activation = activationByEmail.get(employee.email)!
+                const credentials = credentialsByEmail.get(employee.email)!
                 return {
                   email: employee.email,
-                  password_hash: activation.passwordHash,
-                  activation_token: activation.activationToken,
-                  activation_token_expires_at: activation.activationTokenExpiresAt,
+                  password_hash: credentials.passwordHash,
+                  activation_token: null,
+                  activation_token_expires_at: null,
+                  must_change_password: true,
                   name: `${employee.nombre} ${employee.apellido}`.trim(),
                   role: "EMPLOYEE" as const,
                   company_id: companyId,
@@ -665,6 +694,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
           lastName: employee.apellido,
           department: employee.departamento,
           position: employee.puesto,
+          password: credentialsByEmail.get(employee.email)!.plainPassword,
         })),
       })
       queuedSync = jobId !== null
@@ -674,29 +704,6 @@ export async function importEmployeesCsvAction(formData: FormData) {
         error: error instanceof Error ? error.message : String(error),
       })
     }
-  }
-
-  let activationEmailsQueued = false
-  try {
-    const activationEmails = createdEmployees.flatMap((employee) => {
-      const activation = activationByEmail.get(employee.email)
-      if (!activation) return []
-
-      const { subject, html, text } = buildActivationEmail({
-        nombreEmpleado: employee.nombre,
-        nombreEmpresa: companyContext.name,
-        activationUrl: buildActivationUrl(activation.activationToken),
-      })
-      return [{ to: employee.email, subject, html, text }]
-    })
-
-    await enqueueEmailSendJobs(activationEmails)
-    activationEmailsQueued = activationEmails.length > 0
-  } catch (error) {
-    console.error("No se pudo encolar los correos de activación del import CSV", {
-      companyId,
-      error: error instanceof Error ? error.message : String(error),
-    })
   }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(companyId)
@@ -721,7 +728,6 @@ export async function importEmployeesCsvAction(formData: FormData) {
     metadata: {
       creados: created,
       sincronizacion_wp_encolada: queuedSync,
-      correos_activacion_encolados: activationEmailsQueued,
       omitidos: skipped,
     },
   })
@@ -733,6 +739,26 @@ export async function importEmployeesCsvAction(formData: FormData) {
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+
+  const GENERATED_PASSWORDS_COOKIE_LIMIT = 35
+
+  if (generatedPasswords.length > 0) {
+    const cookieStore = await cookies()
+    const truncated = generatedPasswords.length > GENERATED_PASSWORDS_COOKIE_LIMIT
+    const cookiePayload = {
+      passwords: generatedPasswords.slice(0, GENERATED_PASSWORDS_COOKIE_LIMIT),
+      omittedCount: truncated
+        ? generatedPasswords.length - GENERATED_PASSWORDS_COOKIE_LIMIT
+        : 0,
+    }
+    cookieStore.set("d360_csv_generated_passwords", JSON.stringify(cookiePayload), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 300,
+      path: employeesPath(slug),
+    })
+  }
 
   redirect(
     employeesPath(

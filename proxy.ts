@@ -22,6 +22,14 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
+  if (
+    role === "EMPLOYEE" &&
+    req.auth?.user?.mustChangePassword &&
+    pathname !== "/employee/cambiar-contrasena"
+  ) {
+    return NextResponse.redirect(new URL("/employee/cambiar-contrasena", req.url))
+  }
+
   return NextResponse.next()
 })
 

@@ -9,6 +9,7 @@ declare module "next-auth" {
       nombre: string
       empresa?: string
       empresa_slug?: string
+      mustChangePassword: boolean
     } & DefaultSession["user"]
   }
 }
@@ -21,5 +22,6 @@ declare module "next-auth/jwt" {
     nombre?: string
     empresa?: string | null
     empresa_slug?: string | null
+    mustChangePassword?: boolean
   }
 }

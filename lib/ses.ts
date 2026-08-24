@@ -19,6 +19,11 @@ export async function sendEmail({
   html: string
   text: string
 }) {
+  if (process.env.EMAIL_SENDING_ENABLED === "false") {
+    console.info("EMAIL_SENDING_ENABLED=false, correo omitido", { to, subject })
+    return
+  }
+
   await client.send(
     new SendEmailCommand({
       Source: process.env.SES_FROM_EMAIL,

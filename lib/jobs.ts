@@ -47,6 +47,7 @@ type CsvBridgeSyncEmployee = {
   lastName: string
   department: string | null
   position: string | null
+  encryptedPassword: string
 }
 
 type CsvEmployeeBridgeSyncPayload = {
@@ -84,23 +85,6 @@ export async function enqueueEmailSendJob(input: EmailSendInput) {
   })
 
   return job.id
-}
-
-export async function enqueueEmailSendJobs(inputs: EmailSendInput[]) {
-  if (inputs.length === 0) return
-
-  await prisma.job.createMany({
-    data: inputs.map((input) => ({
-      type: "EMAIL_SEND",
-      payload: {
-        to: input.to,
-        subject: input.subject,
-        html: encryptJobPayloadSecret(input.html),
-        text: encryptJobPayloadSecret(input.text),
-        attempts: 0,
-      },
-    })),
-  })
 }
 
 const EMAIL_SEND_BACKOFF_BASE_MS = 60_000
@@ -163,7 +147,7 @@ async function processEmailSendJob(jobId: string, payload: EmailSendPayload) {
 export async function enqueueCsvEmployeeBridgeSyncJob(input: {
   companyId: string
   companyName: string
-  employees: CsvBridgeSyncEmployee[]
+  employees: Array<Omit<CsvBridgeSyncEmployee, "encryptedPassword"> & { password: string }>
 }) {
   if (input.employees.length === 0) return null
 
@@ -173,7 +157,10 @@ export async function enqueueCsvEmployeeBridgeSyncJob(input: {
       payload: {
         companyId: input.companyId,
         companyName: input.companyName,
-        pending: input.employees,
+        pending: input.employees.map(({ password, ...employee }) => ({
+          ...employee,
+          encryptedPassword: encryptJobPayloadSecret(password),
+        })),
         syncedCount: 0,
         warningCount: 0,
       },
@@ -199,6 +186,7 @@ async function processCsvEmployeeBridgeSyncJob(
         email: employee.email,
         firstName: employee.firstName,
         lastName: employee.lastName,
+        password: decryptJobPayloadSecret(employee.encryptedPassword),
         department: employee.department,
         position: employee.position,
       })
