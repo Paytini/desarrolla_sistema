@@ -3889,36 +3889,37 @@ function d360_bridge_tutor_time_to_iso( $value ) {
 }
 
 function d360_bridge_get_course_lesson_completions( $student_id, $course_id ) {
+	global $wpdb;
+
 	$student_id = absint( $student_id );
 	$course_id  = absint( $course_id );
 
-	if ( ! $student_id || ! $course_id || ! function_exists( 'tutor_utils' ) ) {
+	if ( ! $student_id || ! $course_id ) {
 		return array();
 	}
 
-	$tutor_utils = tutor_utils();
-	if ( ! is_object( $tutor_utils ) || ! method_exists( $tutor_utils, 'get_course_contents_by_id' ) ) {
-		return array();
-	}
+	$lessons = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT content.ID, content.post_title
+			 FROM {$wpdb->posts} course
+			 INNER JOIN {$wpdb->posts} topic ON course.ID = topic.post_parent
+			 INNER JOIN {$wpdb->posts} content ON topic.ID = content.post_parent
+			 WHERE course.ID = %d AND content.post_type = 'lesson'",
+			$course_id
+		),
+		ARRAY_A
+	);
 
-	$course_contents = d360_bridge_call_tutor_utils_method( $tutor_utils, 'get_course_contents_by_id', array( $course_id ) );
-
-	if ( ! is_array( $course_contents ) && ! $course_contents instanceof Traversable ) {
+	if ( empty( $lessons ) ) {
 		return array();
 	}
 
 	$completions = array();
 
-	foreach ( $course_contents as $content ) {
-		if ( ! $content instanceof WP_Post ) {
-			continue;
-		}
+	foreach ( $lessons as $lesson ) {
+		$lesson_id = (int) $lesson['ID'];
 
-		if ( 'tutor_quiz' === $content->post_type || 'tutor_assignments' === $content->post_type ) {
-			continue;
-		}
-
-		$raw_completed_at = get_user_meta( $student_id, '_tutor_completed_lesson_id_' . $content->ID, true );
+		$raw_completed_at = get_user_meta( $student_id, '_tutor_completed_lesson_id_' . $lesson_id, true );
 		if ( '' === $raw_completed_at || false === $raw_completed_at ) {
 			continue;
 		}
@@ -3929,8 +3930,8 @@ function d360_bridge_get_course_lesson_completions( $student_id, $course_id ) {
 		}
 
 		$completions[] = array(
-			'wp_lesson_id' => (int) $content->ID,
-			'title'        => wp_strip_all_tags( (string) $content->post_title ),
+			'wp_lesson_id' => $lesson_id,
+			'title'        => wp_strip_all_tags( (string) $lesson['post_title'] ),
 			'completed_at' => $completed_at,
 		);
 	}
