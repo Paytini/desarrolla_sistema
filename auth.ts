@@ -111,6 +111,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             empresa_id: usuario.company_id,
             empresa: usuario.company?.name ?? null,
             empresa_slug: usuario.company?.slug ?? null,
+            mustChangePassword: usuario.must_change_password,
           }
         } catch (error) {
           if (

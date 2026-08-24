@@ -14,6 +14,7 @@ export const authConfig: NextAuthConfig = {
         token.nombre = (user as { nombre?: string }).nombre
         token.empresa = (user as { empresa?: string | null }).empresa
         token.empresa_slug = (user as { empresa_slug?: string | null }).empresa_slug
+        token.mustChangePassword = (user as { mustChangePassword?: boolean }).mustChangePassword
       }
       return token
     },
@@ -24,6 +25,7 @@ export const authConfig: NextAuthConfig = {
       session.user.nombre = token.nombre as string
       session.user.empresa = token.empresa as string | undefined
       session.user.empresa_slug = token.empresa_slug as string | undefined
+      session.user.mustChangePassword = Boolean(token.mustChangePassword)
       return session
     },
   },
