@@ -70,12 +70,12 @@ export default function ManualEmployeeForm() {
       ref={formRef}
       action={createEmployeeAction}
       autoComplete="off"
-      className="grid gap-2.5"
+      className="grid gap-2"
       data-loading-message="Creando empleado..."
       data-loading-detail="Estamos registrando al empleado y sincronizando su acceso en Tutor LMS."
     >
-      <div className={step === "form" ? "grid gap-2.5" : "hidden"}>
-        <div className="flex items-start gap-2 rounded-lg bg-portal-blue-soft px-3 py-2 text-xs leading-5 text-portal-blue-hover">
+      <div className={step === "form" ? "grid gap-2" : "hidden"}>
+        <div className="flex items-start gap-2 rounded-lg bg-portal-blue-soft px-3 py-1.5 text-xs leading-5 text-portal-blue-hover">
           <Info size={14} className="mt-0.5 shrink-0" />
           <p>
             La CURP y la Ocupación (CNO) que captures se usarán para generar la constancia DC-3
@@ -85,14 +85,23 @@ export default function ManualEmployeeForm() {
 
         <p className="text-xs text-slate-500">Todos los campos son obligatorios.</p>
 
-        <div className="grid gap-2.5 md:grid-cols-2">
+        <div className="grid gap-2 md:grid-cols-3">
+          <label className="grid gap-1 text-sm">
+            <span className="text-[14px] font-normal text-slate-700">Nombre(s)</span>
+            <input
+              name="nombre"
+              required
+              onChange={updatePreview("nombre")}
+              className="rounded-lg border border-slate-200 px-3 py-1 text-sm outline-none transition focus:border-portal-blue"
+            />
+          </label>
           <label className="grid gap-1 text-sm">
             <span className="text-[14px] font-normal text-slate-700">Apellido paterno</span>
             <input
               name="apellido"
               required
               onChange={updatePreview("apellido")}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
+              className="rounded-lg border border-slate-200 px-3 py-1 text-sm outline-none transition focus:border-portal-blue"
             />
           </label>
           <label className="grid gap-1 text-sm">
@@ -101,55 +110,46 @@ export default function ManualEmployeeForm() {
               name="apellido_materno"
               required
               onChange={updatePreview("apellidoMaterno")}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
+              className="rounded-lg border border-slate-200 px-3 py-1 text-sm outline-none transition focus:border-portal-blue"
             />
           </label>
         </div>
 
-        <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">Nombre(s)</span>
-          <input
-            name="nombre"
-            required
-            onChange={updatePreview("nombre")}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
-          />
-        </label>
-
-        <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">Correo electrónico</span>
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="off"
-            onChange={updatePreview("email")}
-            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
-          />
-        </label>
-
-        <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">Contraseña inicial</span>
-          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 pr-2 focus-within:border-portal-blue">
+        <div className="grid gap-2 md:grid-cols-2">
+          <label className="grid gap-1 text-sm">
+            <span className="text-[14px] font-normal text-slate-700">Correo electrónico</span>
             <input
-              name="password"
-              type={showPassword ? "text" : "password"}
+              name="email"
+              type="email"
               required
-              minLength={8}
-              autoComplete="new-password"
-              onChange={updatePreview("password")}
-              className="min-w-0 flex-1 border-0 px-3 py-1.5 text-sm outline-none"
+              autoComplete="off"
+              onChange={updatePreview("email")}
+              className="rounded-lg border border-slate-200 px-3 py-1 text-sm outline-none transition focus:border-portal-blue"
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword((current) => !current)}
-              className="shrink-0 text-slate-400 transition-colors hover:text-portal-blue"
-              tabIndex={-1}
-            >
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </label>
+          </label>
+          <label className="grid gap-1 text-sm">
+            <span className="text-[14px] font-normal text-slate-700">Contraseña inicial</span>
+            <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 pr-2 focus-within:border-portal-blue">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={8}
+                autoComplete="new-password"
+                onChange={updatePreview("password")}
+                className="min-w-0 flex-1 border-0 px-3 py-1 text-sm outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="shrink-0 text-slate-400 transition-colors hover:text-portal-blue"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </label>
+        </div>
 
         <p className="text-xs text-slate-500">
           El empleado deberá cambiar esta contraseña la primera vez que inicie sesión.
@@ -157,7 +157,7 @@ export default function ManualEmployeeForm() {
 
         <fieldset className="m-0 border-0 p-0">
           <legend className="sr-only">Datos para la constancia DC-3</legend>
-          <div className="grid gap-2.5 md:grid-cols-2">
+          <div className="grid gap-2 md:grid-cols-2">
             <label className="grid gap-1 text-sm">
               <span className="flex items-center gap-1.5 text-[14px] font-normal text-slate-700">
                 CURP
@@ -169,7 +169,7 @@ export default function ManualEmployeeForm() {
                 maxLength={18}
                 placeholder="18 caracteres"
                 onChange={updatePreview("curp")}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm uppercase outline-none transition focus:border-portal-blue"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-sm uppercase outline-none transition focus:border-portal-blue"
               />
             </label>
             <CnoSelect
@@ -181,14 +181,14 @@ export default function ManualEmployeeForm() {
           </div>
         </fieldset>
 
-        <div className="grid gap-2.5 md:grid-cols-2">
+        <div className="grid gap-2 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span className="text-[14px] font-normal text-slate-700">Departamento</span>
             <input
               name="departamento"
               required
               onChange={updatePreview("departamento")}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
+              className="rounded-lg border border-slate-200 px-3 py-1 text-sm outline-none transition focus:border-portal-blue"
             />
           </label>
           <label className="grid gap-1 text-sm">
@@ -197,7 +197,7 @@ export default function ManualEmployeeForm() {
               name="puesto"
               required
               onChange={updatePreview("puesto")}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
+              className="rounded-lg border border-slate-200 px-3 py-1 text-sm outline-none transition focus:border-portal-blue"
             />
           </label>
         </div>
