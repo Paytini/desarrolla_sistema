@@ -4,12 +4,18 @@ import CurpInfoButton from "@/components/company/CurpInfoButton"
 
 export default function ManualEmployeeForm() {
   return (
-    <form action={createEmployeeAction} autoComplete="off" className="grid gap-3">
+    <form
+      action={createEmployeeAction}
+      autoComplete="off"
+      className="grid gap-3"
+      data-loading-message="Creando empleado..."
+      data-loading-detail="Estamos registrando al empleado y sincronizando su acceso en Tutor LMS."
+    >
+      <p className="text-xs text-slate-500">Todos los campos son obligatorios.</p>
+
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Apellido paterno <span style={{ color: "#f43f5e" }}>*</span>
-          </span>
+          <span className="text-[14px] font-normal text-slate-700">Apellido paterno</span>
           <input
             name="apellido"
             required
@@ -17,9 +23,7 @@ export default function ManualEmployeeForm() {
           />
         </label>
         <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Apellido materno <span style={{ color: "#f43f5e" }}>*</span>
-          </span>
+          <span className="text-[14px] font-normal text-slate-700">Apellido materno</span>
           <input
             name="apellido_materno"
             required
@@ -29,9 +33,7 @@ export default function ManualEmployeeForm() {
       </div>
 
       <label className="grid gap-1 text-sm">
-        <span className="text-[14px] font-normal text-slate-700">
-          Nombre(s) <span style={{ color: "#f43f5e" }}>*</span>
-        </span>
+        <span className="text-[14px] font-normal text-slate-700">Nombre(s)</span>
         <input
           name="nombre"
           required
@@ -40,9 +42,7 @@ export default function ManualEmployeeForm() {
       </label>
 
       <label className="grid gap-1 text-sm">
-        <span className="text-[14px] font-normal text-slate-700">
-          Correo electrónico <span style={{ color: "#f43f5e" }}>*</span>
-        </span>
+        <span className="text-[14px] font-normal text-slate-700">Correo electrónico</span>
         <input
           name="email"
           type="email"
@@ -56,12 +56,12 @@ export default function ManualEmployeeForm() {
         El empleado recibirá un correo para crear su propia contraseña y activar su cuenta.
       </p>
 
-      <div className="rounded-lg bg-gray-50 p-3">
-        <p className="mb-2 text-xs text-slate-500">Constancia DC-3</p>
+      <fieldset className="m-0 rounded-lg border-0 bg-gray-50 p-3">
+        <legend className="mb-2 block px-0 text-xs text-slate-500">Constancia DC-3</legend>
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span className="flex items-center gap-1.5 text-[14px] font-normal text-slate-700">
-              CURP <span style={{ color: "#f43f5e" }}>*</span>
+              CURP
               <CurpInfoButton />
             </span>
             <input
@@ -74,13 +74,11 @@ export default function ManualEmployeeForm() {
           </label>
           <CnoSelect required />
         </div>
-      </div>
+      </fieldset>
 
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Departamento <span style={{ color: "#f43f5e" }}>*</span>
-          </span>
+          <span className="text-[14px] font-normal text-slate-700">Departamento</span>
           <input
             name="departamento"
             required
@@ -88,9 +86,7 @@ export default function ManualEmployeeForm() {
           />
         </label>
         <label className="grid gap-1 text-sm">
-          <span className="text-[14px] font-normal text-slate-700">
-            Puesto <span style={{ color: "#f43f5e" }}>*</span>
-          </span>
+          <span className="text-[14px] font-normal text-slate-700">Puesto</span>
           <input
             name="puesto"
             required

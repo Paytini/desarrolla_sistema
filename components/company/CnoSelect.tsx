@@ -22,8 +22,10 @@ export default function CnoSelect({ defaultCode, defaultName, required = false }
     : null
 
   const [selected, setSelected] = useState<CnoEntry | null>(initialEntry)
+  const [touched, setTouched] = useState(false)
 
   const options = CNO_CATALOG.filter((e) => !e.esArea)
+  const showError = required && touched && !selected
 
   function getAreaLabel(code: string): string {
     const area = CNO_AREAS.find((a) => code.startsWith(a.clave + "."))
@@ -33,7 +35,7 @@ export default function CnoSelect({ defaultCode, defaultName, required = false }
   return (
     <Box>
       <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 400, color: "#334155" }}>
-        Ocupación {required && <Box component="span" sx={{ color: "#f43f5e" }}>*</Box>}
+        Ocupación
       </Typography>
 
       <Autocomplete
@@ -42,12 +44,15 @@ export default function CnoSelect({ defaultCode, defaultName, required = false }
         getOptionLabel={(opt) => `${opt.clave} — ${opt.denominacion}`}
         value={selected}
         onChange={(_, value) => setSelected(value)}
+        onBlur={() => setTouched(true)}
         size="small"
         noOptionsText="Sin resultados"
         renderInput={(params) => (
           <TextField
             {...params}
             required={required}
+            error={showError}
+            helperText={showError ? "Selecciona una ocupación de la lista" : undefined}
             placeholder="Busca por clave (03.4) o nombre (Instalación...)"
           />
         )}
@@ -107,12 +112,7 @@ export default function CnoSelect({ defaultCode, defaultName, required = false }
         }}
       />
 
-      <input
-        type="hidden"
-        name="ocupacion_especifica_clave"
-        value={selected?.clave ?? ""}
-        required={required}
-      />
+      <input type="hidden" name="ocupacion_especifica_clave" value={selected?.clave ?? ""} />
       <input
         type="hidden"
         name="ocupacion_especifica"
