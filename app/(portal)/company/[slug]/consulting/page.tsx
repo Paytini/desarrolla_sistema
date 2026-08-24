@@ -103,10 +103,6 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
       <PageHeader
         title="Consultoría"
         description="Sesiones en vivo con nuestro equipo de consultores"
-        breadcrumbs={[
-          { label: "Empresa", href: companyPath(branding.slug, "/home") },
-          { label: "Consultoría" },
-        ]}
         action={
           <Link
             href={companyPath(branding.slug, "/consulting/new")}

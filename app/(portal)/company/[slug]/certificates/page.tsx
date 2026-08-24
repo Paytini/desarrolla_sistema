@@ -21,7 +21,6 @@ import { paginate } from "@/lib/pagination"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
-import { companyPath } from "@/lib/company-routes"
 
 type CompanyEmployee = {
   id: string
@@ -121,10 +120,6 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
       <PageHeader
         title="Constancias DC-3"
         description="Constancias de habilidades laborales para cumplimiento STPS"
-        breadcrumbs={[
-          { label: "Empresa", href: companyPath(company.slug, "/home") },
-          { label: "Constancias DC-3" },
-        ]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

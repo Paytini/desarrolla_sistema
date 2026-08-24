@@ -78,7 +78,6 @@ export default async function CompanyHome() {
       <PageHeader
         title={company.name}
         description="Panel de operación académica"
-        breadcrumbs={[{ label: "Empresa" }]}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

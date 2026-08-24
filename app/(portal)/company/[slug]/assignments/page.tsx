@@ -6,7 +6,6 @@ import { BookOpen, Package, Users } from "lucide-react"
 import { getHrAssignmentsSnapshot } from "@/lib/dashboard-cache"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { redirect } from "next/navigation"
-import { companyPath } from "@/lib/company-routes"
 import AssignmentBoard from "./AssignmentBoard"
 
 type AssignmentEmployee = {
@@ -65,10 +64,6 @@ export default async function CompanyAssignmentsPage() {
       <PageHeader
         title="Asignación de cursos"
         description="Elige un curso en la fila superior y marca a los colaboradores que lo tomarán"
-        breadcrumbs={[
-          { label: "Empresa", href: companyPath(company.slug, "/home") },
-          { label: "Asignaciones" },
-        ]}
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

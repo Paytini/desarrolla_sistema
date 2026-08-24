@@ -31,7 +31,6 @@ export default async function EmployeeCertificatesPage() {
       <PageHeader
         title="Mis constancias"
         description="Evidencia DC-3 oficial STPS de tus cursos completados"
-        breadcrumbs={[{ label: "Mi espacio" }, { label: "Constancias" }]}
       />
 
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>

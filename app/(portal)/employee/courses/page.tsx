@@ -136,7 +136,6 @@ export default async function EmployeeCourses() {
       <PageHeader
         title={`¡Hola, ${employee.first_name}!`}
         description="Tu ruta de capacitación activa"
-        breadcrumbs={[{ label: "Mi espacio" }, { label: "Mis cursos" }]}
       />
 
       <Box

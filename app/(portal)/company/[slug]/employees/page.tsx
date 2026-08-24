@@ -269,10 +269,6 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
       <PageHeader
         title="Empleados"
         description="Gestión de la plantilla de colaboradores"
-        breadcrumbs={[
-          { label: "Empresa", href: companyPath(company.slug, "/home") },
-          { label: "Empleados" },
-        ]}
         action={
           <EmployeeOnboardingModal
             manualContent={<ManualEmployeeForm />}
