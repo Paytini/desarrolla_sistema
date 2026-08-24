@@ -1,6 +1,7 @@
 import { CheckCircle2, FileQuestion } from "lucide-react"
 import { BackButton } from "@/components/shared/BackButton"
 import { PageHeader } from "@/components/shared/PageHeader"
+import { PaginatedTable } from "@/components/shared/PaginatedTable"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company-routes"
@@ -47,6 +48,8 @@ const QUIZ_RESULT_LABEL: Record<string, string> = {
   fail: "No aprobado",
   pending: "Pendiente de revisión",
 }
+
+const TABLE_PAGE_SIZE = 5
 
 function formatQuizDuration(startedAt: Date | null, endedAt: Date | null) {
   if (!startedAt || !endedAt) return null
@@ -225,8 +228,18 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {employee.quizAttempts.map((attempt) => {
+          <PaginatedTable
+            ariaLabel="Intentos de examen"
+            pageSize={TABLE_PAGE_SIZE}
+            columns={[
+              { label: "Examen" },
+              { label: "Resultado" },
+              { label: "Puntaje" },
+              { label: "Preguntas", className: "hidden md:table-cell" },
+              { label: "Tiempo", className: "hidden md:table-cell" },
+              { label: "Fecha" },
+            ]}
+            rows={employee.quizAttempts.map((attempt) => {
               const scorePct = attempt.total_marks
                 ? Math.round((attempt.earned_marks / attempt.total_marks) * 100)
                 : 0
@@ -236,36 +249,39 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               )
 
               return (
-                <div key={attempt.id} className="rounded-lg bg-gray-50 p-4">
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-950">
+                <tr key={attempt.id} className="bg-gray-50">
+                  <td className="min-w-0 rounded-l-lg py-3 pl-4">
+                    <p className="truncate text-sm font-semibold text-slate-950">
                       {attempt.quiz_name ?? "Examen"}
                     </p>
+                  </td>
+                  <td className="px-4 py-3">
                     {attempt.result ? (
                       <StatusLabel
                         status={attempt.result}
                         variantMap={QUIZ_RESULT_VARIANT}
                         labelMap={QUIZ_RESULT_LABEL}
                       />
-                    ) : null}
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
-                    <span>
-                      Puntaje: {attempt.earned_marks}/{attempt.total_marks} ({scorePct}%)
-                    </span>
-                    <span>
-                      Preguntas respondidas: {attempt.total_answered_questions}/
-                      {attempt.total_questions}
-                    </span>
-                    {duration ? <span>Tiempo: {duration}</span> : null}
-                    {attempt.attempt_started_at ? (
-                      <span>Fecha: {formatDate(attempt.attempt_started_at)}</span>
-                    ) : null}
-                  </div>
-                </div>
+                    ) : (
+                      <span className="text-sm text-slate-500">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-700">
+                    {attempt.earned_marks}/{attempt.total_marks} ({scorePct}%)
+                  </td>
+                  <td className="hidden px-4 py-3 text-sm text-slate-700 md:table-cell">
+                    {attempt.total_answered_questions}/{attempt.total_questions}
+                  </td>
+                  <td className="hidden px-4 py-3 text-sm text-slate-700 md:table-cell">
+                    {duration ?? "—"}
+                  </td>
+                  <td className="rounded-r-lg px-4 py-3 text-sm text-slate-700">
+                    {attempt.attempt_started_at ? formatDate(attempt.attempt_started_at) : "—"}
+                  </td>
+                </tr>
               )
             })}
-          </div>
+          />
         )}
       </section>
 
@@ -286,26 +302,26 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {employee.lessonCompletions.map((lesson) => (
-              <div
-                key={lesson.id}
-                className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 p-3"
-              >
-                <div className="min-w-0">
+          <PaginatedTable
+            ariaLabel="Lecciones completadas"
+            pageSize={TABLE_PAGE_SIZE}
+            columns={[{ label: "Lección" }, { label: "Curso" }, { label: "Fecha" }]}
+            rows={employee.lessonCompletions.map((lesson) => (
+              <tr key={lesson.id} className="bg-gray-50">
+                <td className="min-w-0 rounded-l-lg py-3 pl-4">
                   <p className="truncate text-sm font-semibold text-slate-950">
                     {lesson.lesson_name ?? "Lección"}
                   </p>
-                  <p className="truncate text-xs text-slate-500">
-                    {courseNameByWpId.get(lesson.wp_course_id) ?? "Curso"}
-                  </p>
-                </div>
-                <span className="shrink-0 text-xs text-slate-500">
+                </td>
+                <td className="truncate px-4 py-3 text-sm text-slate-500">
+                  {courseNameByWpId.get(lesson.wp_course_id) ?? "Curso"}
+                </td>
+                <td className="rounded-r-lg px-4 py-3 text-sm text-slate-700">
                   {lesson.completed_at ? formatDate(lesson.completed_at) : "—"}
-                </span>
-              </div>
+                </td>
+              </tr>
             ))}
-          </div>
+          />
         )}
       </section>
     </div>
