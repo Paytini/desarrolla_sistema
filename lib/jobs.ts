@@ -87,23 +87,6 @@ export async function enqueueEmailSendJob(input: EmailSendInput) {
   return job.id
 }
 
-export async function enqueueEmailSendJobs(inputs: EmailSendInput[]) {
-  if (inputs.length === 0) return
-
-  await prisma.job.createMany({
-    data: inputs.map((input) => ({
-      type: "EMAIL_SEND",
-      payload: {
-        to: input.to,
-        subject: input.subject,
-        html: encryptJobPayloadSecret(input.html),
-        text: encryptJobPayloadSecret(input.text),
-        attempts: 0,
-      },
-    })),
-  })
-}
-
 const EMAIL_SEND_BACKOFF_BASE_MS = 60_000
 const EMAIL_SEND_BACKOFF_MAX_MS = 30 * 60_000
 
