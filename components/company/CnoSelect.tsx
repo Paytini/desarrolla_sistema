@@ -8,15 +8,21 @@ import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 import { CNO_AREAS, CNO_CATALOG } from "@/lib/cno-catalog"
 
-type CnoEntry = (typeof CNO_CATALOG)[number]
+export type CnoEntry = (typeof CNO_CATALOG)[number]
 
 type Props = {
   defaultCode?: string | null
   defaultName?: string | null
   required?: boolean
+  onSelectionChange?: (entry: CnoEntry | null) => void
 }
 
-export default function CnoSelect({ defaultCode, defaultName, required = false }: Props) {
+export default function CnoSelect({
+  defaultCode,
+  defaultName,
+  required = false,
+  onSelectionChange,
+}: Props) {
   const initialEntry = defaultCode
     ? (CNO_CATALOG.find((e) => e.clave === defaultCode) ?? null)
     : null
@@ -43,7 +49,10 @@ export default function CnoSelect({ defaultCode, defaultName, required = false }
         groupBy={(opt) => getAreaLabel(opt.clave)}
         getOptionLabel={(opt) => `${opt.clave} — ${opt.denominacion}`}
         value={selected}
-        onChange={(_, value) => setSelected(value)}
+        onChange={(_, value) => {
+          setSelected(value)
+          onSelectionChange?.(value)
+        }}
         onBlur={() => setTouched(true)}
         size="small"
         noOptionsText="Sin resultados"
