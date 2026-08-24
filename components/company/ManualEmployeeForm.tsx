@@ -1,5 +1,6 @@
 "use client"
 
+import { Info } from "lucide-react"
 import { useRef, useState } from "react"
 import { createEmployeeAction } from "@/app/(portal)/company/[slug]/employees/actions"
 import CnoSelect, { type CnoEntry } from "@/components/company/CnoSelect"
@@ -66,21 +67,29 @@ export default function ManualEmployeeForm() {
       ref={formRef}
       action={createEmployeeAction}
       autoComplete="off"
-      className="grid gap-3"
+      className="grid gap-2.5"
       data-loading-message="Creando empleado..."
       data-loading-detail="Estamos registrando al empleado y sincronizando su acceso en Tutor LMS."
     >
-      <div className={step === "form" ? "grid gap-3" : "hidden"}>
+      <div className={step === "form" ? "grid gap-2.5" : "hidden"}>
+        <div className="flex items-start gap-2 rounded-lg bg-portal-blue-soft px-3 py-2 text-xs leading-5 text-portal-blue-hover">
+          <Info size={14} className="mt-0.5 shrink-0" />
+          <p>
+            La CURP y la Ocupación (CNO) que captures se usarán para generar la constancia DC-3
+            del empleado.
+          </p>
+        </div>
+
         <p className="text-xs text-slate-500">Todos los campos son obligatorios.</p>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2.5 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span className="text-[14px] font-normal text-slate-700">Apellido paterno</span>
             <input
               name="apellido"
               required
               onChange={updatePreview("apellido")}
-              className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
             />
           </label>
           <label className="grid gap-1 text-sm">
@@ -89,7 +98,7 @@ export default function ManualEmployeeForm() {
               name="apellido_materno"
               required
               onChange={updatePreview("apellidoMaterno")}
-              className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
             />
           </label>
         </div>
@@ -100,7 +109,7 @@ export default function ManualEmployeeForm() {
             name="nombre"
             required
             onChange={updatePreview("nombre")}
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
           />
         </label>
 
@@ -112,7 +121,7 @@ export default function ManualEmployeeForm() {
             required
             autoComplete="off"
             onChange={updatePreview("email")}
-            className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
           />
         </label>
 
@@ -121,10 +130,8 @@ export default function ManualEmployeeForm() {
         </p>
 
         <fieldset className="m-0 border-0 p-0">
-          <legend className="mb-2 block px-0 text-xs text-slate-500">
-            Estos datos se usan para generar la constancia DC-3 del empleado.
-          </legend>
-          <div className="grid gap-3 md:grid-cols-2">
+          <legend className="sr-only">Datos para la constancia DC-3</legend>
+          <div className="grid gap-2.5 md:grid-cols-2">
             <label className="grid gap-1 text-sm">
               <span className="flex items-center gap-1.5 text-[14px] font-normal text-slate-700">
                 CURP
@@ -136,7 +143,7 @@ export default function ManualEmployeeForm() {
                 maxLength={18}
                 placeholder="18 caracteres"
                 onChange={updatePreview("curp")}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 uppercase outline-none transition focus:border-portal-blue"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm uppercase outline-none transition focus:border-portal-blue"
               />
             </label>
             <CnoSelect
@@ -148,14 +155,14 @@ export default function ManualEmployeeForm() {
           </div>
         </fieldset>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2.5 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span className="text-[14px] font-normal text-slate-700">Departamento</span>
             <input
               name="departamento"
               required
               onChange={updatePreview("departamento")}
-              className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
             />
           </label>
           <label className="grid gap-1 text-sm">
@@ -164,7 +171,7 @@ export default function ManualEmployeeForm() {
               name="puesto"
               required
               onChange={updatePreview("puesto")}
-              className="rounded-xl border border-slate-200 px-3 py-2 outline-none transition focus:border-portal-blue"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-portal-blue"
             />
           </label>
         </div>

@@ -60,7 +60,7 @@ export default function EmployeeOnboardingModal({
               borderRadius: "24px",
               border: "1px solid",
               borderColor: "divider",
-              height: "min(920px, 92vh)",
+              maxHeight: "min(920px, 92vh)",
             },
           },
         }}
