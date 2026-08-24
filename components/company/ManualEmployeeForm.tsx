@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { createEmployeeAction } from "@/app/(portal)/company/[slug]/employees/actions"
 import CnoSelect, { type CnoEntry } from "@/components/company/CnoSelect"
 import CurpInfoButton from "@/components/company/CurpInfoButton"
@@ -37,6 +37,9 @@ function PreviewField({ label, value }: { label: string; value: string }) {
 }
 
 export default function ManualEmployeeForm() {
+  const formRef = useRef<HTMLFormElement>(null)
+  const confirmHeadingRef = useRef<HTMLHeadingElement>(null)
+  const [step, setStep] = useState<"form" | "confirm">("form")
   const [preview, setPreview] = useState<PreviewState>(EMPTY_PREVIEW)
 
   function updatePreview(field: keyof PreviewState) {
@@ -45,19 +48,29 @@ export default function ManualEmployeeForm() {
     }
   }
 
+  function handleReviewClick() {
+    if (formRef.current && !formRef.current.reportValidity()) {
+      return
+    }
+
+    setStep("confirm")
+    requestAnimationFrame(() => confirmHeadingRef.current?.focus())
+  }
+
   const fullName = [preview.nombre, preview.apellido, preview.apellidoMaterno]
     .filter(Boolean)
     .join(" ")
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-      <form
-        action={createEmployeeAction}
-        autoComplete="off"
-        className="grid gap-3"
-        data-loading-message="Creando empleado..."
-        data-loading-detail="Estamos registrando al empleado y sincronizando su acceso en Tutor LMS."
-      >
+    <form
+      ref={formRef}
+      action={createEmployeeAction}
+      autoComplete="off"
+      className="grid gap-3"
+      data-loading-message="Creando empleado..."
+      data-loading-detail="Estamos registrando al empleado y sincronizando su acceso en Tutor LMS."
+    >
+      <div className={step === "form" ? "grid gap-3" : "hidden"}>
         <p className="text-xs text-slate-500">Todos los campos son obligatorios.</p>
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -155,30 +168,60 @@ export default function ManualEmployeeForm() {
             />
           </label>
         </div>
+      </div>
 
-        <div className="flex justify-end">
+      {step === "confirm" ? (
+        <div className="grid gap-4 rounded-lg border border-slate-200 bg-gray-50 p-4">
+          <div>
+            <h3
+              ref={confirmHeadingRef}
+              tabIndex={-1}
+              className="text-sm font-semibold text-slate-950 outline-none"
+            >
+              Confirma la información antes de crear al empleado
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              El empleado recibirá un correo para activar su cuenta en cuanto confirmes.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PreviewField label="Nombre completo" value={fullName} />
+            <PreviewField label="Correo" value={preview.email} />
+            <PreviewField label="CURP" value={preview.curp.toUpperCase()} />
+            <PreviewField label="Ocupación (CNO)" value={preview.ocupacion} />
+            <PreviewField label="Departamento" value={preview.departamento} />
+            <PreviewField label="Puesto" value={preview.puesto} />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex justify-end gap-2">
+        {step === "confirm" ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setStep("form")}
+              className="inline-flex items-center rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Volver a editar
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center rounded-full bg-portal-blue px-5 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
+            >
+              Confirmar y crear empleado
+            </button>
+          </>
+        ) : (
           <button
-            type="submit"
+            type="button"
+            onClick={handleReviewClick}
             className="inline-flex items-center rounded-full bg-portal-blue px-5 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
           >
             Crear empleado
           </button>
-        </div>
-      </form>
-
-      <aside className="h-fit rounded-lg border border-slate-200 bg-white p-4 lg:sticky lg:top-4">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-          Vista previa
-        </p>
-        <div className="grid gap-3">
-          <PreviewField label="Nombre completo" value={fullName} />
-          <PreviewField label="Correo" value={preview.email} />
-          <PreviewField label="CURP" value={preview.curp.toUpperCase()} />
-          <PreviewField label="Ocupación (CNO)" value={preview.ocupacion} />
-          <PreviewField label="Departamento" value={preview.departamento} />
-          <PreviewField label="Puesto" value={preview.puesto} />
-        </div>
-      </aside>
-    </div>
+        )}
+      </div>
+    </form>
   )
 }
