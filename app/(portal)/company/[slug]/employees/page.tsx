@@ -48,7 +48,7 @@ const errorMessages: Record<string, string> = {
   cupos: "La empresa ya alcanzo el limite de empleados contratados.",
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
-  ya_activado: "Este empleado ya activó su cuenta.",
+  ya_activado: "Este empleado no tiene una activación pendiente. Ya puede iniciar sesión con su contraseña.",
   activation_email: "No se pudo reenviar el correo de activación. Intenta de nuevo.",
   bridge_sync:
     "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
@@ -99,9 +99,12 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
   const generatedPasswordsCookie = (await cookies()).get("d360_csv_generated_passwords")?.value
-  const generatedPasswords: Array<{ email: string; password: string }> = generatedPasswordsCookie
-    ? JSON.parse(generatedPasswordsCookie)
-    : []
+  const generatedPasswordsPayload: { passwords: Array<{ email: string; password: string }>; omittedCount: number } =
+    generatedPasswordsCookie
+      ? JSON.parse(generatedPasswordsCookie)
+      : { passwords: [], omittedCount: 0 }
+  const generatedPasswords = generatedPasswordsPayload.passwords
+  const omittedGeneratedPasswordsCount = generatedPasswordsPayload.omittedCount
   const searchQuery = (readSearchParam(params, "q") ?? "").trim()
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
@@ -190,6 +193,15 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
               </li>
             ))}
           </ul>
+          {omittedGeneratedPasswordsCount > 0 ? (
+            <p className="mt-2 text-xs font-semibold text-amber-950">
+              No se pudieron mostrar {omittedGeneratedPasswordsCount} contraseña
+              {omittedGeneratedPasswordsCount === 1 ? "" : "s"} generada
+              {omittedGeneratedPasswordsCount === 1 ? "" : "s"} más por límites del navegador.
+              Vuelve a importar en lotes más pequeños, o especifica las contraseñas manualmente en
+              el CSV para esos empleados.
+            </p>
+          ) : null}
         </div>
       ) : null}
       {error ? <StatusToast tone="error" message={errorMessages[error] ?? error} /> : null}

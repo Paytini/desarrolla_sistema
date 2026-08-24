@@ -740,13 +740,22 @@ export async function importEmployeesCsvAction(formData: FormData) {
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
 
+  const GENERATED_PASSWORDS_COOKIE_LIMIT = 35
+
   if (generatedPasswords.length > 0) {
     const cookieStore = await cookies()
-    cookieStore.set("d360_csv_generated_passwords", JSON.stringify(generatedPasswords), {
+    const truncated = generatedPasswords.length > GENERATED_PASSWORDS_COOKIE_LIMIT
+    const cookiePayload = {
+      passwords: generatedPasswords.slice(0, GENERATED_PASSWORDS_COOKIE_LIMIT),
+      omittedCount: truncated
+        ? generatedPasswords.length - GENERATED_PASSWORDS_COOKIE_LIMIT
+        : 0,
+    }
+    cookieStore.set("d360_csv_generated_passwords", JSON.stringify(cookiePayload), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60,
+      maxAge: 300,
       path: employeesPath(slug),
     })
   }
