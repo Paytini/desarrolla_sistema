@@ -12,6 +12,7 @@ import {
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
 } from "@/lib/company-employees"
+import { cookies } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
@@ -74,7 +75,7 @@ function getSuccessMessage(
     const queued = readSearchParam(params, "queued") === "1"
     const skipped = readSearchParam(params, "skipped") ?? "0"
     const syncNote = queued ? "El acceso a cursos se esta activando en segundo plano." : ""
-    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado recibira un correo para activar su cuenta. ${syncNote}`.trim()
+    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado ya puede iniciar sesion con la contrasena capturada o generada. ${syncNote}`.trim()
   }
   return successMessages[success] ?? success
 }
@@ -97,6 +98,10 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const params = await searchParams
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
+  const generatedPasswordsCookie = (await cookies()).get("d360_csv_generated_passwords")?.value
+  const generatedPasswords: Array<{ email: string; password: string }> = generatedPasswordsCookie
+    ? JSON.parse(generatedPasswordsCookie)
+    : []
   const searchQuery = (readSearchParam(params, "q") ?? "").trim()
   const query = normalizeEmployeeSearchQuery(searchQuery)
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
@@ -168,6 +173,24 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
 
       {success ? (
         <StatusToast tone="success" message={getSuccessMessage(success, params) ?? success} />
+      ) : null}
+      {generatedPasswords.length > 0 ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="mb-2 text-sm font-semibold text-amber-950">
+            Contraseñas generadas automáticamente
+          </p>
+          <p className="mb-3 text-xs text-amber-900">
+            Estas filas del CSV no traían contraseña, así que se generó una por empleado.
+            Compártela por un canal seguro — no volverá a mostrarse.
+          </p>
+          <ul className="grid gap-1 text-xs text-amber-950">
+            {generatedPasswords.map((item) => (
+              <li key={item.email} className="font-mono">
+                {item.email}: {item.password}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
       {error ? <StatusToast tone="error" message={errorMessages[error] ?? error} /> : null}
 
