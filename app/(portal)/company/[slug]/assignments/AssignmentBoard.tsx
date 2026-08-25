@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { BookOpen, Check, ChevronLeft, ChevronRight, Search, X } from "lucide-react"
+import { BookOpen, Check, ChevronLeft, ChevronRight, Minus, Search, X } from "lucide-react"
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { PaginatedTable } from "@/components/shared/PaginatedTable"
 import ProgressBar from "@/components/shared/ProgressBar"
@@ -144,6 +144,10 @@ export default function AssignmentBoard({
       })
       .map((entry) => entry.employee)
   }, [employees, employeeSearch, department, position, savedSet])
+
+  const allFilteredAssigned =
+    filteredEmployees.length > 0 && filteredEmployees.every((e) => workingSet.has(e.id))
+  const someFilteredAssigned = filteredEmployees.some((e) => workingSet.has(e.id))
 
   const employeeFilterKey = `${selectedCourseId}|${employeeSearch}|${department}|${position}`
 
@@ -436,26 +440,34 @@ export default function AssignmentBoard({
               columns={[
                 {
                   label: (
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        if (e.target.value === "assign") bulkSetVisible(true)
-                        if (e.target.value === "unassign") setUnassignConfirmOpen(true)
-                        e.target.value = ""
-                      }}
-                      aria-label="Acciones masivas"
-                      className="rounded-lg border border-portal-border px-2 py-1 text-xs font-medium normal-case tracking-normal text-slate-600 outline-none"
-                    >
-                      <option value="" disabled>
-                        Acciones
-                      </option>
-                      <option value="assign">
-                        Asignar filtrados ({filteredEmployees.length})
-                      </option>
-                      <option value="unassign">
-                        Quitar filtrados ({filteredEmployees.length})
-                      </option>
-                    </select>
+                    <div className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-200 transition has-[:checked]:border-portal-blue has-[:checked]:bg-portal-blue has-[:indeterminate]:border-portal-blue has-[:indeterminate]:bg-portal-blue">
+                      <input
+                        type="checkbox"
+                        checked={allFilteredAssigned}
+                        ref={(el) => {
+                          if (el) el.indeterminate = someFilteredAssigned && !allFilteredAssigned
+                        }}
+                        onChange={() => {
+                          if (allFilteredAssigned) {
+                            setUnassignConfirmOpen(true)
+                          } else {
+                            bulkSetVisible(true)
+                          }
+                        }}
+                        aria-label="Seleccionar todos los filtrados"
+                        className="peer absolute inset-0 z-10 cursor-pointer opacity-0"
+                      />
+                      <Check
+                        size={10}
+                        className="hidden text-white peer-checked:block"
+                        strokeWidth={3}
+                      />
+                      <Minus
+                        size={10}
+                        className="hidden text-white peer-indeterminate:block"
+                        strokeWidth={3}
+                      />
+                    </div>
                   ),
                 },
                 { label: "Colaborador" },
