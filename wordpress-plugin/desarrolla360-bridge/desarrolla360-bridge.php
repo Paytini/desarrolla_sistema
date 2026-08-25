@@ -2174,6 +2174,17 @@ function d360_bridge_batch_enrollments( WP_REST_Request $request ) {
 			)
 		);
 
+		if ( is_wp_error( $response ) && d360_bridge_is_permission_error( $response ) ) {
+			$response = d360_bridge_dispatch_tutor_http_request(
+				'POST',
+				'/tutor/v1/enrollments',
+				array(
+					'user_id'   => $user_id,
+					'course_id' => $course_id,
+				)
+			);
+		}
+
 		if ( is_wp_error( $response ) ) {
 			$failed[] = array(
 				'course_id' => $course_id,
