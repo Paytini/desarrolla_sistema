@@ -7,7 +7,7 @@
     },
     {
       "path": "/api/internal/sync/employee-learning?limit=100",
-      "schedule": "*/15 * * * *"
+      "schedule": "* * * * *"
     },
     {
       "path": "/api/cron/process-jobs",
