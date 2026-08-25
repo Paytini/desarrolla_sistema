@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { BookOpen, Check, ChevronLeft, ChevronRight, Search, X } from "lucide-react"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
+import { PaginatedTable } from "@/components/shared/PaginatedTable"
 import ProgressBar from "@/components/shared/ProgressBar"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
-import { paginate } from "@/lib/pagination"
 import { setCourseAssignmentsAction } from "./actions"
 
-const EMPLOYEES_PAGE_SIZE = 20
+const EMPLOYEES_PAGE_SIZE = 5
 
 type CourseInfo = {
   wp_course_id: number
@@ -70,7 +71,6 @@ export default function AssignmentBoard({
   const [employeeSearch, setEmployeeSearch] = useState(searchParams.get("q") ?? "")
   const [department, setDepartment] = useState(searchParams.get("depto") ?? "")
   const [position, setPosition] = useState(searchParams.get("puesto") ?? "")
-  const [employeePage, setEmployeePage] = useState(1)
 
   useEffect(() => {
     const params = new URLSearchParams()
@@ -85,6 +85,7 @@ export default function AssignmentBoard({
     null,
   )
   const [isPending, startTransition] = useTransition()
+  const [unassignConfirmOpen, setUnassignConfirmOpen] = useState(false)
   const scrollerRef = useRef<HTMLDivElement>(null)
 
   const departments = useMemo(
@@ -142,18 +143,6 @@ export default function AssignmentBoard({
   }, [employees, employeeSearch, department, position, savedSet])
 
   const employeeFilterKey = `${selectedCourseId}|${employeeSearch}|${department}|${position}`
-  const [lastEmployeeFilterKey, setLastEmployeeFilterKey] = useState(employeeFilterKey)
-  if (employeeFilterKey !== lastEmployeeFilterKey) {
-    setLastEmployeeFilterKey(employeeFilterKey)
-    setEmployeePage(1)
-  }
-
-  const {
-    items: pagedEmployees,
-    currentPage: employeeCurrentPage,
-    totalPages: employeeTotalPages,
-    totalResults: employeeTotalResults,
-  } = paginate(filteredEmployees, employeePage, EMPLOYEES_PAGE_SIZE)
 
   function selectCourse(courseId: number) {
     setSelectedCourseId(courseId)
@@ -198,6 +187,11 @@ export default function AssignmentBoard({
       }
       setFeedback({ tone: result.ok ? "success" : "error", message: result.message })
     })
+  }
+
+  function confirmBulkUnassign() {
+    bulkSetVisible(false)
+    setUnassignConfirmOpen(false)
   }
 
   function scrollCourses(direction: -1 | 1) {
@@ -417,14 +411,14 @@ export default function AssignmentBoard({
               onClick={() => bulkSetVisible(true)}
               className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
-              Asignar a todos
+              Asignar filtrados ({filteredEmployees.length})
             </button>
             <button
               type="button"
-              onClick={() => bulkSetVisible(false)}
+              onClick={() => setUnassignConfirmOpen(true)}
               className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
-              Quitar a todos
+              Quitar filtrados ({filteredEmployees.length})
             </button>
           </div>
 
@@ -446,66 +440,54 @@ export default function AssignmentBoard({
               ) : null}
             </div>
           ) : (
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {pagedEmployees.map((employee) => {
+            <PaginatedTable
+              key={employeeFilterKey}
+              ariaLabel="Colaboradores"
+              pageSize={EMPLOYEES_PAGE_SIZE}
+              columns={[
+                { label: "" },
+                { label: "Colaborador" },
+                { label: "Departamento" },
+                { label: "Puesto" },
+              ]}
+              rows={filteredEmployees.map((employee) => {
                 const checked = workingSet.has(employee.id)
                 return (
-                  <label
+                  <tr
                     key={employee.id}
-                    className="group relative flex cursor-pointer items-center gap-3 rounded-xl border border-[#efefef] p-2.5 transition hover:border-portal-blue/30 hover:bg-[#F3F8FE] has-[:checked]:border-portal-blue/40 has-[:checked]:bg-[#F3F8FE]"
+                    onClick={() => toggleEmployee(employee.id)}
+                    className="cursor-pointer bg-gray-50 transition has-[:checked]:bg-[#F3F8FE]"
                   >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleEmployee(employee.id)}
-                      className="sr-only"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-slate-900">
-                        {employee.name}
-                      </p>
-                      <p className="truncate text-xs text-slate-400">
-                        {employee.department ?? "Sin depto."} · {employee.position ?? "Sin puesto"}
-                      </p>
-                    </div>
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 transition group-has-[:checked]:border-portal-blue group-has-[:checked]:bg-portal-blue">
-                      <Check
-                        size={10}
-                        className="hidden text-white group-has-[:checked]:block"
-                        strokeWidth={3}
-                      />
-                    </div>
-                  </label>
+                    <td className="w-10 rounded-l-lg py-3 pl-4">
+                      <div className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-200 transition has-[:checked]:border-portal-blue has-[:checked]:bg-portal-blue">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleEmployee(employee.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Asignar a ${employee.name}`}
+                          className="peer absolute inset-0 z-10 cursor-pointer opacity-0"
+                        />
+                        <Check
+                          size={10}
+                          className="hidden text-white peer-checked:block"
+                          strokeWidth={3}
+                        />
+                      </div>
+                    </td>
+                    <td className="truncate px-4 py-3 text-sm font-semibold text-slate-900">
+                      {employee.name}
+                    </td>
+                    <td className="truncate px-4 py-3 text-sm text-slate-500">
+                      {employee.department ?? "Sin depto."}
+                    </td>
+                    <td className="truncate rounded-r-lg px-4 py-3 text-sm text-slate-500">
+                      {employee.position ?? "Sin puesto"}
+                    </td>
+                  </tr>
                 )
               })}
-            </div>
-          )}
-
-          {employeeTotalPages > 1 && (
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <p className="text-slate-500">
-                {employeeTotalResults} resultado{employeeTotalResults !== 1 ? "s" : ""} · página{" "}
-                {employeeCurrentPage} de {employeeTotalPages}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEmployeePage((p) => Math.max(1, p - 1))}
-                  disabled={employeeCurrentPage <= 1}
-                  className="rounded-lg border border-portal-border bg-white px-3 py-1.5 text-xs font-medium text-[#374151] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  ← Anterior
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEmployeePage((p) => Math.min(employeeTotalPages, p + 1))}
-                  disabled={employeeCurrentPage >= employeeTotalPages}
-                  className="rounded-lg border border-portal-border bg-white px-3 py-1.5 text-xs font-medium text-[#374151] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Siguiente →
-                </button>
-              </div>
-            </div>
+            />
           )}
 
           <div className="sticky bottom-0 -mx-4 -mb-4 space-y-2 border-t border-[#f5f5f5] bg-white px-4 py-3">
@@ -540,6 +522,16 @@ export default function AssignmentBoard({
               </button>
             </div>
           </div>
+
+          <ConfirmDialog
+            open={unassignConfirmOpen}
+            onClose={() => setUnassignConfirmOpen(false)}
+            title={`¿Quitar a ${filteredEmployees.length} colaborador${filteredEmployees.length !== 1 ? "es" : ""} de «${selectedCourse.course_name}»?`}
+            description="Se desasignará a todas las personas que coinciden con el filtro actual. Esta acción se aplica de inmediato al guardar."
+            confirmLabel="Sí, quitar"
+            confirmColor="error"
+            action={confirmBulkUnassign}
+          />
         </section>
       )}
     </div>
