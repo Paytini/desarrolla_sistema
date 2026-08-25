@@ -63,7 +63,7 @@ export async function setCourseAssignmentsAction(
     company.employees.some((employee) => employee.id === id),
   )
 
-  const { addedEmployees, removedCount, bridgeErrors } = await setCourseAssignment(
+  const { addedEmployees, bridgeErrors } = await setCourseAssignment(
     companyId,
     courseId,
     course.course_name,
@@ -106,16 +106,12 @@ export async function setCourseAssignmentsAction(
   if (bridgeErrors.length > 0) {
     return {
       ok: true,
-      message: `Se guardaron los cambios, pero falló la actualización de acceso para ${bridgeErrors.length} colaborador(es). Se reintentará en el siguiente sync.`,
+      message: "Cambios guardados. Reintentaremos la sincronización pendiente.",
     }
   }
 
-  const parts: string[] = []
-  if (addedEmployees.length > 0) parts.push(`se asignó a ${addedEmployees.length} colaborador(es)`)
-  if (removedCount > 0) parts.push(`se quitó a ${removedCount} colaborador(es)`)
-
   return {
     ok: true,
-    message: parts.length > 0 ? `Cambios guardados: ${parts.join(" y ")}.` : "Cambios guardados.",
+    message: "Cambios guardados.",
   }
 }
