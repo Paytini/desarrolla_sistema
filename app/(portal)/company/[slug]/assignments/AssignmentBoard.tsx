@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { BookOpen, Check, ChevronLeft, ChevronRight, Search, X } from "lucide-react"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { PaginatedTable } from "@/components/shared/PaginatedTable"
 import ProgressBar from "@/components/shared/ProgressBar"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import { setCourseAssignmentsAction } from "./actions"
 
-const EMPLOYEES_PAGE_SIZE = 20
+const EMPLOYEES_PAGE_SIZE = 5
 
 type CourseInfo = {
   wp_course_id: number
@@ -84,6 +85,7 @@ export default function AssignmentBoard({
     null,
   )
   const [isPending, startTransition] = useTransition()
+  const [unassignConfirmOpen, setUnassignConfirmOpen] = useState(false)
   const scrollerRef = useRef<HTMLDivElement>(null)
 
   const departments = useMemo(
@@ -185,6 +187,11 @@ export default function AssignmentBoard({
       }
       setFeedback({ tone: result.ok ? "success" : "error", message: result.message })
     })
+  }
+
+  function confirmBulkUnassign() {
+    bulkSetVisible(false)
+    setUnassignConfirmOpen(false)
   }
 
   function scrollCourses(direction: -1 | 1) {
@@ -404,14 +411,14 @@ export default function AssignmentBoard({
               onClick={() => bulkSetVisible(true)}
               className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
-              Asignar a todos
+              Asignar filtrados ({filteredEmployees.length})
             </button>
             <button
               type="button"
-              onClick={() => bulkSetVisible(false)}
+              onClick={() => setUnassignConfirmOpen(true)}
               className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
-              Quitar a todos
+              Quitar filtrados ({filteredEmployees.length})
             </button>
           </div>
 
@@ -515,6 +522,16 @@ export default function AssignmentBoard({
               </button>
             </div>
           </div>
+
+          <ConfirmDialog
+            open={unassignConfirmOpen}
+            onClose={() => setUnassignConfirmOpen(false)}
+            title={`¿Quitar a ${filteredEmployees.length} colaborador${filteredEmployees.length !== 1 ? "es" : ""} de «${selectedCourse.course_name}»?`}
+            description="Se desasignará a todas las personas que coinciden con el filtro actual. Esta acción se aplica de inmediato al guardar."
+            confirmLabel="Sí, quitar"
+            confirmColor="error"
+            action={confirmBulkUnassign}
+          />
         </section>
       )}
     </div>
