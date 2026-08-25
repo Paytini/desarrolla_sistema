@@ -74,6 +74,10 @@ export async function deleteEmployeeRecord({
     })
 
     if (user) {
+      await tx.notification.deleteMany({
+        where: { user_id: user.id },
+      })
+
       await tx.portalSession.deleteMany({
         where: { user_id: user.id },
       })
