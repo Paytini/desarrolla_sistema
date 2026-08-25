@@ -6,6 +6,7 @@ import { BookOpen, Check, ChevronLeft, ChevronRight, Search, X } from "lucide-re
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { PaginatedTable } from "@/components/shared/PaginatedTable"
 import ProgressBar from "@/components/shared/ProgressBar"
+import StatusToast from "@/components/shared/StatusToast"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import { setCourseAssignmentsAction } from "./actions"
 
@@ -81,9 +82,11 @@ export default function AssignmentBoard({
     const query = params.toString()
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
   }, [courseSearch, employeeSearch, department, position, pathname, router])
-  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(
-    null,
-  )
+  const [feedback, setFeedback] = useState<{
+    id: number
+    tone: "success" | "error"
+    message: string
+  } | null>(null)
   const [isPending, startTransition] = useTransition()
   const [unassignConfirmOpen, setUnassignConfirmOpen] = useState(false)
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -185,7 +188,7 @@ export default function AssignmentBoard({
       if (result.ok) {
         setSavedAssignments((prev) => ({ ...prev, [selectedCourseId]: new Set(employeeIds) }))
       }
-      setFeedback({ tone: result.ok ? "success" : "error", message: result.message })
+      setFeedback({ id: Date.now(), tone: result.ok ? "success" : "error", message: result.message })
     })
   }
 
@@ -490,18 +493,11 @@ export default function AssignmentBoard({
             />
           )}
 
-          <div className="sticky bottom-0 -mx-4 -mb-4 space-y-2 border-t border-[#f5f5f5] bg-white px-4 py-3">
-            {feedback && (
-              <div
-                className={`rounded-lg px-4 py-2.5 text-sm ${
-                  feedback.tone === "success"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-red-50 text-red-700"
-                }`}
-              >
-                {feedback.message}
-              </div>
-            )}
+          {feedback && (
+            <StatusToast key={feedback.id} tone={feedback.tone} message={feedback.message} />
+          )}
+
+          <div className="sticky bottom-0 -mx-4 -mb-4 border-t border-[#f5f5f5] bg-white px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-slate-500">
                 <span className="font-semibold text-slate-800">{workingSet.size}</span> colaborador

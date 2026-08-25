@@ -2174,6 +2174,17 @@ function d360_bridge_batch_enrollments( WP_REST_Request $request ) {
 			)
 		);
 
+		if ( is_wp_error( $response ) && d360_bridge_is_permission_error( $response ) ) {
+			$response = d360_bridge_dispatch_tutor_http_request(
+				'POST',
+				'/tutor/v1/enrollments',
+				array(
+					'user_id'   => $user_id,
+					'course_id' => $course_id,
+				)
+			);
+		}
+
 		if ( is_wp_error( $response ) ) {
 			$failed[] = array(
 				'course_id' => $course_id,
@@ -3671,6 +3682,19 @@ function d360_bridge_sync_direct_course_access( $student_id, $course_id ) {
 			'd360_bridge_update_enrollment_failed',
 			$updated->get_error_message(),
 			array( 'status' => 500 )
+		);
+	}
+
+	$verified_enrollment = get_post( $enrollment_id );
+	$verified_status     = ( $verified_enrollment instanceof WP_Post && is_string( $verified_enrollment->post_status ) )
+		? strtolower( $verified_enrollment->post_status )
+		: '';
+
+	if ( 'completed' !== $verified_status ) {
+		return new WP_Error(
+			'd360_bridge_enrollment_not_completed',
+			'Tutor LMS no confirmo el estado de la matricula directa (posiblemente requiere una orden de compra, p. ej. cursos dentro de un bundle).',
+			array( 'status' => 409 )
 		);
 	}
 
