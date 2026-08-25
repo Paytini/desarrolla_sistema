@@ -1,18 +1,10 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  IconButton,
-  Tooltip,
-} from "@mui/material"
+import { Button, IconButton, Tooltip } from "@mui/material"
 import { alpha, type Theme } from "@mui/material/styles"
 import type { SystemStyleObject } from "@mui/system"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog"
 
 type ConfirmIconButtonTone = "brand" | "outline" | "outline-destructive"
@@ -119,24 +111,16 @@ export function ConfirmIconButton({
   return (
     <>
       {trigger}
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{description}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>{cancelLabel}</Button>
-          <form action={action}>
-            {hiddenFields &&
-              Object.entries(hiddenFields).map(([name, value]) => (
-                <input key={name} type="hidden" name={name} value={value} />
-              ))}
-            <Button type="submit" variant="contained" color="primary" onClick={() => setOpen(false)}>
-              {confirmLabel}
-            </Button>
-          </form>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title={title}
+        description={description}
+        confirmLabel={confirmLabel}
+        cancelLabel={cancelLabel}
+        action={action}
+        hiddenFields={hiddenFields}
+      />
     </>
   )
 }

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { SubmitButton } from "@/components/superadmin/SubmitButton"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { RefreshCw, CheckCircle2 } from "lucide-react"
 import KpiCard from "@/components/shared/KpiCard"
 import { getSuperadminReportsSnapshot } from "@/lib/dashboard-cache"
@@ -13,7 +13,6 @@ import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
 import { SearchInput } from "@/components/shared/SearchInput"
 import Box from "@mui/material/Box"
-import Button from "@mui/material/Button"
 import Chip from "@mui/material/Chip"
 import Paper from "@mui/material/Paper"
 import Table from "@mui/material/Table"
@@ -573,10 +572,9 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                         <TableCell sx={{ ...TD_SX, textAlign: "right" }}>
                           <form action={retryCompanySyncAction}>
                             <input type="hidden" name="empresa_id" value={item.company.id} />
-                            <Button
+                            <SubmitButton
                               variant="outlined"
                               size="small"
-                              type="submit"
                               sx={{
                                 height: 28,
                                 fontSize: 12,
@@ -586,7 +584,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                               }}
                             >
                               Reintentar
-                            </Button>
+                            </SubmitButton>
                           </form>
                         </TableCell>
                       </TableRow>

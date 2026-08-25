@@ -10,6 +10,7 @@ import { Package, Plus, RotateCw, X } from "lucide-react"
 import Link from "next/link"
 import { assignPackageToCompanyAction, syncPackageToCompanyEmployeesAction } from "./actions"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
@@ -539,15 +540,14 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                           aria-label="Fecha de vencimiento"
                           sx={SELECT_SX}
                         />
-                        <Button
-                          type="submit"
+                        <SubmitButton
                           size="small"
                           variant="contained"
                           disableElevation
                           sx={{ height: 32, px: 2.5, fontSize: "0.8125rem", borderRadius: "8px" }}
                         >
                           Asignar
-                        </Button>
+                        </SubmitButton>
                       </Box>
                     </TableCell>
                     <TableCell sx={{ ...TD_SX, display: { xs: "none", sm: "table-cell" } }}>
@@ -558,10 +558,9 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                     <TableCell sx={{ ...TD_SX, textAlign: "right" }}>
                       <form action={syncPackageToCompanyEmployeesAction}>
                         <input type="hidden" name="empresa_id" value={company.id} />
-                        <Button
+                        <SubmitButton
                           variant="outlined"
                           size="small"
-                          type="submit"
                           startIcon={<RotateCw size={11} />}
                           sx={{
                             height: 32,
@@ -572,7 +571,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                           }}
                         >
                           Sincronizar
-                        </Button>
+                        </SubmitButton>
                       </form>
                     </TableCell>
                   </TableRow>

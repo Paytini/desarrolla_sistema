@@ -4,7 +4,7 @@ import MenuItem from "@mui/material/MenuItem"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 
-import { SubmitButton } from "@/components/superadmin/SubmitButton"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import PackageCourseSelector from "@/components/company/PackageCourseSelector"
 
 const LABEL_SX = {

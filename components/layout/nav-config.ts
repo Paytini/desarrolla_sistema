@@ -136,13 +136,7 @@ export function isActive(href: string, pathname: string, exact?: boolean) {
   return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`)
 }
 
-export function getInitials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("")
-}
+export { getInitials } from "@/lib/format"
 
 const AVATAR_COLORS = [
   "#D96920",
