@@ -5,13 +5,7 @@ import Box from "@mui/material/Box"
 import Fade from "@mui/material/Fade"
 import Paper from "@mui/material/Paper"
 import Popper from "@mui/material/Popper"
-import Dialog from "@mui/material/Dialog"
-import DialogActions from "@mui/material/DialogActions"
-import DialogContent from "@mui/material/DialogContent"
-import DialogContentText from "@mui/material/DialogContentText"
-import DialogTitle from "@mui/material/DialogTitle"
-import Typography from "@mui/material/Typography"
-import Button from "@mui/material/Button"
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog"
 import { MoreVertical, Trash2, UserCheck, UserX } from "lucide-react"
 
 type EmployeeAction = (formData: FormData) => void | Promise<void>
@@ -134,54 +128,14 @@ export default function EmployeeRowActionsMenu({
         <Box onClick={() => setOpen(false)} sx={{ position: "fixed", inset: 0, zIndex: 1299 }} />
       )}
 
-      <Dialog
+      <DeleteConfirmDialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        slotProps={{
-          paper: { sx: { borderRadius: "16px", border: "1px solid", borderColor: "divider" } },
-        }}
-      >
-        <DialogTitle sx={{ pb: 0.5 }}>
-          <Typography
-            sx={{
-              fontSize: "10px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.16em",
-              color: "error.main",
-              mb: 0.75,
-              display: "block",
-            }}
-          >
-            Confirmar eliminación
-          </Typography>
-          ¿Eliminar a {employeeName}?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Esta acción eliminará al empleado del portal y también intentará remover su acceso a
-            los cursos asignados.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button variant="outlined" onClick={() => setDeleteOpen(false)}>
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              setDeleteOpen(false)
-              runAction(deleteEmployeeAction)
-            }}
-            sx={{ boxShadow: "none", "&:hover": { boxShadow: "none" } }}
-          >
-            Sí, eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title={`¿Eliminar a ${employeeName}?`}
+        description="Esta acción eliminará al empleado del portal y también intentará remover su acceso a los cursos asignados."
+        action={deleteEmployeeAction}
+        hiddenFields={{ empleado_id: employeeId, return_to: returnTo }}
+      />
     </>
   )
 }
