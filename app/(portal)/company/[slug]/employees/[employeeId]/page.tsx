@@ -85,6 +85,21 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
     employee.courses.map((course) => [course.wp_course_id, course.course_name]),
   )
 
+  const latestQuizAttemptByCourse = new Map<number, (typeof employee.quizAttempts)[number]>()
+  for (const attempt of employee.quizAttempts) {
+    const current = latestQuizAttemptByCourse.get(attempt.wp_course_id)
+    const attemptTime = attempt.attempt_started_at?.getTime() ?? -Infinity
+    const currentTime = current?.attempt_started_at?.getTime() ?? -Infinity
+    if (!current || attemptTime > currentTime) {
+      latestQuizAttemptByCourse.set(attempt.wp_course_id, attempt)
+    }
+  }
+  const latestQuizAttempts = [...latestQuizAttemptByCourse.values()].sort((a, b) => {
+    const aTime = a.attempt_started_at?.getTime() ?? -Infinity
+    const bTime = b.attempt_started_at?.getTime() ?? -Infinity
+    return bTime - aTime
+  })
+
   const employeeName = `${employee.first_name} ${employee.last_name}`.trim()
 
   return (
@@ -208,13 +223,13 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
 
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Intentos de examen
-          <span className="ml-2 text-sm font-normal text-slate-400">
-            {employee.quizAttempts.length}
-          </span>
+          Resultados del examen final
+          {/* <span className="ml-2 text-sm font-normal text-slate-400">
+            {latestQuizAttempts.length}
+          </span> */}
         </h2>
 
-        {employee.quizAttempts.length === 0 ? (
+        {latestQuizAttempts.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
             <FileQuestion size={28} className="text-slate-300" />
             <p className="text-sm font-medium text-slate-600">Sin intentos registrados</p>
@@ -234,7 +249,7 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               { label: "Tiempo", className: "hidden md:table-cell" },
               { label: "Fecha" },
             ]}
-            rows={employee.quizAttempts.map((attempt) => {
+            rows={latestQuizAttempts.map((attempt) => {
               const scorePct = attempt.total_marks
                 ? Math.round((attempt.earned_marks / attempt.total_marks) * 100)
                 : 0
