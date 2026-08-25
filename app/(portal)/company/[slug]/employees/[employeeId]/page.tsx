@@ -223,10 +223,10 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
 
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Intentos de examen
-          <span className="ml-2 text-sm font-normal text-slate-400">
+          Resultados del examen final
+          {/* <span className="ml-2 text-sm font-normal text-slate-400">
             {latestQuizAttempts.length}
-          </span>
+          </span> */}
         </h2>
 
         {latestQuizAttempts.length === 0 ? (
