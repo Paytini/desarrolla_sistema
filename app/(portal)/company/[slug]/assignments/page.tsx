@@ -2,7 +2,7 @@ import { auth } from "@/auth"
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusNotice from "@/components/shared/StatusNotice"
-import { BookOpen, Package, Users } from "lucide-react"
+import { Package } from "lucide-react"
 import { getHrAssignmentsSnapshot } from "@/lib/dashboard-cache"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { redirect } from "next/navigation"
@@ -66,7 +66,7 @@ export default async function CompanyAssignmentsPage() {
         description="Elige un curso en la fila superior y marca a los colaboradores que lo tomarán"
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="max-w-xs">
         <KpiCard
           label="Paquete activo"
           value={activePackage?.name ?? "Sin paquete"}
@@ -74,20 +74,6 @@ export default async function CompanyAssignmentsPage() {
           icon={Package}
           borderColor="amber"
           valueSize="sm"
-        />
-        <KpiCard
-          label="Cursos disponibles"
-          value={String(packageCourses.length)}
-          sub="Para asignar a empleados"
-          icon={BookOpen}
-          borderColor="orange"
-        />
-        <KpiCard
-          label="Empleados activos"
-          value={String(allEmployees.length)}
-          sub="Elegibles para asignación"
-          icon={Users}
-          borderColor="charcoal"
         />
       </div>
 

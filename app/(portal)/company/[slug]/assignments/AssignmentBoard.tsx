@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useRef, useState, useTransition } from "react"
-import { BookOpen, Check, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { BookOpen, Check, ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import { paginate } from "@/lib/pagination"
 import { setCourseAssignmentsAction } from "./actions"
@@ -94,15 +94,38 @@ export default function AssignmentBoard({
 
   const selectedCourse = courses.find((c) => c.wp_course_id === selectedCourseId) ?? null
 
+  const workingSet =
+    selectedCourseId != null
+      ? (workingAssignments[selectedCourseId] ?? new Set<string>())
+      : new Set<string>()
+  const savedSet = useMemo(
+    () => (selectedCourseId != null ? (savedAssignments[selectedCourseId] ?? new Set<string>()) : new Set<string>()),
+    [selectedCourseId, savedAssignments],
+  )
+  const isDirty =
+    workingSet.size !== savedSet.size || [...workingSet].some((id) => !savedSet.has(id))
+  const pendingChangeCount =
+    [...workingSet].filter((id) => !savedSet.has(id)).length +
+    [...savedSet].filter((id) => !workingSet.has(id)).length
+
+  const hasEmployeeFilters = Boolean(employeeSearch || department || position)
+
   const filteredEmployees = useMemo(() => {
     const q = employeeSearch.trim().toLowerCase()
-    return employees.filter((e) => {
+    const matches = employees.filter((e) => {
       if (department && e.department !== department) return false
       if (position && e.position !== position) return false
       if (q && !`${e.name} ${e.email}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [employees, employeeSearch, department, position])
+    return matches
+      .map((employee, index) => ({ employee, index, assigned: savedSet.has(employee.id) }))
+      .sort((a, b) => {
+        if (a.assigned !== b.assigned) return a.assigned ? -1 : 1
+        return a.index - b.index
+      })
+      .map((entry) => entry.employee)
+  }, [employees, employeeSearch, department, position, savedSet])
 
   const employeeFilterKey = `${selectedCourseId}|${employeeSearch}|${department}|${position}`
   const [lastEmployeeFilterKey, setLastEmployeeFilterKey] = useState(employeeFilterKey)
@@ -117,20 +140,6 @@ export default function AssignmentBoard({
     totalPages: employeeTotalPages,
     totalResults: employeeTotalResults,
   } = paginate(filteredEmployees, employeePage, EMPLOYEES_PAGE_SIZE)
-
-  const workingSet =
-    selectedCourseId != null
-      ? (workingAssignments[selectedCourseId] ?? new Set<string>())
-      : new Set<string>()
-  const savedSet =
-    selectedCourseId != null
-      ? (savedAssignments[selectedCourseId] ?? new Set<string>())
-      : new Set<string>()
-  const isDirty =
-    workingSet.size !== savedSet.size || [...workingSet].some((id) => !savedSet.has(id))
-  const pendingChangeCount =
-    [...workingSet].filter((id) => !savedSet.has(id)).length +
-    [...savedSet].filter((id) => !workingSet.has(id)).length
 
   function selectCourse(courseId: number) {
     setSelectedCourseId(courseId)
@@ -208,8 +217,18 @@ export default function AssignmentBoard({
                 value={courseSearch}
                 onChange={(e) => setCourseSearch(e.target.value)}
                 placeholder="Buscar curso..."
-                className="w-56 rounded-lg border border-portal-border py-2 pl-8 pr-3 text-sm outline-none transition focus:border-portal-blue"
+                className="w-56 rounded-lg border border-portal-border py-2 pl-8 pr-8 text-sm outline-none transition focus:border-portal-blue"
               />
+              {courseSearch ? (
+                <button
+                  type="button"
+                  onClick={() => setCourseSearch("")}
+                  aria-label="Limpiar búsqueda de curso"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+                >
+                  <X size={14} />
+                </button>
+              ) : null}
             </div>
             <button
               type="button"
@@ -231,8 +250,15 @@ export default function AssignmentBoard({
         </div>
 
         {filteredCourses.length === 0 ? (
-          <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
-            Sin resultados para &quot;{courseSearch}&quot;.
+          <div className="flex flex-col items-center gap-2 rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
+            <p>Sin resultados para &quot;{courseSearch}&quot;.</p>
+            <button
+              type="button"
+              onClick={() => setCourseSearch("")}
+              className="text-xs font-semibold text-portal-blue hover:underline"
+            >
+              Limpiar búsqueda
+            </button>
           </div>
         ) : (
           <div ref={scrollerRef} className="flex gap-3 overflow-x-auto pb-1 scroll-smooth">
@@ -240,10 +266,15 @@ export default function AssignmentBoard({
               const originalIndex = courses.findIndex((c) => c.wp_course_id === course.wp_course_id)
               const colorKey = COLOR_ROTATION[originalIndex % COLOR_ROTATION.length]
               const color = kpiColorMap[colorKey]
-              const assignedCount = savedAssignments[course.wp_course_id]?.size ?? 0
+              const courseSavedSet = savedAssignments[course.wp_course_id] ?? new Set<string>()
+              const courseWorkingSet = workingAssignments[course.wp_course_id] ?? new Set<string>()
+              const assignedCount = courseSavedSet.size
               const pct =
                 employees.length > 0 ? Math.round((assignedCount / employees.length) * 100) : 0
               const isSelected = course.wp_course_id === selectedCourseId
+              const hasPendingChanges =
+                courseWorkingSet.size !== courseSavedSet.size ||
+                [...courseWorkingSet].some((id) => !courseSavedSet.has(id))
 
               return (
                 <button
@@ -289,6 +320,11 @@ export default function AssignmentBoard({
 
                     <p className="text-xs font-medium text-slate-400">
                       {assignedCount} asignado{assignedCount !== 1 ? "s" : ""} · {pct}%
+                      {hasPendingChanges ? (
+                        <span className="ml-1 font-semibold text-amber-600">
+                          · Cambios sin guardar
+                        </span>
+                      ) : null}
                     </p>
                   </div>
                 </button>
@@ -330,8 +366,18 @@ export default function AssignmentBoard({
                 value={employeeSearch}
                 onChange={(e) => setEmployeeSearch(e.target.value)}
                 placeholder="Buscar colaborador..."
-                className="w-full rounded-lg border border-portal-border py-2 pl-8 pr-3 text-sm outline-none transition focus:border-portal-blue"
+                className="w-full rounded-lg border border-portal-border py-2 pl-8 pr-8 text-sm outline-none transition focus:border-portal-blue"
               />
+              {employeeSearch ? (
+                <button
+                  type="button"
+                  onClick={() => setEmployeeSearch("")}
+                  aria-label="Limpiar búsqueda de colaborador"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+                >
+                  <X size={14} />
+                </button>
+              ) : null}
             </div>
             <select
               value={department}
@@ -362,32 +408,33 @@ export default function AssignmentBoard({
               onClick={() => bulkSetVisible(true)}
               className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
-              Asignar visibles
+              Asignar filtrados ({filteredEmployees.length})
             </button>
             <button
               type="button"
               onClick={() => bulkSetVisible(false)}
               className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
-              Quitar visibles
+              Quitar filtrados ({filteredEmployees.length})
             </button>
           </div>
 
-          {feedback && (
-            <div
-              className={`rounded-lg px-4 py-2.5 text-sm ${
-                feedback.tone === "success"
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-red-50 text-red-700"
-              }`}
-            >
-              {feedback.message}
-            </div>
-          )}
-
           {filteredEmployees.length === 0 ? (
-            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
-              Sin colaboradores para estos filtros.
+            <div className="flex flex-col items-center gap-2 rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
+              <p>Sin colaboradores para estos filtros.</p>
+              {hasEmployeeFilters ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmployeeSearch("")
+                    setDepartment("")
+                    setPosition("")
+                  }}
+                  className="text-xs font-semibold text-portal-blue hover:underline"
+                >
+                  Limpiar filtros
+                </button>
+              ) : null}
             </div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -455,24 +502,37 @@ export default function AssignmentBoard({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#f5f5f5] pt-3">
-            <p className="text-sm text-slate-500">
-              <span className="font-semibold text-slate-800">{workingSet.size}</span> colaborador
-              {workingSet.size !== 1 ? "es" : ""} en &laquo;{selectedCourse.course_name}&raquo;
-              <span className="ml-2 text-slate-400">
-                {isDirty
-                  ? `· ${pendingChangeCount} cambio${pendingChangeCount !== 1 ? "s" : ""} pendiente${pendingChangeCount !== 1 ? "s" : ""}`
-                  : "· Sin cambios pendientes"}
-              </span>
-            </p>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!isDirty || isPending}
-              className="flex items-center gap-2 rounded-full bg-portal-blue px-5 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
-            >
-              {isPending ? "Guardando..." : "Guardar asignación"}
-            </button>
+          <div className="sticky bottom-0 -mx-4 -mb-4 space-y-2 border-t border-[#f5f5f5] bg-white px-4 py-3">
+            {feedback && (
+              <div
+                className={`rounded-lg px-4 py-2.5 text-sm ${
+                  feedback.tone === "success"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-red-50 text-red-700"
+                }`}
+              >
+                {feedback.message}
+              </div>
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-slate-500">
+                <span className="font-semibold text-slate-800">{workingSet.size}</span> colaborador
+                {workingSet.size !== 1 ? "es" : ""} en &laquo;{selectedCourse.course_name}&raquo;
+                <span className="ml-2 text-slate-400">
+                  {isDirty
+                    ? `· ${pendingChangeCount} cambio${pendingChangeCount !== 1 ? "s" : ""} pendiente${pendingChangeCount !== 1 ? "s" : ""}`
+                    : "· Sin cambios pendientes"}
+                </span>
+              </p>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={!isDirty || isPending}
+                className="flex items-center gap-2 rounded-full bg-portal-blue px-5 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+              >
+                {isPending ? "Guardando..." : "Guardar asignación"}
+              </button>
+            </div>
           </div>
         </section>
       )}
