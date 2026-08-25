@@ -3685,6 +3685,19 @@ function d360_bridge_sync_direct_course_access( $student_id, $course_id ) {
 		);
 	}
 
+	$verified_enrollment = get_post( $enrollment_id );
+	$verified_status     = ( $verified_enrollment instanceof WP_Post && is_string( $verified_enrollment->post_status ) )
+		? strtolower( $verified_enrollment->post_status )
+		: '';
+
+	if ( 'completed' !== $verified_status ) {
+		return new WP_Error(
+			'd360_bridge_enrollment_not_completed',
+			'Tutor LMS no confirmo el estado de la matricula directa (posiblemente requiere una orden de compra, p. ej. cursos dentro de un bundle).',
+			array( 'status' => 409 )
+		);
+	}
+
 	return array(
 		'enrollment_id'      => $enrollment_id,
 		'already_completed'  => false,
