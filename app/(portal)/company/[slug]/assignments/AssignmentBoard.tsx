@@ -421,14 +421,14 @@ export default function AssignmentBoard({
               onClick={() => bulkSetVisible(true)}
               className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
-              Asignar filtrados ({filteredEmployees.length})
+              Asignar a todos
             </button>
             <button
               type="button"
               onClick={() => bulkSetVisible(false)}
               className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
             >
-              Quitar filtrados ({filteredEmployees.length})
+              Quitar a todos
             </button>
           </div>
 
