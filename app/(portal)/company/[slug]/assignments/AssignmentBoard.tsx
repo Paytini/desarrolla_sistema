@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { BookOpen, Check, ChevronLeft, ChevronRight, Search, X } from "lucide-react"
+import ProgressBar from "@/components/shared/ProgressBar"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import { paginate } from "@/lib/pagination"
 import { setCourseAssignmentsAction } from "./actions"
@@ -324,12 +325,7 @@ export default function AssignmentBoard({
                       {course.course_name}
                     </p>
 
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${pct}%`, background: "var(--portal-blue)" }}
-                      />
-                    </div>
+                    <ProgressBar value={pct} fillClassName="bg-portal-blue" />
 
                     <p className="text-xs font-medium text-slate-400">
                       {assignedCount} asignado{assignedCount !== 1 ? "s" : ""} · {pct}%

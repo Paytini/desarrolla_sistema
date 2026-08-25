@@ -3,7 +3,9 @@ import EmployeeListFilters from "@/components/company/EmployeeListFilters"
 import EmployeeRowActionsMenu from "@/components/company/EmployeeRowActionsMenu"
 import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModal"
 import ManualEmployeeForm from "@/components/company/ManualEmployeeForm"
+import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
+import ProgressBar from "@/components/shared/ProgressBar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import StatusToast from "@/components/shared/StatusToast"
 import { Eye } from "lucide-react"
@@ -228,15 +230,11 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
         />
 
         {totalEmployees === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-            Aún no hay empleados registrados para esta empresa.
-          </div>
+          <EmptyState message="Aún no hay empleados registrados para esta empresa." />
         ) : null}
 
         {totalEmployees > 0 && filteredCount === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-            No encontramos empleados que coincidan con ese filtro.
-          </div>
+          <EmptyState message="No encontramos empleados que coincidan con ese filtro." />
         ) : null}
 
         {filteredCount > 0 ? (
@@ -318,18 +316,10 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                       </td>
                       <td className="hidden px-4 py-3 md:table-cell">
                         <div className="flex items-center gap-2">
-                          <div className="h-2 w-16 shrink-0 overflow-hidden rounded-full border border-slate-300 bg-slate-100">
-                            <div
-                              className={`h-full rounded-full ${
-                                avgProgress >= 75
-                                  ? "bg-portal-blue"
-                                  : avgProgress > 0
-                                    ? "bg-amber-500"
-                                    : "bg-slate-300"
-                              }`}
-                              style={{ width: `${avgProgress}%` }}
-                            />
-                          </div>
+                          <ProgressBar
+                            value={avgProgress}
+                            className="w-16 shrink-0 border border-slate-300"
+                          />
                           <span className="w-9 shrink-0 text-sm tabular-nums text-slate-700">
                             {avgProgress}%
                           </span>

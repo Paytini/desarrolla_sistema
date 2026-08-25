@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Box, Chip, Divider, Stack, Typography } from "@mui/material"
 import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
+import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { SectionCard } from "@/components/shared/SectionCard"
 
 type Renewal = {
@@ -118,17 +119,7 @@ export function RenewalsTable({ renewals }: { renewals: Renewal[] }) {
               py: 1,
             }}
           >
-            <Typography
-              sx={{
-                fontSize: 10,
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                color: "text.disabled",
-              }}
-            >
-              Empresa
-            </Typography>
+            <EyebrowLabel sx={{ fontWeight: 600, letterSpacing: "0.1em" }}>Empresa</EyebrowLabel>
             <Box
               component="button"
               type="button"
