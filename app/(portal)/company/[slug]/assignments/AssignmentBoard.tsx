@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo, useRef, useState, useTransition } from "react"
+import { useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { BookOpen, Check, ChevronLeft, ChevronRight, Search, X } from "lucide-react"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import { paginate } from "@/lib/pagination"
@@ -62,11 +63,24 @@ export default function AssignmentBoard({
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(
     courses[0]?.wp_course_id ?? null,
   )
-  const [courseSearch, setCourseSearch] = useState("")
-  const [employeeSearch, setEmployeeSearch] = useState("")
-  const [department, setDepartment] = useState("")
-  const [position, setPosition] = useState("")
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const [courseSearch, setCourseSearch] = useState(searchParams.get("curso") ?? "")
+  const [employeeSearch, setEmployeeSearch] = useState(searchParams.get("q") ?? "")
+  const [department, setDepartment] = useState(searchParams.get("depto") ?? "")
+  const [position, setPosition] = useState(searchParams.get("puesto") ?? "")
   const [employeePage, setEmployeePage] = useState(1)
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (courseSearch) params.set("curso", courseSearch)
+    if (employeeSearch) params.set("q", employeeSearch)
+    if (department) params.set("depto", department)
+    if (position) params.set("puesto", position)
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }, [courseSearch, employeeSearch, department, position, pathname, router])
   const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(
     null,
   )

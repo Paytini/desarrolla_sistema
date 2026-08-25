@@ -1,11 +1,10 @@
 import { auth } from "@/auth"
-import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusNotice from "@/components/shared/StatusNotice"
-import { Package } from "lucide-react"
 import { getHrAssignmentsSnapshot } from "@/lib/dashboard-cache"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { redirect } from "next/navigation"
+import { Suspense } from "react"
 import AssignmentBoard from "./AssignmentBoard"
 
 type AssignmentEmployee = {
@@ -66,17 +65,6 @@ export default async function CompanyAssignmentsPage() {
         description="Elige un curso en la fila superior y marca a los colaboradores que lo tomarán"
       />
 
-      <div className="max-w-xs">
-        <KpiCard
-          label="Paquete activo"
-          value={activePackage?.name ?? "Sin paquete"}
-          sub="Catálogo disponible"
-          icon={Package}
-          borderColor="amber"
-          valueSize="sm"
-        />
-      </div>
-
       {!activePackage ? (
         <StatusNotice
           tone="error"
@@ -85,11 +73,13 @@ export default async function CompanyAssignmentsPage() {
       ) : null}
 
       {activePackage && packageCourses.length > 0 ? (
-        <AssignmentBoard
-          courses={courses}
-          employees={employees}
-          initialAssignments={initialAssignments}
-        />
+        <Suspense fallback={null}>
+          <AssignmentBoard
+            courses={courses}
+            employees={employees}
+            initialAssignments={initialAssignments}
+          />
+        </Suspense>
       ) : null}
     </div>
   )
