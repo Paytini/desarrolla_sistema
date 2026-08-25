@@ -5,6 +5,7 @@ import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
+import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { Mail, MessageCircle, Phone } from "lucide-react"
 import { getConsultingArea } from "@/lib/consulting-areas"
 import { formatConsultingDateTime } from "@/lib/consulting-schedule"
@@ -63,18 +64,9 @@ export function ConfirmStep({
 
   return (
     <Box>
-      <Typography
-        sx={{
-          fontSize: 11,
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          color: "var(--portal-blue)",
-          mb: 1,
-        }}
-      >
+      <EyebrowLabel color="var(--portal-blue)" sx={{ fontSize: 11, mb: 1 }}>
         Paso 4 · Confirmación
-      </Typography>
+      </EyebrowLabel>
       <Typography sx={{ fontSize: 26, fontWeight: 800, color: "text.primary", mb: 0.5 }}>
         Revisa y confirma tu solicitud
       </Typography>

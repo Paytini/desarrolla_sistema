@@ -4,23 +4,16 @@ import {
   type LearningActivityPoint,
 } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
+import ProgressBar from "@/components/shared/ProgressBar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
 import { SearchInput } from "@/components/shared/SearchInput"
 import { Pagination } from "@/components/shared/Pagination"
-import { formatDateTime } from "@/lib/format"
+import { formatDateTime, getInitials } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("")
-}
 
 const WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
 
@@ -380,12 +373,12 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                       <p className="shrink-0 text-sm font-bold text-slate-950">{avg}%</p>
                     </div>
 
-                    <div className="mb-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className={`h-full rounded-full ${barColor}`}
-                        style={{ width: `${avg}%` }}
-                      />
-                    </div>
+                    <ProgressBar
+                      value={avg}
+                      className="mb-3"
+                      trackClassName="bg-slate-200"
+                      fillClassName={barColor}
+                    />
 
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
                       <span>
@@ -443,12 +436,12 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                           {course.averageProgress}%
                         </span>
                       </div>
-                      <div className="mb-2 h-2 overflow-hidden rounded-full bg-slate-200">
-                        <div
-                          className="h-full rounded-full bg-portal-blue"
-                          style={{ width: `${course.averageProgress}%` }}
-                        />
-                      </div>
+                      <ProgressBar
+                        value={course.averageProgress}
+                        className="mb-2"
+                        trackClassName="bg-slate-200"
+                        fillClassName="bg-portal-blue"
+                      />
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
                         <span>{course.assigned} asignados</span>
                         <span className="text-portal-blue">{course.completed} completados</span>

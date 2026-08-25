@@ -1,7 +1,9 @@
 import { CheckCircle2, FileQuestion } from "lucide-react"
 import { BackButton } from "@/components/shared/BackButton"
+import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { PaginatedTable } from "@/components/shared/PaginatedTable"
+import ProgressBar from "@/components/shared/ProgressBar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company-routes"
@@ -135,9 +137,7 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
         </h2>
 
         {totalCourses === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-            Este empleado aún no tiene cursos asignados.
-          </div>
+          <EmptyState message="Este empleado aún no tiene cursos asignados." />
         ) : (
           <div className="space-y-2">
             {employee.courses.map((course) => (
@@ -151,18 +151,10 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
                   />
                 </div>
                 <div className="mb-2 flex items-center gap-2">
-                  <div className="h-2 flex-1 overflow-hidden rounded-full border border-slate-300 bg-slate-100">
-                    <div
-                      className={`h-full rounded-full ${
-                        course.progress_pct >= 75
-                          ? "bg-portal-blue"
-                          : course.progress_pct > 0
-                            ? "bg-amber-500"
-                            : "bg-slate-300"
-                      }`}
-                      style={{ width: `${course.progress_pct}%` }}
-                    />
-                  </div>
+                  <ProgressBar
+                    value={course.progress_pct}
+                    className="flex-1 border border-slate-300"
+                  />
                   <span className="w-10 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-700">
                     {course.progress_pct}%
                   </span>
@@ -184,40 +176,39 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
 
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Constancias
+          Lecciones completadas
           <span className="ml-2 text-sm font-normal text-slate-400">
-            {employee.certificates.length}
+            {employee.lessonCompletions.length}
           </span>
         </h2>
 
-        {employee.certificates.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-            Aún no se han emitido constancias para este empleado.
-          </div>
+        {employee.lessonCompletions.length === 0 ? (
+          <EmptyState
+            icon={<CheckCircle2 size={28} className="text-slate-300" />}
+            message="Sin lecciones completadas"
+            description="Este empleado aún no ha completado ninguna lección en sus cursos asignados."
+          />
         ) : (
-          <div className="space-y-2">
-            {employee.certificates.map((cert) => (
-              <div
-                key={cert.id}
-                className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 p-3"
-              >
-                <div className="min-w-0">
+          <PaginatedTable
+            ariaLabel="Lecciones completadas"
+            pageSize={TABLE_PAGE_SIZE}
+            columns={[{ label: "Lección" }, { label: "Curso" }, { label: "Fecha" }]}
+            rows={employee.lessonCompletions.map((lesson) => (
+              <tr key={lesson.id} className="bg-gray-50">
+                <td className="min-w-0 rounded-l-lg py-3 pl-4">
                   <p className="truncate text-sm font-semibold text-slate-950">
-                    {cert.course_name}
+                    {lesson.lesson_name ?? "Lección"}
                   </p>
-                  <p className="text-xs text-slate-500">
-                    Folio {cert.reference_number} · Emitida {formatDate(cert.issued_at)}
-                  </p>
-                </div>
-                <a
-                  href={`/api/certificates/${cert.id}/dc3`}
-                  className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-white"
-                >
-                  Descargar
-                </a>
-              </div>
+                </td>
+                <td className="truncate px-4 py-3 text-sm text-slate-500">
+                  {courseNameByWpId.get(lesson.wp_course_id) ?? "Curso"}
+                </td>
+                <td className="rounded-r-lg px-4 py-3 text-sm text-slate-700">
+                  {lesson.completed_at ? formatDate(lesson.completed_at) : "—"}
+                </td>
+              </tr>
             ))}
-          </div>
+          />
         )}
       </section>
 
@@ -230,13 +221,11 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
         </h2>
 
         {latestQuizAttempts.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-            <FileQuestion size={28} className="text-slate-300" />
-            <p className="text-sm font-medium text-slate-600">Sin intentos registrados</p>
-            <p className="max-w-md text-xs text-slate-500">
-              Este empleado aún no ha presentado ningún examen en sus cursos asignados.
-            </p>
-          </div>
+          <EmptyState
+            icon={<FileQuestion size={28} className="text-slate-300" />}
+            message="Sin intentos registrados"
+            description="Este empleado aún no ha presentado ningún examen en sus cursos asignados."
+          />
         ) : (
           <PaginatedTable
             ariaLabel="Intentos de examen"
@@ -297,41 +286,38 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
 
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Lecciones completadas
+          Constancias
           <span className="ml-2 text-sm font-normal text-slate-400">
-            {employee.lessonCompletions.length}
+            {employee.certificates.length}
           </span>
         </h2>
 
-        {employee.lessonCompletions.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-            <CheckCircle2 size={28} className="text-slate-300" />
-            <p className="text-sm font-medium text-slate-600">Sin lecciones completadas</p>
-            <p className="max-w-md text-xs text-slate-500">
-              Este empleado aún no ha completado ninguna lección en sus cursos asignados.
-            </p>
-          </div>
+        {employee.certificates.length === 0 ? (
+          <EmptyState message="Aún no se han emitido constancias para este empleado." />
         ) : (
-          <PaginatedTable
-            ariaLabel="Lecciones completadas"
-            pageSize={TABLE_PAGE_SIZE}
-            columns={[{ label: "Lección" }, { label: "Curso" }, { label: "Fecha" }]}
-            rows={employee.lessonCompletions.map((lesson) => (
-              <tr key={lesson.id} className="bg-gray-50">
-                <td className="min-w-0 rounded-l-lg py-3 pl-4">
+          <div className="space-y-2">
+            {employee.certificates.map((cert) => (
+              <div
+                key={cert.id}
+                className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 p-3"
+              >
+                <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-slate-950">
-                    {lesson.lesson_name ?? "Lección"}
+                    {cert.course_name}
                   </p>
-                </td>
-                <td className="truncate px-4 py-3 text-sm text-slate-500">
-                  {courseNameByWpId.get(lesson.wp_course_id) ?? "Curso"}
-                </td>
-                <td className="rounded-r-lg px-4 py-3 text-sm text-slate-700">
-                  {lesson.completed_at ? formatDate(lesson.completed_at) : "—"}
-                </td>
-              </tr>
+                  <p className="text-xs text-slate-500">
+                    Folio {cert.reference_number} · Emitida {formatDate(cert.issued_at)}
+                  </p>
+                </div>
+                <a
+                  href={`/api/certificates/${cert.id}/dc3`}
+                  className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-white"
+                >
+                  Descargar
+                </a>
+              </div>
             ))}
-          />
+          </div>
         )}
       </section>
     </div>

@@ -7,7 +7,7 @@ import Button from "@mui/material/Button"
 
 type SubmitButtonProps = Omit<ComponentProps<typeof Button>, "type" | "disabled">
 
-function Inner({ children, sx, ...props }: SubmitButtonProps) {
+function Inner({ children, sx, startIcon, ...props }: SubmitButtonProps) {
   const { pending } = useFormStatus()
 
   return (
@@ -17,7 +17,9 @@ function Inner({ children, sx, ...props }: SubmitButtonProps) {
       startIcon={
         pending ? (
           <Loader2 size={13} strokeWidth={2} style={{ animation: "spin 0.8s linear infinite" }} />
-        ) : undefined
+        ) : (
+          startIcon
+        )
       }
       sx={{ gap: 0.5, ...sx }}
       {...props}

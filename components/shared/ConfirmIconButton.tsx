@@ -1,18 +1,11 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  IconButton,
-  Tooltip,
-} from "@mui/material"
+import { Button, IconButton, Tooltip } from "@mui/material"
 import { alpha, type Theme } from "@mui/material/styles"
 import type { SystemStyleObject } from "@mui/system"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog"
 
 type ConfirmIconButtonTone = "brand" | "outline" | "outline-destructive"
 
@@ -73,54 +66,61 @@ export function ConfirmIconButton({
   const [open, setOpen] = useState(false)
   const { variant, color } = toneButtonProps[tone]
 
+  const trigger = showLabel ? (
+    <Button
+      size="small"
+      variant={variant}
+      color={color}
+      startIcon={icon}
+      onClick={() => setOpen(true)}
+      sx={{ fontSize: "0.8125rem", fontWeight: 600, whiteSpace: "nowrap" }}
+    >
+      {label}
+    </Button>
+  ) : (
+    <Tooltip title={label}>
+      <IconButton
+        aria-label={label}
+        size="small"
+        onClick={() => setOpen(true)}
+        sx={[{ width: 32, height: 32 }, toneSx[tone]]}
+      >
+        {icon}
+      </IconButton>
+    </Tooltip>
+  )
+
+  if (tone === "outline-destructive") {
+    return (
+      <>
+        {trigger}
+        <DeleteConfirmDialog
+          open={open}
+          onClose={() => setOpen(false)}
+          title={title}
+          description={description}
+          confirmLabel={confirmLabel}
+          cancelLabel={cancelLabel}
+          action={action}
+          hiddenFields={hiddenFields}
+        />
+      </>
+    )
+  }
+
   return (
     <>
-      {showLabel ? (
-        <Button
-          size="small"
-          variant={variant}
-          color={color}
-          startIcon={icon}
-          onClick={() => setOpen(true)}
-          sx={{ fontSize: "0.8125rem", fontWeight: 600, whiteSpace: "nowrap" }}
-        >
-          {label}
-        </Button>
-      ) : (
-        <Tooltip title={label}>
-          <IconButton
-            aria-label={label}
-            size="small"
-            onClick={() => setOpen(true)}
-            sx={[{ width: 32, height: 32 }, toneSx[tone]]}
-          >
-            {icon}
-          </IconButton>
-        </Tooltip>
-      )}
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>{title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{description}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>{cancelLabel}</Button>
-          <form action={action}>
-            {hiddenFields &&
-              Object.entries(hiddenFields).map(([name, value]) => (
-                <input key={name} type="hidden" name={name} value={value} />
-              ))}
-            <Button
-              type="submit"
-              variant="contained"
-              color={tone === "outline-destructive" ? "error" : "primary"}
-              onClick={() => setOpen(false)}
-            >
-              {confirmLabel}
-            </Button>
-          </form>
-        </DialogActions>
-      </Dialog>
+      {trigger}
+      <ConfirmDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title={title}
+        description={description}
+        confirmLabel={confirmLabel}
+        cancelLabel={cancelLabel}
+        action={action}
+        hiddenFields={hiddenFields}
+      />
     </>
   )
 }

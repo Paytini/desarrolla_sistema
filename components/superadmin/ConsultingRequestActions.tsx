@@ -10,6 +10,8 @@ import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
 import MenuItem from "@mui/material/MenuItem"
 import TextField from "@mui/material/TextField"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
+import { SubmitButton } from "@/components/shared/SubmitButton"
 import {
   cancelConsultingRequestAction,
   confirmConsultingRequestAction,
@@ -111,52 +113,27 @@ export function ConsultingRequestActions({
             <input type="hidden" name="request_id" value={requestId} />
             <input type="hidden" name="preferred_date" value={date} />
             <input type="hidden" name="preferred_time" value={time} />
-            <Button
-              type="submit"
+            <SubmitButton
               variant="contained"
-              onClick={() => setDialog(null)}
               sx={{ boxShadow: "none", "&:hover": { boxShadow: "none" } }}
             >
               Sí, confirmar
-            </Button>
+            </SubmitButton>
           </form>
         </DialogActions>
       </Dialog>
 
-      <Dialog
+      <ConfirmDialog
         open={dialog === "cancel"}
         onClose={() => setDialog(null)}
-        maxWidth="xs"
-        fullWidth
-        slotProps={{
-          paper: { sx: { borderRadius: "16px", border: "1px solid", borderColor: "divider" } },
-        }}
-      >
-        <DialogTitle>¿Cancelar esta consultoría?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Se marcará la sesión de {areaLabel} de {companyName} como cancelada, y le avisaremos al
-            HR de la empresa.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button variant="outlined" onClick={() => setDialog(null)}>
-            Volver
-          </Button>
-          <form action={cancelConsultingRequestAction}>
-            <input type="hidden" name="request_id" value={requestId} />
-            <Button
-              type="submit"
-              variant="contained"
-              color="error"
-              onClick={() => setDialog(null)}
-              sx={{ boxShadow: "none", "&:hover": { boxShadow: "none" } }}
-            >
-              Sí, cancelar
-            </Button>
-          </form>
-        </DialogActions>
-      </Dialog>
+        title="¿Cancelar esta consultoría?"
+        description={`Se marcará la sesión de ${areaLabel} de ${companyName} como cancelada, y le avisaremos al HR de la empresa.`}
+        confirmLabel="Sí, cancelar"
+        confirmColor="error"
+        cancelLabel="Volver"
+        action={cancelConsultingRequestAction}
+        hiddenFields={{ request_id: requestId }}
+      />
     </>
   )
 }

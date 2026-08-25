@@ -3,6 +3,7 @@
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Typography from "@mui/material/Typography"
+import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { CONSULTING_AREAS, type ConsultingAreaId } from "@/lib/consulting-areas"
 import { kpiColorMap } from "@/lib/kpi-colors"
 
@@ -15,18 +16,9 @@ type AreaStepProps = {
 export function AreaStep({ value, onChange, onNext }: AreaStepProps) {
   return (
     <Box>
-      <Typography
-        sx={{
-          fontSize: 11,
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          color: "var(--portal-blue)",
-          mb: 1,
-        }}
-      >
+      <EyebrowLabel color="var(--portal-blue)" sx={{ fontSize: 11, mb: 1 }}>
         Paso 1 · Área
-      </Typography>
+      </EyebrowLabel>
       <Typography sx={{ fontSize: 26, fontWeight: 800, color: "text.primary", mb: 0.5 }}>
         ¿En qué área necesitas ayuda?
       </Typography>

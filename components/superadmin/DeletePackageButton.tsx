@@ -3,12 +3,7 @@
 import { useState } from "react"
 import Button from "@mui/material/Button"
 import Chip from "@mui/material/Chip"
-import Dialog from "@mui/material/Dialog"
-import DialogActions from "@mui/material/DialogActions"
-import DialogContent from "@mui/material/DialogContent"
-import DialogContentText from "@mui/material/DialogContentText"
-import DialogTitle from "@mui/material/DialogTitle"
-import Typography from "@mui/material/Typography"
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog"
 
 type DeletePackageButtonProps = {
   action: (formData: FormData) => void | Promise<void>
@@ -62,49 +57,14 @@ export default function DeletePackageButton({
         Eliminar paquete
       </Button>
 
-      <Dialog
+      <DeleteConfirmDialog
         open={open}
         onClose={() => setOpen(false)}
-        maxWidth="xs"
-        fullWidth
-        slotProps={{
-          paper: { sx: { borderRadius: "16px", border: "1px solid", borderColor: "divider" } },
-        }}
-      >
-        <DialogTitle sx={{ pb: 0.5 }}>
-          <Typography
-            sx={{
-              fontSize: "10px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.16em",
-              color: "error.main",
-              mb: 0.75,
-              display: "block",
-            }}
-          >
-            Confirmar eliminación
-          </Typography>
-          ¿Eliminar {packageName}?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            El paquete se ocultará del catálogo y ya no aparecerá para nuevas asignaciones. No se
-            eliminarán cursos ni datos históricos ya guardados.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button variant="outlined" onClick={() => setOpen(false)}>
-            Cancelar
-          </Button>
-          <form action={action}>
-            <input type="hidden" name="paquete_id" value={packageId} />
-            <Button type="submit" variant="contained" color="error" onClick={() => setOpen(false)}>
-              Sí, eliminar
-            </Button>
-          </form>
-        </DialogActions>
-      </Dialog>
+        title={`¿Eliminar ${packageName}?`}
+        description="El paquete se ocultará del catálogo y ya no aparecerá para nuevas asignaciones. No se eliminarán cursos ni datos históricos ya guardados."
+        action={action}
+        hiddenFields={{ paquete_id: packageId }}
+      />
     </>
   )
 }

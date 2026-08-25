@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 
 import DeletePackageButton from "@/components/superadmin/DeletePackageButton"
+import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { deletePackageAction } from "@/app/(portal)/superadmin/packages/actions"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
 import type { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
@@ -187,18 +188,7 @@ export function PackageRow({
                 </Box>
               )}
 
-              <Typography
-                sx={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  color: "text.disabled",
-                  mb: 0.75,
-                }}
-              >
-                Cursos y estado DC-3
-              </Typography>
+              <EyebrowLabel sx={{ mb: 0.75 }}>Cursos y estado DC-3</EyebrowLabel>
 
               {pkg.courses.length === 0 ? (
                 <Typography sx={{ fontSize: 12, color: "text.secondary", py: 1 }}>

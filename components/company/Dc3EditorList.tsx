@@ -20,6 +20,7 @@ import InputAdornment from "@mui/material/InputAdornment"
 import Paper from "@mui/material/Paper"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
+import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { formatDate } from "@/lib/format"
 
 const DC3_PAGE_SIZE = 20
@@ -106,22 +107,14 @@ function Field({
 }) {
   return (
     <Box sx={{ display: "grid", gap: 0.75 }}>
-      <Typography
-        sx={{
-          fontSize: "10px",
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          color: "#0f172a",
-        }}
-      >
+      <EyebrowLabel color="#0f172a">
         {label}
         {required && (
           <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>
             *
           </Box>
         )}
-      </Typography>
+      </EyebrowLabel>
       {children}
     </Box>
   )
