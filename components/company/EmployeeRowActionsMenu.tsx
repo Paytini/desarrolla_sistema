@@ -12,7 +12,7 @@ import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
 import Typography from "@mui/material/Typography"
 import Button from "@mui/material/Button"
-import { MoreVertical, Send, Trash2, UserCheck, UserX } from "lucide-react"
+import { MoreVertical, Trash2, UserCheck, UserX } from "lucide-react"
 
 type EmployeeAction = (formData: FormData) => void | Promise<void>
 
@@ -21,7 +21,6 @@ type EmployeeRowActionsMenuProps = {
   employeeName: string
   employeeActive: boolean
   returnTo: string
-  resendActivationAction: EmployeeAction
   toggleEmployeeStatusAction: EmployeeAction
   deleteEmployeeAction: EmployeeAction
 }
@@ -38,7 +37,6 @@ export default function EmployeeRowActionsMenu({
   employeeName,
   employeeActive,
   returnTo,
-  resendActivationAction,
   toggleEmployeeStatusAction,
   deleteEmployeeAction,
 }: EmployeeRowActionsMenuProps) {
@@ -105,11 +103,6 @@ export default function EmployeeRowActionsMenu({
                 py: 0.5,
               }}
             >
-              <MenuRow
-                icon={<Send size={15} strokeWidth={2} />}
-                label="Reenviar activación"
-                onClick={() => runAction(resendActivationAction)}
-              />
               <MenuRow
                 icon={
                   employeeActive ? (

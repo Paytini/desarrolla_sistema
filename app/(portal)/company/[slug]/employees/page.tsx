@@ -21,7 +21,6 @@ import { companyPath } from "@/lib/company-routes"
 import { Pagination } from "@/components/shared/Pagination"
 import {
   deleteEmployeeAction,
-  resendActivationAction,
   toggleEmployeeStatusAction,
 } from "./actions"
 
@@ -355,7 +354,6 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                             employeeName={`${employee.first_name} ${employee.last_name}`.trim()}
                             employeeActive={employee.active}
                             returnTo={currentListPath}
-                            resendActivationAction={resendActivationAction}
                             toggleEmployeeStatusAction={toggleEmployeeStatusAction}
                             deleteEmployeeAction={deleteEmployeeAction}
                           />
