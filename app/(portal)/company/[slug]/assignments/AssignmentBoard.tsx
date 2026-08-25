@@ -409,20 +409,6 @@ export default function AssignmentBoard({
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={() => bulkSetVisible(true)}
-              className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
-            >
-              Asignar filtrados ({filteredEmployees.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setUnassignConfirmOpen(true)}
-              className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
-            >
-              Quitar filtrados ({filteredEmployees.length})
-            </button>
           </div>
 
           {filteredEmployees.length === 0 ? (
@@ -448,7 +434,30 @@ export default function AssignmentBoard({
               ariaLabel="Colaboradores"
               pageSize={EMPLOYEES_PAGE_SIZE}
               columns={[
-                { label: "" },
+                {
+                  label: (
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value === "assign") bulkSetVisible(true)
+                        if (e.target.value === "unassign") setUnassignConfirmOpen(true)
+                        e.target.value = ""
+                      }}
+                      aria-label="Acciones masivas"
+                      className="rounded-lg border border-portal-border px-2 py-1 text-xs font-medium normal-case tracking-normal text-slate-600 outline-none"
+                    >
+                      <option value="" disabled>
+                        Acciones
+                      </option>
+                      <option value="assign">
+                        Asignar filtrados ({filteredEmployees.length})
+                      </option>
+                      <option value="unassign">
+                        Quitar filtrados ({filteredEmployees.length})
+                      </option>
+                    </select>
+                  ),
+                },
                 { label: "Colaborador" },
                 { label: "Departamento" },
                 { label: "Puesto" },
