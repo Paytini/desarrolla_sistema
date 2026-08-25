@@ -17,14 +17,6 @@ type AssignmentEmployee = {
   courses: Array<{ wp_course_id: number }>
 }
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("")
-}
-
 export default async function CompanyAssignmentsPage() {
   const session = await auth()
   if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
@@ -48,7 +40,6 @@ export default async function CompanyAssignmentsPage() {
     email: employee.email,
     department: employee.department,
     position: employee.position,
-    initials: getInitials(`${employee.first_name} ${employee.last_name}`),
   }))
 
   const initialAssignments: Record<number, string[]> = {}

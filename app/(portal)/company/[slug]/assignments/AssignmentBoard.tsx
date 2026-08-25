@@ -21,7 +21,6 @@ type EmployeeInfo = {
   email: string
   department: string | null
   position: string | null
-  initials: string
 }
 
 type AssignmentBoardProps = {
@@ -465,9 +464,6 @@ export default function AssignmentBoard({
                       onChange={() => toggleEmployee(employee.id)}
                       className="sr-only"
                     />
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-portal-blue-soft text-xs font-bold text-portal-blue">
-                      {employee.initials}
-                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-slate-900">
                         {employee.name}
