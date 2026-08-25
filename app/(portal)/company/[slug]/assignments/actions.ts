@@ -106,7 +106,7 @@ export async function setCourseAssignmentsAction(
   if (bridgeErrors.length > 0) {
     return {
       ok: true,
-      message: "Cambios guardados. Reintentaremos la sincronización pendiente.",
+      message: "Cambios guardados.",
     }
   }
 
