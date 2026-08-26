@@ -170,7 +170,7 @@ export default async function CompanyProgressPage() {
     <div className="space-y-6">
       <PageHeader
         title="Progreso"
-        description="Avance y actividad de cursos por colaborador"
+        description="Avance general y actividad de los cursos asignados"
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
