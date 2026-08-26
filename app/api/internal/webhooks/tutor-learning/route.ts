@@ -12,6 +12,7 @@ import {
 import {
   isDuplicateTutorLearningWebhook,
   recordTutorLearningWebhookEvent,
+  recordTutorLearningWebhookFailure,
   recordTutorLearningWebhookProcessed,
 } from "@/lib/webhook-monitor"
 import { isUuid } from "@/lib/uuid"
@@ -88,6 +89,17 @@ async function processLearningWebhookEvent(
   }
 
   if (!isValidEvent(event)) {
+    await recordTutorLearningWebhookFailure({
+      event_type: eventType,
+      occurred_at: occurredAt,
+      received_at: new Date().toISOString(),
+      employee_id: event.employee_id ?? null,
+      company_id: event.company_id ?? null,
+      student_wp_user_id: event.student_wp_user_id ?? null,
+      code: "invalid_event",
+      error_message: "El payload del webhook viene incompleto.",
+    })
+
     return {
       student_wp_user_id: event.student_wp_user_id ?? null,
       ok: false as const,
@@ -120,6 +132,7 @@ async function processLearningWebhookEvent(
 
     await Promise.all([
       recordTutorLearningWebhookEvent({
+        ok: true,
         event_type: eventType,
         occurred_at: occurredAt,
         received_at: new Date().toISOString(),
@@ -148,14 +161,28 @@ async function processLearningWebhookEvent(
 
     return { student_wp_user_id: wpUserId, ok: true as const, source_hash: sourceHash, ...result }
   } catch (error) {
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "No fue posible aplicar el webhook academico al portal."
+
+    await recordTutorLearningWebhookFailure({
+      event_type: eventType,
+      occurred_at: occurredAt,
+      received_at: new Date().toISOString(),
+      employee_id: event.employee_id ?? null,
+      company_id: event.company_id ?? null,
+      student_wp_user_id: wpUserId,
+      source_hash: sourceHash,
+      code: "sync_failed",
+      error_message: errorMessage,
+    })
+
     return {
       student_wp_user_id: wpUserId,
       ok: false as const,
       code: "sync_failed" as const,
-      message:
-        error instanceof Error
-          ? error.message
-          : "No fue posible aplicar el webhook academico al portal.",
+      message: errorMessage,
     }
   }
 }
@@ -166,6 +193,7 @@ export async function POST(request: Request) {
   const timestamp = request.headers.get("x-d360-webhook-timestamp")?.trim() ?? ""
 
   if (!getWebhookSecret()) {
+    console.error("[tutor-learning-webhook] secret no configurado en el portal")
     return NextResponse.json(
       { ok: false, message: "Webhook secret no configurado en el portal." },
       { status: 503 },
@@ -173,6 +201,7 @@ export async function POST(request: Request) {
   }
 
   if (!isFreshTimestamp(timestamp) || !hasValidSignature(rawBody, timestamp, signature)) {
+    console.error("[tutor-learning-webhook] firma invalida o expirada", { timestamp })
     return NextResponse.json(
       { ok: false, message: "Firma del webhook invalida o expirada." },
       { status: 401 },
@@ -184,6 +213,7 @@ export async function POST(request: Request) {
   try {
     payload = JSON.parse(rawBody) as TutorLearningWebhookPayload
   } catch {
+    console.error("[tutor-learning-webhook] JSON invalido en el body")
     return NextResponse.json(
       { ok: false, message: "El webhook no contiene JSON valido." },
       { status: 400 },
