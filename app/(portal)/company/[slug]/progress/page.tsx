@@ -1,5 +1,6 @@
 import EmptyState from "@/components/shared/EmptyState"
 import { ExpandableChartCard } from "@/components/shared/ExpandableChartCard"
+import { CourseDepartmentFilter } from "@/components/company/CourseDepartmentFilter"
 import { DepartmentProgressChart } from "@/components/company/DepartmentProgressChart"
 import {
   LearningActivityChart,
@@ -7,9 +8,10 @@ import {
 } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
-import { BookOpen, TrendingDown, TrendingUp } from "lucide-react"
+import { AlertTriangle, BookOpen, TrendingDown, TrendingUp } from "lucide-react"
 import { companyPath } from "@/lib/company-routes"
 import { prisma } from "@/lib/prisma"
+import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -72,11 +74,23 @@ async function getWeeklyLearningActivity(companyId: string) {
   return { data, changeVsPreviousWeek }
 }
 
-export default async function CompanyProgressPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function CompanyProgressPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
   const companyId = session.user.empresa_id
+  const query = await searchParams
+  const selectedDepartment = readSearchParam(query, "departamento") ?? ""
+  const employeeDepartmentFilter =
+    selectedDepartment === "Sin departamento"
+      ? { department: null }
+      : selectedDepartment
+        ? { department: selectedDepartment }
+        : {}
 
   const [
     company,
@@ -96,25 +110,29 @@ export default async function CompanyProgressPage() {
       where: { company_id: companyId, active: true },
       orderBy: { created_at: "desc" },
       select: {
+        expiration_date: true,
         package: { select: { courses: { select: { wp_course_id: true, cover_url: true } } } },
       },
     }),
     prisma.employeeCourse.groupBy({
       by: ["wp_course_id"],
-      where: { employee: { company_id: companyId, active: true } },
+      where: { employee: { company_id: companyId, active: true, ...employeeDepartmentFilter } },
       _count: { _all: true },
       _avg: { progress_pct: true },
       _max: { course_name: true },
     }),
     prisma.employeeCourse.groupBy({
       by: ["wp_course_id"],
-      where: { employee: { company_id: companyId, active: true }, completed: true },
+      where: {
+        employee: { company_id: companyId, active: true, ...employeeDepartmentFilter },
+        completed: true,
+      },
       _count: { _all: true },
     }),
     prisma.employeeCourse.groupBy({
       by: ["wp_course_id"],
       where: {
-        employee: { company_id: companyId, active: true },
+        employee: { company_id: companyId, active: true, ...employeeDepartmentFilter },
         completed: false,
         progress_pct: { gt: 0 },
       },
@@ -132,6 +150,13 @@ export default async function CompanyProgressPage() {
   const thumbnailMap = new Map<number, string>(
     packageCourses.filter((c) => c.cover_url).map((c) => [c.wp_course_id, c.cover_url as string]),
   )
+
+  const daysUntilExpiration = activeCompanyPackage?.expiration_date
+    ? Math.ceil(
+        (activeCompanyPackage.expiration_date.getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24),
+      )
+    : null
 
   const completedByCourseMap = new Map(
     completedByCourse.map((r) => [r.wp_course_id, r._count._all]),
@@ -175,6 +200,8 @@ export default async function CompanyProgressPage() {
     }))
     .sort((a, b) => b.averageProgress - a.averageProgress)
 
+  const departmentOptions = [...departmentTotals.keys()].sort((a, b) => a.localeCompare(b, "es-MX"))
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -182,14 +209,50 @@ export default async function CompanyProgressPage() {
         description="Avance general y actividad de los cursos asignados"
       />
 
+      {daysUntilExpiration !== null ? (
+        <div
+          className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-sm ${
+            daysUntilExpiration < 15
+              ? "border-rose-200 bg-rose-50 text-rose-800"
+              : daysUntilExpiration < 30
+                ? "border-amber-200 bg-amber-50 text-amber-800"
+                : "border-portal-blue-soft bg-portal-blue-soft text-portal-blue-hover"
+          }`}
+        >
+          <AlertTriangle size={16} className="shrink-0" />
+          <p>
+            {daysUntilExpiration >= 0
+              ? `Quedan ${daysUntilExpiration} día${daysUntilExpiration !== 1 ? "s" : ""} para que venza tu paquete contratado.`
+              : `Tu paquete contratado venció hace ${Math.abs(daysUntilExpiration)} día${Math.abs(daysUntilExpiration) !== 1 ? "s" : ""}.`}
+          </p>
+        </div>
+      ) : null}
+
       <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Resumen por curso
-          <span className="ml-2 text-sm font-normal text-slate-400">{courseSummaries.length}</span>
-        </h2>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-slate-950">
+            Resumen por curso
+            <span className="ml-2 text-sm font-normal text-slate-400">
+              {courseSummaries.length}
+            </span>
+          </h2>
+          {departmentOptions.length > 0 ? (
+            <CourseDepartmentFilter
+              departments={departmentOptions}
+              selected={selectedDepartment}
+              basePath={companyPath(company.slug, "/progress")}
+            />
+          ) : null}
+        </div>
 
         {courseSummaries.length === 0 ? (
-          <EmptyState message="Aún no hay cursos sincronizados." />
+          <EmptyState
+            message={
+              selectedDepartment
+                ? `Sin progreso registrado para "${selectedDepartment}".`
+                : "Aún no hay cursos sincronizados."
+            }
+          />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {courseSummaries.map((course) => {
