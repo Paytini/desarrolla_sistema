@@ -1,9 +1,8 @@
-import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { ZipDownloadButton } from "@/components/company/ZipDownloadButton"
 import { SearchInput } from "@/components/shared/SearchInput"
 import { Pagination } from "@/components/shared/Pagination"
-import { Award, Clock, Users } from "lucide-react"
+import EmptyState from "@/components/shared/EmptyState"
 import { formatDateTime, getInitials } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import {
@@ -113,38 +112,12 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
       }).toString()}`
     : ""
 
-  const employeesWithCertificates = new Set(certificates.map((c) => c.employeeEmail)).size
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Constancias DC-3"
         description="Constancias de habilidades laborales para cumplimiento STPS"
       />
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KpiCard
-          label="Constancias emitidas"
-          value={String(certificates.length)}
-          sub="Total registradas"
-          icon={Award}
-          borderColor="orange"
-        />
-        <KpiCard
-          label="Empleados con constancia"
-          value={String(employeesWithCertificates)}
-          sub="Al menos una emitida"
-          icon={Users}
-          borderColor="charcoal"
-        />
-        <KpiCard
-          label="Pendientes"
-          value={String(pendingCertificates.length)}
-          sub="Cursos sin constancia aún"
-          icon={Clock}
-          borderColor="amber"
-        />
-      </div>
 
       <div className="space-y-5">
         <section className="rounded-lg bg-white p-5">
@@ -177,6 +150,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               <select
                 name="dept"
                 defaultValue={issuedDept}
+                aria-label="Filtrar por departamento"
                 className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
               >
                 <option value="">Todos los departamentos</option>
@@ -189,6 +163,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               <select
                 name="course"
                 defaultValue={issuedCourse}
+                aria-label="Filtrar por curso"
                 className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
               >
                 <option value="">Todos los cursos</option>
@@ -216,13 +191,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
           ) : null}
 
           {certificates.length === 0 ? (
-            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
-              Aún no hay constancias emitidas para los empleados activos.
-            </div>
+            <EmptyState message="Aún no hay constancias emitidas para los empleados activos." />
           ) : filteredCertificates.length === 0 ? (
-            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-400">
-              Sin resultados para estos filtros.
-            </div>
+            <EmptyState message="Sin resultados para estos filtros." />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] border-collapse text-sm">
@@ -302,7 +273,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
         </section>
 
         <section className="rounded-lg bg-white p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-[#1a1a1a]">
               Pendientes por aparecer
               <span className="ml-2 text-sm font-normal text-[#94a3b8]">
@@ -312,6 +283,11 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               </span>
             </h2>
           </div>
+          <p className="mb-4 text-xs text-slate-500">
+            Cursos que el empleado ya completó pero cuya constancia aún no ha sido generada o
+            sincronizada. No requieren acción de RH: aparecerán aquí como emitidos en cuanto se
+            procesen.
+          </p>
 
           {pendingCertificates.length > 0 ? (
             <form className="mb-4 flex flex-wrap items-center gap-2">
@@ -324,6 +300,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               <select
                 name="pdept"
                 defaultValue={pendingDept}
+                aria-label="Filtrar por departamento"
                 className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
               >
                 <option value="">Todos los departamentos</option>
@@ -351,13 +328,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
           ) : null}
 
           {pendingCertificates.length === 0 ? (
-            <div className="rounded-lg bg-gray-50 px-4 py-5 text-center text-sm text-gray-400">
-              Todo lo emitido ya está reflejado. No hay pendientes.
-            </div>
+            <EmptyState message="Todo lo emitido ya está reflejado. No hay pendientes." />
           ) : filteredPending.length === 0 ? (
-            <div className="rounded-lg bg-gray-50 px-4 py-5 text-center text-sm text-gray-400">
-              Sin resultados para estos filtros.
-            </div>
+            <EmptyState message="Sin resultados para estos filtros." />
           ) : (
             <div className="space-y-2">
               {pagedPending.map((item) => (
