@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import Button from "@mui/material/Button"
+import { X } from "lucide-react"
+import IconButton from "@mui/material/IconButton"
+import Tooltip from "@mui/material/Tooltip"
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import EyebrowLabel from "@/components/shared/EyebrowLabel"
 
@@ -22,15 +24,20 @@ export function CancelConsultingRequestButton({
 
   return (
     <>
-      <Button
-        variant="outlined"
-        color="error"
-        size="small"
-        onClick={() => setOpen(true)}
-        sx={{ height: 28, px: 1.5, fontSize: 12, flexShrink: 0 }}
-      >
-        Cancelar
-      </Button>
+      <Tooltip title="Cancelar">
+        <IconButton
+          onClick={() => setOpen(true)}
+          aria-label={`Cancelar consultoría de ${areaLabel}`}
+          size="small"
+          sx={{
+            color: "error.main",
+            "&:hover": { transform: "none", backgroundColor: "rgba(220, 38, 38, 0.08)" },
+            "&:active": { transform: "none" },
+          }}
+        >
+          <X size={18} strokeWidth={2} />
+        </IconButton>
+      </Tooltip>
 
       <ConfirmDialog
         open={open}

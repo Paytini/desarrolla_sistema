@@ -1,6 +1,7 @@
 import { BookOpen, Send } from "lucide-react"
 import { BackButton } from "@/components/shared/BackButton"
 import { CourseEmployeeTable } from "@/components/company/CourseEmployeeTable"
+import { InfoField } from "@/components/shared/InfoField"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusToast from "@/components/shared/StatusToast"
 import { SubmitButton } from "@/components/shared/SubmitButton"
@@ -14,15 +15,6 @@ import { sendCourseReminderAction } from "../actions"
 type PageProps = {
   params: Promise<{ slug: string; courseId: string }>
   searchParams?: Promise<Record<string, string | string[] | undefined>>
-}
-
-function InfoField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-0.5 truncate text-sm text-slate-800">{value}</p>
-    </div>
-  )
 }
 
 export default async function CourseProgressPage({ params, searchParams }: PageProps) {
