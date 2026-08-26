@@ -10,7 +10,7 @@ import StatusToast from "@/components/shared/StatusToast"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import { setCourseAssignmentsAction } from "./actions"
 
-const EMPLOYEES_PAGE_SIZE = 5
+const EMPLOYEES_PAGE_SIZE = 10
 
 type CourseInfo = {
   wp_course_id: number
@@ -122,9 +122,6 @@ export default function AssignmentBoard({
   )
   const isDirty =
     workingSet.size !== savedSet.size || [...workingSet].some((id) => !savedSet.has(id))
-  const pendingChangeCount =
-    [...workingSet].filter((id) => !savedSet.has(id)).length +
-    [...savedSet].filter((id) => !workingSet.has(id)).length
 
   const hasEmployeeFilters = Boolean(employeeSearch || department || position)
 
@@ -519,16 +516,7 @@ export default function AssignmentBoard({
           )}
 
           <div className="-mx-4 -mb-4 border-t border-[#f5f5f5] bg-white px-4 py-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-slate-500">
-                <span className="font-semibold text-slate-800">{workingSet.size}</span> colaborador
-                {workingSet.size !== 1 ? "es" : ""} en &laquo;{selectedCourse.course_name}&raquo;
-                <span className="ml-2 text-slate-400">
-                  {isDirty
-                    ? `· ${pendingChangeCount} cambio${pendingChangeCount !== 1 ? "s" : ""} pendiente${pendingChangeCount !== 1 ? "s" : ""}`
-                    : "· Sin cambios pendientes"}
-                </span>
-              </p>
+            <div className="flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={handleSave}
