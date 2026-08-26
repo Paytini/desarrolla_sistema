@@ -206,11 +206,11 @@ export default async function CourseProgressPage({ params }: PageProps) {
                     {formatDateTime(row.last_synced_at)}
                   </td>
                   <td className="rounded-r-lg py-3 pr-4 text-right">
-                    <Tooltip title="Ver perfil del empleado">
+                    <Tooltip title="Ver perfil">
                       <Link
                         href={companyPath(slug, `/employees/${row.employee.id}`)}
                         aria-label={`Ver perfil de ${row.employee.first_name} ${row.employee.last_name}`}
-                        className="inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
+                        className="inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
                       >
                         <Eye size={18} strokeWidth={2} />
                       </Link>
