@@ -5,6 +5,7 @@ import { CalendarClock } from "lucide-react"
 import { cancelConsultingRequestAction } from "./actions"
 import { CancelConsultingRequestButton } from "@/components/company/consulting/CancelConsultingRequestButton"
 import { ConsultingRequestDetailsButton } from "@/components/company/consulting/ConsultingRequestDetailsButton"
+import { ConsultingRequestsTable } from "@/components/shared/ConsultingRequestsTable"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Pagination } from "@/components/shared/Pagination"
 import { StatusLabel } from "@/components/shared/StatusLabel"
@@ -205,20 +206,16 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px] border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-[#f0f0f0] text-left text-xs font-semibold uppercase tracking-wide text-[#94a3b8]">
-                      <th className="px-3 py-2 font-semibold">Área</th>
-                      <th className="px-3 py-2 font-semibold">Fecha y hora</th>
-                      <th className="px-3 py-2 font-semibold">Contexto</th>
-                      <th className="px-3 py-2 font-semibold">Estado</th>
-                      <th className="px-3 py-2 font-semibold">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>{upcoming.items.map(renderUpcomingRow)}</tbody>
-                </table>
-              </div>
+              <ConsultingRequestsTable
+                columns={[
+                  { label: "Área" },
+                  { label: "Fecha y hora" },
+                  { label: "Contexto" },
+                  { label: "Estado" },
+                  { label: "Acciones" },
+                ]}
+                rows={upcoming.items.map(renderUpcomingRow)}
+              />
               <Pagination
                 currentPage={upcoming.currentPage}
                 totalPages={upcoming.totalPages}

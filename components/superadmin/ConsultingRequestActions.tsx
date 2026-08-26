@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Check, X } from "lucide-react"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Dialog from "@mui/material/Dialog"
@@ -8,8 +9,10 @@ import DialogActions from "@mui/material/DialogActions"
 import DialogContent from "@mui/material/DialogContent"
 import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
+import IconButton from "@mui/material/IconButton"
 import MenuItem from "@mui/material/MenuItem"
 import TextField from "@mui/material/TextField"
+import Tooltip from "@mui/material/Tooltip"
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import {
@@ -39,30 +42,35 @@ export function ConsultingRequestActions({
 
   return (
     <>
-      <div className="flex shrink-0 gap-1.5">
-        <Button
-          variant="contained"
-          size="small"
-          onClick={() => setDialog("confirm")}
-          sx={{
-            height: 28,
-            px: 1.5,
-            fontSize: 12,
-            boxShadow: "none",
-            "&:hover": { boxShadow: "none" },
-          }}
-        >
-          Confirmar
-        </Button>
-        <Button
-          variant="outlined"
-          color="error"
-          size="small"
-          onClick={() => setDialog("cancel")}
-          sx={{ height: 28, px: 1.5, fontSize: 12 }}
-        >
-          Cancelar
-        </Button>
+      <div className="flex shrink-0 gap-1">
+        <Tooltip title="Confirmar">
+          <IconButton
+            onClick={() => setDialog("confirm")}
+            aria-label={`Confirmar consultoría de ${areaLabel}`}
+            size="small"
+            sx={{
+              color: "success.main",
+              "&:hover": { transform: "none", backgroundColor: "rgba(22, 163, 74, 0.08)" },
+              "&:active": { transform: "none" },
+            }}
+          >
+            <Check size={18} strokeWidth={2} />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Cancelar">
+          <IconButton
+            onClick={() => setDialog("cancel")}
+            aria-label={`Cancelar consultoría de ${areaLabel}`}
+            size="small"
+            sx={{
+              color: "error.main",
+              "&:hover": { transform: "none", backgroundColor: "rgba(220, 38, 38, 0.08)" },
+              "&:active": { transform: "none" },
+            }}
+          >
+            <X size={18} strokeWidth={2} />
+          </IconButton>
+        </Tooltip>
       </div>
 
       <Dialog

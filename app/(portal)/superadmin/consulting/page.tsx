@@ -4,6 +4,8 @@ import { redirect } from "next/navigation"
 import Stack from "@mui/material/Stack"
 import { ConsultingFilters } from "@/components/superadmin/ConsultingFilters"
 import { ConsultingRequestActions } from "@/components/superadmin/ConsultingRequestActions"
+import { ConsultingRequestDetailsButton } from "@/components/company/consulting/ConsultingRequestDetailsButton"
+import { ConsultingRequestsTable } from "@/components/shared/ConsultingRequestsTable"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Pagination } from "@/components/shared/Pagination"
@@ -87,7 +89,66 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
     }
   }
 
-  function renderRow(request: RequestWithCompany) {
+  function renderPendingRow(request: RequestWithCompany) {
+    const areaOption = getConsultingArea(request.area)
+    const Icon = areaOption?.icon ?? CalendarClock
+    const areaLabel = areaOption?.label ?? request.area
+    const contactMethodLabel =
+      CONSULTING_CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method
+
+    return (
+      <tr key={request.id} className="border-b border-[#f5f5f5] transition hover:bg-gray-50">
+        <td className="px-3 py-3 text-[#1a1a1a]">{request.company.name}</td>
+        <td className="px-3 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-portal-blue">
+              <Icon size={16} />
+            </div>
+            <span className="min-w-0 truncate font-medium text-[#1a1a1a]">{areaLabel}</span>
+          </div>
+        </td>
+        <td className="px-3 py-3 text-[#64748b]">
+          {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
+        </td>
+        <td className="max-w-xs px-3 py-3 text-[#64748b]">
+          <span className="block truncate" title={request.context}>
+            {request.context}
+          </span>
+        </td>
+        <td className="px-3 py-3">
+          <StatusLabel
+            status={request.status}
+            variantMap={CONSULTING_STATUS_VARIANT}
+            labelMap={CONSULTING_STATUS_LABEL}
+          />
+        </td>
+        <td className="px-3 py-3">
+          <div className="flex gap-1">
+            <ConsultingRequestDetailsButton
+              areaLabel={areaLabel}
+              dateTimeLabel={formatConsultingDateTime(
+                toDateKey(request.preferred_date),
+                request.preferred_time,
+              )}
+              context={request.context}
+              contactPhone={request.contact_phone}
+              contactMethodLabel={contactMethodLabel}
+              status={request.status}
+            />
+            <ConsultingRequestActions
+              requestId={request.id}
+              areaLabel={areaLabel}
+              companyName={request.company.name}
+              preferredDate={toDateKey(request.preferred_date)}
+              preferredTime={request.preferred_time}
+            />
+          </div>
+        </td>
+      </tr>
+    )
+  }
+
+  function renderHistoryRow(request: RequestWithCompany) {
     const areaOption = getConsultingArea(request.area)
     const Icon = areaOption?.icon ?? CalendarClock
 
@@ -117,15 +178,6 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
           variantMap={CONSULTING_STATUS_VARIANT}
           labelMap={CONSULTING_STATUS_LABEL}
         />
-        {request.status === "PENDING" ? (
-          <ConsultingRequestActions
-            requestId={request.id}
-            areaLabel={areaOption?.label ?? request.area}
-            companyName={request.company.name}
-            preferredDate={toDateKey(request.preferred_date)}
-            preferredTime={request.preferred_time}
-          />
-        ) : null}
       </div>
     )
   }
@@ -162,7 +214,17 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
           </div>
         ) : (
           <>
-            <div className="space-y-2">{pending.items.map(renderRow)}</div>
+            <ConsultingRequestsTable
+              columns={[
+                { label: "Empresa" },
+                { label: "Área" },
+                { label: "Fecha y hora" },
+                { label: "Contexto" },
+                { label: "Estado" },
+                { label: "Acciones" },
+              ]}
+              rows={pending.items.map(renderPendingRow)}
+            />
             <Pagination
               currentPage={pending.currentPage}
               totalPages={pending.totalPages}
@@ -184,7 +246,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
           </div>
         ) : (
           <>
-            <div className="space-y-2">{resolved.items.map(renderRow)}</div>
+            <div className="space-y-2">{resolved.items.map(renderHistoryRow)}</div>
             <Pagination
               currentPage={resolved.currentPage}
               totalPages={resolved.totalPages}
