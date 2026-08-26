@@ -1,11 +1,10 @@
-import KpiCard from "@/components/shared/KpiCard"
+import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
 import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import { getSession } from "@/lib/session"
-import { Award, Clock } from "lucide-react"
 import { redirect } from "next/navigation"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
@@ -32,23 +31,6 @@ export default async function EmployeeCertificatesPage() {
         title="Mis constancias"
         description="Evidencia DC-3 oficial STPS de tus cursos completados"
       />
-
-      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
-        <KpiCard
-          label="Emitidas"
-          value={String(certificates.length)}
-          sub="Listas para descarga"
-          icon={Award}
-          borderColor="orange"
-        />
-        <KpiCard
-          label="Pendientes"
-          value={String(pendingCertificates.length)}
-          sub="Cursos sin constancia aún"
-          icon={Clock}
-          borderColor="amber"
-        />
-      </Box>
 
       <EmployeeLearningRefresh autoRefresh pollIntervalMs={60_000} />
 
@@ -118,7 +100,8 @@ export default async function EmployeeCertificatesPage() {
                   fontSize: 11,
                   fontWeight: 600,
                   color: "#1a1a1a",
-                  "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0" },
+                  "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0", transform: "none" },
+                  "&:active": { transform: "none" },
                 }}
               >
                 Descargar ZIP
@@ -127,20 +110,7 @@ export default async function EmployeeCertificatesPage() {
           </Box>
 
           {certificates.length === 0 ? (
-            <Box
-              sx={{
-                borderRadius: 2,
-                border: "1px dashed #f0f0f0",
-                bgcolor: "#f8fafc",
-                px: 2,
-                py: 4,
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                Aún no hay constancias emitidas para tu perfil.
-              </Typography>
-            </Box>
+            <EmptyState message="Aún no hay constancias emitidas para tu perfil." />
           ) : (
             <Box sx={{ display: "grid", gap: 1 }}>
               {certificates.map((certificate) => (
@@ -213,7 +183,8 @@ export default async function EmployeeCertificatesPage() {
                           fontSize: 11,
                           fontWeight: 600,
                           color: "#1a1a1a",
-                          "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0" },
+                          "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0", transform: "none" },
+                          "&:active": { transform: "none" },
                         }}
                       >
                         Ver Diploma
@@ -233,7 +204,8 @@ export default async function EmployeeCertificatesPage() {
                         fontWeight: 600,
                         bgcolor: "var(--portal-blue)",
                         color: "#fff",
-                        "&:hover": { bgcolor: "var(--portal-blue-hover)" },
+                        "&:hover": { bgcolor: "var(--portal-blue-hover)", transform: "none" },
+                        "&:active": { transform: "none" },
                       }}
                     >
                       Descargar DC-3
@@ -255,12 +227,19 @@ export default async function EmployeeCertificatesPage() {
               p: 2.5,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mb: 2 }}>
-              <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
-                Pendientes por aparecer
-              </Typography>
-              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
-                {pendingCertificates.length}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
+                  Pendientes por aparecer
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
+                  {pendingCertificates.length}
+                </Typography>
+              </Box>
+              <Typography sx={{ mt: 0.5, fontSize: 11, color: "#94a3b8" }}>
+                Cursos que ya completaste, pero cuya constancia aún no ha sido generada o
+                sincronizada. No necesitas hacer nada: aparecerá aquí como disponible en cuanto se
+                procese.
               </Typography>
             </Box>
             <Box sx={{ display: "grid", gap: 1 }}>
@@ -278,23 +257,6 @@ export default async function EmployeeCertificatesPage() {
                     py: 1.5,
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 36,
-                      height: 36,
-                      flexShrink: 0,
-                      borderRadius: 2,
-                      bgcolor: "#fef3c7",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "#b45309",
-                    }}
-                  >
-                    {course.course_name.charAt(0).toUpperCase()}
-                  </Box>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
                       sx={{

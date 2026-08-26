@@ -5,6 +5,7 @@ const TUTOR_WEBHOOK_STATUS_KEY = "tutor_learning_webhook"
 const HEARTBEAT_SAMPLE_INTERVAL_MS = 30_000
 
 type StoredWebhookStatusPayload = {
+  ok?: boolean | null
   event_type?: string | null
   occurred_at?: string | null
   received_at?: string | null
@@ -14,6 +15,8 @@ type StoredWebhookStatusPayload = {
   source_hash?: string | null
   courses_updated?: number | null
   certificates_updated?: number | null
+  code?: string | null
+  error_message?: string | null
 }
 
 export async function recordTutorLearningWebhookEvent(payload: StoredWebhookStatusPayload) {
@@ -35,6 +38,18 @@ export async function recordTutorLearningWebhookEvent(payload: StoredWebhookStat
       key: TUTOR_WEBHOOK_STATUS_KEY,
       payload,
     },
+  })
+}
+
+export async function recordTutorLearningWebhookFailure(payload: StoredWebhookStatusPayload) {
+  const failurePayload = { ...payload, ok: false }
+
+  console.error("[tutor-learning-webhook]", failurePayload)
+
+  await prisma.integrationState.upsert({
+    where: { key: TUTOR_WEBHOOK_STATUS_KEY },
+    update: { payload: failurePayload },
+    create: { key: TUTOR_WEBHOOK_STATUS_KEY, payload: failurePayload },
   })
 }
 

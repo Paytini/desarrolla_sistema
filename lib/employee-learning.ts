@@ -82,11 +82,11 @@ function parseBridgeDate(value?: string | null) {
 
 function deriveCertificatesFromCourses(courses: BridgeStudentCourse[]): BridgeStudentCertificate[] {
   return courses
-    .filter((course) => course.completed && course.certificate_url)
+    .filter((course) => course.completed)
     .map((course) => ({
       wp_course_id: course.wp_course_id,
       title: course.title,
-      certificate_url: course.certificate_url,
+      certificate_url: course.certificate_url ?? null,
       completed_at: course.completed_at ?? null,
     }))
 }
@@ -259,7 +259,7 @@ async function upsertEmployeeCertificatesFromBridge(
     existingCertificates.map((certificate) => [certificate.wp_course_id, certificate]),
   )
 
-  const newCertificates: { courseName: string; certificateUrl: string }[] = []
+  const newCertificatesToNotify: { courseName: string; certificateUrl: string }[] = []
 
   const operations: Array<
     ReturnType<typeof prisma.certificate.update> | ReturnType<typeof prisma.certificate.create>
@@ -285,12 +285,10 @@ async function upsertEmployeeCertificatesFromBridge(
       continue
     }
 
-    if (!certificateUrl) {
-      continue
-    }
-
     const courseName = decodeHtmlEntities(certificate.title)
-    newCertificates.push({ courseName, certificateUrl })
+    if (certificateUrl) {
+      newCertificatesToNotify.push({ courseName, certificateUrl })
+    }
 
     const [{ nextval }] = await prisma.$queryRaw<
       { nextval: bigint }[]
@@ -319,8 +317,8 @@ async function upsertEmployeeCertificatesFromBridge(
   if (operations.length > 0) {
     try {
       await prisma.$transaction(operations)
-      if (newCertificates.length > 0) {
-        await notifyEmployeeNewCertificates(employeeId, newCertificates).catch(() => {})
+      if (newCertificatesToNotify.length > 0) {
+        await notifyEmployeeNewCertificates(employeeId, newCertificatesToNotify).catch(() => {})
       }
     } catch (err) {
       if (err instanceof Error && (err as { code?: string }).code !== "P2002") {
