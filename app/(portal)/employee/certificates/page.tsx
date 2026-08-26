@@ -1,3 +1,4 @@
+import EmptyState from "@/components/shared/EmptyState"
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefresh"
@@ -127,20 +128,7 @@ export default async function EmployeeCertificatesPage() {
           </Box>
 
           {certificates.length === 0 ? (
-            <Box
-              sx={{
-                borderRadius: 2,
-                border: "1px dashed #f0f0f0",
-                bgcolor: "#f8fafc",
-                px: 2,
-                py: 4,
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                Aún no hay constancias emitidas para tu perfil.
-              </Typography>
-            </Box>
+            <EmptyState message="Aún no hay constancias emitidas para tu perfil." />
           ) : (
             <Box sx={{ display: "grid", gap: 1 }}>
               {certificates.map((certificate) => (
@@ -255,12 +243,19 @@ export default async function EmployeeCertificatesPage() {
               p: 2.5,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mb: 2 }}>
-              <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
-                Pendientes por aparecer
-              </Typography>
-              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
-                {pendingCertificates.length}
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
+                  Pendientes por aparecer
+                </Typography>
+                <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
+                  {pendingCertificates.length}
+                </Typography>
+              </Box>
+              <Typography sx={{ mt: 0.5, fontSize: 11, color: "#94a3b8" }}>
+                Cursos que ya completaste, pero cuya constancia aún no ha sido generada o
+                sincronizada. No necesitas hacer nada: aparecerá aquí como disponible en cuanto se
+                procese.
               </Typography>
             </Box>
             <Box sx={{ display: "grid", gap: 1 }}>

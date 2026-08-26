@@ -1,3 +1,4 @@
+import EmptyState from "@/components/shared/EmptyState"
 import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { RingChart } from "@/components/shared/RingChart"
@@ -14,7 +15,7 @@ import {
   isWordPressBridgeConfigured,
 } from "@/lib/wordpress-bridge"
 import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
-import { Award, BookOpen, CheckCircle, Clock } from "lucide-react"
+import { Award, BookOpen, CheckCircle, Clock, ClipboardList } from "lucide-react"
 import { redirect } from "next/navigation"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
@@ -233,20 +234,7 @@ export default async function EmployeeCourses() {
       ) : null}
 
       {courses.length === 0 ? (
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: 2,
-            border: "1px dashed",
-            borderColor: "divider",
-            py: 6,
-            textAlign: "center",
-          }}
-        >
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Tu ruta de aprendizaje está siendo preparada.
-          </Typography>
-        </Paper>
+        <EmptyState message="Tu ruta de aprendizaje está siendo preparada." />
       ) : (
         <Box
           sx={{
@@ -290,7 +278,7 @@ export default async function EmployeeCourses() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={thumbnail}
-                      alt=""
+                      alt={course.course_name}
                       style={{ height: 144, width: "100%", objectFit: "cover", display: "block" }}
                     />
                     {duracionLabel && (
@@ -398,13 +386,30 @@ export default async function EmployeeCourses() {
                   {(pkgMeta?.lesson_count || hasDc3) && (
                     <Box sx={{ mb: 1, display: "flex", gap: 1.5 }}>
                       {pkgMeta?.lesson_count && (
-                        <Typography sx={{ fontSize: "11px", color: "#94a3b8" }}>
-                          📋 {pkgMeta.lesson_count} lecciones
+                        <Typography
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            fontSize: "11px",
+                            color: "#94a3b8",
+                          }}
+                        >
+                          <ClipboardList size={12} /> {pkgMeta.lesson_count} lecciones
                         </Typography>
                       )}
                       {hasDc3 && (
-                        <Typography sx={{ fontSize: "11px", fontWeight: 600, color: "var(--portal-blue)" }}>
-                          🏅 DC-3
+                        <Typography
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            color: "var(--portal-blue)",
+                          }}
+                        >
+                          <Award size={12} /> DC-3
                         </Typography>
                       )}
                     </Box>
