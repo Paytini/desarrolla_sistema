@@ -1,6 +1,5 @@
 "use client"
 
-import { TrendingDown, TrendingUp } from "lucide-react"
 import {
   Area,
   AreaChart,
@@ -18,7 +17,7 @@ export type LearningActivityPoint = {
 
 type LearningActivityChartProps = {
   data: LearningActivityPoint[]
-  changeVsPreviousWeek: number | null
+  height?: number
 }
 
 type ActivityTooltipProps = {
@@ -40,76 +39,43 @@ function ActivityTooltip({ active, payload, label }: ActivityTooltipProps) {
   )
 }
 
-export function LearningActivityChart({ data, changeVsPreviousWeek }: LearningActivityChartProps) {
-  const weekTotal = data.reduce((sum, point) => sum + point.completions, 0)
-  const trendSummary =
-    changeVsPreviousWeek === null
-      ? ""
-      : ` ${changeVsPreviousWeek >= 0 ? "Un aumento" : "Una disminución"} del ${Math.abs(changeVsPreviousWeek)}% respecto a la semana anterior.`
-  const chartSummary = `Gráfica de finalizaciones de cursos por día en los últimos 7 días. Total de la semana: ${weekTotal} finalizacion${weekTotal === 1 ? "" : "es"}.${trendSummary}`
-
+export function LearningActivityChart({ data, height = 224 }: LearningActivityChartProps) {
   return (
-    <div className="rounded-lg bg-white p-5">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
-            Actividad semanal
-          </p>
-          <h2 className="text-base font-semibold text-slate-950">
-            Finalizaciones de cursos por día
-          </h2>
-        </div>
-        {changeVsPreviousWeek !== null ? (
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-              changeVsPreviousWeek >= 0
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-rose-50 text-rose-700"
-            }`}
-          >
-            {changeVsPreviousWeek >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            {changeVsPreviousWeek >= 0 ? "+" : ""}
-            {changeVsPreviousWeek}% vs semana previa
-          </span>
-        ) : null}
-      </div>
-
-      <div className="h-56 w-full" role="img" aria-label={chartSummary}>
-        <ResponsiveContainer width="100%" height="100%" aria-hidden="true">
-          <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-            <defs>
-              <linearGradient id="learningActivityFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--portal-blue)" stopOpacity={0.28} />
-                <stop offset="100%" stopColor="var(--portal-blue)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} stroke="var(--portal-border)" strokeDasharray="4 4" />
-            <XAxis
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: "#94a3b8" }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: "#94a3b8" }}
-              allowDecimals={false}
-              width={28}
-            />
-            <Tooltip content={<ActivityTooltip />} cursor={{ stroke: "#CBD5E1", strokeWidth: 1 }} />
-            <Area
-              type="monotone"
-              dataKey="completions"
-              stroke="var(--portal-blue)"
-              strokeWidth={2}
-              fill="url(#learningActivityFill)"
-              dot={{ r: 3, fill: "var(--portal-blue)", strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: "var(--portal-blue)", strokeWidth: 2, stroke: "#FFFFFF" }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+    <div className="w-full" style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+          <defs>
+            <linearGradient id="learningActivityFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--portal-blue)" stopOpacity={0.28} />
+              <stop offset="100%" stopColor="var(--portal-blue)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid vertical={false} stroke="var(--portal-border)" strokeDasharray="4 4" />
+          <XAxis
+            dataKey="label"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#94a3b8" }}
+          />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12, fill: "#94a3b8" }}
+            allowDecimals={false}
+            width={28}
+          />
+          <Tooltip content={<ActivityTooltip />} cursor={{ stroke: "#CBD5E1", strokeWidth: 1 }} />
+          <Area
+            type="monotone"
+            dataKey="completions"
+            stroke="var(--portal-blue)"
+            strokeWidth={2}
+            fill="url(#learningActivityFill)"
+            dot={{ r: 3, fill: "var(--portal-blue)", strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: "var(--portal-blue)", strokeWidth: 2, stroke: "#FFFFFF" }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   )
 }

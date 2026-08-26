@@ -1,4 +1,5 @@
 import EmptyState from "@/components/shared/EmptyState"
+import { ExpandableChartCard } from "@/components/shared/ExpandableChartCard"
 import { DepartmentProgressChart } from "@/components/company/DepartmentProgressChart"
 import {
   LearningActivityChart,
@@ -6,7 +7,7 @@ import {
 } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
-import { BookOpen } from "lucide-react"
+import { BookOpen, TrendingDown, TrendingUp } from "lucide-react"
 import { companyPath } from "@/lib/company-routes"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
@@ -235,25 +236,51 @@ export default async function CompanyProgressPage() {
         )}
       </section>
 
-      <LearningActivityChart
-        data={learningActivityData}
-        changeVsPreviousWeek={changeVsPreviousWeek}
-      />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ExpandableChartCard
+          title="Finalizaciones de cursos por día"
+          compactHeight={224}
+          expandedHeight={420}
+          extra={
+            changeVsPreviousWeek !== null ? (
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+                  changeVsPreviousWeek >= 0
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-rose-50 text-rose-700"
+                }`}
+              >
+                {changeVsPreviousWeek >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                {changeVsPreviousWeek >= 0 ? "+" : ""}
+                {changeVsPreviousWeek}% vs semana previa
+              </span>
+            ) : null
+          }
+          renderChart={(height) => (
+            <LearningActivityChart data={learningActivityData} height={height} />
+          )}
+        />
 
-      <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Avance por departamento
-          <span className="ml-2 text-sm font-normal text-slate-400">
-            {departmentSummaries.length}
-          </span>
-        </h2>
-
-        {departmentSummaries.length === 0 ? (
-          <EmptyState message="Aún no hay progreso registrado por departamento." />
-        ) : (
-          <DepartmentProgressChart data={departmentSummaries} />
-        )}
-      </section>
+        <ExpandableChartCard
+          title={
+            <>
+              Avance por departamento
+              <span className="ml-2 text-sm font-normal text-slate-400">
+                {departmentSummaries.length}
+              </span>
+            </>
+          }
+          compactHeight={256}
+          expandedHeight={420}
+          renderChart={(height) =>
+            departmentSummaries.length === 0 ? (
+              <EmptyState message="Aún no hay progreso registrado por departamento." />
+            ) : (
+              <DepartmentProgressChart data={departmentSummaries} height={height} />
+            )
+          }
+        />
+      </div>
     </div>
   )
 }

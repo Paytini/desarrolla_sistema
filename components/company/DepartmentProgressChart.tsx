@@ -9,6 +9,7 @@ export type DepartmentProgressPoint = {
 
 type DepartmentProgressChartProps = {
   data: DepartmentProgressPoint[]
+  height?: number
 }
 
 type DepartmentTooltipProps = {
@@ -30,9 +31,9 @@ function DepartmentTooltip({ active, payload, label }: DepartmentTooltipProps) {
   )
 }
 
-export function DepartmentProgressChart({ data }: DepartmentProgressChartProps) {
+export function DepartmentProgressChart({ data, height = 256 }: DepartmentProgressChartProps) {
   return (
-    <div className="h-64 w-full">
+    <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 24, left: -16 }}>
           <CartesianGrid vertical={false} stroke="var(--portal-border)" strokeDasharray="4 4" />
