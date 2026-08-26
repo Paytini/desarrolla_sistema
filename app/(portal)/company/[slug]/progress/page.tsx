@@ -239,8 +239,6 @@ export default async function CompanyProgressPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <ExpandableChartCard
           title="Finalizaciones de cursos por día"
-          compactHeight={224}
-          expandedHeight={420}
           extra={
             changeVsPreviousWeek !== null ? (
               <span
@@ -256,9 +254,8 @@ export default async function CompanyProgressPage() {
               </span>
             ) : null
           }
-          renderChart={(height) => (
-            <LearningActivityChart data={learningActivityData} height={height} />
-          )}
+          compactChart={<LearningActivityChart data={learningActivityData} height={224} />}
+          expandedChart={<LearningActivityChart data={learningActivityData} height={420} />}
         />
 
         <ExpandableChartCard
@@ -270,13 +267,18 @@ export default async function CompanyProgressPage() {
               </span>
             </>
           }
-          compactHeight={256}
-          expandedHeight={420}
-          renderChart={(height) =>
+          compactChart={
             departmentSummaries.length === 0 ? (
               <EmptyState message="Aún no hay progreso registrado por departamento." />
             ) : (
-              <DepartmentProgressChart data={departmentSummaries} height={height} />
+              <DepartmentProgressChart data={departmentSummaries} height={256} />
+            )
+          }
+          expandedChart={
+            departmentSummaries.length === 0 ? (
+              <EmptyState message="Aún no hay progreso registrado por departamento." />
+            ) : (
+              <DepartmentProgressChart data={departmentSummaries} height={420} />
             )
           }
         />

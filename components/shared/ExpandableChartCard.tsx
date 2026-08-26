@@ -9,17 +9,15 @@ import Tooltip from "@mui/material/Tooltip"
 type ExpandableChartCardProps = {
   title: ReactNode
   extra?: ReactNode
-  compactHeight: number
-  expandedHeight: number
-  renderChart: (height: number) => ReactNode
+  compactChart: ReactNode
+  expandedChart: ReactNode
 }
 
 export function ExpandableChartCard({
   title,
   extra,
-  compactHeight,
-  expandedHeight,
-  renderChart,
+  compactChart,
+  expandedChart,
 }: ExpandableChartCardProps) {
   const [expanded, setExpanded] = useState(false)
 
@@ -41,7 +39,7 @@ export function ExpandableChartCard({
         </div>
       </div>
 
-      {renderChart(compactHeight)}
+      {compactChart}
 
       <Dialog open={expanded} onClose={() => setExpanded(false)} maxWidth="lg" fullWidth>
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -50,7 +48,7 @@ export function ExpandableChartCard({
             <X size={18} />
           </IconButton>
         </div>
-        <div className="p-6">{renderChart(expandedHeight)}</div>
+        <div className="p-6">{expandedChart}</div>
       </Dialog>
     </div>
   )
