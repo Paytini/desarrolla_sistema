@@ -1,5 +1,4 @@
 import EmptyState from "@/components/shared/EmptyState"
-import KpiCard from "@/components/shared/KpiCard"
 import { DepartmentProgressChart } from "@/components/company/DepartmentProgressChart"
 import {
   LearningActivityChart,
@@ -7,7 +6,7 @@ import {
 } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
-import { BarChart3, BookOpen, CheckCircle } from "lucide-react"
+import { BookOpen } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -80,9 +79,6 @@ export default async function CompanyProgressPage() {
     company,
     { data: learningActivityData, changeVsPreviousWeek },
     activeCompanyPackage,
-    courseAgg,
-    completedCourses,
-    startedCourses,
     assignedByCourse,
     completedByCourse,
     inProgressByCourse,
@@ -99,16 +95,6 @@ export default async function CompanyProgressPage() {
       select: {
         package: { select: { courses: { select: { wp_course_id: true, cover_url: true } } } },
       },
-    }),
-    prisma.employeeCourse.aggregate({
-      where: { employee: { company_id: companyId, active: true } },
-      _avg: { progress_pct: true },
-    }),
-    prisma.employeeCourse.count({
-      where: { employee: { company_id: companyId, active: true }, completed: true },
-    }),
-    prisma.employeeCourse.count({
-      where: { employee: { company_id: companyId, active: true }, progress_pct: { gt: 0 } },
     }),
     prisma.employeeCourse.groupBy({
       by: ["wp_course_id"],
@@ -143,8 +129,6 @@ export default async function CompanyProgressPage() {
   const thumbnailMap = new Map<number, string>(
     packageCourses.filter((c) => c.cover_url).map((c) => [c.wp_course_id, c.cover_url as string]),
   )
-
-  const averageProgress = Math.round(courseAgg._avg.progress_pct ?? 0)
 
   const completedByCourseMap = new Map(
     completedByCourse.map((r) => [r.wp_course_id, r._count._all]),
@@ -194,50 +178,6 @@ export default async function CompanyProgressPage() {
         title="Progreso"
         description="Avance general y actividad de los cursos asignados"
       />
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <KpiCard
-          label="Avance promedio"
-          value={`${averageProgress}%`}
-          sub="Todos los cursos"
-          icon={BarChart3}
-          borderColor="orange"
-        />
-        <KpiCard
-          label="Cursos iniciados"
-          value={String(startedCourses)}
-          sub="Con actividad real"
-          icon={BookOpen}
-          borderColor="charcoal"
-        />
-        <KpiCard
-          label="Cursos completados"
-          value={String(completedCourses)}
-          sub="Cerrados por empleados"
-          icon={CheckCircle}
-          borderColor="emerald"
-        />
-      </div>
-
-      <LearningActivityChart
-        data={learningActivityData}
-        changeVsPreviousWeek={changeVsPreviousWeek}
-      />
-
-      <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Avance por departamento
-          <span className="ml-2 text-sm font-normal text-slate-400">
-            {departmentSummaries.length}
-          </span>
-        </h2>
-
-        {departmentSummaries.length === 0 ? (
-          <EmptyState message="Aún no hay progreso registrado por departamento." />
-        ) : (
-          <DepartmentProgressChart data={departmentSummaries} />
-        )}
-      </section>
 
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-slate-950">
@@ -289,6 +229,26 @@ export default async function CompanyProgressPage() {
               )
             })}
           </div>
+        )}
+      </section>
+
+      <LearningActivityChart
+        data={learningActivityData}
+        changeVsPreviousWeek={changeVsPreviousWeek}
+      />
+
+      <section className="rounded-lg bg-white p-5">
+        <h2 className="mb-4 text-base font-semibold text-slate-950">
+          Avance por departamento
+          <span className="ml-2 text-sm font-normal text-slate-400">
+            {departmentSummaries.length}
+          </span>
+        </h2>
+
+        {departmentSummaries.length === 0 ? (
+          <EmptyState message="Aún no hay progreso registrado por departamento." />
+        ) : (
+          <DepartmentProgressChart data={departmentSummaries} />
         )}
       </section>
     </div>
