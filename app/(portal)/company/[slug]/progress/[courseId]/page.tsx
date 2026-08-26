@@ -1,4 +1,5 @@
 import { BookOpen } from "lucide-react"
+import Tooltip from "@mui/material/Tooltip"
 import { BackButton } from "@/components/shared/BackButton"
 import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -111,7 +112,7 @@ export default async function CourseProgressPage({ params }: PageProps) {
           <div className="overflow-hidden rounded-lg">
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={coverUrl} alt="" className="block w-full object-contain" />
+              <img src={coverUrl} alt={courseName} className="block w-full object-contain" />
             ) : (
               <div className="flex h-48 items-center justify-center bg-portal-blue-soft text-portal-blue md:min-h-[220px]">
                 <BookOpen size={48} />
@@ -119,22 +120,34 @@ export default async function CourseProgressPage({ params }: PageProps) {
             )}
           </div>
 
-          <div className="flex flex-col justify-center gap-4">
-            <h2 className="text-lg font-semibold text-slate-950">{courseName}</h2>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <InfoField label="Asignados" value={String(assigned)} />
-              <InfoField label="Completados" value={String(completed)} />
-              <InfoField label="Avance promedio" value={`${averageProgress}%`} />
-              <InfoField
-                label="Duración"
-                value={dc3Metadata?.duration_hours ? `${dc3Metadata.duration_hours} h` : "—"}
-              />
-              <InfoField label="Área temática" value={dc3Metadata?.subject_area_name ?? "—"} />
-              <InfoField
-                label="Agente capacitador"
-                value={dc3Metadata?.training_agent_name ?? "—"}
-              />
-              <InfoField label="Instructor" value={dc3Metadata?.instructor_name ?? "—"} />
+          <div className="flex flex-col justify-center gap-5">
+            <div>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Progreso
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                <InfoField label="Asignados" value={String(assigned)} />
+                <InfoField label="Completados" value={String(completed)} />
+                <InfoField label="Avance promedio" value={`${averageProgress}%`} />
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 pt-4">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Información DC-3
+              </p>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <InfoField
+                  label="Duración"
+                  value={dc3Metadata?.duration_hours ? `${dc3Metadata.duration_hours} h` : "—"}
+                />
+                <InfoField label="Área temática" value={dc3Metadata?.subject_area_name ?? "—"} />
+                <InfoField
+                  label="Agente capacitador"
+                  value={dc3Metadata?.training_agent_name ?? "—"}
+                />
+                <InfoField label="Instructor" value={dc3Metadata?.instructor_name ?? "—"} />
+              </div>
             </div>
           </div>
         </div>
@@ -184,11 +197,23 @@ export default async function CourseProgressPage({ params }: PageProps) {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <StatusLabel
-                      status={status}
-                      variantMap={ROW_STATUS_VARIANT}
-                      labelMap={ROW_STATUS_LABEL}
-                    />
+                    {status === "ERROR" && row.access_error ? (
+                      <Tooltip title={row.access_error}>
+                        <span>
+                          <StatusLabel
+                            status={status}
+                            variantMap={ROW_STATUS_VARIANT}
+                            labelMap={ROW_STATUS_LABEL}
+                          />
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      <StatusLabel
+                        status={status}
+                        variantMap={ROW_STATUS_VARIANT}
+                        labelMap={ROW_STATUS_LABEL}
+                      />
+                    )}
                   </td>
                   <td className="rounded-r-lg px-4 py-3 text-sm text-slate-500">
                     {formatDateTime(row.last_synced_at)}
