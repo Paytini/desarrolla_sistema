@@ -114,7 +114,11 @@ export function ConsultingRequestActions({
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button variant="outlined" onClick={() => setDialog(null)}>
+          <Button
+            variant="outlined"
+            onClick={() => setDialog(null)}
+            sx={{ "&:hover": { transform: "none" }, "&:active": { transform: "none" } }}
+          >
             Volver
           </Button>
           <form action={confirmConsultingRequestAction}>
@@ -123,7 +127,11 @@ export function ConsultingRequestActions({
             <input type="hidden" name="preferred_time" value={time} />
             <SubmitButton
               variant="contained"
-              sx={{ boxShadow: "none", "&:hover": { boxShadow: "none" } }}
+              sx={{
+                boxShadow: "none",
+                "&:hover": { boxShadow: "none", transform: "none" },
+                "&:active": { transform: "none" },
+              }}
             >
               Sí, confirmar
             </SubmitButton>
