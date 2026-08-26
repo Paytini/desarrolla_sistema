@@ -1,7 +1,5 @@
 import EmptyState from "@/components/shared/EmptyState"
-import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { RingChart } from "@/components/shared/RingChart"
 import StatusBadge from "@/components/shared/StatusBadge"
 import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
@@ -15,7 +13,7 @@ import {
   isWordPressBridgeConfigured,
 } from "@/lib/wordpress-bridge"
 import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
-import { Award, BookOpen, CheckCircle, Clock, ClipboardList } from "lucide-react"
+import { Award, ClipboardList } from "lucide-react"
 import { redirect } from "next/navigation"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
@@ -126,11 +124,6 @@ export default async function EmployeeCourses() {
   }
 
   const completedCourses = courses.filter((c) => c.completed).length
-  const coursesInProgress = courses.filter((c) => !c.completed && c.progress_pct > 0).length
-  const pendingCourses = courses.filter((c) => c.progress_pct === 0).length
-  const averageProgress = courses.length
-    ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length)
-    : 0
 
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
@@ -138,70 +131,6 @@ export default async function EmployeeCourses() {
         title={`¡Hola, ${employee.first_name}!`}
         description="Tu ruta de capacitación activa"
       />
-
-      <Box
-        sx={{
-          display: "grid",
-          gap: 2,
-          gridTemplateColumns: { xs: "1fr 1fr", xl: "repeat(4,1fr)" },
-        }}
-      >
-        <KpiCard
-          label="Completados"
-          value={String(completedCourses)}
-          sub={`de ${courses.length} cursos`}
-          icon={CheckCircle}
-          borderColor="emerald"
-        />
-        <KpiCard
-          label="En progreso"
-          value={String(coursesInProgress)}
-          sub="iniciados"
-          icon={BookOpen}
-          borderColor="amber"
-        />
-        <KpiCard
-          label="Sin iniciar"
-          value={String(pendingCourses)}
-          sub="pendientes"
-          icon={Clock}
-          borderColor="charcoal"
-        />
-
-        <Paper
-          elevation={0}
-          sx={{
-            position: "relative",
-            overflow: "hidden",
-            borderRadius: 2.5,
-            border: "1px solid #f0f0f0",
-            borderLeft: "4px solid var(--portal-blue)",
-            bgcolor: "background.paper",
-            p: 2.5,
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: "10px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              color: "#94a3b8",
-            }}
-          >
-            Avance global
-          </Typography>
-          <Typography
-            sx={{ mt: 0.5, fontSize: 28, fontWeight: 700, lineHeight: 1, color: "#1a1a1a" }}
-          >
-            {averageProgress}%
-          </Typography>
-          <Typography sx={{ mt: 0.5, fontSize: 11, color: "#64748b" }}>promedio</Typography>
-          <Box sx={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }}>
-            <RingChart pct={averageProgress} size={72} sw={7} color="var(--portal-blue)" />
-          </Box>
-        </Paper>
-      </Box>
 
       <EmployeeLearningRefresh autoRefresh pollIntervalMs={60_000} />
 

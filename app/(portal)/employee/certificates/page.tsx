@@ -1,12 +1,10 @@
 import EmptyState from "@/components/shared/EmptyState"
-import KpiCard from "@/components/shared/KpiCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import { getSession } from "@/lib/session"
-import { Award, Clock } from "lucide-react"
 import { redirect } from "next/navigation"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
@@ -33,23 +31,6 @@ export default async function EmployeeCertificatesPage() {
         title="Mis constancias"
         description="Evidencia DC-3 oficial STPS de tus cursos completados"
       />
-
-      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
-        <KpiCard
-          label="Emitidas"
-          value={String(certificates.length)}
-          sub="Listas para descarga"
-          icon={Award}
-          borderColor="orange"
-        />
-        <KpiCard
-          label="Pendientes"
-          value={String(pendingCertificates.length)}
-          sub="Cursos sin constancia aún"
-          icon={Clock}
-          borderColor="amber"
-        />
-      </Box>
 
       <EmployeeLearningRefresh autoRefresh pollIntervalMs={60_000} />
 
