@@ -85,6 +85,7 @@ export default async function CompanyProgressPage() {
     assignedByCourse,
     completedByCourse,
     inProgressByCourse,
+    employeeCoursesByDepartment,
   ] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
@@ -129,6 +130,10 @@ export default async function CompanyProgressPage() {
       },
       _count: { _all: true },
     }),
+    prisma.employeeCourse.findMany({
+      where: { employee: { company_id: companyId, active: true } },
+      select: { progress_pct: true, employee: { select: { department: true } } },
+    }),
   ])
 
   if (!company) redirect("/login")
@@ -167,6 +172,21 @@ export default async function CompanyProgressPage() {
       return a.nombre.localeCompare(b.nombre, "es-MX")
     })
 
+  const departmentTotals = new Map<string, { sum: number; count: number }>()
+  for (const row of employeeCoursesByDepartment) {
+    const department = row.employee.department ?? "Sin departamento"
+    const entry = departmentTotals.get(department) ?? { sum: 0, count: 0 }
+    entry.sum += row.progress_pct
+    entry.count += 1
+    departmentTotals.set(department, entry)
+  }
+  const departmentSummaries = [...departmentTotals.entries()]
+    .map(([department, { sum, count }]) => ({
+      department,
+      averageProgress: Math.round(sum / count),
+    }))
+    .sort((a, b) => b.averageProgress - a.averageProgress)
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -202,6 +222,35 @@ export default async function CompanyProgressPage() {
         data={learningActivityData}
         changeVsPreviousWeek={changeVsPreviousWeek}
       />
+
+      <section className="rounded-lg bg-white p-5">
+        <h2 className="mb-4 text-base font-semibold text-slate-950">
+          Avance por departamento
+          <span className="ml-2 text-sm font-normal text-slate-400">
+            {departmentSummaries.length}
+          </span>
+        </h2>
+
+        {departmentSummaries.length === 0 ? (
+          <EmptyState message="Aún no hay progreso registrado por departamento." />
+        ) : (
+          <div className="space-y-3">
+            {departmentSummaries.map((dept) => (
+              <div key={dept.department}>
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="font-medium text-slate-700">{dept.department}</span>
+                  <span className="font-semibold text-slate-950">{dept.averageProgress}%</span>
+                </div>
+                <ProgressBar
+                  value={dept.averageProgress}
+                  trackClassName="bg-slate-200"
+                  fillClassName="bg-portal-blue"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="rounded-lg bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-slate-950">
