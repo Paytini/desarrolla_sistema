@@ -27,7 +27,14 @@ export function CancelConsultingRequestButton({
         color="error"
         size="small"
         onClick={() => setOpen(true)}
-        sx={{ height: 28, px: 1.5, fontSize: 12, flexShrink: 0 }}
+        sx={{
+          height: 28,
+          px: 1.5,
+          fontSize: 12,
+          flexShrink: 0,
+          "&:hover": { transform: "none" },
+          "&:active": { transform: "none" },
+        }}
       >
         Cancelar
       </Button>
