@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import { Pagination } from "@/components/shared/Pagination"
 import { StatusLabel } from "@/components/shared/StatusLabel"
 import { CONSULTING_AREAS, getConsultingArea } from "@/lib/consulting-areas"
+import { CONSULTING_CONTACT_METHOD_LABELS } from "@/lib/consulting-contact-method"
 import { formatConsultingDateTime } from "@/lib/consulting-schedule"
 import { CONSULTING_STATUS_LABEL, CONSULTING_STATUS_VARIANT } from "@/lib/consulting-status"
 import { paginate } from "@/lib/pagination"
@@ -23,12 +24,6 @@ const successMessages: Record<string, string> = {
 
 const errorMessages: Record<string, string> = {
   solicitud: "No se encontró la solicitud o ya no está pendiente.",
-}
-
-const CONTACT_METHOD_LABELS: Record<string, string> = {
-  CALL: "Llamada",
-  WHATSAPP: "WhatsApp",
-  EMAIL: "Correo",
 }
 
 const PAGE_SIZE = 5
@@ -111,7 +106,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
           <p className="truncate text-xs text-[#64748b]">
             {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)} ·{" "}
             {request.contact_phone} ·{" "}
-            {CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method}
+            {CONSULTING_CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method}
           </p>
           <p className="truncate text-xs text-slate-400" title={request.context}>
             {request.context}

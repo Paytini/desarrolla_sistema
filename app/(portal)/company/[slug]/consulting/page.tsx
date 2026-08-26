@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { CalendarClock } from "lucide-react"
 import { cancelConsultingRequestAction } from "./actions"
 import { CancelConsultingRequestButton } from "@/components/company/consulting/CancelConsultingRequestButton"
+import { ConsultingRequestDetailsButton } from "@/components/company/consulting/ConsultingRequestDetailsButton"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Pagination } from "@/components/shared/Pagination"
 import { StatusLabel } from "@/components/shared/StatusLabel"
@@ -12,6 +13,7 @@ import { getCompanyBranding } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { getConsultingArea } from "@/lib/consulting-areas"
 import { formatConsultingDateTime, getTodayInConsultingTimeZone } from "@/lib/consulting-schedule"
+import { CONSULTING_CONTACT_METHOD_LABELS } from "@/lib/consulting-contact-method"
 import { CONSULTING_STATUS_LABEL, CONSULTING_STATUS_VARIANT } from "@/lib/consulting-status"
 import { paginate } from "@/lib/pagination"
 import { prisma } from "@/lib/prisma"
@@ -111,14 +113,29 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
           />
         </td>
         <td className="px-3 py-3">
-          {request.status === "PENDING" ? (
-            <CancelConsultingRequestButton
-              action={cancelConsultingRequestAction}
-              requestId={request.id}
+          <div className="flex gap-1">
+            <ConsultingRequestDetailsButton
               areaLabel={areaOption?.label ?? request.area}
-              returnTo={returnTo}
+              dateTimeLabel={formatConsultingDateTime(
+                toDateKey(request.preferred_date),
+                request.preferred_time,
+              )}
+              context={request.context}
+              contactPhone={request.contact_phone}
+              contactMethodLabel={
+                CONSULTING_CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method
+              }
+              status={request.status}
             />
-          ) : null}
+            {request.status === "PENDING" ? (
+              <CancelConsultingRequestButton
+                action={cancelConsultingRequestAction}
+                requestId={request.id}
+                areaLabel={areaOption?.label ?? request.area}
+                returnTo={returnTo}
+              />
+            ) : null}
+          </div>
         </td>
       </tr>
     )
