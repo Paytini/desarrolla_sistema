@@ -2315,7 +2315,6 @@ function d360_bridge_student_certificates( WP_REST_Request $request ) {
 function d360_bridge_student_diagnostics( WP_REST_Request $request ) {
 	$student_id = absint( $request['student_id'] );
 	$course_id  = absint( $request->get_param( 'course_id' ) );
-	$known_hash = sanitize_text_field( (string) $request->get_param( 'known_hash' ) );
 
 	$rest_response = d360_bridge_dispatch_tutor_request(
 		'GET',
@@ -2397,7 +2396,7 @@ function d360_bridge_student_diagnostics( WP_REST_Request $request ) {
 	foreach ( $course_snapshots as $current_course_id => $snapshot ) {
 		$course_snapshots[ $current_course_id ]['calculated'] = d360_bridge_get_course_progress_stats( $student_id, $current_course_id );
 		$course_snapshots[ $current_course_id ]['enrollment'] = d360_bridge_get_enrollment_debug_data( $student_id, $current_course_id );
-		$course_snapshots[ $current_course_id ]['certificate'] = d360_bridge_get_course_certificate_debug_data( $student_id, $current_course_id, $known_hash );
+		$course_snapshots[ $current_course_id ]['certificate'] = d360_bridge_get_course_certificate_debug_data( $student_id, $current_course_id );
 	}
 
 	return rest_ensure_response(
@@ -3283,114 +3282,7 @@ function d360_bridge_find_certificate_attachment_id( $student_id, $course_id ) {
 	return 0;
 }
 
-function d360_bridge_debug_certificate_related_tables() {
-	global $wpdb;
-
-	$tables = array_unique(
-		array_merge(
-			(array) $wpdb->get_col( "SHOW TABLES LIKE '%certif%'" ), // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			(array) $wpdb->get_col( "SHOW TABLES LIKE '%earned%'" ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		)
-	);
-
-	$result = array();
-	foreach ( $tables as $table_name ) {
-		$columns = $wpdb->get_col( "SHOW COLUMNS FROM `{$table_name}`" ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		$sample_row = $wpdb->get_row( "SELECT * FROM `{$table_name}` ORDER BY 1 DESC LIMIT 1", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		$result[ $table_name ] = array(
-			'columns'    => $columns,
-			'sample_row' => $sample_row ? $sample_row : null,
-		);
-	}
-
-	return $result;
-}
-
-function d360_bridge_debug_scan_for_known_hash( $known_hash, $student_id, $course_id ) {
-	global $wpdb;
-
-	$known_hash = is_string( $known_hash ) ? trim( $known_hash ) : '';
-	if ( '' === $known_hash ) {
-		return null;
-	}
-
-	$like = '%' . $wpdb->esc_like( $known_hash ) . '%';
-
-	$usermeta_matches = $wpdb->get_results(
-		$wpdb->prepare(
-			"SELECT umeta_id, user_id, meta_key, meta_value FROM {$wpdb->usermeta} WHERE user_id = %d AND meta_value LIKE %s LIMIT 20", // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			$student_id,
-			$like
-		),
-		ARRAY_A
-	);
-
-	$postmeta_matches = $wpdb->get_results(
-		$wpdb->prepare(
-			"SELECT meta_id, post_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE meta_value LIKE %s LIMIT 20", // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			$like
-		),
-		ARRAY_A
-	);
-
-	$options_matches = $wpdb->get_results(
-		$wpdb->prepare(
-			"SELECT option_id, option_name FROM {$wpdb->options} WHERE option_value LIKE %s LIMIT 20", // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			$like
-		),
-		ARRAY_A
-	);
-
-	$course_meta_for_user = $wpdb->get_results(
-		$wpdb->prepare(
-			"SELECT umeta_id, meta_key, meta_value FROM {$wpdb->usermeta} WHERE user_id = %d AND ( meta_key LIKE %s OR meta_key LIKE %s ) LIMIT 30", // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-			$student_id,
-			'%certif%',
-			'%' . $wpdb->esc_like( (string) $course_id ) . '%'
-		),
-		ARRAY_A
-	);
-
-	return array(
-		'usermeta_matches'      => $usermeta_matches,
-		'postmeta_matches'      => $postmeta_matches,
-		'options_matches'       => $options_matches,
-		'course_meta_for_user'  => $course_meta_for_user,
-	);
-}
-
-function d360_bridge_debug_certificate_plugin_info() {
-	$active_plugins = (array) get_option( 'active_plugins', array() );
-
-	$network_plugins = array();
-	if ( is_multisite() ) {
-		$network_plugins = array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) );
-	}
-
-	global $wp_rewrite;
-	$matching_rules = array();
-	if ( isset( $wp_rewrite ) && ! empty( $wp_rewrite->rules ) ) {
-		foreach ( $wp_rewrite->rules as $pattern => $rewrite ) {
-			if ( false !== strpos( $pattern, 'tutor-certificate' ) || false !== strpos( $rewrite, 'tutor-certificate' ) || false !== strpos( $rewrite, 'tutor_certificate' ) ) {
-				$matching_rules[ $pattern ] = $rewrite;
-			}
-		}
-	}
-
-	$certificate_page = get_page_by_path( 'tutor-certificate' );
-
-	return array(
-		'active_plugins'          => array_merge( $active_plugins, $network_plugins ),
-		'matching_rewrite_rules'  => $matching_rules,
-		'tutor_certificate_page'  => $certificate_page ? array(
-			'ID'        => $certificate_page->ID,
-			'post_type' => $certificate_page->post_type,
-			'template'  => get_page_template_slug( $certificate_page ),
-		) : null,
-	);
-}
-
-function d360_bridge_get_course_certificate_debug_data( $student_id, $course_id, $known_hash = '' ) {
+function d360_bridge_get_course_certificate_debug_data( $student_id, $course_id ) {
 	$cert_hash = d360_bridge_find_course_certificate_hash( $student_id, $course_id );
 	$attachment_id = d360_bridge_find_certificate_attachment_id( $student_id, $course_id );
 	$page_probe = d360_bridge_probe_student_certificate_pages( $student_id, $course_id );
@@ -3412,9 +3304,6 @@ function d360_bridge_get_course_certificate_debug_data( $student_id, $course_id,
 		'page_probe'       => $page_probe,
 		'attachment_id'    => $attachment_id ? $attachment_id : null,
 		'attachment_url'   => $attachment_id ? wp_get_attachment_url( $attachment_id ) : null,
-		'debug_tables'     => $cert_hash ? null : d360_bridge_debug_certificate_related_tables(),
-		'debug_hash_scan'  => $cert_hash ? null : d360_bridge_debug_scan_for_known_hash( $known_hash, $student_id, $course_id ),
-		'debug_plugin_info' => $cert_hash ? null : d360_bridge_debug_certificate_plugin_info(),
 	);
 }
 
