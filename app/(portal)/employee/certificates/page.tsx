@@ -254,23 +254,6 @@ export default async function EmployeeCertificatesPage() {
                     py: 1.5,
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 36,
-                      height: 36,
-                      flexShrink: 0,
-                      borderRadius: 2,
-                      bgcolor: "#fef3c7",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "#b45309",
-                    }}
-                  >
-                    {course.course_name.charAt(0).toUpperCase()}
-                  </Box>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography
                       sx={{
