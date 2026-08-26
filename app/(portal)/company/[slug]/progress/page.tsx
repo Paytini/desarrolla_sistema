@@ -1,5 +1,6 @@
 import EmptyState from "@/components/shared/EmptyState"
 import KpiCard from "@/components/shared/KpiCard"
+import { DepartmentProgressChart } from "@/components/company/DepartmentProgressChart"
 import {
   LearningActivityChart,
   type LearningActivityPoint,
@@ -234,21 +235,7 @@ export default async function CompanyProgressPage() {
         {departmentSummaries.length === 0 ? (
           <EmptyState message="Aún no hay progreso registrado por departamento." />
         ) : (
-          <div className="space-y-3">
-            {departmentSummaries.map((dept) => (
-              <div key={dept.department}>
-                <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="font-medium text-slate-700">{dept.department}</span>
-                  <span className="font-semibold text-slate-950">{dept.averageProgress}%</span>
-                </div>
-                <ProgressBar
-                  value={dept.averageProgress}
-                  trackClassName="bg-slate-200"
-                  fillClassName="bg-portal-blue"
-                />
-              </div>
-            ))}
-          </div>
+          <DepartmentProgressChart data={departmentSummaries} />
         )}
       </section>
 
