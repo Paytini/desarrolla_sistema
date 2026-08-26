@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { BookOpen, Check, ChevronLeft, ChevronRight, Search, X } from "lucide-react"
+import { BookOpen, Check, ChevronLeft, ChevronRight, Minus, Search, X } from "lucide-react"
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { PaginatedTable } from "@/components/shared/PaginatedTable"
 import ProgressBar from "@/components/shared/ProgressBar"
@@ -10,7 +10,7 @@ import StatusToast from "@/components/shared/StatusToast"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import { setCourseAssignmentsAction } from "./actions"
 
-const EMPLOYEES_PAGE_SIZE = 5
+const EMPLOYEES_PAGE_SIZE = 10
 
 type CourseInfo = {
   wp_course_id: number
@@ -122,9 +122,6 @@ export default function AssignmentBoard({
   )
   const isDirty =
     workingSet.size !== savedSet.size || [...workingSet].some((id) => !savedSet.has(id))
-  const pendingChangeCount =
-    [...workingSet].filter((id) => !savedSet.has(id)).length +
-    [...savedSet].filter((id) => !workingSet.has(id)).length
 
   const hasEmployeeFilters = Boolean(employeeSearch || department || position)
 
@@ -144,6 +141,10 @@ export default function AssignmentBoard({
       })
       .map((entry) => entry.employee)
   }, [employees, employeeSearch, department, position, savedSet])
+
+  const allFilteredAssigned =
+    filteredEmployees.length > 0 && filteredEmployees.every((e) => workingSet.has(e.id))
+  const someFilteredAssigned = filteredEmployees.some((e) => workingSet.has(e.id))
 
   const employeeFilterKey = `${selectedCourseId}|${employeeSearch}|${department}|${position}`
 
@@ -409,20 +410,6 @@ export default function AssignmentBoard({
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={() => bulkSetVisible(true)}
-              className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
-            >
-              Asignar filtrados ({filteredEmployees.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setUnassignConfirmOpen(true)}
-              className="whitespace-nowrap rounded-lg border border-portal-border bg-white px-3 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
-            >
-              Quitar filtrados ({filteredEmployees.length})
-            </button>
           </div>
 
           {filteredEmployees.length === 0 ? (
@@ -448,8 +435,39 @@ export default function AssignmentBoard({
               ariaLabel="Colaboradores"
               pageSize={EMPLOYEES_PAGE_SIZE}
               columns={[
-                { label: "" },
-                { label: "Colaborador" },
+                {
+                  label: (
+                    <div className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-200 transition has-[:checked]:border-portal-blue has-[:checked]:bg-portal-blue has-[:indeterminate]:border-portal-blue has-[:indeterminate]:bg-portal-blue">
+                      <input
+                        type="checkbox"
+                        checked={allFilteredAssigned}
+                        ref={(el) => {
+                          if (el) el.indeterminate = someFilteredAssigned && !allFilteredAssigned
+                        }}
+                        onChange={() => {
+                          if (allFilteredAssigned) {
+                            setUnassignConfirmOpen(true)
+                          } else {
+                            bulkSetVisible(true)
+                          }
+                        }}
+                        aria-label="Seleccionar todos los filtrados"
+                        className="peer absolute inset-0 z-10 cursor-pointer opacity-0"
+                      />
+                      <Check
+                        size={10}
+                        className="hidden text-white peer-checked:block"
+                        strokeWidth={3}
+                      />
+                      <Minus
+                        size={10}
+                        className="hidden text-white peer-indeterminate:block"
+                        strokeWidth={3}
+                      />
+                    </div>
+                  ),
+                },
+                { label: "Empleado" },
                 { label: "Departamento" },
                 { label: "Puesto" },
               ]}
@@ -459,7 +477,7 @@ export default function AssignmentBoard({
                   <tr
                     key={employee.id}
                     onClick={() => toggleEmployee(employee.id)}
-                    className="cursor-pointer bg-gray-50 transition has-[:checked]:bg-[#F3F8FE]"
+                    className="cursor-pointer bg-white transition hover:bg-gray-50 has-[:checked]:bg-[#F3F8FE]"
                   >
                     <td className="w-10 rounded-l-lg py-3 pl-4">
                       <div className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-200 transition has-[:checked]:border-portal-blue has-[:checked]:bg-portal-blue">
@@ -497,17 +515,8 @@ export default function AssignmentBoard({
             <StatusToast key={feedback.id} tone={feedback.tone} message={feedback.message} />
           )}
 
-          <div className="sticky bottom-0 -mx-4 -mb-4 border-t border-[#f5f5f5] bg-white px-4 py-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-slate-500">
-                <span className="font-semibold text-slate-800">{workingSet.size}</span> colaborador
-                {workingSet.size !== 1 ? "es" : ""} en &laquo;{selectedCourse.course_name}&raquo;
-                <span className="ml-2 text-slate-400">
-                  {isDirty
-                    ? `· ${pendingChangeCount} cambio${pendingChangeCount !== 1 ? "s" : ""} pendiente${pendingChangeCount !== 1 ? "s" : ""}`
-                    : "· Sin cambios pendientes"}
-                </span>
-              </p>
+          <div className="-mx-4 -mb-4 border-t border-[#f5f5f5] bg-white px-4 py-3">
+            <div className="flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={handleSave}

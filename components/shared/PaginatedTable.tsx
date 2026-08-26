@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useState, type ReactNode } from "react"
 
 type PaginatedTableColumn = {
-  label: string
+  label: ReactNode
   className?: string
 }
 
@@ -28,9 +28,9 @@ export function PaginatedTable({ columns, rows, pageSize, ariaLabel }: Paginated
       <table className="w-full border-separate border-spacing-y-2" aria-label={ariaLabel}>
         <thead>
           <tr>
-            {columns.map((column) => (
+            {columns.map((column, index) => (
               <th
-                key={column.label}
+                key={index}
                 scope="col"
                 className={`px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 ${column.className ?? ""}`}
               >

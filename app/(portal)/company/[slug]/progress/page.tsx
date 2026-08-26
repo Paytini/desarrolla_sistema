@@ -1,18 +1,19 @@
-import KpiCard from "@/components/shared/KpiCard"
+import EmptyState from "@/components/shared/EmptyState"
+import { ExpandableChartCard } from "@/components/shared/ExpandableChartCard"
+import { CourseDepartmentFilter } from "@/components/company/CourseDepartmentFilter"
+import { DepartmentProgressChart } from "@/components/company/DepartmentProgressChart"
 import {
   LearningActivityChart,
   type LearningActivityPoint,
 } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
-import StatusBadge from "@/components/shared/StatusBadge"
-import { AlertCircle, BarChart3, BookOpen, CheckCircle } from "lucide-react"
-import { SearchInput } from "@/components/shared/SearchInput"
-import { Pagination } from "@/components/shared/Pagination"
-import { formatDateTime, getInitials } from "@/lib/format"
+import { AlertTriangle, BookOpen, TrendingDown, TrendingUp } from "lucide-react"
+import { companyPath } from "@/lib/company-routes"
 import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
+import Link from "next/link"
 import { redirect } from "next/navigation"
 
 const WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
@@ -82,40 +83,23 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
   if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
   const companyId = session.user.empresa_id
-  const params = await searchParams
-  const searchQuery = (readSearchParam(params, "q") ?? "").trim().toLowerCase()
-  const parsedPage = Number(readSearchParam(params, "page") ?? "1")
-  const page = Number.isFinite(parsedPage) ? Math.max(1, Math.trunc(parsedPage)) : 1
-  const PAGE_SIZE = 20
-
-  const employeeWhere = {
-    company_id: companyId,
-    active: true,
-    ...(searchQuery
-      ? {
-          OR: [
-            { first_name: { contains: searchQuery, mode: "insensitive" as const } },
-            { last_name: { contains: searchQuery, mode: "insensitive" as const } },
-            { email: { contains: searchQuery, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
-  }
+  const query = await searchParams
+  const selectedDepartment = readSearchParam(query, "departamento") ?? ""
+  const employeeDepartmentFilter =
+    selectedDepartment === "Sin departamento"
+      ? { department: null }
+      : selectedDepartment
+        ? { department: selectedDepartment }
+        : {}
 
   const [
     company,
     { data: learningActivityData, changeVsPreviousWeek },
     activeCompanyPackage,
-    totalActiveEmployees,
-    filteredCount,
-    courseAgg,
-    completedCourses,
-    startedCourses,
-    employeeAverages,
-    employeesWithErrorRows,
     assignedByCourse,
     completedByCourse,
     inProgressByCourse,
+    employeeCoursesByDepartment,
   ] = await Promise.all([
     prisma.company.findUnique({
       where: { id: companyId },
@@ -126,50 +110,37 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
       where: { company_id: companyId, active: true },
       orderBy: { created_at: "desc" },
       select: {
+        expiration_date: true,
         package: { select: { courses: { select: { wp_course_id: true, cover_url: true } } } },
       },
     }),
-    prisma.employee.count({ where: { company_id: companyId, active: true } }),
-    prisma.employee.count({ where: employeeWhere }),
-    prisma.employeeCourse.aggregate({
-      where: { employee: { company_id: companyId, active: true } },
-      _avg: { progress_pct: true },
-    }),
-    prisma.employeeCourse.count({
-      where: { employee: { company_id: companyId, active: true }, completed: true },
-    }),
-    prisma.employeeCourse.count({
-      where: { employee: { company_id: companyId, active: true }, progress_pct: { gt: 0 } },
-    }),
-    prisma.employeeCourse.groupBy({
-      by: ["employee_id"],
-      where: { employee: { company_id: companyId, active: true } },
-      _avg: { progress_pct: true },
-    }),
-    prisma.employee.findMany({
-      where: { company_id: companyId, active: true, courses: { some: { access_status: "ERROR" } } },
-      select: { id: true },
-    }),
     prisma.employeeCourse.groupBy({
       by: ["wp_course_id"],
-      where: { employee: { company_id: companyId, active: true } },
+      where: { employee: { company_id: companyId, active: true, ...employeeDepartmentFilter } },
       _count: { _all: true },
       _avg: { progress_pct: true },
       _max: { course_name: true },
     }),
     prisma.employeeCourse.groupBy({
       by: ["wp_course_id"],
-      where: { employee: { company_id: companyId, active: true }, completed: true },
+      where: {
+        employee: { company_id: companyId, active: true, ...employeeDepartmentFilter },
+        completed: true,
+      },
       _count: { _all: true },
     }),
     prisma.employeeCourse.groupBy({
       by: ["wp_course_id"],
       where: {
-        employee: { company_id: companyId, active: true },
+        employee: { company_id: companyId, active: true, ...employeeDepartmentFilter },
         completed: false,
         progress_pct: { gt: 0 },
       },
       _count: { _all: true },
+    }),
+    prisma.employeeCourse.findMany({
+      where: { employee: { company_id: companyId, active: true } },
+      select: { progress_pct: true, employee: { select: { department: true } } },
     }),
   ])
 
@@ -180,32 +151,12 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
     packageCourses.filter((c) => c.cover_url).map((c) => [c.wp_course_id, c.cover_url as string]),
   )
 
-  const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE))
-  const currentPage = Math.min(Math.max(1, page), totalPages)
-
-  const pagedEmployees = await prisma.employee.findMany({
-    where: employeeWhere,
-    orderBy: { first_name: "asc" },
-    skip: (currentPage - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
-    include: {
-      courses: { orderBy: [{ progress_pct: "desc" }, { course_name: "asc" }] },
-    },
-  })
-
-  function pageUrl(p: number) {
-    const qs = new URLSearchParams()
-    if (searchQuery) qs.set("q", searchQuery)
-    if (p > 1) qs.set("page", String(p))
-    const str = qs.toString()
-    return str ? `?${str}` : "?"
-  }
-
-  const averageProgress = Math.round(courseAgg._avg.progress_pct ?? 0)
-  const employeesWithErrorSet = new Set(employeesWithErrorRows.map((e) => e.id))
-  const employeesWithDelay = employeeAverages.filter(
-    (row) => (row._avg.progress_pct ?? 0) < 25 || employeesWithErrorSet.has(row.employee_id),
-  ).length
+  const daysUntilExpiration = activeCompanyPackage?.expiration_date
+    ? Math.ceil(
+        (activeCompanyPackage.expiration_date.getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24),
+      )
+    : null
 
   const completedByCourseMap = new Map(
     completedByCourse.map((r) => [r.wp_course_id, r._count._all]),
@@ -234,227 +185,166 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
       return a.nombre.localeCompare(b.nombre, "es-MX")
     })
 
+  const departmentTotals = new Map<string, { sum: number; count: number }>()
+  for (const row of employeeCoursesByDepartment) {
+    const department = row.employee.department ?? "Sin departamento"
+    const entry = departmentTotals.get(department) ?? { sum: 0, count: 0 }
+    entry.sum += row.progress_pct
+    entry.count += 1
+    departmentTotals.set(department, entry)
+  }
+  const departmentSummaries = [...departmentTotals.entries()]
+    .map(([department, { sum, count }]) => ({
+      department,
+      averageProgress: Math.round(sum / count),
+    }))
+    .sort((a, b) => b.averageProgress - a.averageProgress)
+
+  const departmentOptions = [...departmentTotals.keys()].sort((a, b) => a.localeCompare(b, "es-MX"))
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Progreso"
-        description="Avance y actividad de cursos por colaborador"
+        description="Avance general y actividad de los cursos asignados"
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Avance promedio"
-          value={`${averageProgress}%`}
-          sub="Todos los cursos"
-          icon={BarChart3}
-          borderColor="orange"
-        />
-        <KpiCard
-          label="Con rezago"
-          value={String(employeesWithDelay)}
-          sub="Avance < 25% o con error"
-          icon={AlertCircle}
-          borderColor="amber"
-        />
-        <KpiCard
-          label="Cursos iniciados"
-          value={String(startedCourses)}
-          sub="Con actividad real"
-          icon={BookOpen}
-          borderColor="charcoal"
-        />
-        <KpiCard
-          label="Cursos completados"
-          value={String(completedCourses)}
-          sub="Cerrados por empleados"
-          icon={CheckCircle}
-          borderColor="emerald"
-        />
-      </div>
+      {daysUntilExpiration !== null ? (
+        <div
+          className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-sm ${
+            daysUntilExpiration < 15
+              ? "border-rose-200 bg-rose-50 text-rose-800"
+              : daysUntilExpiration < 30
+                ? "border-amber-200 bg-amber-50 text-amber-800"
+                : "border-portal-blue-soft bg-portal-blue-soft text-portal-blue-hover"
+          }`}
+        >
+          <AlertTriangle size={16} className="shrink-0" />
+          <p>
+            {daysUntilExpiration >= 0
+              ? `Quedan ${daysUntilExpiration} día${daysUntilExpiration !== 1 ? "s" : ""} para que venza tu paquete contratado.`
+              : `Tu paquete contratado venció hace ${Math.abs(daysUntilExpiration)} día${Math.abs(daysUntilExpiration) !== 1 ? "s" : ""}.`}
+          </p>
+        </div>
+      ) : null}
 
-      <LearningActivityChart
-        data={learningActivityData}
-        changeVsPreviousWeek={changeVsPreviousWeek}
-      />
-
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-lg bg-white p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-slate-950">
-              Avance por empleado
-              <span className="ml-2 text-sm font-normal text-slate-400">
-                {searchQuery ? `${filteredCount} de ${totalActiveEmployees}` : totalActiveEmployees}
-              </span>
-            </h2>
-            <form className="flex gap-2">
-              <SearchInput
-                name="q"
-                defaultValue={searchQuery}
-                placeholder="Buscar empleado..."
-                width={208}
-              />
-              <button
-                type="submit"
-                className="rounded-lg border border-portal-border bg-white px-3 py-1.5 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
-              >
-                Buscar
-              </button>
-              {searchQuery && (
-                <a
-                  href="?"
-                  className="rounded-lg border border-portal-border bg-white px-3 py-1.5 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
-                >
-                  Limpiar
-                </a>
-              )}
-            </form>
-          </div>
-
-          {filteredCount === 0 ? (
-            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
-              {searchQuery
-                ? `Sin resultados para "${searchQuery}".`
-                : "No hay empleados activos con progreso para mostrar."}
-            </div>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {pagedEmployees.map((employee) => {
-                const courses = employee.courses
-                const avg = courses.length
-                  ? Math.round(courses.reduce((s, c) => s + c.progress_pct, 0) / courses.length)
-                  : 0
-                const completed = courses.filter((c) => c.completed).length
-                const inProgress = courses.filter((c) => !c.completed && c.progress_pct > 0).length
-                const errors = courses.filter((c) => c.access_status === "ERROR").length
-                const lastSync = [...courses].sort(
-                  (a, b) =>
-                    new Date(b.last_synced_at).getTime() - new Date(a.last_synced_at).getTime(),
-                )[0]?.last_synced_at
-
-                const statusVariant: "red" | "green" | "amber" | "slate" =
-                  errors > 0 ? "red" : avg >= 75 ? "green" : avg > 0 ? "amber" : "slate"
-
-                const statusLabel =
-                  errors > 0
-                    ? "Requiere revisión"
-                    : avg >= 75
-                      ? "Buen ritmo"
-                      : avg > 0
-                        ? "En seguimiento"
-                        : "Sin actividad"
-
-                const barColor =
-                  errors > 0
-                    ? "bg-rose-500"
-                    : avg >= 75
-                      ? "bg-portal-blue"
-                      : avg > 0
-                        ? "bg-amber-500"
-                        : "bg-slate-300"
-
-                const initials = getInitials(`${employee.first_name} ${employee.last_name}`)
-
-                return (
-                  <div key={employee.id} className="rounded-lg bg-gray-50 p-4">
-                    <div className="mb-3 flex items-center gap-2.5">
-                      <div
-                        className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                          errors > 0 ? "bg-rose-100 text-rose-700" : "bg-portal-blue-soft text-portal-blue"
-                        }`}
-                      >
-                        {initials}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-slate-950">
-                          {employee.first_name} {employee.last_name}
-                        </p>
-                        <StatusBadge variant={statusVariant}>{statusLabel}</StatusBadge>
-                      </div>
-                      <p className="shrink-0 text-sm font-bold text-slate-950">{avg}%</p>
-                    </div>
-
-                    <ProgressBar
-                      value={avg}
-                      className="mb-3"
-                      trackClassName="bg-slate-200"
-                      fillClassName={barColor}
-                    />
-
-                    <div className="flex items-center justify-between text-[11px] text-slate-500">
-                      <span>
-                        {completed} completados · {inProgress} en curso
-                      </span>
-                      {lastSync && <span className="text-right">{formatDateTime(lastSync)}</span>}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalResults={filteredCount}
-            buildPageUrl={pageUrl}
-          />
-        </section>
-
-        <section className="rounded-lg bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-slate-950">
+      <section className="rounded-lg bg-white p-5">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-slate-950">
             Resumen por curso
             <span className="ml-2 text-sm font-normal text-slate-400">
               {courseSummaries.length}
             </span>
           </h2>
+          {departmentOptions.length > 0 ? (
+            <CourseDepartmentFilter
+              departments={departmentOptions}
+              selected={selectedDepartment}
+              basePath={companyPath(company.slug, "/progress")}
+            />
+          ) : null}
+        </div>
 
-          {courseSummaries.length === 0 ? (
-            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
-              Aún no hay cursos sincronizados.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {courseSummaries.map((course) => {
-                const thumb = thumbnailMap.get(course.courseId)
-                return (
-                  <div key={course.courseId} className="overflow-hidden rounded-lg bg-white">
+        {courseSummaries.length === 0 ? (
+          <EmptyState
+            message={
+              selectedDepartment
+                ? `Sin progreso registrado para "${selectedDepartment}".`
+                : "Aún no hay cursos sincronizados."
+            }
+          />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {courseSummaries.map((course) => {
+              const thumb = thumbnailMap.get(course.courseId)
+              return (
+                <Link
+                  key={course.courseId}
+                  href={companyPath(company.slug, `/progress/${course.courseId}`)}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-[#efefef] bg-white transition hover:border-portal-blue/30 hover:shadow-md"
+                >
+                  <div className="relative h-36 w-full shrink-0">
                     {thumb ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={thumb} alt="" className="h-[90px] w-full object-cover" />
+                      <img src={thumb} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-[56px] items-center justify-center bg-portal-blue-soft">
-                        <span className="text-xl font-bold text-portal-blue/20">
-                          {course.nombre.charAt(0).toUpperCase()}
-                        </span>
+                      <div className="flex h-full w-full items-center justify-center bg-portal-blue-soft text-portal-blue">
+                        <BookOpen size={40} />
                       </div>
                     )}
-                    <div className="p-3">
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <p className="text-sm font-semibold leading-snug text-slate-950">
-                          {course.nombre}
-                        </p>
-                        <span className="shrink-0 text-sm font-bold text-slate-950">
-                          {course.averageProgress}%
-                        </span>
-                      </div>
-                      <ProgressBar
-                        value={course.averageProgress}
-                        className="mb-2"
-                        trackClassName="bg-slate-200"
-                        fillClassName="bg-portal-blue"
-                      />
-                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
-                        <span>{course.assigned} asignados</span>
-                        <span className="text-portal-blue">{course.completed} completados</span>
-                        <span>{course.inProgress} en curso</span>
-                        <span>{course.notStarted} sin iniciar</span>
-                      </div>
-                    </div>
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </section>
+                  <div className="flex flex-col gap-2.5 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-slate-800">
+                        {course.nombre}
+                      </p>
+                      <span className="shrink-0 text-sm font-bold text-slate-950">
+                        {course.averageProgress}%
+                      </span>
+                    </div>
+                    <ProgressBar
+                      value={course.averageProgress}
+                      trackClassName="bg-slate-200"
+                      fillClassName="bg-portal-blue"
+                    />
+                    <p className="text-xs font-medium text-slate-400">
+                      {course.assigned} asignado{course.assigned !== 1 ? "s" : ""} ·{" "}
+                      {course.completed} completado{course.completed !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ExpandableChartCard
+          title="Finalizaciones de cursos por día"
+          extra={
+            changeVsPreviousWeek !== null ? (
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+                  changeVsPreviousWeek >= 0
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-rose-50 text-rose-700"
+                }`}
+              >
+                {changeVsPreviousWeek >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+                {changeVsPreviousWeek >= 0 ? "+" : ""}
+                {changeVsPreviousWeek}% vs semana previa
+              </span>
+            ) : null
+          }
+          compactChart={<LearningActivityChart data={learningActivityData} height={224} />}
+          expandedChart={<LearningActivityChart data={learningActivityData} height={420} />}
+        />
+
+        <ExpandableChartCard
+          title={
+            <>
+              Avance por departamento
+              <span className="ml-2 text-sm font-normal text-slate-400">
+                {departmentSummaries.length}
+              </span>
+            </>
+          }
+          compactChart={
+            departmentSummaries.length === 0 ? (
+              <EmptyState message="Aún no hay progreso registrado por departamento." />
+            ) : (
+              <DepartmentProgressChart data={departmentSummaries} height={256} />
+            )
+          }
+          expandedChart={
+            departmentSummaries.length === 0 ? (
+              <EmptyState message="Aún no hay progreso registrado por departamento." />
+            ) : (
+              <DepartmentProgressChart data={departmentSummaries} height={420} />
+            )
+          }
+        />
       </div>
     </div>
   )
