@@ -145,7 +145,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
 
       <ConsultingFilters
         companies={companies}
-        areas={CONSULTING_AREAS}
+        areas={CONSULTING_AREAS.map((area) => ({ id: area.id, label: area.label }))}
         selectedCompany={selectedCompany}
         selectedArea={selectedArea}
         basePath={basePath}
