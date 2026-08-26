@@ -106,24 +106,20 @@ export default async function CourseProgressPage({ params }: PageProps) {
 
       <PageHeader title={courseName} />
 
-      <section className="overflow-hidden rounded-lg bg-white">
-        <div className="grid md:grid-cols-[280px_1fr]">
-          <div className="relative h-48 bg-portal-blue-soft/40 md:h-full md:min-h-[220px]">
+      <section className="rounded-lg bg-white p-6">
+        <div className="grid items-start gap-6 md:grid-cols-[280px_1fr]">
+          <div className="overflow-hidden rounded-lg">
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={coverUrl}
-                alt=""
-                className="absolute inset-0 h-full w-full object-contain"
-              />
+              <img src={coverUrl} alt="" className="block w-full object-contain" />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-portal-blue-soft text-portal-blue">
+              <div className="flex h-48 items-center justify-center bg-portal-blue-soft text-portal-blue md:min-h-[220px]">
                 <BookOpen size={48} />
               </div>
             )}
           </div>
 
-          <div className="flex flex-col justify-center gap-4 p-6">
+          <div className="flex flex-col justify-center gap-4">
             <h2 className="text-lg font-semibold text-slate-950">{courseName}</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <InfoField label="Asignados" value={String(assigned)} />
