@@ -1,3 +1,4 @@
+import EmptyState from "@/components/shared/EmptyState"
 import KpiCard from "@/components/shared/KpiCard"
 import {
   LearningActivityChart,
@@ -173,7 +174,7 @@ export default async function CompanyProgressPage() {
         description="Avance general y actividad de los cursos asignados"
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <KpiCard
           label="Avance promedio"
           value={`${averageProgress}%`}
@@ -209,15 +210,16 @@ export default async function CompanyProgressPage() {
         </h2>
 
         {courseSummaries.length === 0 ? (
-          <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
-            Aún no hay cursos sincronizados.
-          </div>
+          <EmptyState message="Aún no hay cursos sincronizados." />
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {courseSummaries.map((course) => {
               const thumb = thumbnailMap.get(course.courseId)
               return (
-                <div key={course.courseId} className="overflow-hidden rounded-lg bg-white">
+                <div
+                  key={course.courseId}
+                  className="overflow-hidden rounded-lg border border-[#efefef] bg-white"
+                >
                   {thumb ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={thumb} alt="" className="h-[90px] w-full object-cover" />

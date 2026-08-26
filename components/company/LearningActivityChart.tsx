@@ -41,6 +41,13 @@ function ActivityTooltip({ active, payload, label }: ActivityTooltipProps) {
 }
 
 export function LearningActivityChart({ data, changeVsPreviousWeek }: LearningActivityChartProps) {
+  const weekTotal = data.reduce((sum, point) => sum + point.completions, 0)
+  const trendSummary =
+    changeVsPreviousWeek === null
+      ? ""
+      : ` ${changeVsPreviousWeek >= 0 ? "Un aumento" : "Una disminución"} del ${Math.abs(changeVsPreviousWeek)}% respecto a la semana anterior.`
+  const chartSummary = `Gráfica de finalizaciones de cursos por día en los últimos 7 días. Total de la semana: ${weekTotal} finalizacion${weekTotal === 1 ? "" : "es"}.${trendSummary}`
+
   return (
     <div className="rounded-lg bg-white p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -67,8 +74,8 @@ export function LearningActivityChart({ data, changeVsPreviousWeek }: LearningAc
         ) : null}
       </div>
 
-      <div className="h-56 w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-56 w-full" role="img" aria-label={chartSummary}>
+        <ResponsiveContainer width="100%" height="100%" aria-hidden="true">
           <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
             <defs>
               <linearGradient id="learningActivityFill" x1="0" y1="0" x2="0" y2="1">
