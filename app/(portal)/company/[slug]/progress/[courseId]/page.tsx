@@ -17,20 +17,18 @@ type PageProps = {
   params: Promise<{ slug: string; courseId: string }>
 }
 
-type RowStatus = "COMPLETED" | "IN_PROGRESS" | "NOT_STARTED" | "ERROR"
+type RowStatus = "COMPLETED" | "IN_PROGRESS" | "NOT_STARTED"
 
-const ROW_STATUS_VARIANT: Record<RowStatus, "green" | "amber" | "red" | "slate"> = {
+const ROW_STATUS_VARIANT: Record<RowStatus, "green" | "amber" | "slate"> = {
   COMPLETED: "green",
   IN_PROGRESS: "amber",
   NOT_STARTED: "slate",
-  ERROR: "red",
 }
 
 const ROW_STATUS_LABEL: Record<RowStatus, string> = {
   COMPLETED: "Completado",
   IN_PROGRESS: "En curso",
   NOT_STARTED: "Sin iniciar",
-  ERROR: "Error de acceso",
 }
 
 const TABLE_PAGE_SIZE = 10
@@ -96,7 +94,6 @@ export default async function CourseProgressPage({ params }: PageProps) {
     : 0
 
   function rowStatus(row: (typeof employeeCourses)[number]): RowStatus {
-    if (row.access_status === "ERROR") return "ERROR"
     if (row.completed) return "COMPLETED"
     if (row.progress_pct > 0) return "IN_PROGRESS"
     return "NOT_STARTED"
@@ -199,23 +196,11 @@ export default async function CourseProgressPage({ params }: PageProps) {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {status === "ERROR" && row.access_error ? (
-                      <Tooltip title={row.access_error}>
-                        <span>
-                          <StatusLabel
-                            status={status}
-                            variantMap={ROW_STATUS_VARIANT}
-                            labelMap={ROW_STATUS_LABEL}
-                          />
-                        </span>
-                      </Tooltip>
-                    ) : (
-                      <StatusLabel
-                        status={status}
-                        variantMap={ROW_STATUS_VARIANT}
-                        labelMap={ROW_STATUS_LABEL}
-                      />
-                    )}
+                    <StatusLabel
+                      status={status}
+                      variantMap={ROW_STATUS_VARIANT}
+                      labelMap={ROW_STATUS_LABEL}
+                    />
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-500">
                     {formatDateTime(row.last_synced_at)}
