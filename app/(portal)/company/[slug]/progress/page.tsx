@@ -7,8 +7,10 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
 import { BookOpen } from "lucide-react"
+import { companyPath } from "@/lib/company-routes"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
+import Link from "next/link"
 import { redirect } from "next/navigation"
 
 const WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
@@ -192,9 +194,10 @@ export default async function CompanyProgressPage() {
             {courseSummaries.map((course) => {
               const thumb = thumbnailMap.get(course.courseId)
               return (
-                <div
+                <Link
                   key={course.courseId}
-                  className="flex flex-col overflow-hidden rounded-2xl border border-[#efefef] bg-white"
+                  href={companyPath(company.slug, `/progress/${course.courseId}`)}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-[#efefef] bg-white transition hover:border-portal-blue/30 hover:shadow-md"
                 >
                   <div className="relative h-36 w-full shrink-0">
                     {thumb ? (
@@ -225,7 +228,7 @@ export default async function CompanyProgressPage() {
                       {course.completed} completado{course.completed !== 1 ? "s" : ""}
                     </p>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
