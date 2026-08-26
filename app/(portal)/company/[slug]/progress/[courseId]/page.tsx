@@ -108,10 +108,14 @@ export default async function CourseProgressPage({ params }: PageProps) {
 
       <section className="overflow-hidden rounded-lg bg-white">
         <div className="grid md:grid-cols-[280px_1fr]">
-          <div className="relative h-48 md:h-full md:min-h-[220px]">
+          <div className="relative h-48 bg-portal-blue-soft/40 md:h-full md:min-h-[220px]">
             {coverUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <img
+                src={coverUrl}
+                alt=""
+                className="absolute inset-0 h-full w-full object-contain"
+              />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center bg-portal-blue-soft text-portal-blue">
                 <BookOpen size={48} />
