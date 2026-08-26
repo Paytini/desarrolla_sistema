@@ -1,4 +1,4 @@
-import { BookOpen } from "lucide-react"
+import { BookOpen, Eye } from "lucide-react"
 import Tooltip from "@mui/material/Tooltip"
 import { BackButton } from "@/components/shared/BackButton"
 import EmptyState from "@/components/shared/EmptyState"
@@ -10,6 +10,7 @@ import { companyPath } from "@/lib/company-routes"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
+import Link from "next/link"
 import { redirect } from "next/navigation"
 
 type PageProps = {
@@ -172,6 +173,7 @@ export default async function CourseProgressPage({ params }: PageProps) {
               { label: "Avance" },
               { label: "Estado" },
               { label: "Última sincronización" },
+              { label: "" },
             ]}
             rows={employeeCourses.map((row) => {
               const status = rowStatus(row)
@@ -215,8 +217,19 @@ export default async function CourseProgressPage({ params }: PageProps) {
                       />
                     )}
                   </td>
-                  <td className="rounded-r-lg px-4 py-3 text-sm text-slate-500">
+                  <td className="px-4 py-3 text-sm text-slate-500">
                     {formatDateTime(row.last_synced_at)}
+                  </td>
+                  <td className="rounded-r-lg py-3 pr-4 text-right">
+                    <Tooltip title="Ver perfil del empleado">
+                      <Link
+                        href={companyPath(slug, `/employees/${row.employee.id}`)}
+                        aria-label={`Ver perfil de ${row.employee.first_name} ${row.employee.last_name}`}
+                        className="inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
+                      >
+                        <Eye size={18} strokeWidth={2} />
+                      </Link>
+                    </Tooltip>
                   </td>
                 </tr>
               )
