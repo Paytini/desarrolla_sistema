@@ -203,60 +203,58 @@ export default async function CompanyProgressPage() {
       />
 
       <section className="rounded-lg bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-slate-950">
-            Resumen por curso
-            <span className="ml-2 text-sm font-normal text-slate-400">
-              {courseSummaries.length}
-            </span>
-          </h2>
+        <h2 className="mb-4 text-base font-semibold text-slate-950">
+          Resumen por curso
+          <span className="ml-2 text-sm font-normal text-slate-400">{courseSummaries.length}</span>
+        </h2>
 
-          {courseSummaries.length === 0 ? (
-            <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
-              Aún no hay cursos sincronizados.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {courseSummaries.map((course) => {
-                const thumb = thumbnailMap.get(course.courseId)
-                return (
-                  <div key={course.courseId} className="overflow-hidden rounded-lg bg-white">
-                    {thumb ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={thumb} alt="" className="h-[90px] w-full object-cover" />
-                    ) : (
-                      <div className="flex h-[56px] items-center justify-center bg-portal-blue-soft">
-                        <span className="text-xl font-bold text-portal-blue/20">
-                          {course.nombre.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="p-3">
-                      <div className="mb-2 flex items-start justify-between gap-2">
-                        <p className="text-sm font-semibold leading-snug text-slate-950">
-                          {course.nombre}
-                        </p>
-                        <span className="shrink-0 text-sm font-bold text-slate-950">
-                          {course.averageProgress}%
-                        </span>
-                      </div>
-                      <ProgressBar
-                        value={course.averageProgress}
-                        className="mb-2"
-                        trackClassName="bg-slate-200"
-                        fillClassName="bg-portal-blue"
-                      />
-                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
-                        <span>{course.assigned} asignados</span>
-                        <span className="text-portal-blue">{course.completed} completados</span>
-                        <span>{course.inProgress} en curso</span>
-                        <span>{course.notStarted} sin iniciar</span>
-                      </div>
+        {courseSummaries.length === 0 ? (
+          <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
+            Aún no hay cursos sincronizados.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {courseSummaries.map((course) => {
+              const thumb = thumbnailMap.get(course.courseId)
+              return (
+                <div key={course.courseId} className="overflow-hidden rounded-lg bg-white">
+                  {thumb ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={thumb} alt="" className="h-[90px] w-full object-cover" />
+                  ) : (
+                    <div className="flex h-[56px] items-center justify-center bg-portal-blue-soft">
+                      <span className="text-xl font-bold text-portal-blue/20">
+                        {course.nombre.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="p-3">
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold leading-snug text-slate-950">
+                        {course.nombre}
+                      </p>
+                      <span className="shrink-0 text-sm font-bold text-slate-950">
+                        {course.averageProgress}%
+                      </span>
+                    </div>
+                    <ProgressBar
+                      value={course.averageProgress}
+                      className="mb-2"
+                      trackClassName="bg-slate-200"
+                      fillClassName="bg-portal-blue"
+                    />
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                      <span>{course.assigned} asignados</span>
+                      <span className="text-portal-blue">{course.completed} completados</span>
+                      <span>{course.inProgress} en curso</span>
+                      <span>{course.notStarted} sin iniciar</span>
                     </div>
                   </div>
-                )
-              })}
-            </div>
-          )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </section>
     </div>
   )
