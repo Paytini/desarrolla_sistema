@@ -79,7 +79,52 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
     }
   }
 
-  function renderRow(request: ConsultingRequest) {
+  function renderUpcomingRow(request: ConsultingRequest) {
+    const areaOption = getConsultingArea(request.area)
+    const Icon = areaOption?.icon ?? CalendarClock
+
+    return (
+      <tr key={request.id} className="border-b border-[#f5f5f5] transition hover:bg-gray-50">
+        <td className="px-3 py-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-portal-blue">
+              <Icon size={16} />
+            </div>
+            <span className="min-w-0 truncate font-medium text-[#1a1a1a]">
+              {areaOption?.label ?? request.area}
+            </span>
+          </div>
+        </td>
+        <td className="px-3 py-3 text-[#64748b]">
+          {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
+        </td>
+        <td className="max-w-xs px-3 py-3 text-[#64748b]">
+          <span className="block truncate" title={request.context}>
+            {request.context}
+          </span>
+        </td>
+        <td className="px-3 py-3">
+          <StatusLabel
+            status={request.status}
+            variantMap={CONSULTING_STATUS_VARIANT}
+            labelMap={CONSULTING_STATUS_LABEL}
+          />
+        </td>
+        <td className="px-3 py-3">
+          {request.status === "PENDING" ? (
+            <CancelConsultingRequestButton
+              action={cancelConsultingRequestAction}
+              requestId={request.id}
+              areaLabel={areaOption?.label ?? request.area}
+              returnTo={returnTo}
+            />
+          ) : null}
+        </td>
+      </tr>
+    )
+  }
+
+  function renderHistoryRow(request: ConsultingRequest) {
     const areaOption = getConsultingArea(request.area)
     const Icon = areaOption?.icon ?? CalendarClock
 
@@ -107,14 +152,6 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
           variantMap={CONSULTING_STATUS_VARIANT}
           labelMap={CONSULTING_STATUS_LABEL}
         />
-        {request.status === "PENDING" ? (
-          <CancelConsultingRequestButton
-            action={cancelConsultingRequestAction}
-            requestId={request.id}
-            areaLabel={areaOption?.label ?? request.area}
-            returnTo={returnTo}
-          />
-        ) : null}
       </div>
     )
   }
@@ -151,7 +188,20 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             </div>
           ) : (
             <>
-              <div className="space-y-2">{upcoming.items.map(renderRow)}</div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-[#f0f0f0] text-left text-xs font-semibold uppercase tracking-wide text-[#94a3b8]">
+                      <th className="px-3 py-2 font-semibold">Área</th>
+                      <th className="px-3 py-2 font-semibold">Fecha y hora</th>
+                      <th className="px-3 py-2 font-semibold">Contexto</th>
+                      <th className="px-3 py-2 font-semibold">Estado</th>
+                      <th className="px-3 py-2 font-semibold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>{upcoming.items.map(renderUpcomingRow)}</tbody>
+                </table>
+              </div>
               <Pagination
                 currentPage={upcoming.currentPage}
                 totalPages={upcoming.totalPages}
@@ -173,7 +223,7 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             </div>
           ) : (
             <>
-              <div className="space-y-2">{history.items.map(renderRow)}</div>
+              <div className="space-y-2">{history.items.map(renderHistoryRow)}</div>
               <Pagination
                 currentPage={history.currentPage}
                 totalPages={history.totalPages}
