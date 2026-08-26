@@ -470,7 +470,7 @@ export default function AssignmentBoard({
                     </div>
                   ),
                 },
-                { label: "Colaborador" },
+                { label: "Empleado" },
                 { label: "Departamento" },
                 { label: "Puesto" },
               ]}
@@ -480,7 +480,7 @@ export default function AssignmentBoard({
                   <tr
                     key={employee.id}
                     onClick={() => toggleEmployee(employee.id)}
-                    className="cursor-pointer bg-gray-50 transition has-[:checked]:bg-[#F3F8FE]"
+                    className="cursor-pointer bg-white transition hover:bg-gray-50 has-[:checked]:bg-[#F3F8FE]"
                   >
                     <td className="w-10 rounded-l-lg py-3 pl-4">
                       <div className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-slate-200 transition has-[:checked]:border-portal-blue has-[:checked]:bg-portal-blue">
@@ -518,7 +518,7 @@ export default function AssignmentBoard({
             <StatusToast key={feedback.id} tone={feedback.tone} message={feedback.message} />
           )}
 
-          <div className="sticky bottom-0 -mx-4 -mb-4 border-t border-[#f5f5f5] bg-white px-4 py-3">
+          <div className="-mx-4 -mb-4 border-t border-[#f5f5f5] bg-white px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-slate-500">
                 <span className="font-semibold text-slate-800">{workingSet.size}</span> colaborador
