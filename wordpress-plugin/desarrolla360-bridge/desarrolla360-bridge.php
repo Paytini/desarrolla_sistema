@@ -3359,6 +3359,37 @@ function d360_bridge_debug_scan_for_known_hash( $known_hash, $student_id, $cours
 	);
 }
 
+function d360_bridge_debug_certificate_plugin_info() {
+	$active_plugins = (array) get_option( 'active_plugins', array() );
+
+	$network_plugins = array();
+	if ( is_multisite() ) {
+		$network_plugins = array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) );
+	}
+
+	global $wp_rewrite;
+	$matching_rules = array();
+	if ( isset( $wp_rewrite ) && ! empty( $wp_rewrite->rules ) ) {
+		foreach ( $wp_rewrite->rules as $pattern => $rewrite ) {
+			if ( false !== strpos( $pattern, 'tutor-certificate' ) || false !== strpos( $rewrite, 'tutor-certificate' ) || false !== strpos( $rewrite, 'tutor_certificate' ) ) {
+				$matching_rules[ $pattern ] = $rewrite;
+			}
+		}
+	}
+
+	$certificate_page = get_page_by_path( 'tutor-certificate' );
+
+	return array(
+		'active_plugins'          => array_merge( $active_plugins, $network_plugins ),
+		'matching_rewrite_rules'  => $matching_rules,
+		'tutor_certificate_page'  => $certificate_page ? array(
+			'ID'        => $certificate_page->ID,
+			'post_type' => $certificate_page->post_type,
+			'template'  => get_page_template_slug( $certificate_page ),
+		) : null,
+	);
+}
+
 function d360_bridge_get_course_certificate_debug_data( $student_id, $course_id, $known_hash = '' ) {
 	$cert_hash = d360_bridge_find_course_certificate_hash( $student_id, $course_id );
 	$attachment_id = d360_bridge_find_certificate_attachment_id( $student_id, $course_id );
@@ -3383,6 +3414,7 @@ function d360_bridge_get_course_certificate_debug_data( $student_id, $course_id,
 		'attachment_url'   => $attachment_id ? wp_get_attachment_url( $attachment_id ) : null,
 		'debug_tables'     => $cert_hash ? null : d360_bridge_debug_certificate_related_tables(),
 		'debug_hash_scan'  => $cert_hash ? null : d360_bridge_debug_scan_for_known_hash( $known_hash, $student_id, $course_id ),
+		'debug_plugin_info' => $cert_hash ? null : d360_bridge_debug_certificate_plugin_info(),
 	);
 }
 
