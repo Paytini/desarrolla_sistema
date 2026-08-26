@@ -218,21 +218,21 @@ export default async function CompanyProgressPage() {
               return (
                 <div
                   key={course.courseId}
-                  className="overflow-hidden rounded-lg border border-[#efefef] bg-white"
+                  className="flex flex-col overflow-hidden rounded-2xl border border-[#efefef] bg-white"
                 >
-                  {thumb ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={thumb} alt="" className="h-[90px] w-full object-cover" />
-                  ) : (
-                    <div className="flex h-[56px] items-center justify-center bg-portal-blue-soft">
-                      <span className="text-xl font-bold text-portal-blue/20">
-                        {course.nombre.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <div className="mb-2 flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold leading-snug text-slate-950">
+                  <div className="relative h-36 w-full shrink-0">
+                    {thumb ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={thumb} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-portal-blue-soft text-portal-blue">
+                        <BookOpen size={40} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2.5 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-slate-800">
                         {course.nombre}
                       </p>
                       <span className="shrink-0 text-sm font-bold text-slate-950">
@@ -241,16 +241,13 @@ export default async function CompanyProgressPage() {
                     </div>
                     <ProgressBar
                       value={course.averageProgress}
-                      className="mb-2"
                       trackClassName="bg-slate-200"
                       fillClassName="bg-portal-blue"
                     />
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
-                      <span>{course.assigned} asignados</span>
-                      <span className="text-portal-blue">{course.completed} completados</span>
-                      <span>{course.inProgress} en curso</span>
-                      <span>{course.notStarted} sin iniciar</span>
-                    </div>
+                    <p className="text-xs font-medium text-slate-400">
+                      {course.assigned} asignado{course.assigned !== 1 ? "s" : ""} ·{" "}
+                      {course.completed} completado{course.completed !== 1 ? "s" : ""}
+                    </p>
                   </div>
                 </div>
               )
