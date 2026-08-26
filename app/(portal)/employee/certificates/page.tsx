@@ -100,7 +100,8 @@ export default async function EmployeeCertificatesPage() {
                   fontSize: 11,
                   fontWeight: 600,
                   color: "#1a1a1a",
-                  "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0" },
+                  "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0", transform: "none" },
+                  "&:active": { transform: "none" },
                 }}
               >
                 Descargar ZIP
@@ -182,7 +183,8 @@ export default async function EmployeeCertificatesPage() {
                           fontSize: 11,
                           fontWeight: 600,
                           color: "#1a1a1a",
-                          "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0" },
+                          "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0", transform: "none" },
+                          "&:active": { transform: "none" },
                         }}
                       >
                         Ver Diploma
@@ -202,7 +204,8 @@ export default async function EmployeeCertificatesPage() {
                         fontWeight: 600,
                         bgcolor: "var(--portal-blue)",
                         color: "#fff",
-                        "&:hover": { bgcolor: "var(--portal-blue-hover)" },
+                        "&:hover": { bgcolor: "var(--portal-blue-hover)", transform: "none" },
+                        "&:active": { transform: "none" },
                       }}
                     >
                       Descargar DC-3
