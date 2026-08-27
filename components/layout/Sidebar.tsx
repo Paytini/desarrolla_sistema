@@ -137,6 +137,8 @@ export default function Sidebar({
         fontFamily: SIDEBAR_FONT,
         bgcolor: "var(--sidebar-navy)",
         borderRight: "1px solid var(--sidebar-navy-border)",
+        borderTopRightRadius: 20,
+        borderBottomRightRadius: 20,
       }}
     >
       <Box
