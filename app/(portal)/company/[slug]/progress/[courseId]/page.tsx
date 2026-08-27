@@ -53,14 +53,17 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
     prisma.quizAttempt.findMany({
       where: { wp_course_id: courseId, employee: { company_id: companyId, active: true } },
       orderBy: { attempt_started_at: "desc" },
-      select: { employee_id: true, result: true },
+      select: { employee_id: true, earned_marks: true, total_marks: true },
     }),
   ])
 
-  const quizResultByEmployeeId = new Map<string, string | null>()
+  const quizScorePctByEmployeeId = new Map<string, number | null>()
   for (const attempt of quizAttempts) {
-    if (!quizResultByEmployeeId.has(attempt.employee_id)) {
-      quizResultByEmployeeId.set(attempt.employee_id, attempt.result)
+    if (!quizScorePctByEmployeeId.has(attempt.employee_id)) {
+      const scorePct = attempt.total_marks
+        ? Math.round((attempt.earned_marks / attempt.total_marks) * 100)
+        : null
+      quizScorePctByEmployeeId.set(attempt.employee_id, scorePct)
     }
   }
 
@@ -87,7 +90,7 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
     progressPct: row.progress_pct,
     completed: row.completed,
     lastSyncedAt: row.last_synced_at,
-    quizResult: quizResultByEmployeeId.get(row.employee.id) ?? null,
+    quizScorePct: quizScorePctByEmployeeId.get(row.employee.id) ?? null,
     employee: {
       id: row.employee.id,
       firstName: row.employee.first_name,

@@ -10,14 +10,13 @@ import ProgressBar from "@/components/shared/ProgressBar"
 import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company-routes"
 import { formatDateTime } from "@/lib/format"
-import { QUIZ_RESULT_LABEL, QUIZ_RESULT_VARIANT } from "@/lib/quiz-result"
 
 export type CourseEmployeeRow = {
   id: string
   progressPct: number
   completed: boolean
   lastSyncedAt: Date
-  quizResult: string | null
+  quizScorePct: number | null
   employee: {
     id: string
     firstName: string
@@ -139,15 +138,11 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
                     labelMap={ROW_STATUS_LABEL}
                   />
                 </td>
-                <td className="px-4 py-3">
-                  {row.quizResult ? (
-                    <StatusLabel
-                      status={row.quizResult}
-                      variantMap={QUIZ_RESULT_VARIANT}
-                      labelMap={QUIZ_RESULT_LABEL}
-                    />
+                <td className="px-4 py-3 text-sm text-slate-700">
+                  {row.quizScorePct !== null ? (
+                    <span className="font-semibold tabular-nums">{row.quizScorePct}%</span>
                   ) : (
-                    <span className="text-sm text-slate-400">—</span>
+                    <span className="text-slate-400">—</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-500">
