@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Box from "@mui/material/Box"
 import Tooltip from "@mui/material/Tooltip"
 
-export function FullscreenToggle() {
+export function FullscreenToggle({ dark = false }: { dark?: boolean }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
@@ -42,9 +42,11 @@ export function FullscreenToggle() {
           background: "none",
           borderRadius: "8px",
           cursor: "pointer",
-          color: "text.secondary",
+          color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
           transition: "background 0.15s ease, color 0.15s ease",
-          "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+          "&:hover": dark
+            ? { bgcolor: "rgba(255,255,255,0.1)", color: "var(--sidebar-navy-text-strong)" }
+            : { bgcolor: "action.hover", color: "text.primary" },
         }}
       >
         <i
