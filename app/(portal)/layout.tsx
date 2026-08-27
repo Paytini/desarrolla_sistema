@@ -31,7 +31,6 @@ export default async function PortalLayout({ children }: { children: React.React
         companyName={company}
         companyLogoUrl={branding?.logo_url}
         userName={name}
-        userEmail={email}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-portal-border bg-white px-4 md:hidden">

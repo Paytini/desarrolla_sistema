@@ -111,14 +111,12 @@ export default function Sidebar({
   companyName,
   companyLogoUrl,
   userName,
-  userEmail,
 }: {
   role: Role
   companySlug?: string
   companyName?: string
   companyLogoUrl?: string | null
   userName: string
-  userEmail: string
 }) {
   const pathname = usePathname()
   const homeHref = homeHrefForRole(role, companySlug)
