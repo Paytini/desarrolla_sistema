@@ -58,7 +58,7 @@ export function TopbarUserMenu({ name, role, dark = false }: TopbarUserMenuProps
           >
             {initials}
           </Avatar>
-          <Box sx={{ display: { xs: "none", lg: "block" }, textAlign: "left" }}>
+          <Box sx={{ display: { xs: "none", md: "block" }, textAlign: "left" }}>
             <Typography
               sx={{
                 fontSize: "0.875rem",
@@ -85,7 +85,7 @@ export function TopbarUserMenu({ name, role, dark = false }: TopbarUserMenuProps
             component="i"
             className="ri-arrow-down-s-line"
             sx={{
-              display: { xs: "none", lg: "block" },
+              display: { xs: "none", md: "block" },
               fontSize: "1rem",
               color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
               lineHeight: 1,
