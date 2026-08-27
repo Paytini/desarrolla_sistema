@@ -156,15 +156,14 @@ body {
   --kpi-pt: 18px;
   --kpi-pb: 16px;
 
-  --sidebar-bg-v4: #fefefe;
-  --sidebar-border-v4: #ced5e0;
-  --sidebar-overlay-v4: none;
-
-  --nav-active-bg: rgba(53, 121, 245, 0.12);
-  --nav-active-text: #3579f5;
-  --nav-hover-bg: rgba(53, 121, 245, 0.08);
-
-  --panel-ink-v4: #161b23;
+  --sidebar-navy: #0b1e3f;
+  --sidebar-navy-border: rgba(255, 255, 255, 0.08);
+  --sidebar-navy-text: rgba(255, 255, 255, 0.65);
+  --sidebar-navy-text-strong: #ffffff;
+  --sidebar-navy-active-bg: #ffffff;
+  --sidebar-navy-active-text: #0b1e3f;
+  --sidebar-navy-hover-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-navy-card-bg: color-mix(in srgb, #0b1e3f 100%, white 6%);
 }
 
 @keyframes kpi-rise-in {
