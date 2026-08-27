@@ -115,6 +115,13 @@ export function MobileNav({
 }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [lastPathname, setLastPathname] = useState(pathname)
+
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname)
+    setOpen(false)
+  }
+
   const initials = getInitials(name)
   const homeHref = homeHrefForRole(role, companySlug)
 
