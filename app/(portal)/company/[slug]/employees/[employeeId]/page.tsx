@@ -9,6 +9,7 @@ import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company-routes"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { QUIZ_RESULT_LABEL, QUIZ_RESULT_VARIANT } from "@/lib/quiz-result"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 
@@ -37,18 +38,6 @@ function InfoField({ label, value }: { label: string; value: string }) {
       <p className="mt-0.5 truncate text-sm text-slate-800">{value}</p>
     </div>
   )
-}
-
-const QUIZ_RESULT_VARIANT: Record<string, "green" | "amber" | "red" | "slate"> = {
-  pass: "green",
-  fail: "red",
-  pending: "amber",
-}
-
-const QUIZ_RESULT_LABEL: Record<string, string> = {
-  pass: "Aprobado",
-  fail: "No aprobado",
-  pending: "Pendiente de revisión",
 }
 
 const TABLE_PAGE_SIZE = 5

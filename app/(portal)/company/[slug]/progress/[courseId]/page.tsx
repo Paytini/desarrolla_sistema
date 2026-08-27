@@ -30,7 +30,7 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
     redirect(companyPath(slug, "/progress"))
   }
 
-  const [activeCompanyPackage, employeeCourses, dc3Metadata] = await Promise.all([
+  const [activeCompanyPackage, employeeCourses, dc3Metadata, quizAttempts] = await Promise.all([
     prisma.companyPackage.findFirst({
       where: { company_id: companyId, active: true },
       orderBy: { created_at: "desc" },
@@ -50,7 +50,19 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
       orderBy: [{ progress_pct: "desc" }],
     }),
     prisma.courseDc3Metadata.findUnique({ where: { wp_course_id: courseId } }),
+    prisma.quizAttempt.findMany({
+      where: { wp_course_id: courseId, employee: { company_id: companyId, active: true } },
+      orderBy: { attempt_started_at: "desc" },
+      select: { employee_id: true, result: true },
+    }),
   ])
+
+  const quizResultByEmployeeId = new Map<string, string | null>()
+  for (const attempt of quizAttempts) {
+    if (!quizResultByEmployeeId.has(attempt.employee_id)) {
+      quizResultByEmployeeId.set(attempt.employee_id, attempt.result)
+    }
+  }
 
   const catalogCourse = (activeCompanyPackage?.package?.courses ?? []).find(
     (course) => course.wp_course_id === courseId,
@@ -75,6 +87,7 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
     progressPct: row.progress_pct,
     completed: row.completed,
     lastSyncedAt: row.last_synced_at,
+    quizResult: quizResultByEmployeeId.get(row.employee.id) ?? null,
     employee: {
       id: row.employee.id,
       firstName: row.employee.first_name,
