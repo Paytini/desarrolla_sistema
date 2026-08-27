@@ -17,6 +17,7 @@ interface SearchPaletteProps<T> {
   triggerLabel: string
   minChars?: number
   triggerWidth?: number | string
+  dark?: boolean
   renderGroups: (results: T, query: string, onClose: () => void) => ReactNode
 }
 
@@ -26,6 +27,7 @@ export default function SearchPalette<T>({
   triggerLabel,
   minChars = 2,
   triggerWidth,
+  dark = false,
   renderGroups,
 }: SearchPaletteProps<T>) {
   const [open, setOpen] = useState(false)
@@ -147,18 +149,17 @@ export default function SearchPalette<T>({
           width: { xs: 40, sm: triggerWidth ?? 280 },
           px: { xs: 1, sm: 2 },
           border: "1px solid",
-          borderColor: "divider",
+          borderColor: dark ? "var(--sidebar-navy-border)" : "divider",
           borderRadius: "8px",
-          bgcolor: "background.default",
+          bgcolor: dark ? "rgba(255,255,255,0.06)" : "background.default",
           cursor: "pointer",
           fontSize: "0.8125rem",
-          color: "text.secondary",
+          color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
           fontFamily: "inherit",
-          transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-          "&:hover": {
-            borderColor: "primary.main",
-            boxShadow: "0 0 0 3px rgba(59,130,246,0.08)",
-          },
+          transition: "border-color 0.2s ease, background-color 0.2s ease",
+          "&:hover": dark
+            ? { bgcolor: "rgba(255,255,255,0.1)", borderColor: "rgba(255,255,255,0.24)" }
+            : { borderColor: "primary.main", boxShadow: "0 0 0 3px rgba(59,130,246,0.08)" },
         }}
       >
         <Search size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
@@ -181,14 +182,14 @@ export default function SearchPalette<T>({
             display: { xs: "none", sm: "flex" },
             alignItems: "center",
             border: "1px solid",
-            borderColor: "divider",
+            borderColor: dark ? "rgba(255,255,255,0.16)" : "divider",
             borderRadius: "6px",
             px: 0.875,
             py: 0.25,
             fontFamily: "monospace",
             fontSize: "10px",
-            color: "text.secondary",
-            bgcolor: "background.paper",
+            color: dark ? "rgba(255,255,255,0.6)" : "text.secondary",
+            bgcolor: dark ? "rgba(255,255,255,0.08)" : "background.paper",
             flexShrink: 0,
           }}
         >
