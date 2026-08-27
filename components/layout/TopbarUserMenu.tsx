@@ -13,9 +13,10 @@ import { avatarColor, getInitials, roleLabel, type Role } from "@/components/lay
 interface TopbarUserMenuProps {
   name: string
   role: Role
+  dark?: boolean
 }
 
-export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
+export function TopbarUserMenu({ name, role, dark = false }: TopbarUserMenuProps) {
   const color = avatarColor(name)
   const initials = getInitials(name)
 
@@ -40,8 +41,9 @@ export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
             borderRadius: "10px",
             px: 1,
             py: 0.75,
+            width: "100%",
             transition: "background 0.15s ease",
-            "&:hover": { bgcolor: "action.hover" },
+            "&:hover": { bgcolor: dark ? "rgba(255,255,255,0.08)" : "action.hover" },
           }}
         >
           <Avatar
@@ -61,7 +63,7 @@ export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
               sx={{
                 fontSize: "0.875rem",
                 fontWeight: 600,
-                color: "text.primary",
+                color: dark ? "var(--sidebar-navy-text-strong)" : "text.primary",
                 lineHeight: 1.2,
                 whiteSpace: "nowrap",
               }}
@@ -71,7 +73,7 @@ export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
             <Typography
               sx={{
                 fontSize: "0.6875rem",
-                color: "text.secondary",
+                color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
                 lineHeight: 1,
                 mt: "2px",
               }}
@@ -85,7 +87,7 @@ export function TopbarUserMenu({ name, role }: TopbarUserMenuProps) {
             sx={{
               display: { xs: "none", lg: "block" },
               fontSize: "1rem",
-              color: "text.secondary",
+              color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
               lineHeight: 1,
               transition: "transform 0.2s ease",
               transform: open ? "rotate(180deg)" : "rotate(0deg)",
