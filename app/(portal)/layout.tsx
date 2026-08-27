@@ -38,7 +38,7 @@ export default async function PortalLayout({ children }: { children: React.React
         userName={name}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-portal-border bg-[#F8F9FC] px-4 md:px-8">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-3 bg-[#F8F9FC] px-4 md:px-8">
           <div className="md:hidden">
             <MobileNav
               role={role}
