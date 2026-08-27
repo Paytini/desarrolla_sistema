@@ -29,11 +29,6 @@ import {
   type NavItem,
   type Role,
 } from "@/components/layout/nav-config"
-import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
-import { NotificationBell } from "@/components/layout/NotificationBell"
-import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
-import HrSearchBar from "@/components/search/HrSearchBar"
-import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import { blobProxyUrl } from "@/lib/blob-proxy"
 
 function MobileNavLink({
@@ -162,7 +157,6 @@ export function MobileNav({
             flexShrink: 0,
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
             px: 2,
             borderBottom: "1px solid var(--sidebar-navy-border)",
           }}
@@ -197,14 +191,6 @@ export function MobileNav({
               />
             )}
           </Link>
-
-          {role === "SUPERADMIN" ? (
-            <SuperadminSearchBar />
-          ) : role === "HR" ? (
-            companySlug && <HrSearchBar companySlug={companySlug} />
-          ) : (
-            <EmployeeSearchBar />
-          )}
         </Box>
 
         <Box sx={{ flex: 1, overflowY: "auto", py: 1.5 }}>
@@ -255,20 +241,13 @@ export function MobileNav({
 
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5,
-            px: 1.5,
-            py: 1,
-            borderTop: "1px solid var(--sidebar-navy-border)",
             flexShrink: 0,
+            px: 1,
+            pt: 1,
+            pb: 0.5,
+            borderTop: "1px solid var(--sidebar-navy-border)",
           }}
         >
-          <NotificationBell dark />
-          <FullscreenToggle dark />
-        </Box>
-
-        <Box sx={{ flexShrink: 0, px: 1, pt: 1, pb: 0.5 }}>
           <Box
             component="button"
             type="button"

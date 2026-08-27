@@ -21,12 +21,7 @@ import {
   type NavItem,
   type Role,
 } from "@/components/layout/nav-config"
-import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
-import { NotificationBell } from "@/components/layout/NotificationBell"
 import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu"
-import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
-import HrSearchBar from "@/components/search/HrSearchBar"
-import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import { blobProxyUrl } from "@/lib/blob-proxy"
 import { companyPath } from "@/lib/company-routes"
 
@@ -144,7 +139,6 @@ export default function Sidebar({
           flexShrink: 0,
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
           px: 2,
           borderBottom: "1px solid var(--sidebar-navy-border)",
         }}
@@ -178,14 +172,6 @@ export default function Sidebar({
             />
           )}
         </Link>
-
-        {role === "SUPERADMIN" ? (
-          <SuperadminSearchBar />
-        ) : role === "HR" ? (
-          companySlug && <HrSearchBar companySlug={companySlug} />
-        ) : (
-          <EmployeeSearchBar />
-        )}
       </Box>
 
       <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>
@@ -312,20 +298,13 @@ export default function Sidebar({
 
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          px: 1.5,
-          py: 1,
-          borderTop: "1px solid var(--sidebar-navy-border)",
+          px: 1,
+          pt: 1,
+          pb: 1.5,
           flexShrink: 0,
+          borderTop: "1px solid var(--sidebar-navy-border)",
         }}
       >
-        <NotificationBell dark />
-        <FullscreenToggle dark />
-      </Box>
-
-      <Box sx={{ px: 1, pb: 1.5, flexShrink: 0 }}>
         <TopbarUserMenu name={userName} role={role} dark />
       </Box>
     </Box>

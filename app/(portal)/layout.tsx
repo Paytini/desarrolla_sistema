@@ -1,9 +1,14 @@
 import { Suspense } from "react"
 import { PortalThemeProvider } from "@/components/providers/PortalThemeProvider"
 import { PageSkeleton } from "@/components/shared/PageSkeleton"
+import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
 import { MobileNav } from "@/components/layout/MobileNav"
+import { NotificationBell } from "@/components/layout/NotificationBell"
 import Sidebar from "@/components/layout/Sidebar"
 import { OnboardingTour } from "@/components/layout/OnboardingTour"
+import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
+import HrSearchBar from "@/components/search/HrSearchBar"
+import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -33,14 +38,27 @@ export default async function PortalLayout({ children }: { children: React.React
         userName={name}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-portal-border bg-white px-4 md:hidden">
-          <MobileNav
-            role={role}
-            name={name}
-            company={company}
-            companySlug={branding?.slug}
-            companyLogoUrl={branding?.logo_url}
-          />
+        <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-portal-border bg-[#F8F9FC] px-4 md:px-8">
+          <div className="md:hidden">
+            <MobileNav
+              role={role}
+              name={name}
+              company={company}
+              companySlug={branding?.slug}
+              companyLogoUrl={branding?.logo_url}
+            />
+          </div>
+          <div className="flex flex-1 items-center justify-end gap-1">
+            {role === "SUPERADMIN" ? (
+              <SuperadminSearchBar />
+            ) : role === "HR" ? (
+              branding?.slug && <HrSearchBar companySlug={branding.slug} />
+            ) : (
+              <EmployeeSearchBar />
+            )}
+            <NotificationBell />
+            <FullscreenToggle />
+          </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-[#F8F9FC] px-8 py-7">
           <Suspense fallback={<PageSkeleton />}>{children}</Suspense>

@@ -22,7 +22,6 @@ export default function EmployeeSearchBar() {
       placeholder="Buscar cursos o constancias..."
       triggerLabel="Buscar mis cursos"
       triggerWidth="100%"
-      dark
       iconOnly
       renderGroups={(results, query, onClose) => {
         const hasResults = results.courses.length > 0 || results.certificates.length > 0
