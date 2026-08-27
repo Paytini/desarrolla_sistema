@@ -209,7 +209,6 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                 </thead>
                 <tbody>
                   {pagedCertificates.map((certificate) => {
-                    const initials = getInitials(certificate.employeeName)
                     return (
                       <tr
                         key={certificate.id}
@@ -217,9 +216,6 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                       >
                         <td className="px-3 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-[11px] font-bold text-portal-blue">
-                              {initials}
-                            </div>
                             <span className="min-w-0 truncate font-medium text-[#1a1a1a]">
                               {certificate.employeeName}
                             </span>
