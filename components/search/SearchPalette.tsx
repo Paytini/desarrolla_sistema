@@ -18,6 +18,7 @@ interface SearchPaletteProps<T> {
   minChars?: number
   triggerWidth?: number | string
   dark?: boolean
+  iconOnly?: boolean
   renderGroups: (results: T, query: string, onClose: () => void) => ReactNode
 }
 
@@ -28,6 +29,7 @@ export default function SearchPalette<T>({
   minChars = 2,
   triggerWidth,
   dark = false,
+  iconOnly = false,
   renderGroups,
 }: SearchPaletteProps<T>) {
   const [open, setOpen] = useState(false)
@@ -136,66 +138,93 @@ export default function SearchPalette<T>({
 
   return (
     <>
-      <Box
-        component="button"
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={`${triggerLabel} (${kbd})`}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1.25,
-          height: 40,
-          width: { xs: 40, sm: triggerWidth ?? 280 },
-          px: { xs: 1, sm: 2 },
-          border: "1px solid",
-          borderColor: dark ? "var(--sidebar-navy-border)" : "divider",
-          borderRadius: "8px",
-          bgcolor: dark ? "rgba(255,255,255,0.06)" : "background.default",
-          cursor: "pointer",
-          fontSize: "0.8125rem",
-          color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
-          fontFamily: "inherit",
-          transition: "border-color 0.2s ease, background-color 0.2s ease",
-          "&:hover": dark
-            ? { bgcolor: "rgba(255,255,255,0.1)", borderColor: "rgba(255,255,255,0.24)" }
-            : { borderColor: "primary.main", boxShadow: "0 0 0 3px rgba(59,130,246,0.08)" },
-        }}
-      >
-        <Search size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
+      {iconOnly ? (
         <Box
-          component="span"
+          component="button"
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`${triggerLabel} (${kbd})`}
           sx={{
-            display: { xs: "none", sm: "block" },
-            flex: 1,
-            textAlign: "left",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {triggerLabel}
-        </Box>
-        <Box
-          component="kbd"
-          sx={{
-            display: { xs: "none", sm: "flex" },
+            display: "flex",
             alignItems: "center",
-            border: "1px solid",
-            borderColor: dark ? "rgba(255,255,255,0.16)" : "divider",
-            borderRadius: "6px",
-            px: 0.875,
-            py: 0.25,
-            fontFamily: "monospace",
-            fontSize: "10px",
-            color: dark ? "rgba(255,255,255,0.6)" : "text.secondary",
-            bgcolor: dark ? "rgba(255,255,255,0.08)" : "background.paper",
-            flexShrink: 0,
+            justifyContent: "center",
+            width: 36,
+            height: 36,
+            border: "none",
+            background: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
+            transition: "background 0.15s ease, color 0.15s ease",
+            "&:hover": dark
+              ? { bgcolor: "rgba(255,255,255,0.1)", color: "var(--sidebar-navy-text-strong)" }
+              : { bgcolor: "action.hover", color: "text.primary" },
           }}
         >
-          {kbd}
+          <Search size={18} strokeWidth={1.75} />
         </Box>
-      </Box>
+      ) : (
+        <Box
+          component="button"
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`${triggerLabel} (${kbd})`}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            height: 40,
+            width: { xs: 40, sm: triggerWidth ?? 280 },
+            px: { xs: 1, sm: 2 },
+            border: "1px solid",
+            borderColor: dark ? "var(--sidebar-navy-border)" : "divider",
+            borderRadius: "8px",
+            bgcolor: dark ? "rgba(255,255,255,0.06)" : "background.default",
+            cursor: "pointer",
+            fontSize: "0.8125rem",
+            color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
+            fontFamily: "inherit",
+            transition: "border-color 0.2s ease, background-color 0.2s ease",
+            "&:hover": dark
+              ? { bgcolor: "rgba(255,255,255,0.1)", borderColor: "rgba(255,255,255,0.24)" }
+              : { borderColor: "primary.main", boxShadow: "0 0 0 3px rgba(59,130,246,0.08)" },
+          }}
+        >
+          <Search size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
+          <Box
+            component="span"
+            sx={{
+              display: { xs: "none", sm: "block" },
+              flex: 1,
+              textAlign: "left",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {triggerLabel}
+          </Box>
+          <Box
+            component="kbd"
+            sx={{
+              display: { xs: "none", sm: "flex" },
+              alignItems: "center",
+              border: "1px solid",
+              borderColor: dark ? "rgba(255,255,255,0.16)" : "divider",
+              borderRadius: "6px",
+              px: 0.875,
+              py: 0.25,
+              fontFamily: "monospace",
+              fontSize: "10px",
+              color: dark ? "rgba(255,255,255,0.6)" : "text.secondary",
+              bgcolor: dark ? "rgba(255,255,255,0.08)" : "background.paper",
+              flexShrink: 0,
+            }}
+          >
+            {kbd}
+          </Box>
+        </Box>
+      )}
 
       <Modal
         open={open}

@@ -162,6 +162,7 @@ export function MobileNav({
             flexShrink: 0,
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
             px: 2,
             borderBottom: "1px solid var(--sidebar-navy-border)",
           }}
@@ -196,19 +197,7 @@ export function MobileNav({
               />
             )}
           </Link>
-        </Box>
 
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-            borderBottom: "1px solid var(--sidebar-navy-border)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 1.25,
-            flexShrink: 0,
-          }}
-        >
           {role === "SUPERADMIN" ? (
             <SuperadminSearchBar />
           ) : role === "HR" ? (

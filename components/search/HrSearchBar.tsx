@@ -29,6 +29,7 @@ export default function HrSearchBar({ companySlug }: { companySlug: string }) {
       triggerLabel="Buscar en el portal"
       triggerWidth="100%"
       dark
+      iconOnly
       renderGroups={(results, query, onClose) => {
         const hasResults = results.employees.length > 0 || results.courses.length > 0
 

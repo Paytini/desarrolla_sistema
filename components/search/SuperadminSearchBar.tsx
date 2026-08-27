@@ -34,6 +34,7 @@ export default function SuperadminSearchBar() {
       triggerLabel="Buscar en el portal"
       triggerWidth="100%"
       dark
+      iconOnly
       renderGroups={(results, query, onClose) => {
         const hasResults =
           results.companies.length > 0 ||
