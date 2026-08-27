@@ -55,6 +55,15 @@
   --fd-accent: #f59e0b;
   --fd-muted: #f3f4f6;
   --fd-border: #e5e7eb;
+
+  --sidebar-navy: #0b1e3f;
+  --sidebar-navy-border: rgba(255, 255, 255, 0.08);
+  --sidebar-navy-text: rgba(255, 255, 255, 0.65);
+  --sidebar-navy-text-strong: #ffffff;
+  --sidebar-navy-active-bg: #ffffff;
+  --sidebar-navy-active-text: #0b1e3f;
+  --sidebar-navy-hover-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-navy-card-bg: color-mix(in srgb, #0b1e3f 100%, white 6%);
 }
 
 @theme inline {
@@ -155,15 +164,6 @@ body {
   --kpi-px: 20px;
   --kpi-pt: 18px;
   --kpi-pb: 16px;
-
-  --sidebar-navy: #0b1e3f;
-  --sidebar-navy-border: rgba(255, 255, 255, 0.08);
-  --sidebar-navy-text: rgba(255, 255, 255, 0.65);
-  --sidebar-navy-text-strong: #ffffff;
-  --sidebar-navy-active-bg: #ffffff;
-  --sidebar-navy-active-text: #0b1e3f;
-  --sidebar-navy-hover-bg: rgba(255, 255, 255, 0.08);
-  --sidebar-navy-card-bg: color-mix(in srgb, #0b1e3f 100%, white 6%);
 }
 
 @keyframes kpi-rise-in {
