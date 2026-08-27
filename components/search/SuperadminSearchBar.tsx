@@ -33,6 +33,7 @@ export default function SuperadminSearchBar() {
       placeholder="Buscar empresas, empleados, paquetes..."
       triggerLabel="Buscar en el portal"
       triggerWidth="100%"
+      dark
       renderGroups={(results, query, onClose) => {
         const hasResults =
           results.companies.length > 0 ||
