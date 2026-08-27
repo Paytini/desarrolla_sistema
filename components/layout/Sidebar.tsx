@@ -158,6 +158,7 @@ export default function Sidebar({
             background: "#FFFFFF",
             borderRadius: 8,
             padding: "6px 10px",
+            width: "fit-content",
           }}
         >
           {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
@@ -171,9 +172,9 @@ export default function Sidebar({
             <Image
               src="/assets/logo_desarrolla_cropped.png"
               alt="Desarrolla360"
-              width={1554}
-              height={461}
-              style={{ height: 28, width: "auto", objectFit: "contain" }}
+              width={94}
+              height={28}
+              style={{ height: 28, width: 94, objectFit: "contain" }}
             />
           )}
         </Link>

@@ -169,6 +169,7 @@ export function MobileNav({
               background: "#FFFFFF",
               borderRadius: 8,
               padding: "6px 10px",
+              width: "fit-content",
             }}
             onClick={() => setOpen(false)}
           >
@@ -183,9 +184,9 @@ export function MobileNav({
               <Image
                 src="/assets/logo_desarrolla_cropped.png"
                 alt="Desarrolla360"
-                width={1554}
-                height={461}
-                style={{ height: 26, width: "auto", objectFit: "contain" }}
+                width={88}
+                height={26}
+                style={{ height: 26, width: 88, objectFit: "contain" }}
               />
             )}
           </Link>
