@@ -23,7 +23,6 @@ import {
 } from "@/components/layout/nav-config"
 import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
 import { NotificationBell } from "@/components/layout/NotificationBell"
-import { PortalGreeting } from "@/components/layout/PortalGreeting"
 import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu"
 import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
 import HrSearchBar from "@/components/search/HrSearchBar"
@@ -198,7 +197,6 @@ export default function Sidebar({
         ) : (
           <EmployeeSearchBar />
         )}
-        <PortalGreeting name={userName} role={role} />
       </Box>
 
       <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>

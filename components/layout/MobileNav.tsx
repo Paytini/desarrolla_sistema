@@ -31,7 +31,6 @@ import {
 } from "@/components/layout/nav-config"
 import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
 import { NotificationBell } from "@/components/layout/NotificationBell"
-import { PortalGreeting } from "@/components/layout/PortalGreeting"
 import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
 import HrSearchBar from "@/components/search/HrSearchBar"
 import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
@@ -206,11 +205,10 @@ export function MobileNav({
           {role === "SUPERADMIN" ? (
             <SuperadminSearchBar />
           ) : role === "HR" ? (
-            <HrSearchBar companySlug={companySlug ?? ""} />
+            companySlug && <HrSearchBar companySlug={companySlug} />
           ) : (
             <EmployeeSearchBar />
           )}
-          <PortalGreeting name={name} role={role} />
         </Box>
 
         <Box sx={{ flex: 1, overflowY: "auto", py: 1.5 }}>
