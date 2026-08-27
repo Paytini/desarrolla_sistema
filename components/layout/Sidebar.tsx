@@ -21,7 +21,13 @@ import {
   type NavItem,
   type Role,
 } from "@/components/layout/nav-config"
-import { kpiColorMap } from "@/lib/kpi-colors"
+import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
+import { NotificationBell } from "@/components/layout/NotificationBell"
+import { PortalGreeting } from "@/components/layout/PortalGreeting"
+import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu"
+import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
+import HrSearchBar from "@/components/search/HrSearchBar"
+import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import { blobProxyUrl } from "@/lib/blob-proxy"
 import { companyPath } from "@/lib/company-routes"
 
@@ -30,25 +36,9 @@ const SIDEBAR_W = 288
 const SIDEBAR_FONT =
   'var(--font-plus-jakarta-sans, "Plus Jakarta Sans"), system-ui, "Segoe UI", Arial, sans-serif'
 
-const SIDEBAR_BG = "var(--sidebar-bg-v4, #FFFFFF)"
-const SIDEBAR_BORDER = "var(--sidebar-border-v4, #E3D7F5)"
-const SIDEBAR_OVERLAY =
-  "var(--sidebar-overlay-v4, linear-gradient(to bottom, rgba(139,92,246,0) 0%, rgba(139,92,246,0.10) 45%, rgba(139,92,246,0.55) 100%))"
-
-const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)": "var(--portal-blue)",
-  "var(--sidebar-accent-2)": "var(--portal-blue)",
-  "var(--sidebar-accent-3)": "var(--portal-blue)",
-}
-const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
-
 function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
   const active = isActive(item.href, pathname, item.exact)
   const Icon = item.icon
-  const { bg, text } = kpiColorMap[item.color]
-  const activeBg = `var(--nav-active-bg, ${bg})`
-  const activeText = `var(--nav-active-text, ${text})`
-  const hoverBg = `var(--nav-hover-bg, ${bg}14)`
 
   const LinkComponent = item.external ? "a" : Link
   const linkProps = item.external ? {} : { prefetch: true }
@@ -69,17 +59,16 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
           py: 0.875,
           minHeight: 40,
           gap: 1,
-          color: "text.primary",
+          color: "var(--sidebar-navy-text)",
           "&.Mui-selected": {
-            bgcolor: activeBg,
-            color: activeText,
-            "& .nav-icon": { color: activeText },
-            "&:hover": { bgcolor: activeBg, filter: "brightness(0.94)" },
+            bgcolor: "var(--sidebar-navy-active-bg)",
+            color: "var(--sidebar-navy-active-text)",
+            "& .nav-icon": { color: "var(--sidebar-navy-active-text)" },
+            "&:hover": { bgcolor: "var(--sidebar-navy-active-bg)" },
           },
           "&:hover:not(.Mui-selected)": {
-            bgcolor: hoverBg,
-            color: "text.primary",
-            "& .nav-icon": { color: activeBg },
+            bgcolor: "var(--sidebar-navy-hover-bg)",
+            color: "var(--sidebar-navy-text-strong)",
           },
           transition: "background-color 0.15s ease, color 0.15s ease",
         }}
@@ -89,7 +78,7 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
           sx={{
             minWidth: 0,
             mr: 0.5,
-            color: active ? text : "inherit",
+            color: "inherit",
             transition: "color 0.15s ease",
             flexShrink: 0,
           }}
@@ -121,11 +110,15 @@ export default function Sidebar({
   companySlug,
   companyName,
   companyLogoUrl,
+  userName,
+  userEmail,
 }: {
   role: Role
   companySlug?: string
   companyName?: string
   companyLogoUrl?: string | null
+  userName: string
+  userEmail: string
 }) {
   const pathname = usePathname()
   const homeHref = homeHrefForRole(role, companySlug)
@@ -141,216 +134,213 @@ export default function Sidebar({
         flexShrink: 0,
         display: { xs: "none", md: "flex" },
         flexDirection: "column",
-        overflow: "visible",
+        overflow: "hidden",
         zIndex: 20,
         fontFamily: SIDEBAR_FONT,
+        bgcolor: "var(--sidebar-navy)",
+        borderRight: "1px solid var(--sidebar-navy-border)",
       }}
     >
       <Box
-        aria-hidden
         sx={{
-          position: "absolute",
-          inset: 0,
-          bgcolor: SIDEBAR_BG,
-          borderRight: "1px solid",
-          borderColor: SIDEBAR_BORDER,
-          overflow: "hidden",
-          pointerEvents: "none",
+          height: 64,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          px: 2,
+          borderBottom: "1px solid var(--sidebar-navy-border)",
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: "55%",
-            background: SIDEBAR_OVERLAY,
+        <Link
+          href={homeHref}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            textDecoration: "none",
+            background: "#FFFFFF",
+            borderRadius: 8,
+            padding: "6px 10px",
           }}
-        />
+        >
+          {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
+            <img
+              src={blobProxyUrl(companyLogoUrl)}
+              alt={companyName ?? "Logo de la empresa"}
+              style={{ height: 28, width: "auto", maxWidth: 160, objectFit: "contain" }}
+            />
+          ) : (
+            <Image
+              src="/assets/logo_desarrolla_cropped.png"
+              alt="Desarrolla360"
+              width={1554}
+              height={461}
+              style={{ height: 28, width: "auto", objectFit: "contain" }}
+            />
+          )}
+        </Link>
       </Box>
 
       <Box
         sx={{
-          position: "relative",
-          zIndex: 1,
+          px: 2,
+          py: 1.5,
+          borderBottom: "1px solid var(--sidebar-navy-border)",
           display: "flex",
           flexDirection: "column",
-          height: "100%",
-          overflow: "hidden",
+          gap: 1.25,
+          flexShrink: 0,
         }}
       >
-        <Box
-          sx={{
-            height: 64,
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            px: 2,
-            borderBottom: "1px solid",
-            borderColor: SIDEBAR_BORDER,
-          }}
-        >
-          <Link
-            href={homeHref}
-            style={{ display: "flex", alignItems: "center", textDecoration: "none" }}
-          >
-            {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
-              <img
-                src={blobProxyUrl(companyLogoUrl)}
-                alt={companyName ?? "Logo de la empresa"}
-                style={{ height: 36, width: "auto", maxWidth: 180, objectFit: "contain" }}
-              />
-            ) : (
-              <Image
-                src="/assets/logo_desarrolla_cropped.png"
-                alt="Desarrolla360"
-                width={1554}
-                height={461}
-                style={{ height: 36, width: "auto", objectFit: "contain" }}
-              />
-            )}
-          </Link>
-        </Box>
+        {role === "SUPERADMIN" ? (
+          <SuperadminSearchBar />
+        ) : role === "HR" ? (
+          companySlug && <HrSearchBar companySlug={companySlug} />
+        ) : (
+          <EmployeeSearchBar />
+        )}
+        <PortalGreeting name={userName} role={role} />
+      </Box>
 
-        <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>
-          {role === "SUPERADMIN" ? (
-            navSuperAdminSections.map((section, si) => (
-              <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
-                <Box
+      <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>
+        {role === "SUPERADMIN" ? (
+          navSuperAdminSections.map((section, si) => (
+            <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
+              <Typography
+                variant="overline"
+                sx={{
+                  display: "block",
+                  fontFamily: SIDEBAR_FONT,
+                  color: "var(--sidebar-navy-text)",
+                  opacity: 0.7,
+                  px: 2.5,
+                  mt: si > 0 ? 2 : 0.5,
+                  mb: 0.75,
+                  lineHeight: 1,
+                }}
+              >
+                {section.heading}
+              </Typography>
+              <List disablePadding>
+                {section.items.map((item) => (
+                  <NavItemRow key={item.href} item={item} pathname={pathname} />
+                ))}
+              </List>
+            </Box>
+          ))
+        ) : (
+          <List disablePadding>
+            {(role === "HR" ? navHr(companySlug ?? "") : navEmployee).map((item) => (
+              <NavItemRow key={item.href} item={item} pathname={pathname} />
+            ))}
+          </List>
+        )}
+      </Box>
+
+      {role === "SUPERADMIN" && (
+        <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
+          <Link href="/superadmin/integration" style={{ textDecoration: "none" }}>
+            <Box
+              sx={{
+                borderRadius: "14px",
+                bgcolor: "var(--sidebar-navy-card-bg)",
+                px: 2,
+                py: 1.75,
+                transition: "transform 150ms ease",
+                "&:hover": { transform: "scale(1.015)" },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
+                <LifeBuoy size={15} strokeWidth={2} color="var(--portal-blue)" />
+                <Typography
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    px: 2.5,
-                    mt: si > 0 ? 2 : 0.5,
-                    mb: 0.75,
+                    fontSize: "0.6875rem",
+                    fontWeight: 700,
+                    color: "var(--portal-blue)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      bgcolor: resolveAccent(section.accent),
-                      flexShrink: 0,
-                      boxShadow: `0 0 6px 0 ${resolveAccent(section.accent)}`,
-                    }}
-                  />
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      fontFamily: SIDEBAR_FONT,
-                      color: resolveAccent(section.accent),
-                      lineHeight: 1,
-                    }}
-                  >
-                    {section.heading}
-                  </Typography>
-                </Box>
-                <List disablePadding>
-                  {section.items.map((item) => (
-                    <NavItemRow key={item.href} item={item} pathname={pathname} />
-                  ))}
-                </List>
+                  Soporte
+                </Typography>
               </Box>
-            ))
-          ) : (
-            <List disablePadding>
-              {(role === "HR" ? navHr(companySlug ?? "") : navEmployee).map((item) => (
-                <NavItemRow key={item.href} item={item} pathname={pathname} />
-              ))}
-            </List>
-          )}
+              <Typography
+                sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}
+              >
+                Centro de ayuda
+              </Typography>
+              <Typography
+                sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}
+              >
+                Guías de DC-3, integración WordPress y estado del sistema.
+              </Typography>
+            </Box>
+          </Link>
         </Box>
+      )}
 
-        {role === "SUPERADMIN" && (
-          <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
-            <Link href="/superadmin/integration" style={{ textDecoration: "none" }}>
-              <Box
-                sx={{
-                  borderRadius: "14px",
-                  bgcolor: "var(--panel-ink-v4, #161B23)",
-                  px: 2,
-                  py: 1.75,
-                  transition: "transform 150ms ease",
-                  "&:hover": { transform: "scale(1.015)" },
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
-                  <LifeBuoy size={15} strokeWidth={2} color="var(--portal-blue)" />
-                  <Typography
-                    sx={{
-                      fontSize: "0.6875rem",
-                      fontWeight: 700,
-                      color: "var(--portal-blue)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    Soporte
-                  </Typography>
-                </Box>
-                <Typography
-                  sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}
-                >
-                  Centro de ayuda
-                </Typography>
-                <Typography
-                  sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}
-                >
-                  Guías de DC-3, integración WordPress y estado del sistema.
-                </Typography>
-              </Box>
-            </Link>
-          </Box>
-        )}
-
-        {role === "HR" && (
-          <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
-            <Link
-              href={companyPath(companySlug ?? "", "/consulting")}
-              style={{ textDecoration: "none" }}
+      {role === "HR" && (
+        <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
+          <Link
+            href={companyPath(companySlug ?? "", "/consulting")}
+            style={{ textDecoration: "none" }}
+          >
+            <Box
+              sx={{
+                borderRadius: "14px",
+                bgcolor: "var(--sidebar-navy-card-bg)",
+                px: 2,
+                py: 1.75,
+                transition: "transform 150ms ease",
+                "&:hover": { transform: "scale(1.015)" },
+              }}
             >
-              <Box
-                sx={{
-                  borderRadius: "14px",
-                  bgcolor: "var(--panel-ink-v4, #161B23)",
-                  px: 2,
-                  py: 1.75,
-                  transition: "transform 150ms ease",
-                  "&:hover": { transform: "scale(1.015)" },
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
-                  <CalendarClock size={15} strokeWidth={2} color="var(--portal-blue)" />
-                  <Typography
-                    sx={{
-                      fontSize: "0.6875rem",
-                      fontWeight: 700,
-                      color: "var(--portal-blue)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    Consultoría
-                  </Typography>
-                </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
+                <CalendarClock size={15} strokeWidth={2} color="var(--portal-blue)" />
                 <Typography
-                  sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}
+                  sx={{
+                    fontSize: "0.6875rem",
+                    fontWeight: 700,
+                    color: "var(--portal-blue)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
                 >
-                  Agenda una sesión en vivo
-                </Typography>
-                <Typography
-                  sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}
-                >
-                  Habla con nuestro equipo de consultores sobre CTPAT, OEA, DC-3 y más.
+                  Consultoría
                 </Typography>
               </Box>
-            </Link>
-          </Box>
-        )}
+              <Typography
+                sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}
+              >
+                Agenda una sesión en vivo
+              </Typography>
+              <Typography
+                sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}
+              >
+                Habla con nuestro equipo de consultores sobre CTPAT, OEA, DC-3 y más.
+              </Typography>
+            </Box>
+          </Link>
+        </Box>
+      )}
+
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          px: 1.5,
+          py: 1,
+          borderTop: "1px solid var(--sidebar-navy-border)",
+          flexShrink: 0,
+        }}
+      >
+        <NotificationBell dark />
+        <FullscreenToggle dark />
+      </Box>
+
+      <Box sx={{ px: 1, pb: 1.5, flexShrink: 0 }}>
+        <TopbarUserMenu name={userName} role={role} dark />
       </Box>
     </Box>
   )
