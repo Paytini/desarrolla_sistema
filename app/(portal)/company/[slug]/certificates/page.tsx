@@ -104,6 +104,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
     return str ? `?${str}` : "?"
   }
 
+  const clearIssuedUrl = pendingPageUrl(pendingPage)
+  const clearPendingUrl = issuedPageUrl(issuedPage)
+
   const zipQueryString = issuedHasFilters
     ? `?${new URLSearchParams({
         ...(issuedQuery ? { q: issuedQuery } : {}),
@@ -181,7 +184,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               </button>
               {issuedHasFilters ? (
                 <a
-                  href="?"
+                  href={clearIssuedUrl}
                   className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
                 >
                   Limpiar
@@ -281,8 +284,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
           </div>
           <p className="mb-4 text-xs text-slate-500">
             Cursos que el empleado ya completó pero cuya constancia aún no ha sido generada o
-            sincronizada. No requieren acción de RH: aparecerán aquí como emitidos en cuanto se
-            procesen.
+            sincronizada.
           </p>
 
           {pendingCertificates.length > 0 ? (
@@ -314,7 +316,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               </button>
               {pendingHasFilters ? (
                 <a
-                  href="?"
+                  href={clearPendingUrl}
                   className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
                 >
                   Limpiar
@@ -347,9 +349,6 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                       {item.completedAt ? ` · Completado: ${formatDateTime(item.completedAt)}` : ""}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
-                    Pendiente
-                  </span>
                 </div>
               ))}
             </div>
