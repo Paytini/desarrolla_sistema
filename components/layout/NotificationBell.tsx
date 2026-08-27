@@ -35,7 +35,7 @@ function timeAgo(iso: string) {
   return `hace ${days} d`
 }
 
-export function NotificationBell() {
+export function NotificationBell({ dark = false }: { dark?: boolean }) {
   const [items, setItems] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
 
@@ -82,9 +82,11 @@ export function NotificationBell() {
             background: "none",
             borderRadius: "8px",
             cursor: "pointer",
-            color: "text.secondary",
+            color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
             transition: "background 0.15s ease, color 0.15s ease",
-            "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+            "&:hover": dark
+              ? { bgcolor: "rgba(255,255,255,0.1)", color: "var(--sidebar-navy-text-strong)" }
+              : { bgcolor: "action.hover", color: "text.primary" },
           }}
         >
           <Bell size={18} strokeWidth={1.75} />
@@ -105,7 +107,7 @@ export function NotificationBell() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                border: "2px solid #FFFFFF",
+                border: dark ? "2px solid var(--sidebar-navy)" : "2px solid #FFFFFF",
               }}
             >
               {unreadCount > 9 ? "9+" : unreadCount}
