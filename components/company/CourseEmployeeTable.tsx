@@ -16,6 +16,7 @@ export type CourseEmployeeRow = {
   progressPct: number
   completed: boolean
   lastSyncedAt: Date
+  quizScorePct: number | null
   employee: {
     id: string
     firstName: string
@@ -103,6 +104,7 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
             { label: "Puesto" },
             { label: "Avance" },
             { label: "Estado" },
+            { label: "Resultado del examen final" },
             { label: "Última sincronización" },
             { label: "" },
           ]}
@@ -135,6 +137,13 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
                     variantMap={ROW_STATUS_VARIANT}
                     labelMap={ROW_STATUS_LABEL}
                   />
+                </td>
+                <td className="px-4 py-3 text-sm text-slate-700">
+                  {row.quizScorePct !== null ? (
+                    <span className="font-semibold tabular-nums">{row.quizScorePct}%</span>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-500">
                   {formatDateTime(row.lastSyncedAt)}

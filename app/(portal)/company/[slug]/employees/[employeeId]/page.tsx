@@ -1,4 +1,4 @@
-import { CheckCircle2, FileQuestion } from "lucide-react"
+import { FileQuestion } from "lucide-react"
 import { BackButton } from "@/components/shared/BackButton"
 import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -9,6 +9,7 @@ import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company-routes"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { QUIZ_RESULT_LABEL, QUIZ_RESULT_VARIANT } from "@/lib/quiz-result"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 
@@ -39,18 +40,6 @@ function InfoField({ label, value }: { label: string; value: string }) {
   )
 }
 
-const QUIZ_RESULT_VARIANT: Record<string, "green" | "amber" | "red" | "slate"> = {
-  pass: "green",
-  fail: "red",
-  pending: "amber",
-}
-
-const QUIZ_RESULT_LABEL: Record<string, string> = {
-  pass: "Aprobado",
-  fail: "No aprobado",
-  pending: "Pendiente de revisión",
-}
-
 const TABLE_PAGE_SIZE = 5
 
 function formatQuizDuration(startedAt: Date | null, endedAt: Date | null) {
@@ -76,16 +65,12 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
       courses: { orderBy: [{ progress_pct: "desc" }, { course_name: "asc" }] },
       certificates: { orderBy: { issued_at: "desc" } },
       quizAttempts: { orderBy: { attempt_started_at: "desc" } },
-      lessonCompletions: { orderBy: { completed_at: "desc" } },
     },
   })
 
   if (!employee) redirect(companyPath(slug, "/employees"))
 
   const totalCourses = employee.courses.length
-  const courseNameByWpId = new Map(
-    employee.courses.map((course) => [course.wp_course_id, course.course_name]),
-  )
 
   const latestQuizAttemptByCourse = new Map<number, (typeof employee.quizAttempts)[number]>()
   for (const attempt of employee.quizAttempts) {
@@ -171,44 +156,6 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               </div>
             ))}
           </div>
-        )}
-      </section>
-
-      <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Lecciones completadas
-          <span className="ml-2 text-sm font-normal text-slate-400">
-            {employee.lessonCompletions.length}
-          </span>
-        </h2>
-
-        {employee.lessonCompletions.length === 0 ? (
-          <EmptyState
-            icon={<CheckCircle2 size={28} className="text-slate-300" />}
-            message="Sin lecciones completadas"
-            description="Este empleado aún no ha completado ninguna lección en sus cursos asignados."
-          />
-        ) : (
-          <PaginatedTable
-            ariaLabel="Lecciones completadas"
-            pageSize={TABLE_PAGE_SIZE}
-            columns={[{ label: "Lección" }, { label: "Curso" }, { label: "Fecha" }]}
-            rows={employee.lessonCompletions.map((lesson) => (
-              <tr key={lesson.id} className="bg-gray-50">
-                <td className="min-w-0 rounded-l-lg py-3 pl-4">
-                  <p className="truncate text-sm font-semibold text-slate-950">
-                    {lesson.lesson_name ?? "Lección"}
-                  </p>
-                </td>
-                <td className="truncate px-4 py-3 text-sm text-slate-500">
-                  {courseNameByWpId.get(lesson.wp_course_id) ?? "Curso"}
-                </td>
-                <td className="rounded-r-lg px-4 py-3 text-sm text-slate-700">
-                  {lesson.completed_at ? formatDate(lesson.completed_at) : "—"}
-                </td>
-              </tr>
-            ))}
-          />
         )}
       </section>
 
