@@ -8,12 +8,11 @@ import { getSession } from "@/lib/session"
 import { readSearchParam } from "@/lib/search-params"
 import { paginate } from "@/lib/pagination"
 import { isUuid } from "@/lib/uuid"
-import { ArrowLeft, Calendar, Mail, Phone, User, X } from "lucide-react"
+import { ArrowLeft, Calendar, Mail, Phone, User } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
-import { SearchInput } from "@/components/shared/SearchInput"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
 import Divider from "@mui/material/Divider"
@@ -105,8 +104,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
 
   const query = await searchParams
   const success = readSearchParam(query, "success")
-  const q = readSearchParam(query, "q")?.toLowerCase() ?? ""
-  const page = Math.max(1, Number(readSearchParam(query, "page") ?? "1"))
+  const detailPage = Math.max(1, Number(readSearchParam(query, "dpage") ?? "1"))
 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
@@ -167,28 +165,19 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
     })
     .sort((a, b) => b.avg - a.avg)
 
-  const filteredEmployeeStats = q
-    ? employeeStats.filter(
-        (e) =>
-          `${e.first_name} ${e.last_name}`.toLowerCase().includes(q) ||
-          e.email.toLowerCase().includes(q),
-      )
-    : employeeStats
-
-  const EMPLOYEES_PAGE_SIZE = 20
+  const DETAIL_PAGE_SIZE = 8
   const {
-    items: pagedEmployeeStats,
-    currentPage: employeesPage,
-    totalPages: employeesTotalPages,
-    totalResults: employeesTotalResults,
-  } = paginate(filteredEmployeeStats, page, EMPLOYEES_PAGE_SIZE)
+    items: pagedEmployeeDetails,
+    currentPage: detailCurrentPage,
+    totalPages: detailTotalPages,
+    totalResults: detailTotalResults,
+  } = paginate(employeeStats, detailPage, DETAIL_PAGE_SIZE)
 
-  function employeesPageUrl(p: number) {
+  function detailPageUrl(p: number) {
     const qs = new URLSearchParams()
-    if (q) qs.set("q", q)
-    if (p > 1) qs.set("page", String(p))
+    if (p > 1) qs.set("dpage", String(p))
     const str = qs.toString()
-    return `/superadmin/companies/${companyId}${str ? `?${str}` : ""}`
+    return `/superadmin/companies/${companyId}${str ? `?${str}` : ""}#detalle-empleados`
   }
 
   const courseStats = packageCourses.map((pc) => {
@@ -381,122 +370,131 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
           </Box>
         </PanelBox>
 
-        <PanelBox
-          title="Progreso por empleado"
-          description={`Mayor a menor · ${employeesTotalResults} empleado${employeesTotalResults !== 1 ? "s" : ""}${q ? " · filtro activo" : ""}`}
-          action={
-            <Box
-              component="form"
-              method="GET"
-              sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
-            >
-              <SearchInput name="q" defaultValue={q} placeholder="Buscar empleado…" width={180} />
-              {q && (
-                <Link
-                  href={`/superadmin/companies/${companyId}`}
-                  style={{ display: "inline-flex", alignItems: "center", color: "#64748b" }}
-                  aria-label="Limpiar búsqueda"
-                >
-                  <X size={14} />
-                </Link>
-              )}
-            </Box>
-          }
-        >
-          <Box sx={{ p: 2.5 }}>
-            {employeeStats.length === 0 ? (
-              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
-                Sin empleados activos.
-              </Typography>
-            ) : filteredEmployeeStats.length === 0 ? (
-              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
-                Sin resultados para ese filtro.
-              </Typography>
-            ) : (
-              <Box sx={{ display: "grid", gap: 1.5 }}>
-                {pagedEmployeeStats.map((e) => (
-                  <Box key={e.id} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        {courseStats.length > 0 && (
+          <PanelBox
+            title="Avance por curso"
+            action={
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  fontSize: "10px",
+                  color: "#94a3b8",
+                }}
+              >
+                {[
+                  { color: "#1a4f8a", label: "Completado" },
+                  { color: "#fbbf24", label: "En curso" },
+                  { color: "#f1f5f9", label: "Pendiente" },
+                ].map(({ color, label }) => (
+                  <Box
+                    key={label}
+                    component="span"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      fontSize: "10px",
+                      color: "#94a3b8",
+                    }}
+                  >
                     <Box
+                      component="span"
                       sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: 28,
-                        height: 28,
-                        flexShrink: 0,
-                        borderRadius: 1,
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        ...(e.hasError
-                          ? { bgcolor: "#fef2f2", color: "#dc2626" }
-                          : { bgcolor: "#eff4fb", color: "#1a4f8a" }),
+                        display: "inline-block",
+                        width: 8,
+                        height: 8,
+                        borderRadius: 0.5,
+                        bgcolor: color,
                       }}
-                    >
-                      {getInitials(e.first_name, e.last_name)}
-                    </Box>
-                    <Typography
-                      sx={{
-                        width: 112,
-                        flexShrink: 0,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        fontSize: 12,
-                        color: "#334155",
-                      }}
-                    >
-                      {e.first_name} {e.last_name}
-                    </Typography>
-                    <Box sx={{ flex: 1 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Box
-                          sx={{
-                            flex: 1,
-                            height: 8,
-                            overflow: "hidden",
-                            borderRadius: "999px",
-                            bgcolor: "#f1f5f9",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              height: "100%",
-                              borderRadius: "999px",
-                              bgcolor: progressColor(e.avg),
-                              width: `${e.avg}%`,
-                            }}
-                          />
-                        </Box>
-                        <Typography
-                          sx={{
-                            width: 32,
-                            flexShrink: 0,
-                            textAlign: "right",
-                            fontSize: 12,
-                            fontWeight: 600,
-                            fontVariantNumeric: "tabular-nums",
-                            color: "#334155",
-                          }}
-                        >
-                          {e.avg}%
-                        </Typography>
-                      </Box>
-                      <Typography sx={{ mt: 0.25, fontSize: "10px", color: "#94a3b8" }}>
-                        {e.completed}/{e.total} cursos · {e.certificatesCount} constancias
-                      </Typography>
-                    </Box>
+                    />
+                    {label}
                   </Box>
                 ))}
               </Box>
-            )}
-          </Box>
-          <Pagination
-            currentPage={employeesPage}
-            totalPages={employeesTotalPages}
-            totalResults={employeesTotalResults}
-            buildPageUrl={employeesPageUrl}
-          />
-        </PanelBox>
+            }
+          >
+            <Box sx={{ display: "grid", gap: 2, p: 2.5 }}>
+              {courseStats.map((c) => {
+                const cPct = c.assigned ? (c.completed / c.assigned) * 100 : 0
+                const iPct = c.assigned ? (c.inProgress / c.assigned) * 100 : 0
+                return (
+                  <Box key={c.wp_course_id}>
+                    <Box
+                      sx={{
+                        mb: 0.75,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "#334155",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {c.course_name}
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexShrink: 0,
+                          alignItems: "center",
+                          gap: 1.5,
+                          fontSize: 11,
+                          color: "#94a3b8",
+                        }}
+                      >
+                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a4f8a" }}>
+                          {c.completed} compl.
+                        </Typography>
+                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+                          {c.inProgress} en curso
+                        </Typography>
+                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+                          {c.notStarted} pend.
+                        </Typography>
+                        {c.assigned > 0 && (
+                          <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#475569" }}>
+                            {c.avgPct}% avg
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                    {c.assigned > 0 ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          height: 10,
+                          overflow: "hidden",
+                          borderRadius: "999px",
+                          bgcolor: "#f1f5f9",
+                        }}
+                      >
+                        <Box sx={{ bgcolor: "#1a4f8a", width: `${cPct}%` }} />
+                        <Box sx={{ bgcolor: "#fbbf24", width: `${iPct}%` }} />
+                      </Box>
+                    ) : (
+                      <Box sx={{ height: 10, borderRadius: "999px", bgcolor: "#f1f5f9" }} />
+                    )}
+                    {c.assigned === 0 && (
+                      <Typography sx={{ mt: 0.25, fontSize: 11, color: "#94a3b8" }}>
+                        Sin empleados asignados
+                      </Typography>
+                    )}
+                  </Box>
+                )
+              })}
+            </Box>
+          </PanelBox>
+        )}
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <PanelBox title="Cupos">
@@ -577,151 +575,28 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
         </Box>
       </Box>
 
-      <PanelBox title="Marca y URL" description="Logo y slug que ve esta empresa dentro del portal">
-        <CompanyBrandingForm
-          companyId={company.id}
-          currentSlug={company.slug}
-          currentLogoUrl={company.logo_url}
-          action={updateCompanyBrandingAction}
-        />
-      </PanelBox>
-
-      {courseStats.length > 0 && (
-        <PanelBox
-          title="Avance por curso"
-          action={
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 2,
-                fontSize: "10px",
-                color: "#94a3b8",
-              }}
-            >
-              {[
-                { color: "#1a4f8a", label: "Completado" },
-                { color: "#fbbf24", label: "En curso" },
-                { color: "#f1f5f9", label: "Pendiente" },
-              ].map(({ color, label }) => (
-                <Box
-                  key={label}
-                  component="span"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    fontSize: "10px",
-                    color: "#94a3b8",
-                  }}
-                >
-                  <Box
-                    component="span"
-                    sx={{
-                      display: "inline-block",
-                      width: 8,
-                      height: 8,
-                      borderRadius: 0.5,
-                      bgcolor: color,
-                    }}
-                  />
-                  {label}
-                </Box>
-              ))}
-            </Box>
-          }
-        >
-          <Box sx={{ display: "grid", gap: 2, p: 2.5 }}>
-            {courseStats.map((c) => {
-              const cPct = c.assigned ? (c.completed / c.assigned) * 100 : 0
-              const iPct = c.assigned ? (c.inProgress / c.assigned) * 100 : 0
-              return (
-                <Box key={c.wp_course_id}>
-                  <Box
-                    sx={{
-                      mb: 0.75,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 2,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: 13,
-                        fontWeight: 500,
-                        color: "#334155",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {c.course_name}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexShrink: 0,
-                        alignItems: "center",
-                        gap: 1.5,
-                        fontSize: 11,
-                        color: "#94a3b8",
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a4f8a" }}>
-                        {c.completed} compl.
-                      </Typography>
-                      <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
-                        {c.inProgress} en curso
-                      </Typography>
-                      <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
-                        {c.notStarted} pend.
-                      </Typography>
-                      {c.assigned > 0 && (
-                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#475569" }}>
-                          {c.avgPct}% avg
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                  {c.assigned > 0 ? (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        height: 10,
-                        overflow: "hidden",
-                        borderRadius: "999px",
-                        bgcolor: "#f1f5f9",
-                      }}
-                    >
-                      <Box sx={{ bgcolor: "#1a4f8a", width: `${cPct}%` }} />
-                      <Box sx={{ bgcolor: "#fbbf24", width: `${iPct}%` }} />
-                    </Box>
-                  ) : (
-                    <Box sx={{ height: 10, borderRadius: "999px", bgcolor: "#f1f5f9" }} />
-                  )}
-                  {c.assigned === 0 && (
-                    <Typography sx={{ mt: 0.25, fontSize: 11, color: "#94a3b8" }}>
-                      Sin empleados asignados
-                    </Typography>
-                  )}
-                </Box>
-              )
-            })}
-          </Box>
-        </PanelBox>
-      )}
-
-      <PanelBox
-        title="Detalle de empleados"
-        count={activeEmployees.length}
-        description={
-          company.employees.length - activeEmployees.length > 0
-            ? `${company.employees.length - activeEmployees.length} suspendidos`
-            : undefined
-        }
-        noPadding
+      <Box
+        sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "320px 1fr" } }}
       >
+        <PanelBox title="Logotipo de la empresa" description="Logo que observará esta empresa dentro del portal">
+          <CompanyBrandingForm
+            companyId={company.id}
+            currentLogoUrl={company.logo_url}
+            action={updateCompanyBrandingAction}
+          />
+        </PanelBox>
+
+        <PanelBox
+          id="detalle-empleados"
+          title="Detalle de empleados"
+          count={activeEmployees.length}
+          description={
+            company.employees.length - activeEmployees.length > 0
+              ? `${company.employees.length - activeEmployees.length} suspendidos`
+              : undefined
+          }
+          noPadding
+        >
         {employeeStats.length === 0 ? (
           <Box sx={{ px: 3, py: 5 }}>
             <Box
@@ -752,7 +627,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
               </TableRow>
             </TableHead>
             <TableBody>
-              {employeeStats.map((e) => (
+              {pagedEmployeeDetails.map((e) => (
                 <TableRow
                   key={e.id}
                   sx={{
@@ -901,7 +776,14 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
             </TableBody>
           </Table>
         )}
-      </PanelBox>
+          <Pagination
+            currentPage={detailCurrentPage}
+            totalPages={detailTotalPages}
+            totalResults={detailTotalResults}
+            buildPageUrl={detailPageUrl}
+          />
+        </PanelBox>
+      </Box>
 
       {company.notes && (
         <PanelBox title="Notas internas">

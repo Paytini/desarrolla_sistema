@@ -3,18 +3,17 @@
 import { useRef, useState } from "react"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
-import TextField from "@mui/material/TextField"
+import Divider from "@mui/material/Divider"
 import Typography from "@mui/material/Typography"
+import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { blobProxyUrl } from "@/lib/blob-proxy"
 
 export function CompanyBrandingForm({
   companyId,
-  currentSlug,
   currentLogoUrl,
   action,
 }: {
   companyId: string
-  currentSlug: string
   currentLogoUrl: string | null
   action: (formData: FormData) => void
 }) {
@@ -52,67 +51,68 @@ export function CompanyBrandingForm({
       <input type="hidden" name="empresa_id" value={companyId} />
       <input type="hidden" name="logo_url" value={logoUrl} />
 
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1.5 }}>
-        <Box
-          sx={{
-            width: 180,
-            height: 180,
-            borderRadius: "14px",
-            border: "1px solid var(--portal-border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-            flexShrink: 0,
-            bgcolor: "#F9FAFB",
-          }}
-        >
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
-            <img
-              src={blobProxyUrl(logoUrl)}
-              alt="Logo de la empresa"
-              style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
-            />
-          ) : (
-            <Typography sx={{ fontSize: "13px", color: "#9CA3AF", textAlign: "center", px: 2 }}>
-              Sin logo
-            </Typography>
-          )}
-        </Box>
+      <Box sx={{ display: "grid", gap: 1 }}>
+        <EyebrowLabel>Logo de la empresa</EyebrowLabel>
 
-        <Box>
-          <Button
-            component="label"
-            size="small"
-            variant="outlined"
-            disabled={uploading}
-            sx={{ textTransform: "none", fontSize: "12px" }}
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1.25 }}>
+          <Box
+            sx={{
+              width: 180,
+              height: 180,
+              borderRadius: "14px",
+              border: "1px solid var(--portal-border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              flexShrink: 0,
+              bgcolor: "#F9FAFB",
+            }}
           >
-            {uploading ? "Subiendo..." : "Subir logo"}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              hidden
-              onChange={handleLogoChange}
-            />
-          </Button>
-          {uploadError && (
-            <Typography sx={{ mt: 0.5, fontSize: "11px", color: "#dc2626" }}>
-              {uploadError}
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
+              <img
+                src={blobProxyUrl(logoUrl)}
+                alt="Logo de la empresa"
+                style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+              />
+            ) : (
+              <Typography sx={{ fontSize: "13px", color: "#9CA3AF", textAlign: "center", px: 2 }}>
+                Sin logo
+              </Typography>
+            )}
+          </Box>
+
+          <Box>
+            <Button
+              component="label"
+              size="small"
+              variant="outlined"
+              disabled={uploading}
+              sx={{ textTransform: "none", fontSize: "12px" }}
+            >
+              {uploading ? "Subiendo..." : "Subir logo"}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                hidden
+                onChange={handleLogoChange}
+              />
+            </Button>
+            <Typography sx={{ mt: 0.5, fontSize: "11px", color: "#9CA3AF" }}>
+              PNG, JPG o WEBP
             </Typography>
-          )}
+            {uploadError && (
+              <Typography sx={{ mt: 0.5, fontSize: "11px", color: "#dc2626" }}>
+                {uploadError}
+              </Typography>
+            )}
+          </Box>
         </Box>
       </Box>
 
-      <TextField
-        label="Slug de la URL"
-        value={currentSlug}
-        size="small"
-        disabled
-        helperText="Se usa en /company/<slug>/... Se asigna al crear la empresa y no se puede cambiar, para que los enlaces ya compartidos nunca dejen de funcionar."
-      />
+      <Divider sx={{ borderColor: "#f1f5f9" }} />
 
       <Button
         type="submit"
