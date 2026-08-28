@@ -36,8 +36,8 @@ export function FullscreenToggle({ dark = false }: { dark?: boolean }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          width: 36,
-          height: 36,
+          width: 44,
+          height: 44,
           border: "none",
           borderRadius: "50%",
           cursor: "pointer",
@@ -52,7 +52,7 @@ export function FullscreenToggle({ dark = false }: { dark?: boolean }) {
       >
         <i
           className={isFullscreen ? "ri-fullscreen-exit-line" : "ri-fullscreen-line"}
-          style={{ fontSize: "1.125rem", lineHeight: 1 }}
+          style={{ fontSize: "1.3125rem", lineHeight: 1 }}
         />
       </Box>
     </Tooltip>

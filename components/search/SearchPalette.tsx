@@ -150,13 +150,13 @@ export default function SearchPalette<T>({
           px: { xs: 1, sm: 2.25 },
           border: "1px solid",
           borderColor: dark ? "var(--sidebar-navy-border)" : "divider",
-          borderRadius: "10px",
-          bgcolor: dark ? "rgba(255,255,255,0.06)" : "background.default",
+          borderRadius: "999px",
+          bgcolor: dark ? "rgba(255,255,255,0.06)" : "#ffffff",
           cursor: "pointer",
           fontSize: "0.875rem",
           color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
           fontFamily: "inherit",
-          transition: "border-color 0.2s ease, background-color 0.2s ease",
+          transition: "border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease",
           "&:hover": dark
             ? { bgcolor: "rgba(255,255,255,0.1)", borderColor: "rgba(255,255,255,0.24)" }
             : { borderColor: "primary.main", boxShadow: "0 0 0 3px rgba(59,130,246,0.08)" },

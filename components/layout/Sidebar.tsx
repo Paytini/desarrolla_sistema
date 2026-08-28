@@ -4,7 +4,7 @@ import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { LifeBuoy, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 
 import Box from "@mui/material/Box"
 import List from "@mui/material/List"
@@ -179,7 +179,13 @@ export default function Sidebar({
           <img
             src={logoSrc}
             alt={logoAlt ?? "Logo de la empresa"}
-            style={{ maxHeight: 48, maxWidth: "100%", objectFit: "contain" }}
+            style={{
+              maxHeight: 48,
+              maxWidth: "100%",
+              objectFit: "contain",
+              filter: "brightness(0) invert(1)",
+              opacity: 0.95,
+            }}
           />
         ) : role === "SUPERADMIN" ? (
           <Image
@@ -220,9 +226,12 @@ export default function Sidebar({
       <Box
         sx={{
           flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
           overflowY: "auto",
           overflowX: "hidden",
-          py: 1.5,
+          pt: role === "SUPERADMIN" ? 1.5 : 5,
+          pb: 1.5,
         }}
       >
         {role === "SUPERADMIN" ? (
@@ -270,6 +279,107 @@ export default function Sidebar({
             ))}
           </List>
         )}
+
+        {role !== "SUPERADMIN" &&
+          (collapsed ? (
+            <Tooltip title="¿Necesitas ayuda?" placement="right">
+              <Box
+                component="a"
+                href="mailto:soporte@desarrolla360.com"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 44,
+                  height: 44,
+                  mx: "auto",
+                  mt: "auto",
+                  borderRadius: "50%",
+                  color: "var(--sidebar-navy-text)",
+                  bgcolor: "var(--sidebar-navy-hover-bg)",
+                  transition: "background-color 0.15s ease, color 0.15s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(255,255,255,0.16)",
+                    color: "var(--sidebar-navy-text-strong)",
+                  },
+                }}
+              >
+                <LifeBuoy size={19} strokeWidth={1.8} />
+              </Box>
+            </Tooltip>
+          ) : (
+            <Box
+              sx={{
+                mt: "auto",
+                mx: 1.5,
+                p: 2,
+                borderRadius: "14px",
+                border: "1px solid var(--sidebar-navy-border)",
+                bgcolor: "rgba(0,0,0,0.12)",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 34,
+                  height: 34,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "50%",
+                  bgcolor: "rgba(255,255,255,0.14)",
+                  color: "var(--sidebar-navy-text-strong)",
+                  mb: 1.25,
+                }}
+              >
+                <LifeBuoy size={17} strokeWidth={1.8} />
+              </Box>
+              <Typography
+                sx={{
+                  fontFamily: SIDEBAR_FONT,
+                  fontSize: "0.8125rem",
+                  fontWeight: 700,
+                  color: "var(--sidebar-navy-text-strong)",
+                  lineHeight: 1.3,
+                }}
+              >
+                ¿Necesitas ayuda?
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: SIDEBAR_FONT,
+                  fontSize: "0.75rem",
+                  color: "var(--sidebar-navy-text-strong)",
+                  lineHeight: 1.4,
+                  mt: 0.375,
+                  mb: 1.25,
+                }}
+              >
+                Escríbenos y te ayudamos.
+              </Typography>
+              <Box
+                component="a"
+                href="mailto:soporte@desarrolla360.com"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  minHeight: 44,
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  bgcolor: "var(--sidebar-navy-active-bg)",
+                  color: "var(--sidebar-navy-active-text)",
+                  fontFamily: SIDEBAR_FONT,
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  transition: "opacity 0.15s ease",
+                  "&:hover": { opacity: 0.85 },
+                }}
+              >
+                Contactar soporte
+              </Box>
+            </Box>
+          ))}
       </Box>
 
       <Box sx={{ px: 1, py: 0.5, flexShrink: 0, borderTop: "1px solid var(--sidebar-navy-border)" }}>

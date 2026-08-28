@@ -57,7 +57,7 @@ export default async function PortalLayout({ children }: { children: React.React
           <div className="flex flex-1 items-center justify-end gap-1">
             <NotificationBell />
             <FullscreenToggle />
-            <TopbarUserMenu name={name} role={role} />
+            <TopbarUserMenu name={name} companyName={role !== "SUPERADMIN" ? companyName : undefined} />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-[#F8F9FC] px-8 py-7">

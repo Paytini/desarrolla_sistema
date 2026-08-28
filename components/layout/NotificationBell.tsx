@@ -69,8 +69,8 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 36,
-            height: 36,
+            width: 44,
+            height: 44,
             border: "none",
             borderRadius: "50%",
             cursor: "pointer",
@@ -83,13 +83,13 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
               : { bgcolor: "#ffffff", boxShadow: "0 2px 8px rgba(15,23,42,0.16)", color: "text.primary" },
           }}
         >
-          <Bell size={18} strokeWidth={1.75} />
+          <Bell size={20} strokeWidth={1.75} />
           {unreadCount > 0 && (
             <Box
               sx={{
                 position: "absolute",
-                top: 6,
-                right: 6,
+                top: 8,
+                right: 8,
                 minWidth: 15,
                 height: 15,
                 px: "3px",

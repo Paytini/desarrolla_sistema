@@ -1,7 +1,7 @@
 import type { ConsultingRequest } from "@prisma/client"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { CalendarClock } from "lucide-react"
+import { CalendarClock, CalendarPlus } from "lucide-react"
 import { cancelConsultingRequestAction } from "./actions"
 import { CancelConsultingRequestButton } from "@/components/company/consulting/CancelConsultingRequestButton"
 import { ConsultingRequestDetailsButton } from "@/components/company/consulting/ConsultingRequestDetailsButton"
@@ -182,8 +182,9 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
         action={
           <Link
             href={companyPath(branding.slug, "/consulting/new")}
-            className="inline-flex items-center rounded-xl bg-portal-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
+            className="inline-flex items-center gap-2 rounded-xl bg-portal-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-portal-blue-hover"
           >
+            <CalendarPlus size={16} strokeWidth={2} />
             Agendar nueva consultoría
           </Link>
         }
