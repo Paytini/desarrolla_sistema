@@ -277,20 +277,14 @@ export async function getSuperadminPackagesSnapshot() {
 
 const getSuperadminDc3SnapshotCached = unstable_cache(
   async () => {
-    const [catalogResult, metadata, paqueteCursos] = await Promise.all([
+    const [catalogResult, metadata] = await Promise.all([
       getWordPressCourseCatalog().catch(() => ({ courses: [], total: 0 })),
       prisma.courseDc3Metadata.findMany(),
-      prisma.packageCourse.findMany({
-        select: {
-          wp_course_id: true,
-          package: { select: { name: true } },
-        },
-      }),
     ])
 
     const publishedCourses = catalogResult.courses.filter((course) => course.status === "publish")
 
-    return { publishedCourses, metadata, paqueteCursos }
+    return { publishedCourses, metadata }
   },
   ["dashboard-snapshot", "superadmin", "dc3"],
   {

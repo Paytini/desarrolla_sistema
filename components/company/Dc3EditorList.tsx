@@ -42,7 +42,6 @@ type CourseMetadata = {
 export type CourseEntry = {
   wpCourseId: number
   courseName: string
-  packages: string[]
   metadata: CourseMetadata | null
 }
 
@@ -295,20 +294,6 @@ function CourseEditorCard({
             <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
               ID {course.wpCourseId}
             </Typography>
-            {course.packages.map((p) => (
-              <Chip
-                key={p}
-                label={p}
-                size="small"
-                sx={{
-                  height: 16,
-                  fontSize: "10px",
-                  bgcolor: "rgba(167,139,250,0.1)",
-                  color: "#7c3aed",
-                  "& .MuiChip-label": { px: 1 },
-                }}
-              />
-            ))}
           </Box>
         </Box>
 
