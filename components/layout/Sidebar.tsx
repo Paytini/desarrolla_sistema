@@ -284,8 +284,8 @@ export default function Sidebar({
           (collapsed ? (
             <Tooltip title="¿Necesitas ayuda?" placement="right">
               <Box
-                component="a"
-                href="mailto:soporte@desarrolla360.com"
+                component={Link}
+                href="/support"
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -357,8 +357,8 @@ export default function Sidebar({
                 Escríbenos y te ayudamos.
               </Typography>
               <Box
-                component="a"
-                href="mailto:soporte@desarrolla360.com"
+                component={Link}
+                href="/support"
                 sx={{
                   display: "flex",
                   alignItems: "center",

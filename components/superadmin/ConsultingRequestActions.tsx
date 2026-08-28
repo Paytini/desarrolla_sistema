@@ -50,8 +50,7 @@ export function ConsultingRequestActions({
             size="small"
             sx={{
               color: "success.main",
-              "&:hover": { transform: "none", backgroundColor: "rgba(22, 163, 74, 0.08)" },
-              "&:active": { transform: "none" },
+              "&:hover": { backgroundColor: "rgba(22, 163, 74, 0.08)" },
             }}
           >
             <Check size={18} strokeWidth={2} />
@@ -64,8 +63,7 @@ export function ConsultingRequestActions({
             size="small"
             sx={{
               color: "error.main",
-              "&:hover": { transform: "none", backgroundColor: "rgba(220, 38, 38, 0.08)" },
-              "&:active": { transform: "none" },
+              "&:hover": { backgroundColor: "rgba(220, 38, 38, 0.08)" },
             }}
           >
             <X size={18} strokeWidth={2} />
@@ -117,7 +115,6 @@ export function ConsultingRequestActions({
           <Button
             variant="outlined"
             onClick={() => setDialog(null)}
-            sx={{ "&:hover": { transform: "none" }, "&:active": { transform: "none" } }}
           >
             Volver
           </Button>
@@ -129,8 +126,7 @@ export function ConsultingRequestActions({
               variant="contained"
               sx={{
                 boxShadow: "none",
-                "&:hover": { boxShadow: "none", transform: "none" },
-                "&:active": { transform: "none" },
+                "&:hover": { boxShadow: "none" },
               }}
             >
               Sí, confirmar

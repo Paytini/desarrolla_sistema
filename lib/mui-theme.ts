@@ -79,9 +79,9 @@ export const muiTheme = createTheme({
           fontWeight: 600,
           boxShadow: "none",
           border: "none",
-          transition: "transform 200ms, background-color 200ms",
-          "&:hover": { boxShadow: "none", transform: "scale(1.05)" },
-          "&:active": { boxShadow: "none", transform: "scale(0.98)" },
+          transition: "background-color 200ms",
+          "&:hover": { boxShadow: "none" },
+          "&:active": { boxShadow: "none" },
         },
         contained: {
           boxShadow: "none",
@@ -90,10 +90,6 @@ export const muiTheme = createTheme({
         outlined: {
           borderWidth: "2px",
           "&:hover": { borderWidth: "2px" },
-        },
-        text: {
-          "&:hover": { transform: "none" },
-          "&:active": { transform: "none" },
         },
         sizeSmall: { fontSize: "0.8125rem", padding: "5px 16px" },
         sizeMedium: { fontSize: "0.875rem", padding: "8px 22px" },
