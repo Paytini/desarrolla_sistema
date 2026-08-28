@@ -100,6 +100,7 @@ model Notification {
   title       String
   message     String
   read        Boolean  @default(false)
+  archived    Boolean  @default(false)
   entity_type String?
   entity_id   String?  @db.Uuid
   created_at  DateTime @default(now())
@@ -107,6 +108,7 @@ model Notification {
   user User @relation(fields: [user_id], references: [id])
 
   @@index([user_id, read])
+  @@index([user_id, archived])
   @@index([created_at])
   @@index([type, entity_id])
   @@map("notifications")

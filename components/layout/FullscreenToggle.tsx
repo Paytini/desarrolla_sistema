@@ -39,14 +39,15 @@ export function FullscreenToggle({ dark = false }: { dark?: boolean }) {
           width: 36,
           height: 36,
           border: "none",
-          background: "none",
-          borderRadius: "8px",
+          borderRadius: "50%",
           cursor: "pointer",
+          bgcolor: dark ? "rgba(255,255,255,0.1)" : "#ffffff",
+          boxShadow: dark ? "none" : "0 1px 3px rgba(15,23,42,0.1)",
           color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
-          transition: "background 0.15s ease, color 0.15s ease",
+          transition: "background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease",
           "&:hover": dark
-            ? { bgcolor: "rgba(255,255,255,0.1)", color: "var(--sidebar-navy-text-strong)" }
-            : { bgcolor: "action.hover", color: "text.primary" },
+            ? { bgcolor: "rgba(255,255,255,0.18)", color: "var(--sidebar-navy-text-strong)" }
+            : { bgcolor: "#ffffff", boxShadow: "0 2px 8px rgba(15,23,42,0.16)", color: "text.primary" },
         }}
       >
         <i

@@ -4,12 +4,10 @@ import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { signOut } from "next-auth/react"
-import { LogOut, Menu } from "lucide-react"
+import { Menu } from "lucide-react"
 
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
-import Divider from "@mui/material/Divider"
 import Drawer from "@mui/material/Drawer"
 import IconButton from "@mui/material/IconButton"
 import List from "@mui/material/List"
@@ -29,7 +27,6 @@ import {
   type NavItem,
   type Role,
 } from "@/components/layout/nav-config"
-import { blobProxyUrl } from "@/lib/blob-proxy"
 
 function MobileNavLink({
   item,
@@ -98,15 +95,11 @@ function MobileNavLink({
 export function MobileNav({
   role,
   name,
-  company,
   companySlug,
-  companyLogoUrl,
 }: {
   role: Role
   name: string
-  company?: string
   companySlug?: string
-  companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
@@ -174,22 +167,13 @@ export function MobileNav({
             }}
             onClick={() => setOpen(false)}
           >
-            {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
-              <img
-                src={blobProxyUrl(companyLogoUrl)}
-                alt={company ?? "Logo de la empresa"}
-                style={{ height: 26, width: "auto", maxWidth: 140, objectFit: "contain" }}
-              />
-            ) : (
-              <Image
-                src="/assets/logo_desarrolla_cropped.png"
-                alt="Desarrolla360"
-                width={88}
-                height={26}
-                style={{ height: 26, width: 88, objectFit: "contain" }}
-              />
-            )}
+            <Image
+              src="/assets/logo_desarrolla_cropped.png"
+              alt="Desarrolla360"
+              width={88}
+              height={26}
+              style={{ height: 26, width: 88, objectFit: "contain" }}
+            />
           </Link>
         </Box>
 
@@ -242,42 +226,13 @@ export function MobileNav({
         <Box
           sx={{
             flexShrink: 0,
-            px: 1,
-            pt: 1,
-            pb: 0.5,
+            px: 1.5,
+            py: 1.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
             borderTop: "1px solid var(--sidebar-navy-border)",
           }}
-        >
-          <Box
-            component="button"
-            type="button"
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              width: "100%",
-              px: 1.25,
-              py: 1,
-              borderRadius: "8px",
-              border: "none",
-              bgcolor: "transparent",
-              cursor: "pointer",
-              color: "var(--sidebar-navy-text)",
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              fontFamily: "inherit",
-              "&:hover": { bgcolor: "rgba(220,38,38,0.15)", color: "#FCA5A5" },
-              transition: "background-color 0.15s ease, color 0.15s ease",
-            }}
-          >
-            <LogOut size={18} strokeWidth={1.8} style={{ flexShrink: 0 }} />
-            <span>Cerrar sesión</span>
-          </Box>
-        </Box>
-        <Divider sx={{ borderColor: "var(--sidebar-navy-border)" }} />
-        <Box
-          sx={{ flexShrink: 0, px: 1.5, py: 1.5, display: "flex", alignItems: "center", gap: 1.5 }}
         >
           <Avatar
             sx={{

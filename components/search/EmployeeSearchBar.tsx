@@ -21,8 +21,6 @@ export default function EmployeeSearchBar() {
       searchUrl={(q) => `/api/internal/employee-search?q=${encodeURIComponent(q)}`}
       placeholder="Buscar cursos o constancias..."
       triggerLabel="Buscar mis cursos"
-      triggerWidth="100%"
-      iconOnly
       renderGroups={(results, query, onClose) => {
         const hasResults = results.courses.length > 0 || results.certificates.length > 0
 

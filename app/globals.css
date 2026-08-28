@@ -48,22 +48,13 @@
   --sidebar-border: oklch(0.918 0.008 55);
   --sidebar-ring: oklch(0.685 0.178 44);
 
-  --fd-background: #ffffff;
-  --fd-foreground: #111827;
-  --fd-primary: #3b82f6;
-  --fd-secondary: #10b981;
-  --fd-accent: #f59e0b;
-  --fd-muted: #f3f4f6;
-  --fd-border: #e5e7eb;
-
-  --sidebar-navy: #0b1e3f;
+  --sidebar-navy: #3579f5;
   --sidebar-navy-border: rgba(255, 255, 255, 0.08);
   --sidebar-navy-text: rgba(255, 255, 255, 0.65);
   --sidebar-navy-text-strong: #ffffff;
   --sidebar-navy-active-bg: #ffffff;
-  --sidebar-navy-active-text: #0b1e3f;
+  --sidebar-navy-active-text: #3579f5;
   --sidebar-navy-hover-bg: rgba(255, 255, 255, 0.08);
-  --sidebar-navy-card-bg: color-mix(in srgb, #0b1e3f 100%, white 6%);
 }
 
 @theme inline {

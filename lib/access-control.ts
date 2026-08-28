@@ -176,25 +176,3 @@ export async function togglePortalUserStatus(
 
   return user
 }
-
-export async function revokeUserPortalSessions(userId: string) {
-  return prisma.portalSession.deleteMany({
-    where: { user_id: userId },
-  })
-}
-
-export async function revokePortalSession(sessionId: string) {
-  return prisma.portalSession.deleteMany({
-    where: { id: sessionId },
-  })
-}
-
-export async function purgeExpiredPortalSessions() {
-  return prisma.portalSession.deleteMany({
-    where: {
-      expires_at: {
-        lt: new Date(),
-      },
-    },
-  })
-}

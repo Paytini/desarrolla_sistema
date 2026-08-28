@@ -1,46 +1,25 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bell, Building2, Package, ShieldAlert } from "lucide-react"
+import Link from "next/link"
+import { Bell, CheckCheck, PartyPopper } from "lucide-react"
 
 import Box from "@mui/material/Box"
+import Divider from "@mui/material/Divider"
 import Typography from "@mui/material/Typography"
-import { alpha } from "@mui/material/styles"
 import ActionsPopover from "@/components/shared/ActionsPopover"
+import { NotificationRow, type NotificationItem } from "@/components/notifications/NotificationRow"
+import { groupNotificationsByDate } from "@/lib/notification-groups"
 
-type NotificationItem = {
-  id: number
-  type: string
-  title: string
-  message: string
-  read: boolean
-  created_at: string
-}
-
-const TYPE_ICON: Record<string, typeof Building2> = {
-  EMPRESA_CREADA: Building2,
-  EMPRESA_SUSPENDIDA: ShieldAlert,
-  EMPRESA_REACTIVADA: Building2,
-  PAQUETE_ASIGNADO: Package,
-}
-
-function timeAgo(iso: string) {
-  const diffMs = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diffMs / 60000)
-  if (mins < 1) return "ahora"
-  if (mins < 60) return `hace ${mins} min`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `hace ${hours} h`
-  const days = Math.floor(hours / 24)
-  return `hace ${days} d`
-}
+const DROPDOWN_LIMIT = 8
 
 export function NotificationBell({ dark = false }: { dark?: boolean }) {
   const [items, setItems] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [marking, setMarking] = useState(false)
 
   useEffect(() => {
-    fetch("/api/internal/notifications")
+    fetch(`/api/internal/notifications?limit=${DROPDOWN_LIMIT}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data) return
@@ -50,24 +29,38 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
       .catch(() => {})
   }, [])
 
-  function handleToggle(toggle: () => void, wasOpen: boolean) {
-    toggle()
-    if (!wasOpen && unreadCount > 0) {
-      setUnreadCount(0)
-      fetch("/api/internal/notifications", { method: "PATCH" }).catch(() => {})
-    }
+  function handleMarkAllRead() {
+    if (unreadCount === 0 || marking) return
+    setMarking(true)
+    setUnreadCount(0)
+    setItems((prev) => prev.map((item) => ({ ...item, read: true })))
+    fetch("/api/internal/notifications", { method: "PATCH" })
+      .catch(() => {})
+      .finally(() => setMarking(false))
   }
+
+  function handleArchive(item: NotificationItem) {
+    setItems((prev) => prev.filter((i) => i.id !== item.id))
+    if (!item.read) setUnreadCount((prev) => Math.max(0, prev - 1))
+    fetch(`/api/internal/notifications/${item.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ archived: true }),
+    }).catch(() => {})
+  }
+
+  const groups = groupNotificationsByDate(items)
 
   return (
     <ActionsPopover
       transitionTimeout={160}
-      paperSx={{ width: 340, maxHeight: 420, overflowY: "auto" }}
+      paperSx={{ width: 440, maxHeight: 480, display: "flex", flexDirection: "column" }}
       trigger={({ open, toggle, setAnchorEl }) => (
         <Box
           ref={setAnchorEl}
           component="button"
           type="button"
-          onClick={() => handleToggle(toggle, open)}
+          onClick={() => toggle()}
           aria-label="Notificaciones"
           aria-haspopup="true"
           aria-expanded={open}
@@ -79,14 +72,15 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
             width: 36,
             height: 36,
             border: "none",
-            background: "none",
-            borderRadius: "8px",
+            borderRadius: "50%",
             cursor: "pointer",
+            bgcolor: dark ? "rgba(255,255,255,0.1)" : "#ffffff",
+            boxShadow: dark ? "none" : "0 1px 3px rgba(15,23,42,0.1)",
             color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
-            transition: "background 0.15s ease, color 0.15s ease",
+            transition: "background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease",
             "&:hover": dark
-              ? { bgcolor: "rgba(255,255,255,0.1)", color: "var(--sidebar-navy-text-strong)" }
-              : { bgcolor: "action.hover", color: "text.primary" },
+              ? { bgcolor: "rgba(255,255,255,0.18)", color: "var(--sidebar-navy-text-strong)" }
+              : { bgcolor: "#ffffff", boxShadow: "0 2px 8px rgba(15,23,42,0.16)", color: "text.primary" },
           }}
         >
           <Bell size={18} strokeWidth={1.75} />
@@ -116,75 +110,123 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
         </Box>
       )}
     >
-      {() => (
+      {({ close }) => (
         <>
-          <Box sx={{ px: 2.5, py: 1.75, borderBottom: "1px solid", borderColor: "divider" }}>
-            <Typography sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "text.primary" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1.5,
+              px: 2.5,
+              py: 1.75,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              flexShrink: 0,
+            }}
+          >
+            <Typography sx={{ fontSize: "0.875rem", fontWeight: 700, color: "text.primary" }}>
               Notificaciones
             </Typography>
+            {unreadCount > 0 && (
+              <Box
+                component="button"
+                type="button"
+                onClick={handleMarkAllRead}
+                disabled={marking}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  border: "none",
+                  background: "none",
+                  cursor: marking ? "default" : "pointer",
+                  color: "primary.main",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                  opacity: marking ? 0.6 : 1,
+                  "&:hover": { textDecoration: marking ? "none" : "underline" },
+                }}
+              >
+                <CheckCheck size={13} strokeWidth={2} />
+                Marcar todo como leído
+              </Box>
+            )}
           </Box>
 
-          {items.length === 0 ? (
-            <Box sx={{ px: 2.5, py: 4, textAlign: "center" }}>
-              <Typography sx={{ fontSize: "0.8125rem", color: "text.secondary" }}>
-                No tienes notificaciones todavía.
-              </Typography>
-            </Box>
-          ) : (
-            items.map((n) => {
-              const Icon = TYPE_ICON[n.type] ?? Bell
-              return (
-                <Box
-                  key={n.id}
-                  sx={{
-                    display: "flex",
-                    gap: 1.25,
-                    px: 2.5,
-                    py: 1.5,
-                    borderBottom: "1px solid",
-                    borderColor: "divider",
-                    bgcolor: n.read
-                      ? "transparent"
-                      : (theme) => alpha(theme.palette.primary.main, 0.04),
-                  }}
-                >
-                  <Box
+          <Box sx={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}>
+            {items.length === 0 ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 1.25,
+                  px: 2.5,
+                  py: 6,
+                  textAlign: "center",
+                }}
+              >
+                <PartyPopper size={28} strokeWidth={1.5} color="#9CA3AF" />
+                <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary" }}>
+                  Estás al día
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
+                  No tienes notificaciones nuevas.
+                </Typography>
+              </Box>
+            ) : (
+              groups.map((group) => (
+                <Box key={group.label}>
+                  <Typography
                     sx={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: "8px",
-                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                      color: "primary.main",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
+                      fontSize: "0.6875rem",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      color: "text.disabled",
+                      px: 2.5,
+                      pt: 1.5,
+                      pb: 0.5,
                     }}
                   >
-                    <Icon size={14} strokeWidth={2} />
-                  </Box>
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary" }}>
-                      {n.title}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: "0.75rem",
-                        color: "text.secondary",
-                        lineHeight: 1.4,
-                        mt: "1px",
-                      }}
-                    >
-                      {n.message}
-                    </Typography>
-                    <Typography sx={{ fontSize: "0.6875rem", color: "text.disabled", mt: 0.5 }}>
-                      {timeAgo(n.created_at)}
-                    </Typography>
-                  </Box>
+                    {group.label}
+                  </Typography>
+                  {group.items.map((item) => (
+                    <NotificationRow key={item.id} item={item} onToggleArchive={handleArchive} />
+                  ))}
                 </Box>
-              )
-            })
-          )}
+              ))
+            )}
+          </Box>
+
+          <Divider />
+          <Box sx={{ flexShrink: 0, px: 1, py: 1 }}>
+            <Link
+              href="/notifications"
+              onClick={close}
+              style={{ textDecoration: "none" }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  py: 1,
+                  borderRadius: "8px",
+                  fontSize: "0.8125rem",
+                  fontWeight: 600,
+                  color: "primary.main",
+                  transition: "background-color 0.15s ease",
+                  "&:hover": { bgcolor: "action.hover" },
+                }}
+              >
+                Ver todas las notificaciones
+              </Box>
+            </Link>
+          </Box>
         </>
       )}
     </ActionsPopover>

@@ -41,7 +41,6 @@ export function TopbarUserMenu({ name, role, dark = false }: TopbarUserMenuProps
             borderRadius: "10px",
             px: 1,
             py: 0.75,
-            width: "100%",
             transition: "background 0.15s ease",
             "&:hover": { bgcolor: dark ? "rgba(255,255,255,0.08)" : "action.hover" },
           }}

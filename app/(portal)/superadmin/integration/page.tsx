@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
 import { getTutorLearningWebhookDiagnostics } from "@/lib/webhook-monitor"
-import { formatDateTime } from "@/lib/format"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { CheckCircle2, History, Plug, XCircle } from "lucide-react"
+import { CheckCircle2, Plug, XCircle } from "lucide-react"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
 import Divider from "@mui/material/Divider"
@@ -66,38 +65,11 @@ export default async function SuperAdminIntegrationPage() {
     },
   ]
 
-  const lastEvent = diagnostics.lastEvent
-  const lastEventFailed = lastEvent?.ok === false
-  const lastEventRows = lastEvent
-    ? [
-        { key: "Tipo", value: lastEvent.event_type || "Sin dato" },
-        {
-          key: "Recibido",
-          value: diagnostics.lastEventUpdatedAt
-            ? formatDateTime(diagnostics.lastEventUpdatedAt)
-            : "Sin dato",
-        },
-        {
-          key: "Empleado (wp_user_id)",
-          value: lastEvent.student_wp_user_id != null ? String(lastEvent.student_wp_user_id) : "—",
-        },
-        {
-          key: "Cursos actualizados",
-          value: lastEvent.courses_updated != null ? String(lastEvent.courses_updated) : "—",
-        },
-        {
-          key: "Certificados actualizados",
-          value:
-            lastEvent.certificates_updated != null ? String(lastEvent.certificates_updated) : "—",
-        },
-      ]
-    : []
-
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
         title="Integración WordPress / Tutor"
-        description="Diagnóstico del bridge, webhook académico y último evento recibido."
+        description="Diagnóstico del bridge y el webhook académico."
       />
 
       {bridgeReachable ? (
@@ -240,72 +212,6 @@ export default async function SuperAdminIntegrationPage() {
               <Alert severity="error" icon={<XCircle size={16} />} sx={{ borderRadius: 2 }}>
                 No pudimos consultar el health del bridge. Detalle: {bridgeError}
               </Alert>
-            </>
-          )}
-        </Box>
-      </Paper>
-
-      <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-        <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <History size={16} style={{ color: "var(--portal-blue)" }} />
-            <Typography sx={{ fontSize: 15, fontWeight: 600, color: "text.primary" }}>
-              Último evento del webhook académico
-            </Typography>
-          </Box>
-          <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary" }}>
-            Último intento de sincronización de cursos/constancias recibido desde WordPress.
-          </Typography>
-        </Box>
-
-        <Box sx={{ p: 2.5 }}>
-          {!lastEvent ? (
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              Aún no se ha recibido ningún evento del webhook.
-            </Typography>
-          ) : (
-            <>
-              <Alert
-                severity={lastEventFailed ? "error" : "success"}
-                icon={lastEventFailed ? <XCircle size={16} /> : <CheckCircle2 size={16} />}
-                sx={{ borderRadius: 2, mb: 2 }}
-              >
-                {lastEventFailed
-                  ? `El último evento falló (${lastEvent.code ?? "error"})`
-                  : "El último evento se procesó correctamente"}
-                {lastEvent.error_message ? ` — ${lastEvent.error_message}` : null}
-              </Alert>
-
-              <Box
-                sx={{
-                  display: "grid",
-                  gap: 1,
-                  borderRadius: 1.5,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  bgcolor: "background.default",
-                  p: 2,
-                }}
-              >
-                {lastEventRows.map(({ key, value }) => (
-                  <Box key={key} sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
-                    <Typography sx={{ fontSize: 13, color: "text.secondary", flexShrink: 0 }}>
-                      {key}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: 13,
-                        fontWeight: 500,
-                        color: "text.primary",
-                        textAlign: "right",
-                        wordBreak: "break-all",
-                      }}
-                    >
-                      {value}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
             </>
           )}
         </Box>

@@ -78,4 +78,3 @@ export const CNO_CATALOG: CnoEntry[] = [
 ]
 
 export const CNO_AREAS = CNO_CATALOG.filter((e) => e.esArea)
-export const CNO_SUBAREAS = CNO_CATALOG.filter((e) => !e.esArea)

@@ -4,6 +4,7 @@ import { PageSkeleton } from "@/components/shared/PageSkeleton"
 import { FullscreenToggle } from "@/components/layout/FullscreenToggle"
 import { MobileNav } from "@/components/layout/MobileNav"
 import { NotificationBell } from "@/components/layout/NotificationBell"
+import { TopbarUserMenu } from "@/components/layout/TopbarUserMenu"
 import Sidebar from "@/components/layout/Sidebar"
 import { OnboardingTour } from "@/components/layout/OnboardingTour"
 import EmployeeSearchBar from "@/components/search/EmployeeSearchBar"
@@ -12,6 +13,7 @@ import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { blobProxyUrl } from "@/lib/blob-proxy"
 import { getCompanyBranding } from "@/lib/company-branding"
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -28,36 +30,34 @@ export default async function PortalLayout({ children }: { children: React.React
       ? await getCompanyBranding(session.user.empresa_id)
       : null
 
+  const logoSrc = branding?.logo_url ? blobProxyUrl(branding.logo_url) : null
+  const companyName = company ?? branding?.name ?? undefined
+
   const content = (
-    <div className={cn("flex h-screen overflow-hidden", "portal-v4")}>
+    <div className={cn("relative flex h-screen overflow-hidden bg-[#F8F9FC]", "portal-v4")}>
       <Sidebar
         role={role}
         companySlug={branding?.slug}
-        companyName={company}
-        companyLogoUrl={branding?.logo_url}
-        userName={name}
+        logoSrc={logoSrc}
+        logoAlt={companyName ?? "Logo de la empresa"}
+        companyName={companyName}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center justify-between gap-3 bg-[#F8F9FC] px-4 md:px-8">
-          <div className="md:hidden">
-            <MobileNav
-              role={role}
-              name={name}
-              company={company}
-              companySlug={branding?.slug}
-              companyLogoUrl={branding?.logo_url}
-            />
+        <header className="flex h-16 shrink-0 items-center gap-3 bg-[#F8F9FC] px-4 min-[900px]:px-8">
+          <div className="min-[900px]:hidden">
+            <MobileNav role={role} name={name} companySlug={branding?.slug} />
           </div>
+          {role === "SUPERADMIN" ? (
+            <SuperadminSearchBar />
+          ) : role === "HR" ? (
+            branding?.slug && <HrSearchBar companySlug={branding.slug} />
+          ) : (
+            <EmployeeSearchBar />
+          )}
           <div className="flex flex-1 items-center justify-end gap-1">
-            {role === "SUPERADMIN" ? (
-              <SuperadminSearchBar />
-            ) : role === "HR" ? (
-              branding?.slug && <HrSearchBar companySlug={branding.slug} />
-            ) : (
-              <EmployeeSearchBar />
-            )}
             <NotificationBell />
             <FullscreenToggle />
+            <TopbarUserMenu name={name} role={role} />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-[#F8F9FC] px-8 py-7">
