@@ -171,17 +171,33 @@ export async function checkAndNotifyExpiringPackages() {
   }
 }
 
-export async function getRecentNotifications(userId: string, limit = 20) {
-  return prisma.notification.findMany({
-    where: { user_id: userId },
+export async function getNotificationHistory(
+  userId: string,
+  options: { cursor?: string; limit?: number; unreadOnly?: boolean; archived?: boolean } = {},
+) {
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 50)
+
+  const items = await prisma.notification.findMany({
+    where: {
+      user_id: userId,
+      archived: options.archived ?? false,
+      ...(options.unreadOnly ? { read: false } : {}),
+    },
     orderBy: { created_at: "desc" },
-    take: limit,
+    take: limit + 1,
+    ...(options.cursor ? { cursor: { id: options.cursor }, skip: 1 } : {}),
   })
+
+  const hasMore = items.length > limit
+  return {
+    items: hasMore ? items.slice(0, limit) : items,
+    nextCursor: hasMore ? items[limit].id : null,
+  }
 }
 
 export async function getUnreadNotificationCount(userId: string) {
   return prisma.notification.count({
-    where: { user_id: userId, read: false },
+    where: { user_id: userId, read: false, archived: false },
   })
 }
 
@@ -189,5 +205,12 @@ export async function markAllNotificationsRead(userId: string) {
   await prisma.notification.updateMany({
     where: { user_id: userId, read: false },
     data: { read: true },
+  })
+}
+
+export async function setNotificationArchived(userId: string, id: string, archived: boolean) {
+  await prisma.notification.updateMany({
+    where: { id, user_id: userId },
+    data: { archived },
   })
 }

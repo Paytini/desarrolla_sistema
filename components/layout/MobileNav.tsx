@@ -4,12 +4,10 @@ import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { signOut } from "next-auth/react"
-import { LogOut, Menu } from "lucide-react"
+import { Menu } from "lucide-react"
 
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
-import Divider from "@mui/material/Divider"
 import Drawer from "@mui/material/Drawer"
 import IconButton from "@mui/material/IconButton"
 import List from "@mui/material/List"
@@ -19,7 +17,6 @@ import ListItemText from "@mui/material/ListItemText"
 import Typography from "@mui/material/Typography"
 
 import {
-  defaultNavAccent,
   getInitials,
   homeHrefForRole,
   isActive,
@@ -30,28 +27,17 @@ import {
   type NavItem,
   type Role,
 } from "@/components/layout/nav-config"
-import { blobProxyUrl } from "@/lib/blob-proxy"
-
-const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)": "var(--portal-blue)",
-  "var(--sidebar-accent-2)": "var(--portal-blue)",
-  "var(--sidebar-accent-3)": "var(--portal-blue)",
-}
-const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
 
 function MobileNavLink({
   item,
   pathname,
-  accentColor,
   onClose,
 }: {
   item: NavItem
   pathname: string
-  accentColor: string
   onClose: () => void
 }) {
   const active = isActive(item.href, pathname, item.exact)
-  const c = resolveAccent(accentColor)
   const Icon = item.icon
 
   const LinkComponent = item.external ? "a" : Link
@@ -65,33 +51,25 @@ function MobileNavLink({
       <ListItemButton
         selected={active}
         sx={{
-          borderStartStartRadius: 0,
-          borderEndStartRadius: 0,
-          borderStartEndRadius: "9999px",
-          borderEndEndRadius: "9999px",
-          mx: 0,
+          borderRadius: "8px",
+          mx: 1,
           mb: 0.25,
-          pl: "20px",
-          pr: "16px",
+          px: 1.25,
           py: "9px",
           minHeight: 40,
-          color: active ? "text.primary" : "text.secondary",
           gap: 1,
+          color: "var(--sidebar-navy-text)",
           "&.Mui-selected": {
-            background: `linear-gradient(270deg, ${c}, color-mix(in srgb, ${c} 50%, white))`,
-            color: "#fff",
-            boxShadow: `3px 0px 0px 0px ${c} inset`,
-            "& .nav-icon": { color: "#fff" },
-            "&:hover": {
-              background: `linear-gradient(270deg, ${c}, color-mix(in srgb, ${c} 50%, white))`,
-            },
+            bgcolor: "var(--sidebar-navy-active-bg)",
+            color: "var(--sidebar-navy-active-text)",
+            "& .nav-icon": { color: "var(--sidebar-navy-active-text)" },
+            "&:hover": { bgcolor: "var(--sidebar-navy-active-bg)" },
           },
           "&:hover:not(.Mui-selected)": {
-            bgcolor: "action.hover",
-            color: "text.primary",
-            "& .nav-icon": { color: c },
+            bgcolor: "var(--sidebar-navy-hover-bg)",
+            color: "var(--sidebar-navy-text-strong)",
           },
-          transition: "background 0.15s ease",
+          transition: "background-color 0.15s ease, color 0.15s ease",
         }}
       >
         <ListItemIcon
@@ -104,13 +82,7 @@ function MobileNavLink({
           primary={item.label}
           slotProps={{
             primary: {
-              sx: {
-                fontSize: "0.875rem",
-                fontWeight: active ? 600 : 400,
-                letterSpacing: "-0.01em",
-                lineHeight: 1,
-                color: "inherit",
-              },
+              sx: { fontSize: "0.875rem", fontWeight: active ? 700 : 600, lineHeight: 1 },
             },
           }}
           sx={{ my: 0 }}
@@ -123,18 +95,21 @@ function MobileNavLink({
 export function MobileNav({
   role,
   name,
-  company,
   companySlug,
-  companyLogoUrl,
 }: {
   role: Role
   name: string
-  company?: string
   companySlug?: string
-  companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [lastPathname, setLastPathname] = useState(pathname)
+
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname)
+    setOpen(false)
+  }
+
   const initials = getInitials(name)
   const homeHref = homeHrefForRole(role, companySlug)
 
@@ -160,10 +135,11 @@ export function MobileNav({
         slotProps={{
           paper: {
             sx: {
-              width: 240,
-              bgcolor: "background.paper",
-              borderRight: "1px solid",
-              borderColor: "divider",
+              width: 280,
+              bgcolor: "var(--sidebar-navy)",
+              borderRight: "1px solid var(--sidebar-navy-border)",
+              display: "flex",
+              flexDirection: "column",
             },
           },
         }}
@@ -175,68 +151,31 @@ export function MobileNav({
             display: "flex",
             alignItems: "center",
             px: 2,
-            borderBottom: "1px solid",
-            borderColor: "divider",
+            borderBottom: "1px solid var(--sidebar-navy-border)",
           }}
         >
           <Link
             href={homeHref}
-            style={{ display: "flex", alignItems: "center", textDecoration: "none" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+              background: "#FFFFFF",
+              borderRadius: 8,
+              padding: "6px 10px",
+              width: "fit-content",
+            }}
             onClick={() => setOpen(false)}
           >
-            {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
-              <img
-                src={blobProxyUrl(companyLogoUrl)}
-                alt={company ?? "Logo de la empresa"}
-                style={{ height: 32, width: "auto", maxWidth: 160, objectFit: "contain" }}
-              />
-            ) : (
-              <Image
-                src="/assets/logo_desarrolla_cropped.png"
-                alt="Desarrolla360"
-                width={1554}
-                height={461}
-                style={{ height: 32, width: "auto", objectFit: "contain" }}
-              />
-            )}
+            <Image
+              src="/assets/logo_desarrolla_cropped.png"
+              alt="Desarrolla360"
+              width={88}
+              height={26}
+              style={{ height: 26, width: 88, objectFit: "contain" }}
+            />
           </Link>
         </Box>
-
-        {company && role !== "SUPERADMIN" && (
-          <Box
-            sx={{
-              mx: 1.5,
-              mt: 1.5,
-              flexShrink: 0,
-              px: 1.5,
-              py: 1.25,
-              borderRadius: "8px",
-              bgcolor: "background.default",
-              border: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            <Typography
-              variant="overline"
-              sx={{ display: "block", color: "primary.main", lineHeight: 1, mb: 0.5 }}
-            >
-              Empresa
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                fontWeight: 600,
-                color: "text.primary",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {company}
-            </Typography>
-          </Box>
-        )}
 
         <Box sx={{ flex: 1, overflowY: "auto", py: 1.5 }}>
           {role === "SUPERADMIN" ? (
@@ -248,7 +187,7 @@ export function MobileNav({
                     fontWeight: 700,
                     textTransform: "uppercase",
                     letterSpacing: "0.12em",
-                    color: resolveAccent(section.accent),
+                    color: "var(--sidebar-navy-text)",
                     opacity: 0.7,
                     px: "20px",
                     mt: si > 0 ? 2 : 0.5,
@@ -264,7 +203,6 @@ export function MobileNav({
                       key={item.href}
                       item={item}
                       pathname={pathname}
-                      accentColor={section.accent}
                       onClose={() => setOpen(false)}
                     />
                   ))}
@@ -278,7 +216,6 @@ export function MobileNav({
                   key={item.href}
                   item={item}
                   pathname={pathname}
-                  accentColor={defaultNavAccent}
                   onClose={() => setOpen(false)}
                 />
               ))}
@@ -286,38 +223,16 @@ export function MobileNav({
           )}
         </Box>
 
-        <Divider />
-        <Box sx={{ flexShrink: 0, px: 1, pt: 1, pb: 0.5 }}>
-          <Box
-            component="button"
-            type="button"
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              width: "100%",
-              px: 1.25,
-              py: 1,
-              borderRadius: "8px",
-              border: "none",
-              bgcolor: "transparent",
-              cursor: "pointer",
-              color: "text.secondary",
-              fontSize: "0.875rem",
-              fontWeight: 500,
-              fontFamily: "inherit",
-              "&:hover": { bgcolor: "rgba(220,38,38,0.06)", color: "error.main" },
-              transition: "background-color 0.15s ease, color 0.15s ease",
-            }}
-          >
-            <LogOut size={18} strokeWidth={1.8} style={{ flexShrink: 0 }} />
-            <span>Cerrar sesión</span>
-          </Box>
-        </Box>
-        <Divider />
         <Box
-          sx={{ flexShrink: 0, px: 1.5, py: 1.5, display: "flex", alignItems: "center", gap: 1.5 }}
+          sx={{
+            flexShrink: 0,
+            px: 1.5,
+            py: 1.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            borderTop: "1px solid var(--sidebar-navy-border)",
+          }}
         >
           <Avatar
             sx={{
@@ -336,7 +251,7 @@ export function MobileNav({
               sx={{
                 fontSize: "0.8125rem",
                 fontWeight: 600,
-                color: "text.primary",
+                color: "var(--sidebar-navy-text-strong)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -344,7 +259,7 @@ export function MobileNav({
             >
               {name}
             </Typography>
-            <Typography sx={{ fontSize: "0.6875rem", color: "text.secondary" }}>
+            <Typography sx={{ fontSize: "0.6875rem", color: "var(--sidebar-navy-text)" }}>
               {roleLabel[role]}
             </Typography>
           </Box>

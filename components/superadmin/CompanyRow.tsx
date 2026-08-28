@@ -1,16 +1,9 @@
-"use client"
-
 import Link from "next/link"
 import { ExternalLink } from "lucide-react"
-import Box from "@mui/material/Box"
-import Button from "@mui/material/Button"
-import Chip from "@mui/material/Chip"
-import TableCell from "@mui/material/TableCell"
-import TableRow from "@mui/material/TableRow"
-import Typography from "@mui/material/Typography"
 
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
 import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButton"
+import StatusBadge from "@/components/shared/StatusBadge"
 import type { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 
@@ -21,124 +14,58 @@ export function CompanyRow({ company }: { company: Company }) {
   const activeEmployeesCount = company.employees.filter((e) => e.active).length
 
   return (
-    <TableRow
-      sx={{
-        "&:hover": { bgcolor: "action.hover" },
-        "&:last-child td": { borderBottom: 0 },
-      }}
-    >
-      <TableCell sx={{ py: 1.5, px: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
-              sx={{
-                fontSize: 13,
-                fontWeight: 500,
-                color: "text.primary",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {company.name}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: 11,
-                color: "text.secondary",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {company.hr_email}
-            </Typography>
-          </Box>
-        </Box>
-      </TableCell>
+    <tr className="bg-white transition-colors hover:bg-gray-50">
+      <td className="min-w-0 rounded-l-lg py-3 pl-4">
+        <p className="truncate text-sm font-medium text-slate-950">{company.name}</p>
+        <p className="truncate text-[11px] text-slate-500">{company.hr_email}</p>
+      </td>
 
-      <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", sm: "table-cell" } }}>
-        <Typography sx={{ fontFamily: "monospace", fontSize: 12, color: "text.secondary" }}>
-          {company.rfc ?? "—"}
-        </Typography>
-      </TableCell>
+      <td className="hidden px-4 py-3 font-mono text-xs text-slate-500 sm:table-cell">
+        {company.rfc ?? "—"}
+      </td>
 
-      <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", md: "table-cell" } }}>
-        <Chip
-          label={packageName}
-          size="small"
-          sx={{
-            height: 20,
-            fontSize: "11px",
-            bgcolor: "action.hover",
-            color: "text.secondary",
-            "& .MuiChip-label": { px: 1 },
-          }}
-        />
-      </TableCell>
+      <td className="hidden px-4 py-3 md:table-cell">
+        <span className="inline-flex h-5 items-center rounded-full bg-slate-100 px-2 text-[11px] text-slate-600">
+          {packageName}
+        </span>
+      </td>
 
-      <TableCell sx={{ py: 1.5, px: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
           <SeatDonut used={activeEmployeesCount} total={company.contracted_seats} size={48} />
-          <Typography sx={{ fontSize: 12, fontWeight: 500, color: "text.primary" }}>
+          <span className="text-xs font-medium text-slate-900">
             {activeEmployeesCount}
-            <Box component="span" sx={{ color: "text.secondary" }}>
-              /{company.contracted_seats}
-            </Box>
-          </Typography>
-        </Box>
-      </TableCell>
+            <span className="text-slate-500">/{company.contracted_seats}</span>
+          </span>
+        </div>
+      </td>
 
-      <TableCell sx={{ py: 1.5, px: 2, display: { xs: "none", lg: "table-cell" } }}>
-        <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-          {formatDate(company.created_at)}
-        </Typography>
-      </TableCell>
+      <td className="hidden px-4 py-3 text-xs text-slate-500 lg:table-cell">
+        {formatDate(company.created_at)}
+      </td>
 
-      <TableCell sx={{ py: 1.5, px: 2 }}>
-        <Chip
-          label={company.active ? "Activa" : "Suspendida"}
-          size="small"
-          sx={{
-            height: 22,
-            fontSize: "11px",
-            fontWeight: 600,
-            border: "1px solid",
-            borderColor: company.active ? "rgba(40,199,111,0.3)" : "rgba(234,84,85,0.3)",
-            bgcolor: company.active ? "rgba(40,199,111,0.12)" : "rgba(234,84,85,0.12)",
-            color: company.active ? "#28C76F" : "#EA5455",
-            borderRadius: "11px",
-            "& .MuiChip-label": { px: 1.25 },
-          }}
-        />
-      </TableCell>
+      <td className="px-4 py-3">
+        <StatusBadge variant={company.active ? "green" : "red"} dot>
+          {company.active ? "Activa" : "Suspendida"}
+        </StatusBadge>
+      </td>
 
-      <TableCell sx={{ py: 1.5, px: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.75 }}>
-          <Button
-            component={Link}
+      <td className="rounded-r-lg py-3 pr-2 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <Link
             href={`/superadmin/companies/${company.id}`}
-            size="small"
-            variant="outlined"
-            startIcon={<ExternalLink size={11} strokeWidth={2} />}
-            sx={{
-              height: 28,
-              px: 1.25,
-              fontSize: 12,
-              color: "text.secondary",
-              borderColor: "divider",
-              "&:hover": { color: "text.primary", borderColor: "text.secondary" },
-            }}
+            className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 px-2.5 text-xs text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
           >
+            <ExternalLink size={11} strokeWidth={2} />
             Ver
-          </Button>
+          </Link>
           <SuspendCompanyButton
             companyId={company.id}
             active={company.active}
             name={company.name}
           />
-        </Box>
-      </TableCell>
-    </TableRow>
+        </div>
+      </td>
+    </tr>
   )
 }

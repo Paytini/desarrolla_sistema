@@ -4,18 +4,13 @@ import { paginate } from "@/lib/pagination"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
+import EmptyState from "@/components/shared/EmptyState"
 import { Building2, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
-import Table from "@mui/material/Table"
-import TableBody from "@mui/material/TableBody"
-import TableCell from "@mui/material/TableCell"
-import TableHead from "@mui/material/TableHead"
-import TableRow from "@mui/material/TableRow"
-import Typography from "@mui/material/Typography"
 import { SearchInput } from "@/components/shared/SearchInput"
 
 const successMessages: Record<string, string> = {
@@ -28,17 +23,6 @@ const errorMessages: Record<string, string> = {
   email_hr: "Ese correo HR ya está ligado a una empresa.",
   usuario_hr: "Ese correo ya existe como usuario del portal.",
   empresa: "No se encontró la empresa.",
-}
-
-const TH_SX = {
-  fontSize: "10px",
-  fontWeight: 700,
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.1em",
-  color: "text.secondary",
-  bgcolor: "action.hover",
-  borderBottom: "1px solid",
-  borderColor: "divider",
 }
 
 type PageProps = {
@@ -190,48 +174,72 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         noPadding
       >
         {filteredCompanies.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1.5,
-              py: 8,
-              textAlign: "center",
-            }}
-          >
-            <Building2 size={28} style={{ color: "#cbd5e1" }} />
-            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-              {q || statusFilter !== "all"
-                ? "Sin resultados para ese filtro."
-                : "Aún no hay empresas registradas."}
-            </Typography>
+          <Box sx={{ px: 3, py: 2 }}>
+            <EmptyState
+              icon={<Building2 size={28} className="text-slate-300" />}
+              message={
+                q || statusFilter !== "all"
+                  ? "Sin resultados para ese filtro."
+                  : "Aún no hay empresas registradas."
+              }
+            />
           </Box>
         ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={TH_SX}>Empresa</TableCell>
-                <TableCell sx={{ ...TH_SX, display: { xs: "none", sm: "table-cell" } }}>
-                  RFC
-                </TableCell>
-                <TableCell sx={{ ...TH_SX, display: { xs: "none", md: "table-cell" } }}>
-                  Plan
-                </TableCell>
-                <TableCell sx={TH_SX}>Cupos</TableCell>
-                <TableCell sx={{ ...TH_SX, display: { xs: "none", lg: "table-cell" } }}>
-                  Alta
-                </TableCell>
-                <TableCell sx={TH_SX}>Estado</TableCell>
-                <TableCell sx={{ ...TH_SX, textAlign: "right" }}>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pagedCompanies.map((company) => (
-                <CompanyRow key={company.id} company={company} />
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto px-2">
+            <table
+              className="w-full border-separate border-spacing-y-2"
+              aria-label="Empresas registradas"
+            >
+              <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                  >
+                    Empresa
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:table-cell"
+                  >
+                    RFC
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
+                  >
+                    Plan
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                  >
+                    Cupos
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 lg:table-cell"
+                  >
+                    Alta
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                  >
+                    Estado
+                  </th>
+                  <th scope="col" className="px-4 pb-2">
+                    <span className="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedCompanies.map((company) => (
+                  <CompanyRow key={company.id} company={company} />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
         <Pagination

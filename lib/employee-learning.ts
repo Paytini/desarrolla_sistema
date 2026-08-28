@@ -45,7 +45,6 @@ async function releaseEmployeeSyncLock(employeeId: string, lockUntil: Date) {
   })
 }
 
-export type EmployeeLearningData = Awaited<ReturnType<typeof getEmployeeLearningData>>
 export type EmployeeLearningBridgeSnapshot = {
   courses: BridgeStudentCourse[]
   certificates?: BridgeStudentCertificate[]
@@ -582,20 +581,6 @@ export async function syncStaleEmployeeLearningBatch(options?: { limit?: number 
   return syncEmployeeLearningBatchInternal({
     limit: options?.limit,
     staleOnly: true,
-  })
-}
-
-export async function syncCompanyEmployeeLearningBatch(
-  companyId: string,
-  options?: {
-    limit?: number
-    staleOnly?: boolean
-  },
-) {
-  return syncEmployeeLearningBatchInternal({
-    companyId,
-    limit: options?.limit,
-    staleOnly: options?.staleOnly ?? false,
   })
 }
 

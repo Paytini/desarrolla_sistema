@@ -65,22 +65,6 @@ function buildPackageCourseUpsertOperation(
   })
 }
 
-export async function upsertEmployeePackageCourses(
-  employeeId: string,
-  packageCourses: PackageCourseInput[],
-) {
-  if (packageCourses.length === 0) {
-    return
-  }
-
-  const syncedAt = new Date()
-  await prisma.$transaction(
-    packageCourses.map((packageCourse) =>
-      buildPackageCourseUpsertOperation(employeeId, packageCourse, syncedAt),
-    ),
-  )
-}
-
 export async function replaceEmployeePackageCourses(
   employeeId: string,
   packageCourses: PackageCourseInput[],

@@ -62,20 +62,18 @@ enum ConsultingRequestStatus {
 // ─────────────────────────────────────────────────────────────
 
 model User {
-  id                           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                        String    @unique
-  password_hash                String
-  role                         Role
-  name                         String
-  company_id                   String?   @db.Uuid // null for SUPERADMIN
-  wp_user_id                   Int? // WordPress user ID (nullable)
-  active                       Boolean   @default(true)
-  last_access                  DateTime?
-  activation_token             String?   @unique
-  activation_token_expires_at  DateTime?
-  must_change_password         Boolean   @default(false)
-  created_at                   DateTime  @default(now())
-  updated_at                   DateTime  @updatedAt
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String    @unique
+  password_hash         String
+  role                  Role
+  name                  String
+  company_id            String?   @db.Uuid // null for SUPERADMIN
+  wp_user_id            Int? // WordPress user ID (nullable)
+  active                Boolean   @default(true)
+  last_access           DateTime?
+  must_change_password  Boolean   @default(false)
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
 
   company            Company?            @relation(fields: [company_id], references: [id])
   sessions           PortalSession[]
@@ -100,6 +98,7 @@ model Notification {
   title       String
   message     String
   read        Boolean  @default(false)
+  archived    Boolean  @default(false)
   entity_type String?
   entity_id   String?  @db.Uuid
   created_at  DateTime @default(now())
@@ -107,6 +106,7 @@ model Notification {
   user User @relation(fields: [user_id], references: [id])
 
   @@index([user_id, read])
+  @@index([user_id, archived])
   @@index([created_at])
   @@index([type, entity_id])
   @@map("notifications")

@@ -23,28 +23,13 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
   const openParam = readSearchParam(params, "open")
   const openCourseId = openParam ? Number(openParam) : null
 
-  const {
-    publishedCourses,
-    metadata,
-    paqueteCursos: packageCourses,
-  } = await getSuperadminDc3Snapshot()
-
-  const packagesByCourseId = new Map<number, string[]>()
-  for (const pc of packageCourses) {
-    const existing = packagesByCourseId.get(pc.wp_course_id)
-    if (existing) {
-      if (!existing.includes(pc.package.name)) existing.push(pc.package.name)
-    } else {
-      packagesByCourseId.set(pc.wp_course_id, [pc.package.name])
-    }
-  }
+  const { publishedCourses, metadata } = await getSuperadminDc3Snapshot()
 
   const metadataMap = new Map(metadata.map((m) => [m.wp_course_id, m]))
 
   const courses: CourseEntry[] = publishedCourses.map((course) => ({
     wpCourseId: course.wp_course_id,
     courseName: decodeHtmlEntities(course.title),
-    packages: packagesByCourseId.get(course.wp_course_id) ?? [],
     metadata: metadataMap.get(course.wp_course_id) ?? null,
   }))
 

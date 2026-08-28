@@ -2,6 +2,7 @@ import { PackageRow } from "@/components/superadmin/PackageRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { SearchInput } from "@/components/shared/SearchInput"
+import EmptyState from "@/components/shared/EmptyState"
 import { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
@@ -14,12 +15,6 @@ import { SubmitButton } from "@/components/shared/SubmitButton"
 import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
-import Chip from "@mui/material/Chip"
-import Table from "@mui/material/Table"
-import TableBody from "@mui/material/TableBody"
-import TableCell from "@mui/material/TableCell"
-import TableHead from "@mui/material/TableHead"
-import TableRow from "@mui/material/TableRow"
 import Typography from "@mui/material/Typography"
 
 const successMessages: Record<string, string> = {
@@ -37,19 +32,6 @@ const errorMessages: Record<string, string> = {
   asignacion: "No fue posible asignar el paquete.",
   sync: "No fue posible sincronizar. Revisa que exista paquete activo y empleados con WP user ID.",
 }
-
-const TH_SX = {
-  fontSize: "10px",
-  fontWeight: 700,
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.1em",
-  color: "text.secondary",
-  bgcolor: "action.hover",
-  borderBottom: "1px solid",
-  borderColor: "divider",
-}
-
-const TD_SX = { borderBottom: "1px solid", borderColor: "divider" }
 
 const SELECT_SX = {
   height: 32,
@@ -289,71 +271,79 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
         noPadding
       >
         {packages.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1.5,
-              py: 8,
-              textAlign: "center",
-            }}
-          >
-            <Package size={28} style={{ color: "#cbd5e1" }} />
-            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-              Aún no hay paquetes registrados.
-            </Typography>
+          <Box sx={{ px: 3, py: 2 }}>
+            <EmptyState
+              icon={<Package size={28} className="text-slate-300" />}
+              message="Aún no hay paquetes registrados."
+            />
           </Box>
         ) : sortedPackages.length === 0 ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1.5,
-              py: 8,
-              textAlign: "center",
-            }}
-          >
-            <Package size={28} style={{ color: "#cbd5e1" }} />
-            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-              Sin resultados para ese filtro.
-            </Typography>
+          <Box sx={{ px: 3, py: 2 }}>
+            <EmptyState
+              icon={<Package size={28} className="text-slate-300" />}
+              message="Sin resultados para ese filtro."
+            />
           </Box>
         ) : (
           <>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ ...TH_SX, width: 32 }} />
-                  <TableCell sx={TH_SX}>Paquete</TableCell>
-                  <TableCell sx={{ ...TH_SX, display: { xs: "none", sm: "table-cell" } }}>
-                    Cursos
-                  </TableCell>
-                  <TableCell sx={{ ...TH_SX, display: { xs: "none", md: "table-cell" } }}>
-                    Empresas
-                  </TableCell>
-                  <TableCell sx={TH_SX}>DC-3</TableCell>
-                  <TableCell sx={{ ...TH_SX, display: { xs: "none", lg: "table-cell" } }}>
-                    Alta
-                  </TableCell>
-                  <TableCell sx={{ ...TH_SX, textAlign: "right" }}>Acciones</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {pagedPackages.map(({ pkg, dc3Complete, dc3Total, dc3AllOk, companyNames }) => (
-                  <PackageRow
-                    key={pkg.id}
-                    pkg={pkg}
-                    dc3Complete={dc3Complete}
-                    dc3Total={dc3Total}
-                    dc3AllOk={dc3AllOk}
-                    companyNames={companyNames}
-                    dc3MetadataByCourseId={dc3MetadataByCourseId}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto px-2">
+              <table
+                className="w-full border-separate border-spacing-y-2"
+                aria-label="Catálogo de paquetes"
+              >
+                <thead>
+                  <tr>
+                    <th scope="col" className="w-8 pb-2" />
+                    <th
+                      scope="col"
+                      className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                    >
+                      Paquete
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:table-cell"
+                    >
+                      Cursos
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
+                    >
+                      Empresas
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                    >
+                      DC-3
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 lg:table-cell"
+                    >
+                      Alta
+                    </th>
+                    <th scope="col" className="px-4 pb-2">
+                      <span className="sr-only">Acciones</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedPackages.map(({ pkg, dc3Complete, dc3Total, dc3AllOk, companyNames }) => (
+                    <PackageRow
+                      key={pkg.id}
+                      pkg={pkg}
+                      dc3Complete={dc3Complete}
+                      dc3Total={dc3Total}
+                      dc3AllOk={dc3AllOk}
+                      companyNames={companyNames}
+                      dc3MetadataByCourseId={dc3MetadataByCourseId}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {totalPages > 1 && (
               <Box
@@ -471,114 +461,130 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
             </Typography>
           </Box>
         ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={TH_SX}>Empresa</TableCell>
-                <TableCell sx={TH_SX}>Paquete activo</TableCell>
-                <TableCell sx={TH_SX}>Cambiar paquete</TableCell>
-                <TableCell sx={{ ...TH_SX, display: { xs: "none", sm: "table-cell" } }}>
-                  Empleados
-                </TableCell>
-                <TableCell sx={{ ...TH_SX, textAlign: "right" }}>Sync</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pagedCompanies.map((company) => {
-                const activePackage = company.packages[0]?.package
-                const syncable = company.employees.filter((e) => e.wp_user_id).length
+          <div className="overflow-x-auto px-2">
+            <table
+              className="w-full border-separate border-spacing-y-2"
+              aria-label="Asignación por empresa"
+            >
+              <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                  >
+                    Empresa
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                  >
+                    Paquete activo
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
+                  >
+                    Cambiar paquete
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:table-cell"
+                  >
+                    Empleados
+                  </th>
+                  <th scope="col" className="px-4 pb-2">
+                    <span className="sr-only">Sync</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedCompanies.map((company) => {
+                  const activePackage = company.packages[0]?.package
+                  const syncable = company.employees.filter((e) => e.wp_user_id).length
 
-                return (
-                  <TableRow key={company.id} sx={{ "&:hover": { bgcolor: "action.hover" } }}>
-                    <TableCell
-                      sx={{ ...TD_SX, fontSize: 13, fontWeight: 500, color: "text.primary" }}
-                    >
-                      {company.name}
-                    </TableCell>
-                    <TableCell sx={TD_SX}>
-                      {activePackage ? (
-                        <Chip
-                          label={activePackage.name}
-                          size="small"
-                          variant="outlined"
-                          sx={{ height: 20, fontSize: 11, "& .MuiChip-label": { px: 1 } }}
-                        />
-                      ) : (
-                        <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                          Sin paquete
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell sx={TD_SX}>
-                      <Box
-                        component="form"
-                        action={assignPackageToCompanyAction}
-                        sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
-                      >
-                        <input type="hidden" name="empresa_id" value={company.id} />
+                  return (
+                    <tr key={company.id} className="bg-white transition-colors hover:bg-gray-50">
+                      <td className="rounded-l-lg px-4 py-3 text-sm font-medium text-slate-900">
+                        {company.name}
+                      </td>
+                      <td className="px-4 py-3">
+                        {activePackage ? (
+                          <span className="inline-flex h-5 items-center rounded-full border border-slate-200 px-2 text-[11px] text-slate-600">
+                            {activePackage.name}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-500">Sin paquete</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
                         <Box
-                          component="select"
-                          name="paquete_id"
-                          required
-                          aria-label="Paquete"
-                          defaultValue={company.packages[0]?.package_id ?? ""}
-                          sx={SELECT_SX}
+                          component="form"
+                          action={assignPackageToCompanyAction}
+                          sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
                         >
-                          <option value="" disabled>
-                            Selecciona un paquete
-                          </option>
-                          {packages.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name}
+                          <input type="hidden" name="empresa_id" value={company.id} />
+                          <Box
+                            component="select"
+                            name="paquete_id"
+                            required
+                            aria-label="Paquete"
+                            defaultValue={company.packages[0]?.package_id ?? ""}
+                            sx={SELECT_SX}
+                          >
+                            <option value="" disabled>
+                              Selecciona un paquete
                             </option>
-                          ))}
+                            {packages.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </Box>
+                          <Box
+                            component="input"
+                            type="date"
+                            name="fecha_vencimiento"
+                            aria-label="Fecha de vencimiento"
+                            sx={SELECT_SX}
+                          />
+                          <SubmitButton
+                            size="small"
+                            variant="contained"
+                            disableElevation
+                            sx={{ height: 32, px: 2.5, fontSize: "0.8125rem", borderRadius: "8px" }}
+                          >
+                            Asignar
+                          </SubmitButton>
                         </Box>
-                        <Box
-                          component="input"
-                          type="date"
-                          name="fecha_vencimiento"
-                          aria-label="Fecha de vencimiento"
-                          sx={SELECT_SX}
-                        />
-                        <SubmitButton
-                          size="small"
-                          variant="contained"
-                          disableElevation
-                          sx={{ height: 32, px: 2.5, fontSize: "0.8125rem", borderRadius: "8px" }}
-                        >
-                          Asignar
-                        </SubmitButton>
-                      </Box>
-                    </TableCell>
-                    <TableCell sx={{ ...TD_SX, display: { xs: "none", sm: "table-cell" } }}>
-                      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                      </td>
+                      <td className="hidden px-4 py-3 text-xs text-slate-500 sm:table-cell">
                         {company.employees.length} empleados · {syncable} con WP ID
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={{ ...TD_SX, textAlign: "right" }}>
-                      <form action={syncPackageToCompanyEmployeesAction}>
-                        <input type="hidden" name="empresa_id" value={company.id} />
-                        <SubmitButton
-                          variant="outlined"
-                          size="small"
-                          startIcon={<RotateCw size={11} />}
-                          sx={{
-                            height: 32,
-                            fontSize: 12,
-                            borderColor: "divider",
-                            color: "text.secondary",
-                            "&:hover": { borderColor: "text.secondary" },
-                          }}
-                        >
-                          Sincronizar
-                        </SubmitButton>
-                      </form>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                      </td>
+                      <td className="rounded-r-lg px-4 py-3 text-right">
+                        <form action={syncPackageToCompanyEmployeesAction}>
+                          <input type="hidden" name="empresa_id" value={company.id} />
+                          <SubmitButton
+                            variant="outlined"
+                            size="small"
+                            startIcon={<RotateCw size={11} />}
+                            sx={{
+                              height: 32,
+                              fontSize: 12,
+                              borderColor: "divider",
+                              color: "text.secondary",
+                              "&:hover": { borderColor: "text.secondary" },
+                            }}
+                          >
+                            Sincronizar
+                          </SubmitButton>
+                        </form>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
         <Pagination
           currentPage={companiesCurrentPage}

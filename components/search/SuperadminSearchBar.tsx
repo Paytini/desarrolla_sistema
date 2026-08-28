@@ -32,7 +32,6 @@ export default function SuperadminSearchBar() {
       searchUrl={(q) => `/api/internal/superadmin-search?q=${encodeURIComponent(q)}`}
       placeholder="Buscar empresas, empleados, paquetes..."
       triggerLabel="Buscar en el portal"
-      triggerWidth="100%"
       renderGroups={(results, query, onClose) => {
         const hasResults =
           results.companies.length > 0 ||

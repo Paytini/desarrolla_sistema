@@ -1,19 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { CalendarClock, LifeBuoy } from "lucide-react"
+import { LifeBuoy, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 
 import Box from "@mui/material/Box"
 import List from "@mui/material/List"
-import ListItemButton from "@mui/material/ListItemButton"
-import ListItemIcon from "@mui/material/ListItemIcon"
-import ListItemText from "@mui/material/ListItemText"
+import Tooltip from "@mui/material/Tooltip"
 import Typography from "@mui/material/Typography"
 
 import {
-  homeHrefForRole,
+  avatarColor,
+  getInitials,
   isActive,
   navEmployee,
   navHr,
@@ -21,37 +21,61 @@ import {
   type NavItem,
   type Role,
 } from "@/components/layout/nav-config"
-import { kpiColorMap } from "@/lib/kpi-colors"
-import { blobProxyUrl } from "@/lib/blob-proxy"
-import { companyPath } from "@/lib/company-routes"
 
 const SIDEBAR_W = 288
+const SIDEBAR_W_COLLAPSED = 88
 
 const SIDEBAR_FONT =
   'var(--font-plus-jakarta-sans, "Plus Jakarta Sans"), system-ui, "Segoe UI", Arial, sans-serif'
 
-const SIDEBAR_BG = "var(--sidebar-bg-v4, #FFFFFF)"
-const SIDEBAR_BORDER = "var(--sidebar-border-v4, #E3D7F5)"
-const SIDEBAR_OVERLAY =
-  "var(--sidebar-overlay-v4, linear-gradient(to bottom, rgba(139,92,246,0) 0%, rgba(139,92,246,0.10) 45%, rgba(139,92,246,0.55) 100%))"
-
-const ACCENT_MAP: Record<string, string> = {
-  "var(--brand)": "var(--portal-blue)",
-  "var(--sidebar-accent-2)": "var(--portal-blue)",
-  "var(--sidebar-accent-3)": "var(--portal-blue)",
-}
-const resolveAccent = (raw: string) => ACCENT_MAP[raw] ?? raw
-
-function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
+function NavItemRow({
+  item,
+  pathname,
+  collapsed,
+}: {
+  item: NavItem
+  pathname: string
+  collapsed: boolean
+}) {
   const active = isActive(item.href, pathname, item.exact)
   const Icon = item.icon
-  const { bg, text } = kpiColorMap[item.color]
-  const activeBg = `var(--nav-active-bg, ${bg})`
-  const activeText = `var(--nav-active-text, ${text})`
-  const hoverBg = `var(--nav-hover-bg, ${bg}14)`
 
   const LinkComponent = item.external ? "a" : Link
   const linkProps = item.external ? {} : { prefetch: true }
+
+  if (collapsed) {
+    return (
+      <Tooltip title={item.label} placement="right">
+        <LinkComponent
+          href={item.href}
+          {...linkProps}
+          style={{ textDecoration: "none", color: "inherit", display: "flex" }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 44,
+              height: 44,
+              mx: "auto",
+              mb: 0.5,
+              borderRadius: "50%",
+              color: active ? "var(--sidebar-navy-active-text)" : "var(--sidebar-navy-text)",
+              bgcolor: active ? "var(--sidebar-navy-active-bg)" : "transparent",
+              transition: "background-color 0.15s ease, color 0.15s ease",
+              "&:hover": {
+                bgcolor: active ? "var(--sidebar-navy-active-bg)" : "var(--sidebar-navy-hover-bg)",
+                color: active ? "var(--sidebar-navy-active-text)" : "var(--sidebar-navy-text-strong)",
+              },
+            }}
+          >
+            <Icon size={19} strokeWidth={active ? 2.2 : 1.8} />
+          </Box>
+        </LinkComponent>
+      </Tooltip>
+    )
+  }
 
   return (
     <LinkComponent
@@ -59,59 +83,49 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
       {...linkProps}
       style={{ textDecoration: "none", color: "inherit", display: "block" }}
     >
-      <ListItemButton
-        selected={active}
+      <Box
+        className="nav-row"
         sx={{
-          borderRadius: "8px",
-          mx: 1,
-          mb: 0.25,
+          display: "flex",
+          alignItems: "center",
+          gap: 1.25,
           px: 1.25,
-          py: 0.875,
-          minHeight: 40,
-          gap: 1,
-          color: "text.primary",
-          "&.Mui-selected": {
-            bgcolor: activeBg,
-            color: activeText,
-            "& .nav-icon": { color: activeText },
-            "&:hover": { bgcolor: activeBg, filter: "brightness(0.94)" },
-          },
-          "&:hover:not(.Mui-selected)": {
-            bgcolor: hoverBg,
-            color: "text.primary",
-            "& .nav-icon": { color: activeBg },
-          },
-          transition: "background-color 0.15s ease, color 0.15s ease",
+          py: 0.5,
+          mb: 0.25,
+          color: "var(--sidebar-navy-text)",
+          transition: "color 0.15s ease",
+          "&:hover": { color: "var(--sidebar-navy-text-strong)" },
         }}
       >
-        <ListItemIcon
-          className="nav-icon"
+        <Box
           sx={{
-            minWidth: 0,
-            mr: 0.5,
-            color: active ? text : "inherit",
-            transition: "color 0.15s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 36,
+            height: 36,
             flexShrink: 0,
+            borderRadius: "50%",
+            color: active ? "var(--sidebar-navy-active-text)" : "inherit",
+            bgcolor: active ? "var(--sidebar-navy-active-bg)" : "var(--sidebar-navy-hover-bg)",
+            transition: "background-color 0.15s ease, color 0.15s ease",
           }}
         >
           <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
-        </ListItemIcon>
-        <ListItemText
-          primary={item.label}
-          slotProps={{
-            primary: {
-              sx: {
-                fontFamily: SIDEBAR_FONT,
-                fontSize: "0.875rem",
-                fontWeight: active ? 700 : 600,
-                letterSpacing: "0.01em",
-                lineHeight: 1,
-              },
-            },
+        </Box>
+        <Typography
+          sx={{
+            fontFamily: SIDEBAR_FONT,
+            fontSize: "0.875rem",
+            fontWeight: active ? 700 : 600,
+            letterSpacing: "0.01em",
+            lineHeight: 1,
+            color: active ? "var(--sidebar-navy-text-strong)" : "inherit",
           }}
-          sx={{ my: 0 }}
-        />
-      </ListItemButton>
+        >
+          {item.label}
+        </Typography>
+      </Box>
     </LinkComponent>
   )
 }
@@ -119,238 +133,289 @@ function NavItemRow({ item, pathname }: { item: NavItem; pathname: string }) {
 export default function Sidebar({
   role,
   companySlug,
+  logoSrc,
+  logoAlt,
   companyName,
-  companyLogoUrl,
 }: {
   role: Role
   companySlug?: string
+  logoSrc?: string | null
+  logoAlt?: string
   companyName?: string
-  companyLogoUrl?: string | null
 }) {
   const pathname = usePathname()
-  const homeHref = homeHrefForRole(role, companySlug)
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
     <Box
       component="aside"
       sx={{
-        position: "sticky",
-        top: 0,
-        height: "100vh",
-        width: SIDEBAR_W,
+        height: "100%",
+        width: collapsed ? SIDEBAR_W_COLLAPSED : SIDEBAR_W,
         flexShrink: 0,
         display: { xs: "none", md: "flex" },
         flexDirection: "column",
-        overflow: "visible",
+        overflow: "hidden",
         zIndex: 20,
         fontFamily: SIDEBAR_FONT,
+        bgcolor: "var(--sidebar-navy)",
+        borderRight: "1px solid var(--sidebar-navy-border)",
+        transition: "width 0.2s ease",
       }}
     >
       <Box
-        aria-hidden
         sx={{
-          position: "absolute",
-          inset: 0,
-          bgcolor: SIDEBAR_BG,
-          borderRight: "1px solid",
-          borderColor: SIDEBAR_BORDER,
-          overflow: "hidden",
-          pointerEvents: "none",
+          width: "100%",
+          height: 72,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          px: collapsed ? 1 : 2,
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: "55%",
-            background: SIDEBAR_OVERLAY,
-          }}
-        />
+        {logoSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element -- arbitrary tenant logo, size unknown ahead of time
+          <img
+            src={logoSrc}
+            alt={logoAlt ?? "Logo de la empresa"}
+            style={{
+              maxHeight: 48,
+              maxWidth: "100%",
+              objectFit: "contain",
+              filter: "brightness(0) invert(1)",
+              opacity: 0.95,
+            }}
+          />
+        ) : role === "SUPERADMIN" ? (
+          <Image
+            src="/assets/logo_desarrolla_cropped.png"
+            alt="Desarrolla360"
+            width={220}
+            height={66}
+            priority
+            style={{
+              height: 52,
+              width: "auto",
+              objectFit: "contain",
+              filter: "brightness(0) invert(1)",
+              opacity: 0.95,
+            }}
+          />
+        ) : (
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              flexShrink: 0,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: avatarColor(companyName ?? "?"),
+              color: "#ffffff",
+              fontSize: "0.875rem",
+              fontWeight: 700,
+            }}
+          >
+            {getInitials(companyName ?? "?")}
+          </Box>
+        )}
       </Box>
 
       <Box
         sx={{
-          position: "relative",
-          zIndex: 1,
+          flexGrow: 1,
           display: "flex",
           flexDirection: "column",
-          height: "100%",
-          overflow: "hidden",
+          overflowY: "auto",
+          overflowX: "hidden",
+          pt: role === "SUPERADMIN" ? 1.5 : 5,
+          pb: 1.5,
         }}
       >
-        <Box
-          sx={{
-            height: 64,
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            px: 2,
-            borderBottom: "1px solid",
-            borderColor: SIDEBAR_BORDER,
-          }}
-        >
-          <Link
-            href={homeHref}
-            style={{ display: "flex", alignItems: "center", textDecoration: "none" }}
-          >
-            {(role === "HR" || role === "EMPLOYEE") && companyLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy
-              <img
-                src={blobProxyUrl(companyLogoUrl)}
-                alt={companyName ?? "Logo de la empresa"}
-                style={{ height: 36, width: "auto", maxWidth: 180, objectFit: "contain" }}
-              />
-            ) : (
-              <Image
-                src="/assets/logo_desarrolla_cropped.png"
-                alt="Desarrolla360"
-                width={1554}
-                height={461}
-                style={{ height: 36, width: "auto", objectFit: "contain" }}
-              />
-            )}
-          </Link>
-        </Box>
-
-        <Box sx={{ flex: 1, overflowY: "auto", overflowX: "hidden", py: 1.5 }}>
-          {role === "SUPERADMIN" ? (
-            navSuperAdminSections.map((section, si) => (
-              <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
-                <Box
+        {role === "SUPERADMIN" ? (
+          navSuperAdminSections.map((section, si) => (
+            <Box key={section.heading} sx={{ mt: si > 0 ? 0.5 : 0 }}>
+              {collapsed ? (
+                si > 0 && (
+                  <Box
+                    sx={{
+                      mx: 2,
+                      my: 1,
+                      height: "1px",
+                      bgcolor: "var(--sidebar-navy-border)",
+                    }}
+                  />
+                )
+              ) : (
+                <Typography
+                  variant="overline"
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
+                    display: "block",
+                    fontFamily: SIDEBAR_FONT,
+                    color: "var(--sidebar-navy-text)",
+                    opacity: 0.7,
                     px: 2.5,
                     mt: si > 0 ? 2 : 0.5,
                     mb: 0.75,
+                    lineHeight: 1,
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      bgcolor: resolveAccent(section.accent),
-                      flexShrink: 0,
-                      boxShadow: `0 0 6px 0 ${resolveAccent(section.accent)}`,
-                    }}
-                  />
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      fontFamily: SIDEBAR_FONT,
-                      color: resolveAccent(section.accent),
-                      lineHeight: 1,
-                    }}
-                  >
-                    {section.heading}
-                  </Typography>
-                </Box>
-                <List disablePadding>
-                  {section.items.map((item) => (
-                    <NavItemRow key={item.href} item={item} pathname={pathname} />
-                  ))}
-                </List>
-              </Box>
-            ))
-          ) : (
-            <List disablePadding>
-              {(role === "HR" ? navHr(companySlug ?? "") : navEmployee).map((item) => (
-                <NavItemRow key={item.href} item={item} pathname={pathname} />
-              ))}
-            </List>
-          )}
-        </Box>
-
-        {role === "SUPERADMIN" && (
-          <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
-            <Link href="/superadmin/integration" style={{ textDecoration: "none" }}>
-              <Box
-                sx={{
-                  borderRadius: "14px",
-                  bgcolor: "var(--panel-ink-v4, #161B23)",
-                  px: 2,
-                  py: 1.75,
-                  transition: "transform 150ms ease",
-                  "&:hover": { transform: "scale(1.015)" },
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
-                  <LifeBuoy size={15} strokeWidth={2} color="var(--portal-blue)" />
-                  <Typography
-                    sx={{
-                      fontSize: "0.6875rem",
-                      fontWeight: 700,
-                      color: "var(--portal-blue)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    Soporte
-                  </Typography>
-                </Box>
-                <Typography
-                  sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}
-                >
-                  Centro de ayuda
+                  {section.heading}
                 </Typography>
-                <Typography
-                  sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}
-                >
-                  Guías de DC-3, integración WordPress y estado del sistema.
-                </Typography>
-              </Box>
-            </Link>
-          </Box>
+              )}
+              <List disablePadding>
+                {section.items.map((item) => (
+                  <NavItemRow key={item.href} item={item} pathname={pathname} collapsed={collapsed} />
+                ))}
+              </List>
+            </Box>
+          ))
+        ) : (
+          <List disablePadding>
+            {(role === "HR" ? navHr(companySlug ?? "") : navEmployee).map((item) => (
+              <NavItemRow key={item.href} item={item} pathname={pathname} collapsed={collapsed} />
+            ))}
+          </List>
         )}
 
-        {role === "HR" && (
-          <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
-            <Link
-              href={companyPath(companySlug ?? "", "/consulting")}
-              style={{ textDecoration: "none" }}
+        {role !== "SUPERADMIN" &&
+          (collapsed ? (
+            <Tooltip title="¿Necesitas ayuda?" placement="right">
+              <Box
+                component={Link}
+                href="/support"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 44,
+                  height: 44,
+                  mx: "auto",
+                  mt: "auto",
+                  borderRadius: "50%",
+                  color: "var(--sidebar-navy-text)",
+                  bgcolor: "var(--sidebar-navy-hover-bg)",
+                  transition: "background-color 0.15s ease, color 0.15s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(255,255,255,0.16)",
+                    color: "var(--sidebar-navy-text-strong)",
+                  },
+                }}
+              >
+                <LifeBuoy size={19} strokeWidth={1.8} />
+              </Box>
+            </Tooltip>
+          ) : (
+            <Box
+              sx={{
+                mt: "auto",
+                mx: 1.5,
+                p: 2,
+                borderRadius: "14px",
+                border: "1px solid var(--sidebar-navy-border)",
+                bgcolor: "rgba(0,0,0,0.12)",
+              }}
             >
               <Box
                 sx={{
-                  borderRadius: "14px",
-                  bgcolor: "var(--panel-ink-v4, #161B23)",
-                  px: 2,
-                  py: 1.75,
-                  transition: "transform 150ms ease",
-                  "&:hover": { transform: "scale(1.015)" },
+                  width: 34,
+                  height: 34,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "50%",
+                  bgcolor: "rgba(255,255,255,0.14)",
+                  color: "var(--sidebar-navy-text-strong)",
+                  mb: 1.25,
                 }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1 }}>
-                  <CalendarClock size={15} strokeWidth={2} color="var(--portal-blue)" />
-                  <Typography
-                    sx={{
-                      fontSize: "0.6875rem",
-                      fontWeight: 700,
-                      color: "var(--portal-blue)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    Consultoría
-                  </Typography>
-                </Box>
-                <Typography
-                  sx={{ fontSize: "0.8125rem", fontWeight: 700, color: "#FFFFFF", mb: 0.5 }}
-                >
-                  Agenda una sesión en vivo
-                </Typography>
-                <Typography
-                  sx={{ fontSize: "0.75rem", lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}
-                >
-                  Habla con nuestro equipo de consultores sobre CTPAT, OEA, DC-3 y más.
-                </Typography>
+                <LifeBuoy size={17} strokeWidth={1.8} />
               </Box>
-            </Link>
+              <Typography
+                sx={{
+                  fontFamily: SIDEBAR_FONT,
+                  fontSize: "0.8125rem",
+                  fontWeight: 700,
+                  color: "var(--sidebar-navy-text-strong)",
+                  lineHeight: 1.3,
+                }}
+              >
+                ¿Necesitas ayuda?
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: SIDEBAR_FONT,
+                  fontSize: "0.75rem",
+                  color: "var(--sidebar-navy-text-strong)",
+                  lineHeight: 1.4,
+                  mt: 0.375,
+                  mb: 1.25,
+                }}
+              >
+                Escríbenos y te ayudamos.
+              </Typography>
+              <Box
+                component={Link}
+                href="/support"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  minHeight: 44,
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  bgcolor: "var(--sidebar-navy-active-bg)",
+                  color: "var(--sidebar-navy-active-text)",
+                  fontFamily: SIDEBAR_FONT,
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  transition: "opacity 0.15s ease",
+                  "&:hover": { opacity: 0.85 },
+                }}
+              >
+                Contactar soporte
+              </Box>
+            </Box>
+          ))}
+      </Box>
+
+      <Box sx={{ px: 1, py: 0.5, flexShrink: 0, borderTop: "1px solid var(--sidebar-navy-border)" }}>
+        <Tooltip title={collapsed ? "Expandir" : ""} placement="right">
+          <Box
+            component="button"
+            type="button"
+            onClick={() => setCollapsed((prev) => !prev)}
+            aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: collapsed ? "center" : "flex-start",
+              gap: 1,
+              width: "100%",
+              px: collapsed ? 0 : 1.25,
+              py: 0.625,
+              border: "none",
+              bgcolor: "transparent",
+              borderRadius: "8px",
+              cursor: "pointer",
+              color: "var(--sidebar-navy-text)",
+              fontFamily: "inherit",
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              transition: "background-color 0.15s ease, color 0.15s ease",
+              "&:hover": {
+                bgcolor: "var(--sidebar-navy-hover-bg)",
+                color: "var(--sidebar-navy-text-strong)",
+              },
+            }}
+          >
+            {collapsed ? <PanelLeftOpen size={19} strokeWidth={1.8} /> : <PanelLeftClose size={19} strokeWidth={1.8} />}
+            {!collapsed && <span>Colapsar</span>}
           </Box>
-        )}
+        </Tooltip>
       </Box>
     </Box>
   )

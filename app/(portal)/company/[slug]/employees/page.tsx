@@ -41,7 +41,6 @@ const successMessages: Record<string, string> = {
     "Estamos actualizando los cursos, avances y constancias de tu equipo. Puedes seguir usando el portal mientras terminamos.",
   sync_background_already_running:
     "Ya hay una actualización en curso. En unos minutos verás la información más reciente.",
-  activacion_reenviada: "Se reenvió el correo de activación al empleado.",
 }
 
 const errorMessages: Record<string, string> = {
@@ -50,8 +49,6 @@ const errorMessages: Record<string, string> = {
   cupos: "La empresa ya alcanzo el limite de empleados contratados.",
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
-  ya_activado: "Este empleado no tiene una activación pendiente. Ya puede iniciar sesión con su contraseña.",
-  activation_email: "No se pudo reenviar el correo de activación. Intenta de nuevo.",
   bridge_sync:
     "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
   asignacion_manual:

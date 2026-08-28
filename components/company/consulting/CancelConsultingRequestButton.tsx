@@ -31,8 +31,7 @@ export function CancelConsultingRequestButton({
           size="small"
           sx={{
             color: "error.main",
-            "&:hover": { transform: "none", backgroundColor: "rgba(220, 38, 38, 0.08)" },
-            "&:active": { transform: "none" },
+            "&:hover": { backgroundColor: "rgba(220, 38, 38, 0.08)" },
           }}
         >
           <X size={18} strokeWidth={2} />

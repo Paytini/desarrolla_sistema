@@ -36,11 +36,7 @@ export function ConsultingRequestDetailsButton({
           onClick={() => setOpen(true)}
           aria-label={`Ver detalles de la consultoría de ${areaLabel}`}
           size="small"
-          sx={{
-            color: "text.secondary",
-            "&:hover": { transform: "none" },
-            "&:active": { transform: "none" },
-          }}
+          sx={{ color: "text.secondary" }}
         >
           <Eye size={18} strokeWidth={2} />
         </IconButton>
