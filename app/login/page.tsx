@@ -121,9 +121,6 @@ const BLOCKED_MESSAGES: Record<string, string> = {
     "Tu empresa fue suspendida. Contacta a Desarrolla360 para reactivar tu acceso.",
   empresa_vencida: "El acceso de tu empresa venció. Contacta a Desarrolla360 para renovarlo.",
   role_no_reconocido: "Tu cuenta no tiene un rol reconocido. Contacta a Desarrolla360.",
-  cuenta_pendiente_activacion:
-    "Tu cuenta todavía no está activada. Revisa tu correo y sigue el enlace de activación.",
-  activation_invalid: "El enlace de activación ya venció o ya fue utilizado.",
 }
 
 export default function LoginPage() {
@@ -144,7 +141,6 @@ function LoginForm() {
     const errorCode = searchParams.get("error")
     return errorCode && BLOCKED_MESSAGES[errorCode] ? BLOCKED_MESSAGES[errorCode] : ""
   })
-  const activated = searchParams.get("success") === "activated"
   const [loading, setLoading] = useState(false)
   const [activeIdx, setActiveIdx] = useState(0)
   const [quoteVisible, setQuoteVisible] = useState(true)
@@ -325,26 +321,6 @@ function LoginForm() {
                 </button>
               </div>
             </div>
-
-            {activated ? (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.55rem",
-                  padding: "0.7rem 0.85rem",
-                  borderRadius: "0.7rem",
-                  background: "#EAF6EE",
-                  border: "1px solid #BEE3C6",
-                  color: "#1E7A3B",
-                  fontSize: "0.85rem",
-                  fontWeight: 500,
-                }}
-                role="status"
-              >
-                <span>Tu cuenta quedó activada. Inicia sesión con tu nueva contraseña.</span>
-              </div>
-            ) : null}
 
             <div className="login-turnstile">
               <TurnstileWidget

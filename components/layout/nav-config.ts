@@ -69,7 +69,7 @@ export function navHr(companySlug: string): NavItem[] {
     { label: "Asignaciones", href: companyPath(companySlug, "/assignments"), icon: ClipboardList },
     { label: "Progreso", href: companyPath(companySlug, "/progress"), icon: BarChart3 },
     { label: "Consultoría", href: companyPath(companySlug, "/consulting"), icon: CalendarClock },
-    { label: "Constancias", href: companyPath(companySlug, "/certificates"), icon: Award },
+    { label: "Constancias DC-3 y Diplomas", href: companyPath(companySlug, "/certificates"), icon: Award },
   ]
 }
 

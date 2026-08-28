@@ -224,24 +224,29 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                             </span>
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-[#64748b]">
+                        <td className="whitespace-nowrap px-3 py-3 text-[#64748b]">
                           {certificate.department ?? "—"}
                         </td>
-                        <td className="px-3 py-3 text-[#1a1a1a]">{certificate.course_name}</td>
-                        <td className="px-3 py-3 font-mono text-xs text-[#64748b]">
+                        <td
+                          className="max-w-[240px] truncate px-3 py-3 text-[#1a1a1a]"
+                          title={certificate.course_name}
+                        >
+                          {certificate.course_name}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-[#64748b]">
                           {certificate.reference_number}
                         </td>
-                        <td className="hidden px-3 py-3 text-xs text-[#94a3b8] sm:table-cell">
+                        <td className="hidden whitespace-nowrap px-3 py-3 text-xs text-[#94a3b8] sm:table-cell">
                           {formatDateTime(certificate.issued_at)}
                         </td>
-                        <td className="px-3 py-3">
-                          <div className="flex gap-1.5">
+                        <td className="whitespace-nowrap px-3 py-3">
+                          <div className="flex gap-2">
                             {certificate.certificate_url ? (
                               <a
                                 href={certificate.certificate_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition hover:bg-gray-200"
+                                className="whitespace-nowrap rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition hover:bg-gray-200"
                               >
                                 Ver Diploma
                               </a>
@@ -250,7 +255,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                               href={`/api/certificates/${certificate.id}/dc3`}
                               target="_blank"
                               rel="noreferrer"
-                              className="rounded-xl bg-portal-blue px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-portal-blue-hover"
+                              className="whitespace-nowrap rounded-xl bg-portal-blue px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-portal-blue-hover"
                             >
                               DC-3
                             </a>

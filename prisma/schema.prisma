@@ -62,20 +62,18 @@ enum ConsultingRequestStatus {
 // ─────────────────────────────────────────────────────────────
 
 model User {
-  id                           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                        String    @unique
-  password_hash                String
-  role                         Role
-  name                         String
-  company_id                   String?   @db.Uuid // null for SUPERADMIN
-  wp_user_id                   Int? // WordPress user ID (nullable)
-  active                       Boolean   @default(true)
-  last_access                  DateTime?
-  activation_token             String?   @unique
-  activation_token_expires_at  DateTime?
-  must_change_password         Boolean   @default(false)
-  created_at                   DateTime  @default(now())
-  updated_at                   DateTime  @updatedAt
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String    @unique
+  password_hash         String
+  role                  Role
+  name                  String
+  company_id            String?   @db.Uuid // null for SUPERADMIN
+  wp_user_id            Int? // WordPress user ID (nullable)
+  active                Boolean   @default(true)
+  last_access           DateTime?
+  must_change_password  Boolean   @default(false)
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
 
   company            Company?            @relation(fields: [company_id], references: [id])
   sessions           PortalSession[]

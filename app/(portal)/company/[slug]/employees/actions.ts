@@ -17,15 +17,9 @@ import { requireCompanySlug } from "@/lib/company-branding"
 import { companyPath } from "@/lib/company-routes"
 import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
-import { buildActivationEmail } from "@/lib/email-templates/activation"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
-import { enqueueCsvEmployeeBridgeSyncJob, enqueueEmailSendJob } from "@/lib/jobs"
-import {
-  buildActivationUrl,
-  buildPendingActivationFields,
-  generateRandomPassword,
-  hashPassword,
-} from "@/lib/onboarding"
+import { enqueueCsvEmployeeBridgeSyncJob } from "@/lib/jobs"
+import { generateRandomPassword, hashPassword } from "@/lib/onboarding"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
 import { bridgeUpsertEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
@@ -84,7 +78,7 @@ type EmployeeProvisioningInput = {
   puesto?: string | null
   ocupacionEspecificaClave?: string | null
   ocupacionEspecifica?: string | null
-  password?: string
+  password: string
   companyContext?: CompanyProvisioningContext
   actor: AuditActor
 }
@@ -162,10 +156,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
     }
   }
 
-  const pendingActivation = input.password ? null : buildPendingActivationFields()
-  const passwordHash = input.password
-    ? await hashPassword(input.password)
-    : pendingActivation!.passwordHash
+  const passwordHash = await hashPassword(input.password)
   const activePackage = companyContext.packages[0]
   const hasActivePackage = Boolean(activePackage)
 
@@ -199,9 +190,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
         data: {
           email,
           password_hash: passwordHash,
-          activation_token: pendingActivation?.activationToken ?? null,
-          activation_token_expires_at: pendingActivation?.activationTokenExpiresAt ?? null,
-          must_change_password: Boolean(input.password),
+          must_change_password: true,
           name: `${input.nombre} ${input.apellido}`.trim(),
           role: "EMPLOYEE",
           company_id: input.companyId,
@@ -224,24 +213,6 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       return { ok: false as const, code: "cupos" }
     }
     throw err
-  }
-
-  let activationEmailQueued = false
-  if (pendingActivation) {
-    try {
-      const { subject, html, text } = buildActivationEmail({
-        nombreEmpleado: input.nombre,
-        nombreEmpresa: companyContext.name,
-        activationUrl: buildActivationUrl(pendingActivation.activationToken),
-      })
-      await enqueueEmailSendJob({ to: email, subject, html, text })
-      activationEmailQueued = true
-    } catch (error) {
-      console.error("No se pudo encolar el correo de activación", {
-        employeeId: createdEmployee.id,
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
   }
 
   const afterSeatSnapshot = await getCompanySeatSnapshot(input.companyId)
@@ -271,7 +242,6 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
       ocupacion_especifica_clave: input.ocupacionEspecificaClave ?? null,
       ocupacion_especifica: input.ocupacionEspecifica ?? null,
       tiene_paquete_activo: hasActivePackage,
-      correo_activacion_encolado: activationEmailQueued,
     },
   })
 
@@ -630,8 +600,6 @@ export async function importEmployeesCsvAction(formData: FormData) {
                 return {
                   email: employee.email,
                   password_hash: credentials.passwordHash,
-                  activation_token: null,
-                  activation_token_expires_at: null,
                   must_change_password: true,
                   name: `${employee.nombre} ${employee.apellido}`.trim(),
                   role: "EMPLOYEE" as const,
@@ -768,67 +736,6 @@ export async function importEmployeesCsvAction(formData: FormData) {
   )
 }
 
-export async function resendActivationAction(formData: FormData) {
-  const session = await requireHrSession()
-  const companyId = session.user.empresa_id as string
-  const slug = await requireCompanySlug(companyId)
-  const employeeId = getString(formData, "empleado_id")
-  const returnTo = sanitizeReturnTo(getString(formData, "return_to"), slug)
-
-  if (!employeeId || !isUuid(employeeId)) {
-    redirect(withStatus(returnTo, "error", "empleado"))
-  }
-
-  const employee = await prisma.employee.findFirst({
-    where: { id: employeeId, company_id: companyId },
-    select: { id: true, email: true, first_name: true },
-  })
-
-  if (!employee) {
-    redirect(withStatus(returnTo, "error", "empleado"))
-  }
-
-  const user = await prisma.user.findFirst({
-    where: { email: employee.email, company_id: companyId },
-    select: { id: true, activation_token: true },
-  })
-
-  if (!user || !user.activation_token) {
-    redirect(withStatus(returnTo, "error", "ya_activado"))
-  }
-
-  const companyContext = await loadCompanyProvisioningContext(companyId)
-  if (!companyContext) {
-    redirect(withStatus(returnTo, "error", "empresa"))
-  }
-
-  const pendingActivation = buildPendingActivationFields()
-
-  try {
-    const { subject, html, text } = buildActivationEmail({
-      nombreEmpleado: employee.first_name,
-      nombreEmpresa: companyContext.name,
-      activationUrl: buildActivationUrl(pendingActivation.activationToken),
-    })
-    await enqueueEmailSendJob({ to: employee.email, subject, html, text })
-  } catch (error) {
-    console.error("No se pudo reenviar el correo de activación", {
-      employeeId: employee.id,
-      error: error instanceof Error ? error.message : String(error),
-    })
-    redirect(withStatus(returnTo, "error", "activation_email"))
-  }
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      activation_token: pendingActivation.activationToken,
-      activation_token_expires_at: pendingActivation.activationTokenExpiresAt,
-    },
-  })
-
-  redirect(withStatus(returnTo, "success", "activacion_reenviada"))
-}
 export async function toggleEmployeeStatusAction(formData: FormData) {
   const session = await requireHrSession()
   const actor = getAuditActorFromSession(session)
