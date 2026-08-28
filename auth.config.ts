@@ -4,7 +4,7 @@ export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   trustHost: true,
-  pages: { signIn: "/login" },
+  pages: { signIn: "/login" }, // cambiar a dashboard
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
