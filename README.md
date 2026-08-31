@@ -30,12 +30,15 @@ El proyecto separa dos frentes:
 - `PostgreSQL`
 - `MUI`
 
-## Estructura recomendada
+## Estructura
 
-- `app/`: vistas del portal y autenticacion.
-- `components/`: piezas de interfaz reutilizables.
-- `docs/`: blueprint tecnico, roadmap y decisiones de arquitectura.
-- `prisma/`: modelo de datos del portal.
+Todo el código de la app vive bajo `src/` (config y `prisma/` quedan en la raíz).
+
+- `src/app/`: rutas del portal (route groups por rol) y API.
+- `src/components/`: piezas de interfaz reutilizables.
+- `src/lib/`: lógica de dominio, acceso a datos e integraciones, agrupada por área.
+- `src/proxy.ts`, `src/auth.ts`: middleware de roles y NextAuth.
+- `prisma/`: modelo de datos y migraciones.
 
 ## Primeros pasos
 
