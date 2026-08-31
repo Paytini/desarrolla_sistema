@@ -238,6 +238,27 @@ El navegador hace poll cada 60 s y el throttle está en 15 s, así que **cada po
 
 −89% en el endpoint que era el cuello, con una variable de entorno. **El valor correcto es una decisión de producto**, no de medición: depende de cuán fresco deba verse el progreso. Y depende de arreglar antes el webhook de producción (punto 11 de [PENDIENTES-RENDIMIENTO.md](PENDIENTES-RENDIMIENTO.md)) — con el webhook vivo, el poll es solo una red de seguridad y 300 s sobra; con el webhook caído, es una de las dos únicas vías.
 
+### Escalera final, con toda la configuración aplicada
+
+Se repitió el ladder con el estado final (cambios de código + `DB_POOL_MAX=10` + `EMPLEADO_SYNC_INTERVAL_MS=300000`):
+
+| Paso | Usuarios/s | VUs | Fallidos | p95 | Veredicto |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 120 | **0 (0.0%)** | **279 ms** | ✅ limpio |
+| 2 | 2 | 360 | 286 (79.4%) | 3,135 ms | ❌ |
+
+El mismo paso de control, medido tres veces a lo largo de la sesión:
+
+| `1:120:6` | Fallidos | p95 |
+| --- | --- | --- |
+| Estado inicial (`max: 3`) | 109/120 | 5,945 ms |
+| Con los cambios de código | 0/120 | 1,064 ms |
+| **+ intervalo de sync a 300 s** | **0/120** | **279 ms** |
+
+**21× mejor en p95 sobre el mismo escenario.** El techo declarado no se movió — sigue en 1 usuario/s, ~120 concurrentes — porque ese techo lo pone la laptop, no la aplicación. Lo que se movió es la holgura con la que la app vive dentro de él.
+
+En el paso de 2/s, otra vez: 0 errores en el log del servidor, base con `active` máximo 3 y query más larga de 0.14 s, páginas servidas en 15-17 ms y **login en 11 ms de p95**. Los 286 fallos son timeouts del cliente contra un servidor que respondía en milisegundos.
+
 ### Confirmación de que el techo es el banco de pruebas
 
 En la corrida con 300 s, los fallos siguieron (419 VUs) pero la línea de tiempo los delata:
