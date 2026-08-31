@@ -25,7 +25,7 @@ tags:
     description: >
       Custom REST routes registered by the `desarrolla360-bridge` WordPress plugin
       (source in `wordpress-plugin/`), running on the client's WordPress site —
-      not on this portal. Called by `lib/wordpress-bridge.ts`.
+      not on this portal. Called by `src/lib/wordpress/bridge.ts`.
 
 components:
   securitySchemes:
@@ -574,7 +574,7 @@ paths:
         "500":
           description: No PDF could be generated for any matched certificate.
 
-  /api/company/empleados/export:
+  /api/company/employees/export:
     get:
       tags: [Company]
       summary: Export the company's employees as CSV
