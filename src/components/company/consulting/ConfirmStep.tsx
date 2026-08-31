@@ -7,8 +7,8 @@ import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { Mail, MessageCircle, Phone } from "lucide-react"
-import { getConsultingArea } from "@/lib/consulting-areas"
-import { formatConsultingDateTime } from "@/lib/consulting-schedule"
+import { getConsultingArea } from "@/lib/consulting/areas"
+import { formatConsultingDateTime } from "@/lib/consulting/schedule"
 
 const ERROR_MESSAGES: Record<string, string> = {
   datos: "Revisa que todos los campos estén completos y sean válidos, e intenta de nuevo.",

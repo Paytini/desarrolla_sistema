@@ -19,7 +19,7 @@ import {
   cancelConsultingRequestAction,
   confirmConsultingRequestAction,
 } from "@/app/(portal)/superadmin/consulting/actions"
-import { CONSULTING_TIME_SLOTS } from "@/lib/consulting-schedule"
+import { CONSULTING_TIME_SLOTS } from "@/lib/consulting/schedule"
 
 type ConsultingRequestActionsProps = {
   requestId: string

@@ -14,13 +14,13 @@ import Link from "next/link"
 import {
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
-} from "@/lib/company-employees"
+} from "@/lib/company/employees"
 import { cookies } from "next/headers"
 import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
-import { companyPath } from "@/lib/company-routes"
+import { companyPath } from "@/lib/company/routes"
 import { Pagination } from "@/components/shared/Pagination"
 import { deleteEmployeeAction, toggleEmployeeStatusAction } from "./actions"
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
+import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3/pdf"
 import { isUuid } from "@/lib/uuid"
 
 export const runtime = "nodejs"

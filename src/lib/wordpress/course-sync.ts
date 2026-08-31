@@ -8,7 +8,7 @@ import {
   bridgeEnsureStudentAccess,
   bridgeGetStudentCourses,
   isWordPressBridgeConfigured,
-} from "@/lib/wordpress-bridge"
+} from "@/lib/wordpress/bridge"
 
 type PackageCourseInput = {
   wp_course_id: number

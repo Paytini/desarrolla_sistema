@@ -5,9 +5,9 @@ import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
-import { getCompanyBranding } from "@/lib/company-branding"
-import { companyPath } from "@/lib/company-routes"
-import { enqueuePackageEnrollmentSyncJob } from "@/lib/course-sync"
+import { getCompanyBranding } from "@/lib/company/branding"
+import { companyPath } from "@/lib/company/routes"
+import { enqueuePackageEnrollmentSyncJob } from "@/lib/wordpress/course-sync"
 import {
   scheduleCompanyEmployeeLearningBatch,
   scheduleStaleEmployeeLearningBatch,

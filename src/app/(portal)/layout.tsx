@@ -14,7 +14,7 @@ import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { blobProxyUrl } from "@/lib/blob-proxy"
-import { getCompanyBranding } from "@/lib/company-branding"
+import { getCompanyBranding } from "@/lib/company/branding"
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()

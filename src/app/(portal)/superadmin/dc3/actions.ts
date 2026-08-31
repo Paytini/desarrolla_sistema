@@ -5,7 +5,7 @@ import { SUPERADMIN_DC3_TAG, SUPERADMIN_GLOBAL_TAG } from "@/lib/cache-tags"
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
-import { bridgeGetCourseDetails, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
+import { bridgeGetCourseDetails, isWordPressBridgeConfigured } from "@/lib/wordpress/bridge"
 
 function preferBridgeValue(
   incoming: string | number | null | undefined,

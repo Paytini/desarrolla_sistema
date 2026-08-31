@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation"
 import { requireHrSession } from "@/lib/auth-guards"
-import { getCompanyBranding } from "@/lib/company-branding"
-import { companyPath } from "@/lib/company-routes"
+import { getCompanyBranding } from "@/lib/company/branding"
+import { companyPath } from "@/lib/company/routes"
 
 export default async function CompanyLayout({
   children,

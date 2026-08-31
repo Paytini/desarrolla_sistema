@@ -13,7 +13,7 @@ import {
   getMaxSelectableDate,
   getMinSelectableDate,
   isDateSelectable,
-} from "@/lib/consulting-schedule"
+} from "@/lib/consulting/schedule"
 
 const WEEKDAY_LETTERS = ["L", "M", "M", "J", "V", "S", "D"]
 

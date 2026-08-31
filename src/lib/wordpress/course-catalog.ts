@@ -1,4 +1,4 @@
-import { bridgeListCourses } from "@/lib/wordpress-bridge"
+import { bridgeListCourses } from "@/lib/wordpress/bridge"
 import { unstable_cache } from "next/cache"
 
 const getCachedCatalog = unstable_cache(

@@ -7,7 +7,7 @@ import IconButton from "@mui/material/IconButton"
 import Tooltip from "@mui/material/Tooltip"
 import { InfoField } from "@/components/shared/InfoField"
 import { StatusLabel } from "@/components/shared/StatusLabel"
-import { CONSULTING_STATUS_LABEL, CONSULTING_STATUS_VARIANT } from "@/lib/consulting-status"
+import { CONSULTING_STATUS_LABEL, CONSULTING_STATUS_VARIANT } from "@/lib/consulting/status"
 import type { ConsultingRequestStatus } from "@prisma/client"
 
 type ConsultingRequestDetailsButtonProps = {

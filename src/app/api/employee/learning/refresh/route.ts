@@ -3,8 +3,8 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
-import { getCompanyBranding } from "@/lib/company-branding"
-import { companyPath } from "@/lib/company-routes"
+import { getCompanyBranding } from "@/lib/company/branding"
+import { companyPath } from "@/lib/company/routes"
 import { syncEmployeeLearningByEmail } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
 

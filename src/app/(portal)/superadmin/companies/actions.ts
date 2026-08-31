@@ -12,7 +12,7 @@ import {
 } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
-import { companyPath } from "@/lib/company-routes"
+import { companyPath } from "@/lib/company/routes"
 import { notifySuperadmins } from "@/lib/notifications"
 import { enqueueEmailSendJob } from "@/lib/jobs"
 import { prisma } from "@/lib/prisma"

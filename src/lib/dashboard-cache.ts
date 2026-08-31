@@ -10,7 +10,7 @@ import {
   companyCacheRootTag,
 } from "@/lib/cache-tags"
 import { prisma } from "@/lib/prisma"
-import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
+import { getWordPressCourseCatalog } from "@/lib/wordpress/course-catalog"
 
 const REPORTS_STALE_SYNC_MS = 1000 * 60 * 60 * 24
 

@@ -114,7 +114,7 @@ Core idea: the portal is the **source of truth for corporate structure** (usuari
 
 **Clients (outbound):**
 
-1. `src/lib/wordpress-bridge.ts` → custom WP plugin endpoints `/wp-json/desarrolla360/v1/*`, authenticated by the `X-D360-Portal-Key` shared header. This is the primary channel: employee upsert/delete in WP, batch enrollment, ensure-access, student courses/certificates/diagnostics, course catalog.
+1. `src/lib/wordpress/bridge.ts` → custom WP plugin endpoints `/wp-json/desarrolla360/v1/*`, authenticated by the `X-D360-Portal-Key` shared header. This is the primary channel: employee upsert/delete in WP, batch enrollment, ensure-access, student courses/certificates/diagnostics, course catalog.
 2. `src/lib/tutorlms-api.ts` → official Tutor LMS REST API `/wp-json/tutor/v1/*` with Basic auth (`TUTORLMS_API_KEY`:`TUTORLMS_SECRET`). Fallback used to complete enrollments when the bridge's internal route hits Tutor permission errors.
 
 The plugin source itself lives in `wordpress-plugin/desarrolla360-bridge/` (single ~4200-line PHP file). It is edited in this repo but deployed to WordPress separately — changes there require re-uploading the plugin.
@@ -127,13 +127,13 @@ The plugin source itself lives in `wordpress-plugin/desarrolla360-bridge/` (sing
 
 All three converge on `syncEmployeeLearningFromBridgeSnapshot`, which upserts `empleado_cursos`/`constancias` and fires notifications (`src/lib/notifications.ts`).
 
-**Enrollment flow** (`src/lib/course-sync.ts`): assigning a package to an employee upserts `empleado_cursos` rows as `PENDING`, calls bridge enroll + ensure-access, verifies the courses are visible to the student, then marks `ACTIVE` or records the error. Packages can optionally create a private Course Bundle in Tutor LMS (`Paquete.wp_bundle_id`).
+**Enrollment flow** (`src/lib/wordpress/course-sync.ts`): assigning a package to an employee upserts `empleado_cursos` rows as `PENDING`, calls bridge enroll + ensure-access, verifies the courses are visible to the student, then marks `ACTIVE` or records the error. Packages can optionally create a private Course Bundle in Tutor LMS (`Paquete.wp_bundle_id`).
 
 **SSO into WordPress**: `buildWordPressCourseLaunchUrl` builds an HMAC-signed auto-login URL (`d360_autologin` params) so employees jump from the portal into their Tutor LMS course without a second login.
 
 ### DC-3 constancias
 
-`src/lib/dc3-pdf.ts` fills the official DC-3 PDF with `pdf-lib` using templates from `public/templates` and metadata from `curso_dc3_metadata`; `src/lib/dc3.ts` reports which required fields are missing. Instructor signature images upload to Vercel Blob (`src/app/api/upload/firma-instructor`).
+`src/lib/dc3/pdf.ts` fills the official DC-3 PDF with `pdf-lib` using templates from `public/templates` and metadata from `curso_dc3_metadata`; `src/lib/dc3/fields.ts` reports which required fields are missing. Instructor signature images upload to Vercel Blob (`src/app/api/upload/firma-instructor`).
 
 ### UI
 

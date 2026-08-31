@@ -3,8 +3,8 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
 
 import { companyCacheRootTag } from "@/lib/cache-tags"
-import { getCompanyBranding } from "@/lib/company-branding"
-import { companyPath } from "@/lib/company-routes"
+import { getCompanyBranding } from "@/lib/company/branding"
+import { companyPath } from "@/lib/company/routes"
 import {
   syncEmployeeLearningFromBridgeSnapshot,
   type EmployeeLearningBridgeSnapshot,

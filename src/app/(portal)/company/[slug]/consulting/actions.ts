@@ -4,14 +4,14 @@ import type { ConsultingArea, ConsultingContactMethod } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { requireHrSession } from "@/lib/auth-guards"
-import { getCompanyBranding, requireCompanySlug } from "@/lib/company-branding"
-import { companyPath } from "@/lib/company-routes"
-import { CONSULTING_AREAS } from "@/lib/consulting-areas"
+import { getCompanyBranding, requireCompanySlug } from "@/lib/company/branding"
+import { companyPath } from "@/lib/company/routes"
+import { CONSULTING_AREAS } from "@/lib/consulting/areas"
 import {
   formatConsultingDateTime,
   isDateSelectable,
   isTimeSlotValid,
-} from "@/lib/consulting-schedule"
+} from "@/lib/consulting/schedule"
 import { buildConsultingRequestEmail } from "@/lib/email-templates/consulting-request"
 import { notifySuperadmins } from "@/lib/notifications"
 import { enqueueEmailSendJob } from "@/lib/jobs"

@@ -13,7 +13,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react"
-import { companyPath } from "@/lib/company-routes"
+import { companyPath } from "@/lib/company/routes"
 
 export type Role = "SUPERADMIN" | "HR" | "EMPLOYEE"
 export type NavItem = {

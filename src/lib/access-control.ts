@@ -5,7 +5,7 @@ import {
   getCompanySeatSnapshot,
   type AuditActor,
 } from "@/lib/auditing"
-import { bridgeDeleteEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
+import { bridgeDeleteEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress/bridge"
 
 type DeleteEmployeeOptions = {
   employeeId: string

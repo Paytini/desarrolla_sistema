@@ -6,7 +6,7 @@ import { LearningActivityChart } from "@/components/company/LearningActivityChar
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
 import { AlertTriangle, BookOpen, TrendingDown, TrendingUp } from "lucide-react"
-import { companyPath } from "@/lib/company-routes"
+import { companyPath } from "@/lib/company/routes"
 import { getHrProgressSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"

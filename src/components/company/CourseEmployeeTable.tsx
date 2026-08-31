@@ -8,7 +8,7 @@ import EmptyState from "@/components/shared/EmptyState"
 import { PaginatedTable } from "@/components/shared/PaginatedTable"
 import ProgressBar from "@/components/shared/ProgressBar"
 import { StatusLabel } from "@/components/shared/StatusLabel"
-import { companyPath } from "@/lib/company-routes"
+import { companyPath } from "@/lib/company/routes"
 import { formatDateTime } from "@/lib/format"
 
 export type CourseEmployeeRow = {

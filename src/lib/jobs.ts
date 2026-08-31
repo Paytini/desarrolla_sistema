@@ -4,8 +4,8 @@ import { mapWithConcurrency } from "@/lib/concurrency"
 import {
   syncSingleEmployeePackageEnrollment,
   type PackageEnrollmentSyncResult,
-} from "@/lib/course-sync"
-import { bridgeUpsertEmployee } from "@/lib/wordpress-bridge"
+} from "@/lib/wordpress/course-sync"
+import { bridgeUpsertEmployee } from "@/lib/wordpress/bridge"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { sendEmail } from "@/lib/ses"
 

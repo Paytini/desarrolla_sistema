@@ -13,8 +13,8 @@ import {
 } from "@/lib/auditing"
 import { requireHrSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
-import { requireCompanySlug } from "@/lib/company-branding"
-import { companyPath } from "@/lib/company-routes"
+import { requireCompanySlug } from "@/lib/company/branding"
+import { companyPath } from "@/lib/company/routes"
 import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
@@ -22,7 +22,7 @@ import { enqueueCsvEmployeeBridgeSyncJob } from "@/lib/jobs"
 import { generateRandomPassword, hashPassword } from "@/lib/onboarding"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
-import { bridgeUpsertEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
+import { bridgeUpsertEmployee, isWordPressBridgeConfigured } from "@/lib/wordpress/bridge"
 
 const CSV_IMPORT_LIMIT = 200
 

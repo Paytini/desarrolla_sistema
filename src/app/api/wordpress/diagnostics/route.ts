@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-import { bridgeGetStudentDiagnostics, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
+import { bridgeGetStudentDiagnostics, isWordPressBridgeConfigured } from "@/lib/wordpress/bridge"
 import { NextRequest, NextResponse } from "next/server"
 
 function parseInteger(value: string | null) {

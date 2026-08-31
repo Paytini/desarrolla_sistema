@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
-import { getConsultingArea } from "@/lib/consulting-areas"
+import { getConsultingArea } from "@/lib/consulting/areas"
 import {
   formatConsultingDateTime,
   isBusinessDayString,
   isTimeSlotValid,
-} from "@/lib/consulting-schedule"
+} from "@/lib/consulting/schedule"
 import { notifyCompanyHr } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"

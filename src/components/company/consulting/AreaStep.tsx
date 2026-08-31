@@ -4,7 +4,7 @@ import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Typography from "@mui/material/Typography"
 import EyebrowLabel from "@/components/shared/EyebrowLabel"
-import { CONSULTING_AREAS, type ConsultingAreaId } from "@/lib/consulting-areas"
+import { CONSULTING_AREAS, type ConsultingAreaId } from "@/lib/consulting/areas"
 import { kpiColorMap } from "@/lib/kpi-colors"
 
 type AreaStepProps = {

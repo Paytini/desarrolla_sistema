@@ -9,7 +9,7 @@ import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
-import { companyPath } from "@/lib/company-routes"
+import { companyPath } from "@/lib/company/routes"
 
 type EmployeeResult = {
   id: number

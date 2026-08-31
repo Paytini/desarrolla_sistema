@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
-import { getCompanyAccessStatus } from "@/lib/company-status"
+import { getCompanyAccessStatus } from "@/lib/company/status"
 import { enterCompanyContext } from "@/lib/tenant-context"
 
 export async function requireSuperAdminSession() {

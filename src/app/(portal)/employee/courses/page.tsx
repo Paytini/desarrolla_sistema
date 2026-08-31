@@ -11,8 +11,8 @@ import {
   buildWordPressCourseLaunchUrl,
   getWordPressSiteUrl,
   isWordPressBridgeConfigured,
-} from "@/lib/wordpress-bridge"
-import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
+} from "@/lib/wordpress/bridge"
+import { getWordPressCourseCatalog } from "@/lib/wordpress/course-catalog"
 import { Award, ClipboardList } from "lucide-react"
 import { redirect } from "next/navigation"
 import Alert from "@mui/material/Alert"

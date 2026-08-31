@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { bridgeHealthCheck, isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
+import { bridgeHealthCheck, isWordPressBridgeConfigured } from "@/lib/wordpress/bridge"
 
 const TUTOR_WEBHOOK_STATUS_KEY = "tutor_learning_webhook"
 const HEARTBEAT_SAMPLE_INTERVAL_MS = 30_000

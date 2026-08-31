@@ -6,7 +6,7 @@ import Box from "@mui/material/Box"
 import ListSubheader from "@mui/material/ListSubheader"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
-import { CNO_AREAS, CNO_CATALOG } from "@/lib/cno-catalog"
+import { CNO_AREAS, CNO_CATALOG } from "@/lib/dc3/cno-catalog"
 
 export type CnoEntry = (typeof CNO_CATALOG)[number]
 

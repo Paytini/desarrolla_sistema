@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
-import { getWordPressCourseCatalog } from "@/lib/wordpress-course-catalog"
-import { isWordPressBridgeConfigured } from "@/lib/wordpress-bridge"
+import { getWordPressCourseCatalog } from "@/lib/wordpress/course-catalog"
+import { isWordPressBridgeConfigured } from "@/lib/wordpress/bridge"
 import { NextResponse } from "next/server"
 
 export async function GET() {

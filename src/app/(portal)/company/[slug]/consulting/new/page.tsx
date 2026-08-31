@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { ConsultingWizard } from "@/components/company/consulting/ConsultingWizard"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { getCompanyBranding } from "@/lib/company-branding"
+import { getCompanyBranding } from "@/lib/company/branding"
 import { getSession } from "@/lib/session"
 
 export default async function CompanyNewConsultingRequestPage() {

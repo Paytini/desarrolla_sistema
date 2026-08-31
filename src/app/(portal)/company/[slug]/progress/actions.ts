@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation"
 import { requireHrSession } from "@/lib/auth-guards"
-import { requireCompanySlug } from "@/lib/company-branding"
-import { companyPath } from "@/lib/company-routes"
+import { requireCompanySlug } from "@/lib/company/branding"
+import { companyPath } from "@/lib/company/routes"
 import { notifyUsuarioByEmail } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 

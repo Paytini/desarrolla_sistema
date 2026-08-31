@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import JSZip from "jszip"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3-pdf"
+import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3/pdf"
 import { mapWithConcurrency } from "@/lib/concurrency"
 import {
   buildIssuedCertificates,

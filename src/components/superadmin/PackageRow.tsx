@@ -16,7 +16,7 @@ import {
 import DeletePackageButton from "@/components/superadmin/DeletePackageButton"
 import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { deletePackageAction } from "@/app/(portal)/superadmin/packages/actions"
-import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3"
+import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3/fields"
 import type { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities, formatDate } from "@/lib/format"
 

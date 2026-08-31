@@ -3,7 +3,7 @@ import {
   matchesEmployeeFilters,
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
-} from "@/lib/company-employees"
+} from "@/lib/company/employees"
 import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { toCsvText } from "@/lib/csv"

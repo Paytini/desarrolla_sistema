@@ -5,7 +5,7 @@ import { after } from "next/server"
 import bcrypt from "bcrypt"
 import { prisma } from "@/lib/prisma"
 import { verifyTurnstileToken } from "@/lib/turnstile"
-import { deriveCompanyAccessStatus } from "@/lib/company-status"
+import { deriveCompanyAccessStatus } from "@/lib/company/status"
 import { authConfig } from "@/auth.config"
 
 class EmpresaBloqueadaError extends CredentialsSignin {

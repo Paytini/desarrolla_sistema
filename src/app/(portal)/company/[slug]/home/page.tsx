@@ -14,7 +14,7 @@ import Link from "next/link"
 import { getHrHomeSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
-import { companyPath } from "@/lib/company-routes"
+import { companyPath } from "@/lib/company/routes"
 
 function QuickLink({
   href,

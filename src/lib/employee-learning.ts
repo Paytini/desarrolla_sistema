@@ -7,7 +7,7 @@ import {
   type BridgeStudentCertificate,
   type BridgeStudentCourse,
   isWordPressBridgeConfigured,
-} from "@/lib/wordpress-bridge"
+} from "@/lib/wordpress/bridge"
 import { after } from "next/server"
 
 function getEmployeeSyncIntervalMs() {
