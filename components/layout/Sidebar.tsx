@@ -189,7 +189,7 @@ export default function Sidebar({
           />
         ) : role === "SUPERADMIN" ? (
           <Image
-            src="/assets/logo_desarrolla_cropped.png"
+            src="/assets/logo_desarrolla_cropped.webp"
             alt="Desarrolla360"
             width={220}
             height={66}
