@@ -32,13 +32,13 @@ El proyecto separa dos frentes:
 
 ## Estructura
 
-Todo el código de la app vive bajo `src/` (config y `prisma/` quedan en la raíz).
-
-- `src/app/`: rutas del portal (route groups por rol) y API.
-- `src/components/`: piezas de interfaz reutilizables.
-- `src/lib/`: lógica de dominio, acceso a datos e integraciones, agrupada por área.
-- `src/proxy.ts`, `src/auth.ts`: middleware de roles y NextAuth.
+- `app/`: rutas del portal (route groups por rol) y API.
+- `components/`: piezas de interfaz reutilizables.
+- `lib/`: logica de dominio, acceso a datos e integraciones.
 - `prisma/`: modelo de datos y migraciones.
+- `docs-observability/`: informes de capacidad, rendimiento, financieros y handoff.
+- `wordpress-plugin/`: fuente del plugin puente para WordPress (se despliega por separado).
+- `load-testing/`: sub-proyecto de pruebas de carga (Artillery), con su propio `package.json`.
 
 ## Primeros pasos
 
@@ -57,13 +57,15 @@ cp .env.example .env
 3. Configura variables de entorno:
 
 ```bash
-DATABASE_URL=
+DATABASE_URL=          # pooler de Supabase (6543), runtime
+DIRECT_URL=            # conexion directa de Supabase (5432), prisma migrate
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=
 WP_BRIDGE_BASE_URL=
 WP_BRIDGE_PORTAL_KEY=
 NEXT_PUBLIC_WORDPRESS_SITE_URL=
 BRIDGE_WEBHOOK_SECRET=
+BLOB_READ_WRITE_TOKEN=
 TUTORLMS_API_KEY=
 TUTORLMS_SECRET=
 ```
