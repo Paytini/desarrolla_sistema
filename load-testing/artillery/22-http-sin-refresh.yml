@@ -1,0 +1,121 @@
+### Copia exacta de 21-http-user-session.yml SALVO el POST a
+### /api/employee/learning/refresh dentro del loop del empleado.
+###
+### Sirve para una sola pregunta: ¿el techo de ~1 usuario/s lo pone ese
+### endpoint (sync al bridge + 5 revalidatePath + 2 revalidateTag por llamada)
+### o es el costo general de la app? Fases fijadas al paso que fallo en el
+### ladder (1:120:6) para que la comparacion sea A/B directa.
+config:
+  target: "http://localhost:3005"
+  processor: "./processor-http-session.js"
+  payload:
+    - path: "../data/payloads/employee-credentials.csv"
+      fields: ["email", "password"]
+      skipHeader: true
+      order: random
+    - path: "../data/payloads/rh-credentials.csv"
+      fields: ["rhEmail", "rhPassword", "slug"]
+      skipHeader: true
+      order: random
+  phases:
+    - duration: 120
+      arrivalRate: 1
+      name: "sin-refresh-1x120"
+  variables:
+    pagesPerSession: 6
+    thinkMinSec: 8
+    thinkMaxSec: 25
+  plugins:
+    ensure: {}
+    expect: {}
+  ensure:
+    thresholds:
+      - "http.response_time.p95": 3000
+      - "http.response_time.p99": 8000
+    maxErrorRate: 5
+
+scenarios:
+  - name: "empleado-http-session"
+    weight: 80
+    flow:
+      - get:
+          url: "/api/auth/csrf"
+          capture:
+            - json: "$.csrfToken"
+              as: "csrfToken"
+      - post:
+          url: "/api/auth/callback/credentials"
+          form:
+            csrfToken: "{{ csrfToken }}"
+            email: "{{ email }}"
+            password: "{{ password }}"
+            turnstileToken: "XXXX.DUMMY.TOKEN.XXXX"
+      - get:
+          url: "/api/auth/session"
+          expect:
+            - statusCode: 200
+            - hasProperty: "user"
+      - loop:
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/employee/courses"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Tu ruta de capacitaci.n activa"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/employee/certificates"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Mis constancias"
+          - get:
+              url: "/api/internal/notifications"
+              expect:
+                - statusCode: 200
+        count: "{{ pagesPerSession }}"
+
+  - name: "rh-http-session"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/auth/csrf"
+          capture:
+            - json: "$.csrfToken"
+              as: "csrfToken"
+      - post:
+          url: "/api/auth/callback/credentials"
+          form:
+            csrfToken: "{{ csrfToken }}"
+            email: "{{ rhEmail }}"
+            password: "{{ rhPassword }}"
+            turnstileToken: "XXXX.DUMMY.TOKEN.XXXX"
+      - get:
+          url: "/api/auth/session"
+          expect:
+            - statusCode: 200
+            - hasProperty: "user"
+      - loop:
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ slug }}/home"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Panel de operaci.n acad.mica"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ slug }}/employees"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Gesti.n de la plantilla de colaboradores"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ slug }}/certificates"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Constancias DC-3"
+        count: "{{ pagesPerSession }}"

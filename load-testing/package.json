@@ -13,6 +13,8 @@
     "simulate:http": "node scripts/run-http.js",
     "simulate:spike": "node scripts/run-http.js --spike",
     "simulate:ladder": "node scripts/run-ladder.js",
+    "prelogin": "node scripts/prelogin.js",
+    "simulate:sessions": "node scripts/run-scenario.js 23-http-sesion-precargada",
     "simulate:enrollment": "node scripts/run-scenario.js 30-mass-enrollment",
     "simulate:zip": "node scripts/run-scenario.js 31-zip-constancias",
     "simulate:cache-storm": "node scripts/run-scenario.js 32-cache-invalidation-storm",

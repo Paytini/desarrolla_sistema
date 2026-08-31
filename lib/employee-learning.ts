@@ -122,11 +122,35 @@ function mergeBridgeCertificates(
   })
 }
 
+function sameInstant(left: Date | null | undefined, right: Date | null | undefined) {
+  return (left?.getTime() ?? null) === (right?.getTime() ?? null)
+}
+
 async function upsertEmployeeCoursesFromBridge(employeeId: string, courses: BridgeStudentCourse[]) {
+  const incoming = courses.filter(hasWpCourseId)
+  if (incoming.length === 0) return 0
+
+  const existing = await prisma.employeeCourse.findMany({ where: { employee_id: employeeId } })
+  const existingByCourseId = new Map(existing.map((row) => [row.wp_course_id, row]))
+
   const now = new Date()
-  const upsertOperations = courses.filter(hasWpCourseId).map((course) => {
+  const upsertOperations = incoming.flatMap((course) => {
     const startedAt = parseBridgeDate(course.started_at)
     const completedAt = parseBridgeDate(course.completed_at)
+    const current = existingByCourseId.get(course.wp_course_id)
+
+    if (
+      current &&
+      current.course_name === decodeHtmlEntities(course.title) &&
+      current.progress_pct === course.progress_pct &&
+      current.completed === course.completed &&
+      current.access_status === "ACTIVE" &&
+      current.access_error === null &&
+      sameInstant(current.course_start_date, startedAt) &&
+      sameInstant(current.completed_at, completedAt)
+    ) {
+      return []
+    }
 
     return prisma.employeeCourse.upsert({
       where: {
@@ -162,87 +186,146 @@ async function upsertEmployeeCoursesFromBridge(employeeId: string, courses: Brid
   if (upsertOperations.length > 0) {
     await prisma.$transaction(upsertOperations)
   }
+
+  return upsertOperations.length
 }
 
 async function upsertQuizAttemptsFromBridge(employeeId: string, courses: BridgeStudentCourse[]) {
-  const now = new Date()
-  const upsertOperations = courses.filter(hasWpCourseId).flatMap((course) => {
-    const attempts = course.quiz_attempts ?? []
+  const incoming = courses
+    .filter(hasWpCourseId)
+    .flatMap((course) => (course.quiz_attempts ?? []).map((attempt) => ({ course, attempt })))
+  if (incoming.length === 0) return 0
 
-    return attempts.map((attempt) =>
-      prisma.quizAttempt.upsert({
-        where: { wp_attempt_id: attempt.attempt_id },
-        update: {
-          quiz_name: attempt.quiz_name ? decodeHtmlEntities(attempt.quiz_name) : null,
-          total_questions: attempt.total_questions,
-          total_answered_questions: attempt.total_answered_questions,
-          total_marks: attempt.total_marks,
-          earned_marks: attempt.earned_marks,
-          attempt_status: attempt.attempt_status,
-          result: attempt.result,
-          attempt_started_at: parseBridgeDate(attempt.attempt_started_at),
-          attempt_ended_at: parseBridgeDate(attempt.attempt_ended_at),
-          last_synced_at: now,
-        },
-        create: {
-          employee_id: employeeId,
-          wp_course_id: course.wp_course_id,
-          wp_quiz_id: attempt.quiz_id,
-          wp_attempt_id: attempt.attempt_id,
-          quiz_name: attempt.quiz_name ? decodeHtmlEntities(attempt.quiz_name) : null,
-          total_questions: attempt.total_questions,
-          total_answered_questions: attempt.total_answered_questions,
-          total_marks: attempt.total_marks,
-          earned_marks: attempt.earned_marks,
-          attempt_status: attempt.attempt_status,
-          result: attempt.result,
-          attempt_started_at: parseBridgeDate(attempt.attempt_started_at),
-          attempt_ended_at: parseBridgeDate(attempt.attempt_ended_at),
-          last_synced_at: now,
-        },
-      }),
-    )
+  const existing = await prisma.quizAttempt.findMany({ where: { employee_id: employeeId } })
+  const existingByAttemptId = new Map(existing.map((row) => [row.wp_attempt_id, row]))
+
+  const now = new Date()
+  const upsertOperations = incoming.flatMap(({ course, attempt }) => {
+    const current = existingByAttemptId.get(attempt.attempt_id)
+    const quizName = attempt.quiz_name ? decodeHtmlEntities(attempt.quiz_name) : null
+
+    if (
+      current &&
+      current.quiz_name === quizName &&
+      current.total_questions === attempt.total_questions &&
+      current.total_answered_questions === attempt.total_answered_questions &&
+      current.total_marks === attempt.total_marks &&
+      current.earned_marks === attempt.earned_marks &&
+      current.attempt_status === attempt.attempt_status &&
+      current.result === attempt.result &&
+      sameInstant(current.attempt_started_at, parseBridgeDate(attempt.attempt_started_at)) &&
+      sameInstant(current.attempt_ended_at, parseBridgeDate(attempt.attempt_ended_at))
+    ) {
+      return []
+    }
+
+    return prisma.quizAttempt.upsert({
+      where: { wp_attempt_id: attempt.attempt_id },
+      update: {
+        quiz_name: attempt.quiz_name ? decodeHtmlEntities(attempt.quiz_name) : null,
+        total_questions: attempt.total_questions,
+        total_answered_questions: attempt.total_answered_questions,
+        total_marks: attempt.total_marks,
+        earned_marks: attempt.earned_marks,
+        attempt_status: attempt.attempt_status,
+        result: attempt.result,
+        attempt_started_at: parseBridgeDate(attempt.attempt_started_at),
+        attempt_ended_at: parseBridgeDate(attempt.attempt_ended_at),
+        last_synced_at: now,
+      },
+      create: {
+        employee_id: employeeId,
+        wp_course_id: course.wp_course_id,
+        wp_quiz_id: attempt.quiz_id,
+        wp_attempt_id: attempt.attempt_id,
+        quiz_name: attempt.quiz_name ? decodeHtmlEntities(attempt.quiz_name) : null,
+        total_questions: attempt.total_questions,
+        total_answered_questions: attempt.total_answered_questions,
+        total_marks: attempt.total_marks,
+        earned_marks: attempt.earned_marks,
+        attempt_status: attempt.attempt_status,
+        result: attempt.result,
+        attempt_started_at: parseBridgeDate(attempt.attempt_started_at),
+        attempt_ended_at: parseBridgeDate(attempt.attempt_ended_at),
+        last_synced_at: now,
+      },
+    })
   })
 
   if (upsertOperations.length > 0) {
     await prisma.$transaction(upsertOperations)
   }
+
+  return upsertOperations.length
 }
 
-async function upsertLessonCompletionsFromBridge(employeeId: string, courses: BridgeStudentCourse[]) {
-  const now = new Date()
-  const upsertOperations = courses.filter(hasWpCourseId).flatMap((course) => {
-    const completions = course.lesson_completions ?? []
-
-    return completions.map((completion) =>
-      prisma.lessonCompletion.upsert({
-        where: {
-          employee_id_wp_lesson_id: {
-            employee_id: employeeId,
-            wp_lesson_id: completion.wp_lesson_id,
-          },
-        },
-        update: {
-          wp_course_id: course.wp_course_id,
-          lesson_name: completion.title ? decodeHtmlEntities(completion.title) : null,
-          completed_at: parseBridgeDate(completion.completed_at),
-          last_synced_at: now,
-        },
-        create: {
-          employee_id: employeeId,
-          wp_course_id: course.wp_course_id,
-          wp_lesson_id: completion.wp_lesson_id,
-          lesson_name: completion.title ? decodeHtmlEntities(completion.title) : null,
-          completed_at: parseBridgeDate(completion.completed_at),
-          last_synced_at: now,
-        },
-      }),
+async function upsertLessonCompletionsFromBridge(
+  employeeId: string,
+  courses: BridgeStudentCourse[],
+) {
+  const incoming = courses
+    .filter(hasWpCourseId)
+    .flatMap((course) =>
+      (course.lesson_completions ?? []).map((completion) => ({ course, completion })),
     )
+  if (incoming.length === 0) return 0
+
+  const existing = await prisma.lessonCompletion.findMany({ where: { employee_id: employeeId } })
+  const existingByLessonId = new Map(existing.map((row) => [row.wp_lesson_id, row]))
+
+  const now = new Date()
+  const upsertOperations = incoming.flatMap(({ course, completion }) => {
+    const current = existingByLessonId.get(completion.wp_lesson_id)
+    const lessonName = completion.title ? decodeHtmlEntities(completion.title) : null
+
+    if (
+      current &&
+      current.wp_course_id === course.wp_course_id &&
+      current.lesson_name === lessonName &&
+      sameInstant(current.completed_at, parseBridgeDate(completion.completed_at))
+    ) {
+      return []
+    }
+
+    return prisma.lessonCompletion.upsert({
+      where: {
+        employee_id_wp_lesson_id: {
+          employee_id: employeeId,
+          wp_lesson_id: completion.wp_lesson_id,
+        },
+      },
+      update: {
+        wp_course_id: course.wp_course_id,
+        lesson_name: completion.title ? decodeHtmlEntities(completion.title) : null,
+        completed_at: parseBridgeDate(completion.completed_at),
+        last_synced_at: now,
+      },
+      create: {
+        employee_id: employeeId,
+        wp_course_id: course.wp_course_id,
+        wp_lesson_id: completion.wp_lesson_id,
+        lesson_name: completion.title ? decodeHtmlEntities(completion.title) : null,
+        completed_at: parseBridgeDate(completion.completed_at),
+        last_synced_at: now,
+      },
+    })
   })
 
   if (upsertOperations.length > 0) {
     await prisma.$transaction(upsertOperations)
   }
+
+  return upsertOperations.length
+}
+
+// El throttle de sincronización se mide con last_synced_at de los cursos. Como
+// ahora solo se escriben las filas que cambiaron, hay que avanzar la marca
+// aparte o una sincronización sin novedades se repetiría en cada poll.
+async function touchEmployeeCoursesSyncedAt(employeeId: string) {
+  await prisma.employeeCourse.updateMany({
+    where: { employee_id: employeeId },
+    data: { last_synced_at: new Date() },
+  })
 }
 
 async function upsertEmployeeCertificatesFromBridge(
@@ -271,6 +354,15 @@ async function upsertEmployeeCertificatesFromBridge(
       parseBridgeDate(certificate.completed_at) ?? existingCertificate?.issued_at ?? syncedAt
 
     if (existingCertificate) {
+      if (
+        existingCertificate.course_name === decodeHtmlEntities(certificate.title) &&
+        existingCertificate.certificate_url ===
+          (certificateUrl ?? existingCertificate.certificate_url) &&
+        sameInstant(existingCertificate.issued_at, issuedAt)
+      ) {
+        continue
+      }
+
       operations.push(
         prisma.certificate.update({
           where: { id: existingCertificate.id },
@@ -370,19 +462,22 @@ export async function syncEmployeeLearningFromBridgeSnapshot(input: {
 
   const normalizedCertificates = normalizeBridgeSnapshotCertificates(input.snapshot)
 
-  await upsertEmployeeCoursesFromBridge(employeeId, input.snapshot.courses)
-  await upsertQuizAttemptsFromBridge(employeeId, input.snapshot.courses)
-  await upsertLessonCompletionsFromBridge(employeeId, input.snapshot.courses)
+  const coursesUpdated = await upsertEmployeeCoursesFromBridge(employeeId, input.snapshot.courses)
+  const quizAttemptsUpdated = await upsertQuizAttemptsFromBridge(employeeId, input.snapshot.courses)
+  const lessonsUpdated = await upsertLessonCompletionsFromBridge(employeeId, input.snapshot.courses)
 
   const certificatesUpdated =
     normalizedCertificates.length > 0
       ? await upsertEmployeeCertificatesFromBridge(employeeId, normalizedCertificates)
       : 0
 
+  await touchEmployeeCoursesSyncedAt(employeeId)
+
   return {
     employeeId,
-    coursesUpdated: input.snapshot.courses.filter(hasWpCourseId).length,
+    coursesUpdated,
     certificatesUpdated,
+    changed: coursesUpdated + quizAttemptsUpdated + lessonsUpdated + certificatesUpdated,
   }
 }
 
@@ -392,7 +487,17 @@ export async function syncEmployeeLearningByEmail(
     force?: boolean
   },
 ) {
-  const employee = await fetchEmployeeLearningRecord(email)
+  // Este es el poll de cada pestaña abierta: solo necesita decidir si toca
+  // sincronizar, así que no trae el árbol completo de cursos y constancias.
+  const employee = await prisma.employee.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      company_id: true,
+      wp_user_id: true,
+      courses: { select: { last_synced_at: true } },
+    },
+  })
 
   if (!employee) {
     return {
@@ -420,7 +525,10 @@ export async function syncEmployeeLearningByEmail(
     }
   }
 
-  const result = await syncEmployeeLearningRecord(employee.id)
+  const result = await syncEmployeeLearningRecord(employee.id, {
+    id: employee.id,
+    wp_user_id: employee.wp_user_id,
+  })
   const latestSyncedCourse = await prisma.employeeCourse.findFirst({
     where: { employee_id: employee.id },
     orderBy: { last_synced_at: "desc" },
@@ -435,6 +543,7 @@ export async function syncEmployeeLearningByEmail(
     companyId: employee.company_id,
     coursesUpdated: result.coursesUpdated,
     certificatesUpdated: result.certificatesUpdated,
+    changed: result.changed,
     latestSyncAt: latestSyncedCourse?.last_synced_at.toISOString() ?? latestSyncAt,
   }
 }
@@ -510,8 +619,11 @@ async function fetchEmployeeLearningRecordById(employeeId: string) {
   })
 }
 
-async function syncEmployeeLearningRecord(employeeId: string) {
-  const employee = await fetchEmployeeLearningRecordById(employeeId)
+async function syncEmployeeLearningRecord(
+  employeeId: string,
+  known?: { id: string; wp_user_id: number | null },
+) {
+  const employee = known ?? (await fetchEmployeeLearningRecordById(employeeId))
 
   if (!employee || !employee.wp_user_id || !isWordPressBridgeConfigured()) {
     return {
@@ -519,6 +631,7 @@ async function syncEmployeeLearningRecord(employeeId: string) {
       bridgeCourses: [] as BridgeStudentCourse[],
       coursesUpdated: 0,
       certificatesUpdated: 0,
+      changed: 0,
     }
   }
 
@@ -548,6 +661,7 @@ async function syncEmployeeLearningRecord(employeeId: string) {
     bridgeCourses: bridgeCourses.courses,
     coursesUpdated: appliedSnapshot.coursesUpdated,
     certificatesUpdated: appliedSnapshot.certificatesUpdated,
+    changed: appliedSnapshot.changed,
   }
 }
 

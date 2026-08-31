@@ -1,0 +1,113 @@
+### Navegacion con sesiones ya autenticadas.
+###
+### Requiere `npm run prelogin` antes: ese script hace todos los logins, mide
+### esa fase por separado y deja las cookies en data/payloads/sessions-*.csv.
+### Aqui no hay ni un solo login, asi que lo que se mide es exclusivamente la
+### capacidad de navegacion — la pregunta "si el login deja de ser el cuello,
+### ¿que se rompe despues?".
+###
+### Cada peticion lleva su `expect` contra texto que solo existe en la version
+### autenticada: el middleware redirige a /login con un 200, asi que comprobar
+### el status no detectaria una sesion caida.
+config:
+  target: "http://localhost:3005"
+  processor: "./processor-http-session.js"
+  payload:
+    - path: "../data/payloads/sessions-employee.csv"
+      fields: ["empCookie"]
+      skipHeader: true
+      order: random
+    - path: "../data/payloads/sessions-rh.csv"
+      fields: ["rhCookie", "rhSlug"]
+      skipHeader: true
+      order: random
+  phases:
+    - duration: 180
+      arrivalRate: 3
+      name: "navegacion-con-sesion"
+  variables:
+    pagesPerSession: 8
+    thinkMinSec: 8
+    thinkMaxSec: 25
+  plugins:
+    ensure: {}
+    expect: {}
+  ensure:
+    thresholds:
+      - "http.response_time.p95": 3000
+      - "http.response_time.p99": 8000
+    maxErrorRate: 5
+
+scenarios:
+  - name: "empleado-navegando"
+    weight: 80
+    flow:
+      - loop:
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/employee/courses"
+              headers:
+                Cookie: "{{ empCookie }}"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Tu ruta de capacitaci.n activa"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - post:
+              url: "/api/employee/learning/refresh"
+              headers:
+                Cookie: "{{ empCookie }}"
+              json:
+                force: false
+              expect:
+                - statusCode: 200
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/employee/certificates"
+              headers:
+                Cookie: "{{ empCookie }}"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Mis constancias"
+          - get:
+              url: "/api/internal/notifications"
+              headers:
+                Cookie: "{{ empCookie }}"
+              expect:
+                - statusCode: 200
+        count: "{{ pagesPerSession }}"
+
+  - name: "rh-navegando"
+    weight: 20
+    flow:
+      - loop:
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ rhSlug }}/home"
+              headers:
+                Cookie: "{{ rhCookie }}"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Panel de operaci.n acad.mica"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ rhSlug }}/employees"
+              headers:
+                Cookie: "{{ rhCookie }}"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Gesti.n de la plantilla de colaboradores"
+          - function: "setThinkTime"
+          - think: "{{ thinkTime }}"
+          - get:
+              url: "/company/{{ rhSlug }}/certificates"
+              headers:
+                Cookie: "{{ rhCookie }}"
+              expect:
+                - statusCode: 200
+                - matchesRegexp: "Constancias DC-3"
+        count: "{{ pagesPerSession }}"

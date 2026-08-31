@@ -46,6 +46,14 @@ export async function POST(request: Request) {
     force: forceRequested,
   })
 
+  // Este handler es el poll de cada pestaña abierta. Invalidar en cada llamada
+  // tiraba la caché de las cinco páginas aunque la sincronización no trajera
+  // nada nuevo, que es el caso normal.
+  const changed = "changed" in result ? (result.changed ?? 0) : 0
+  if (changed === 0) {
+    return NextResponse.json(result)
+  }
+
   revalidatePath("/employee/courses")
   revalidatePath("/employee/certificates")
 

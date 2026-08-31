@@ -8,11 +8,16 @@ const globalForPrisma = globalThis as unknown as {
   prismaPool?: Pool
 }
 
+// Cada instancia serverless abre su propio pool, así que este número se
+// multiplica por la concurrencia de lambdas contra el max_connections de
+// Supabase. Configurable para poder medirlo sin recompilar.
+const POOL_MAX = Number(process.env.DB_POOL_MAX ?? 3)
+
 const pool =
   globalForPrisma.prismaPool ??
   new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 3,
+    max: POOL_MAX,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
   })
