@@ -173,8 +173,8 @@ const getSuperadminCompaniesSnapshotCached = unstable_cache(
             select: { name: true, email: true, active: true },
             take: 1,
           },
-          employees: {
-            select: { id: true, active: true },
+          _count: {
+            select: { employees: { where: { active: true } } },
           },
           packages: {
             where: { active: true },
@@ -394,6 +394,308 @@ export async function getSuperadminAccessSnapshot(employeeQuery: string, employe
     getSuperadminAccessEmployeesSnapshotCached(employeeQuery, employeePage),
   ])
   return { hrUsers, ...employeesData }
+}
+
+export async function getHrHomeSnapshot(companyId: string) {
+  const snapshot = unstable_cache(
+    async () => {
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+        select: {
+          name: true,
+          slug: true,
+          packages: {
+            where: { active: true },
+            orderBy: { created_at: "desc" },
+            select: {
+              package: {
+                select: { name: true, _count: { select: { courses: true } } },
+              },
+            },
+            take: 1,
+          },
+        },
+      })
+
+      if (!company) return null
+
+      const [activeEmployees, totalCertificates, progressAverage] = await Promise.all([
+        prisma.employee.count({ where: { company_id: companyId, active: true } }),
+        prisma.certificate.count({ where: { employee: { company_id: companyId, active: true } } }),
+        prisma.employeeCourse.aggregate({
+          where: { employee: { company_id: companyId, active: true } },
+          _avg: { progress_pct: true },
+        }),
+      ])
+
+      const activePackage = company.packages[0]?.package ?? null
+
+      return {
+        companyName: company.name,
+        companySlug: company.slug,
+        activePackageName: activePackage?.name ?? null,
+        activePackageCourseCount: activePackage?._count.courses ?? 0,
+        activeEmployees,
+        totalCertificates,
+        averageProgress: Math.round(progressAverage._avg.progress_pct ?? 0),
+      }
+    },
+    ["dashboard-snapshot", "empresa", "home", String(companyId)],
+    { revalidate: 45, tags: [companyCacheRootTag(companyId)] },
+  )
+
+  return snapshot()
+}
+
+const PROGRESS_WEEKDAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+
+function progressDateKey(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function progressLastSevenDayKeys() {
+  const days: { key: string; label: string }[] = []
+  const today = new Date()
+  for (let index = 6; index >= 0; index--) {
+    const day = new Date(today)
+    day.setUTCDate(day.getUTCDate() - index)
+    days.push({ key: progressDateKey(day), label: PROGRESS_WEEKDAY_LABELS[day.getUTCDay()] })
+  }
+  return days
+}
+
+export async function getHrProgressSnapshot(companyId: string, department: string) {
+  const snapshot = unstable_cache(
+    async () => {
+      const employeeDepartmentFilter =
+        department === "Sin departamento" ? { department: null } : department ? { department } : {}
+
+      const weekDays = progressLastSevenDayKeys()
+      const currentWeekStart = new Date(`${weekDays[0].key}T00:00:00.000Z`)
+      const previousWeekStart = new Date(currentWeekStart)
+      previousWeekStart.setUTCDate(previousWeekStart.getUTCDate() - 7)
+
+      const [
+        company,
+        currentWeekCertificates,
+        previousWeekCount,
+        activeCompanyPackage,
+        assignedByCourse,
+        completedByCourse,
+        inProgressByCourse,
+        employeeCoursesByDepartment,
+      ] = await Promise.all([
+        prisma.company.findUnique({ where: { id: companyId }, select: { slug: true } }),
+        prisma.certificate.findMany({
+          where: { employee: { company_id: companyId }, issued_at: { gte: currentWeekStart } },
+          select: { issued_at: true },
+        }),
+        prisma.certificate.count({
+          where: {
+            employee: { company_id: companyId },
+            issued_at: { gte: previousWeekStart, lt: currentWeekStart },
+          },
+        }),
+        prisma.companyPackage.findFirst({
+          where: { company_id: companyId, active: true },
+          orderBy: { created_at: "desc" },
+          select: {
+            expiration_date: true,
+            package: {
+              select: { courses: { select: { wp_course_id: true, cover_url: true } } },
+            },
+          },
+        }),
+        prisma.employeeCourse.groupBy({
+          by: ["wp_course_id"],
+          where: { employee: { company_id: companyId, active: true, ...employeeDepartmentFilter } },
+          _count: { _all: true },
+          _avg: { progress_pct: true },
+          _max: { course_name: true },
+        }),
+        prisma.employeeCourse.groupBy({
+          by: ["wp_course_id"],
+          where: {
+            employee: { company_id: companyId, active: true, ...employeeDepartmentFilter },
+            completed: true,
+          },
+          _count: { _all: true },
+        }),
+        prisma.employeeCourse.groupBy({
+          by: ["wp_course_id"],
+          where: {
+            employee: { company_id: companyId, active: true, ...employeeDepartmentFilter },
+            completed: false,
+            progress_pct: { gt: 0 },
+          },
+          _count: { _all: true },
+        }),
+        prisma.employeeCourse.findMany({
+          where: { employee: { company_id: companyId, active: true } },
+          select: { progress_pct: true, employee: { select: { department: true } } },
+        }),
+      ])
+
+      if (!company) return null
+
+      const countsByDay = new Map(weekDays.map((day) => [day.key, 0]))
+      for (const certificate of currentWeekCertificates) {
+        const key = progressDateKey(certificate.issued_at)
+        if (countsByDay.has(key)) countsByDay.set(key, (countsByDay.get(key) ?? 0) + 1)
+      }
+      const learningActivityData = weekDays.map((day) => ({
+        label: day.label,
+        completions: countsByDay.get(day.key) ?? 0,
+      }))
+      const currentWeekTotal = currentWeekCertificates.length
+      const changeVsPreviousWeek =
+        previousWeekCount > 0
+          ? Math.round(((currentWeekTotal - previousWeekCount) / previousWeekCount) * 100)
+          : currentWeekTotal > 0
+            ? 100
+            : null
+
+      const packageCourses = activeCompanyPackage?.package?.courses ?? []
+      const thumbnails = packageCourses
+        .filter((course) => course.cover_url)
+        .map((course) => [course.wp_course_id, course.cover_url as string] as const)
+
+      const daysUntilExpiration = activeCompanyPackage?.expiration_date
+        ? Math.ceil(
+            (activeCompanyPackage.expiration_date.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+          )
+        : null
+
+      const completedByCourseMap = new Map(
+        completedByCourse.map((row) => [row.wp_course_id, row._count._all]),
+      )
+      const inProgressByCourseMap = new Map(
+        inProgressByCourse.map((row) => [row.wp_course_id, row._count._all]),
+      )
+
+      const courseSummaries = assignedByCourse
+        .map((row) => {
+          const assigned = row._count._all
+          const completed = completedByCourseMap.get(row.wp_course_id) ?? 0
+          const inProgress = inProgressByCourseMap.get(row.wp_course_id) ?? 0
+          return {
+            courseId: row.wp_course_id,
+            nombre: row._max.course_name ?? "",
+            assigned,
+            completed,
+            inProgress,
+            notStarted: assigned - completed - inProgress,
+            averageProgress: Math.round(row._avg.progress_pct ?? 0),
+          }
+        })
+        .sort((left, right) => {
+          if (left.completed !== right.completed) return right.completed - left.completed
+          return left.nombre.localeCompare(right.nombre, "es-MX")
+        })
+
+      const departmentTotals = new Map<string, { sum: number; count: number }>()
+      for (const row of employeeCoursesByDepartment) {
+        const key = row.employee.department ?? "Sin departamento"
+        const entry = departmentTotals.get(key) ?? { sum: 0, count: 0 }
+        entry.sum += row.progress_pct
+        entry.count += 1
+        departmentTotals.set(key, entry)
+      }
+      const departmentSummaries = [...departmentTotals.entries()]
+        .map(([name, { sum, count }]) => ({
+          department: name,
+          averageProgress: Math.round(sum / count),
+        }))
+        .sort((left, right) => right.averageProgress - left.averageProgress)
+      const departmentOptions = [...departmentTotals.keys()].sort((left, right) =>
+        left.localeCompare(right, "es-MX"),
+      )
+
+      return {
+        companySlug: company.slug,
+        courseSummaries,
+        departmentSummaries,
+        departmentOptions,
+        thumbnails,
+        learningActivityData,
+        changeVsPreviousWeek,
+        daysUntilExpiration,
+      }
+    },
+    ["dashboard-snapshot", "empresa", "progreso", String(companyId), department],
+    { revalidate: 45, tags: [companyCacheRootTag(companyId)] },
+  )
+
+  return snapshot()
+}
+
+export const HR_EMPLOYEES_PAGE_SIZE = 5
+
+export async function getHrEmployeesSnapshot(
+  companyId: string,
+  query: string,
+  status: string,
+  page: number,
+) {
+  const snapshot = unstable_cache(
+    async () => {
+      const statusFilter =
+        status === "active" ? { active: true } : status === "inactive" ? { active: false } : {}
+
+      const employeeWhere = {
+        company_id: companyId,
+        ...statusFilter,
+        ...(query
+          ? {
+              OR: [
+                { first_name: { contains: query, mode: "insensitive" as const } },
+                { last_name: { contains: query, mode: "insensitive" as const } },
+                { email: { contains: query, mode: "insensitive" as const } },
+                { department: { contains: query, mode: "insensitive" as const } },
+                { position: { contains: query, mode: "insensitive" as const } },
+              ],
+            }
+          : {}),
+      }
+
+      const [company, totalEmployees, filteredCount] = await Promise.all([
+        prisma.company.findUnique({
+          where: { id: companyId },
+          select: { slug: true, contracted_seats: true },
+        }),
+        prisma.employee.count({ where: { company_id: companyId } }),
+        prisma.employee.count({ where: employeeWhere }),
+      ])
+
+      if (!company) return null
+
+      const totalPages = Math.max(1, Math.ceil(filteredCount / HR_EMPLOYEES_PAGE_SIZE))
+      const currentPage = Math.min(Math.max(1, page), totalPages)
+
+      const pagedEmployees = await prisma.employee.findMany({
+        where: employeeWhere,
+        orderBy: { created_at: "desc" },
+        skip: (currentPage - 1) * HR_EMPLOYEES_PAGE_SIZE,
+        take: HR_EMPLOYEES_PAGE_SIZE,
+        include: {
+          courses: { select: { progress_pct: true } },
+        },
+      })
+
+      return {
+        company,
+        totalEmployees,
+        filteredCount,
+        totalPages,
+        currentPage,
+        pagedEmployees,
+      }
+    },
+    ["dashboard-snapshot", "empresa", "empleados", String(companyId), status, query, String(page)],
+    { revalidate: 30, tags: [companyCacheRootTag(companyId)] },
+  )
+
+  return snapshot()
 }
 
 export async function getHrAssignmentsSnapshot(companyId: string) {

@@ -16,16 +16,13 @@ import {
   normalizeEmployeeSearchQuery,
 } from "@/lib/company-employees"
 import { cookies } from "next/headers"
-import { prisma } from "@/lib/prisma"
+import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { companyPath } from "@/lib/company-routes"
 import { Pagination } from "@/components/shared/Pagination"
-import {
-  deleteEmployeeAction,
-  toggleEmployeeStatusAction,
-} from "./actions"
+import { deleteEmployeeAction, toggleEmployeeStatusAction } from "./actions"
 
 export const maxDuration = 300
 
@@ -98,10 +95,12 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const success = readSearchParam(params, "success")
   const error = readSearchParam(params, "error")
   const generatedPasswordsCookie = (await cookies()).get("d360_csv_generated_passwords")?.value
-  const generatedPasswordsPayload: { passwords: Array<{ email: string; password: string }>; omittedCount: number } =
-    generatedPasswordsCookie
-      ? JSON.parse(generatedPasswordsCookie)
-      : { passwords: [], omittedCount: 0 }
+  const generatedPasswordsPayload: {
+    passwords: Array<{ email: string; password: string }>
+    omittedCount: number
+  } = generatedPasswordsCookie
+    ? JSON.parse(generatedPasswordsCookie)
+    : { passwords: [], omittedCount: 0 }
   const generatedPasswords = generatedPasswordsPayload.passwords
   const omittedGeneratedPasswordsCount = generatedPasswordsPayload.omittedCount
   const searchQuery = (readSearchParam(params, "q") ?? "").trim()
@@ -109,50 +108,12 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
   const parsedPage = Number(readSearchParam(params, "page") ?? "1")
   const page = Number.isFinite(parsedPage) ? Math.max(1, Math.trunc(parsedPage)) : 1
-  const PAGE_SIZE = 5
 
-  const statusFilter =
-    status === "active" ? { active: true } : status === "inactive" ? { active: false } : {}
+  const snapshot = await getHrEmployeesSnapshot(companyId, query, status, page)
+  if (!snapshot) redirect("/login")
 
-  const employeeWhere = {
-    company_id: companyId,
-    ...statusFilter,
-    ...(query
-      ? {
-          OR: [
-            { first_name: { contains: query, mode: "insensitive" as const } },
-            { last_name: { contains: query, mode: "insensitive" as const } },
-            { email: { contains: query, mode: "insensitive" as const } },
-            { department: { contains: query, mode: "insensitive" as const } },
-            { position: { contains: query, mode: "insensitive" as const } },
-          ],
-        }
-      : {}),
-  }
-
-  const [company, totalEmployees, filteredCount] = await Promise.all([
-    prisma.company.findUnique({
-      where: { id: companyId },
-      select: { slug: true, contracted_seats: true },
-    }),
-    prisma.employee.count({ where: { company_id: companyId } }),
-    prisma.employee.count({ where: employeeWhere }),
-  ])
-
-  if (!company) redirect("/login")
-
-  const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE))
-  const currentPage = Math.min(Math.max(1, page), totalPages)
-
-  const pagedEmployees = await prisma.employee.findMany({
-    where: employeeWhere,
-    orderBy: { created_at: "desc" },
-    skip: (currentPage - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
-    include: {
-      courses: { select: { progress_pct: true } },
-    },
-  })
+  const { company, totalEmployees, filteredCount, totalPages, currentPage, pagedEmployees } =
+    snapshot
 
   const employeesBasePath = companyPath(company.slug, "/employees")
   const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status, currentPage)
@@ -182,8 +143,8 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
             Contraseñas generadas automáticamente
           </p>
           <p className="mb-3 text-xs text-amber-900">
-            Estas filas del CSV no traían contraseña, así que se generó una por empleado.
-            Compártela por un canal seguro — no volverá a mostrarse.
+            Estas filas del CSV no traían contraseña, así que se generó una por empleado. Compártela
+            por un canal seguro — no volverá a mostrarse.
           </p>
           <ul className="grid gap-1 text-xs text-amber-950">
             {generatedPasswords.map((item) => (
@@ -294,10 +255,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                     : 0
 
                   return (
-                    <tr
-                      key={employee.id}
-                      className="bg-white transition-colors hover:bg-gray-50"
-                    >
+                    <tr key={employee.id} className="bg-white transition-colors hover:bg-gray-50">
                       <td className="min-w-0 rounded-l-lg py-3 pl-4">
                         <p className="truncate text-sm font-semibold text-slate-950">
                           {employee.first_name} {employee.last_name}

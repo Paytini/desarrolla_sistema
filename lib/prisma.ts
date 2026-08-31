@@ -8,11 +8,13 @@ const globalForPrisma = globalThis as unknown as {
   prismaPool?: Pool
 }
 
+const poolMax = Number.parseInt(process.env.DATABASE_POOL_MAX ?? "", 10)
+
 const pool =
   globalForPrisma.prismaPool ??
   new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 3,
+    max: Number.isFinite(poolMax) && poolMax > 0 ? poolMax : 5,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
   })
