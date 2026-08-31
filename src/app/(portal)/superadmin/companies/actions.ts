@@ -12,6 +12,11 @@ import {
 } from "@/lib/auditing"
 import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import {
+  COMPANY_LOGO_ALLOWED_TYPES,
+  COMPANY_LOGO_MAX_SIZE_BYTES,
+  uploadCompanyLogo,
+} from "@/lib/company/logo"
 import { companyPath } from "@/lib/company/routes"
 import { notifySuperadmins } from "@/lib/notifications"
 import { enqueueEmailSendJob } from "@/lib/jobs"
@@ -45,6 +50,8 @@ export async function createCompanyAction(
   const notas = getString(formData, "notas")
   const packageIdRaw = getString(formData, "paquete_id")
   const expirationDateRaw = getString(formData, "fecha_vencimiento")
+  const logoFileEntry = formData.get("logo")
+  const logoFile = logoFileEntry instanceof File && logoFileEntry.size > 0 ? logoFileEntry : null
 
   if (!nombre || !emailHr || !nombreHr || !passwordHr || contractedSeats < 1) {
     return { error: "datos" }
@@ -52,6 +59,14 @@ export async function createCompanyAction(
 
   if (packageIdRaw && !isUuid(packageIdRaw)) {
     return { error: "datos" }
+  }
+
+  if (
+    logoFile &&
+    (!COMPANY_LOGO_ALLOWED_TYPES.includes(logoFile.type) ||
+      logoFile.size > COMPANY_LOGO_MAX_SIZE_BYTES)
+  ) {
+    return { error: "logo" }
   }
 
   const existingCompany = await prisma.company.findUnique({
@@ -196,6 +211,22 @@ export async function createCompanyAction(
       entidadId: createdResult.companyId,
       excludeUsuarioId: actor.userId,
     })
+
+    if (logoFile) {
+      try {
+        const logoUrl = await uploadCompanyLogo(createdResult.companyId, logoFile)
+        await prisma.company.update({
+          where: { id: createdResult.companyId },
+          data: { logo_url: logoUrl },
+        })
+        revalidateTag(companyCacheRootTag(createdResult.companyId), "max")
+      } catch (error) {
+        console.error("createCompanyAction logo upload failed", {
+          companyId: createdResult.companyId,
+          error,
+        })
+      }
+    }
   })
 
   revalidatePath("/superadmin/companies")

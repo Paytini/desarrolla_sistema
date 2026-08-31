@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useRef, useState } from "react"
+import { useActionState, useEffect, useRef, useState } from "react"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
@@ -19,10 +19,14 @@ type Package = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["paque
 
 const STEPS = ["Info empresa", "Admin HR", "Plan"]
 
+const LOGO_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"]
+const LOGO_MAX_SIZE_BYTES = 2 * 1024 * 1024
+
 const ERROR_MESSAGES: Record<string, string> = {
   datos: "Faltan datos obligatorios.",
   email_hr: "Ese correo ya está ligado a otra empresa.",
   usuario_hr: "Ese correo ya existe como usuario del portal.",
+  logo: "El logo no es válido (usa PNG, JPG o WebP, máx. 2 MB).",
 }
 
 const LABEL_SX = {
@@ -70,6 +74,49 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
     setValues((v) => ({ ...v, [name]: value }))
   }
 
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
+  const [logoError, setLogoError] = useState<string | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    return () => {
+      if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl)
+    }
+  }, [logoPreviewUrl])
+
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setLogoError(null)
+
+    if (!file) {
+      setLogoFile(null)
+      setLogoPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return null
+      })
+      return
+    }
+
+    if (!LOGO_ALLOWED_TYPES.includes(file.type)) {
+      setLogoError("Formato no válido. Usa PNG, JPG o WebP.")
+      if (logoInputRef.current) logoInputRef.current.value = ""
+      return
+    }
+
+    if (file.size > LOGO_MAX_SIZE_BYTES) {
+      setLogoError("El archivo supera el límite de 2 MB.")
+      if (logoInputRef.current) logoInputRef.current.value = ""
+      return
+    }
+
+    setLogoFile(file)
+    setLogoPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(file)
+    })
+  }
+
   function validateCurrentStep(): boolean {
     if (!formRef.current) return true
     const requiredByStep: Record<number, string[]> = {
@@ -94,7 +141,7 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
   if (state !== handledState) {
     setHandledState(state)
     if (state?.error === "email_hr" || state?.error === "usuario_hr") setStep(1)
-    if (state?.error === "datos") setStep(0)
+    if (state?.error === "datos" || state?.error === "logo") setStep(0)
   }
 
   const isHrError = state?.error === "email_hr" || state?.error === "usuario_hr"
@@ -147,9 +194,74 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
           </>
         )}
 
+        <Box sx={{ display: step === 0 ? "grid" : "none", gap: 1, mb: 2.5 }}>
+          <Typography component="label" htmlFor="logo" sx={LABEL_SX}>
+            Logo (opcional)
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: "10px",
+                border: "1px solid",
+                borderColor: "divider",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                flexShrink: 0,
+                bgcolor: "background.default",
+              }}
+            >
+              {logoPreviewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not served through Next's optimizer
+                <img
+                  src={logoPreviewUrl}
+                  alt="Vista previa del logo"
+                  style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                />
+              ) : (
+                <Typography sx={{ fontSize: 10, color: "text.secondary", textAlign: "center" }}>
+                  Sin logo
+                </Typography>
+              )}
+            </Box>
+            <Box>
+              <Button
+                component="label"
+                size="small"
+                variant="outlined"
+                sx={{ textTransform: "none", fontSize: "12px" }}
+              >
+                {logoFile ? "Cambiar archivo" : "Subir logo"}
+                <input
+                  ref={logoInputRef}
+                  id="logo"
+                  name="logo"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  hidden
+                  onChange={handleLogoChange}
+                />
+              </Button>
+              <Typography sx={{ mt: 0.5, fontSize: "11px", color: "text.secondary" }}>
+                PNG, JPG o WebP · máx. 2 MB
+              </Typography>
+              {logoError && (
+                <Typography sx={{ mt: 0.5, fontSize: "11px", color: "error.main" }}>
+                  {logoError}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        </Box>
+
         {step === 0 && (
           <Box sx={{ display: "grid", gap: 2.5 }}>
-            {state?.error === "datos" && <Alert severity="error">{ERROR_MESSAGES.datos}</Alert>}
+            {(state?.error === "datos" || state?.error === "logo") && (
+              <Alert severity="error">{ERROR_MESSAGES[state.error]}</Alert>
+            )}
             <Box
               sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}
             >
@@ -357,6 +469,33 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
               >
                 Resumen
               </Typography>
+              {logoPreviewUrl && (
+                <Box sx={{ mb: 1.5 }}>
+                  <Typography sx={{ fontSize: 10, color: "text.secondary" }}>Logo</Typography>
+                  <Box
+                    sx={{
+                      mt: 0.5,
+                      width: 48,
+                      height: 48,
+                      borderRadius: "8px",
+                      border: "1px solid",
+                      borderColor: "divider",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      bgcolor: "background.paper",
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview */}
+                    <img
+                      src={logoPreviewUrl}
+                      alt="Vista previa del logo"
+                      style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                    />
+                  </Box>
+                </Box>
+              )}
               {(
                 [
                   { label: "Empresa", key: "nombre" },
