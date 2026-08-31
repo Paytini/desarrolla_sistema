@@ -25,11 +25,11 @@ export async function changeOwnPasswordAction(formData: FormData) {
   const confirmPassword = String(formData.get("confirm_password") ?? "")
 
   if (password.length < 8) {
-    redirect("/employee/cambiar-contrasena?error=corta")
+    redirect("/employee/change-password?error=corta")
   }
 
   if (password !== confirmPassword) {
-    redirect("/employee/cambiar-contrasena?error=no_coincide")
+    redirect("/employee/change-password?error=no_coincide")
   }
 
   const passwordHash = await hashPassword(password)

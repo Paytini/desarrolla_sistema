@@ -117,7 +117,7 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
 
   const employeesBasePath = companyPath(company.slug, "/employees")
   const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status, currentPage)
-  const exportHref = `/api/company/empleados/export${
+  const exportHref = `/api/company/employees/export${
     currentListPath === employeesBasePath ? "" : currentListPath.replace(employeesBasePath, "")
   }`
 

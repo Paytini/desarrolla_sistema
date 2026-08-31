@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { changeOwnPasswordAction } from "@/app/(portal)/employee/cambiar-contrasena/actions"
+import { changeOwnPasswordAction } from "@/app/(portal)/employee/change-password/actions"
 
 const ERROR_MESSAGES: Record<string, string> = {
   corta: "La contraseña debe tener al menos 8 caracteres.",
