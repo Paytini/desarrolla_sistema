@@ -40,40 +40,16 @@ export default async function EmployeeCourses() {
     redirect("/login")
   }
 
-  const learningData = await getEmployeeLearningData(session.user.email ?? "")
-  const employee = learningData?.employee
-  if (!employee) redirect("/login")
+  const companyId = session.user.empresa_id
 
-  let courseUrlById = new Map<number, string>()
-  let fallbackUrlById = new Map<number, string>()
-  let thumbnailById = new Map<number, string>()
-
-  if (isWordPressBridgeConfigured()) {
-    try {
-      const bridgeCourses = await getWordPressCourseCatalog()
-      courseUrlById = new Map(
-        bridgeCourses.courses
-          .filter((c) => c.course_url)
-          .map((c) => [c.wp_course_id, c.course_url as string]),
-      )
-      const siteUrl = getWordPressSiteUrl()
-      fallbackUrlById = new Map(
-        bridgeCourses.courses
-          .filter((c) => c.post_type && siteUrl)
-          .map((c) => [c.wp_course_id, `${siteUrl}/?post_type=${c.post_type}&p=${c.wp_course_id}`]),
-      )
-      thumbnailById = new Map(
-        bridgeCourses.courses
-          .filter((c) => c.thumbnail_url)
-          .map((c) => [c.wp_course_id, c.thumbnail_url as string]),
-      )
-    } catch {}
-  }
-
-  if (session.user.empresa_id) {
-    try {
-      const pkg = await prisma.company.findUnique({
-        where: { id: session.user.empresa_id },
+  const [learningData, catalogResult, companyPackageResult] = await Promise.all([
+    getEmployeeLearningData(session.user.email ?? ""),
+    isWordPressBridgeConfigured()
+      ? getWordPressCourseCatalog().catch(() => null)
+      : Promise.resolve(null),
+    prisma.company
+      .findUnique({
+        where: { id: companyId },
         select: {
           packages: {
             where: { active: true },
@@ -86,10 +62,32 @@ export default async function EmployeeCourses() {
           },
         },
       })
-      for (const c of pkg?.packages[0]?.package?.courses ?? []) {
-        if (c.cover_url) thumbnailById.set(c.wp_course_id, c.cover_url)
+      .catch(() => null),
+  ])
+
+  const employee = learningData?.employee
+  if (!employee) redirect("/login")
+
+  const courseUrlById = new Map<number, string>()
+  const fallbackUrlById = new Map<number, string>()
+  const thumbnailById = new Map<number, string>()
+
+  if (catalogResult) {
+    const siteUrl = getWordPressSiteUrl()
+    for (const c of catalogResult.courses) {
+      if (c.course_url) courseUrlById.set(c.wp_course_id, c.course_url)
+      if (c.post_type && siteUrl) {
+        fallbackUrlById.set(
+          c.wp_course_id,
+          `${siteUrl}/?post_type=${c.post_type}&p=${c.wp_course_id}`,
+        )
       }
-    } catch {}
+      if (c.thumbnail_url) thumbnailById.set(c.wp_course_id, c.thumbnail_url)
+    }
+  }
+
+  for (const c of companyPackageResult?.packages[0]?.package?.courses ?? []) {
+    if (c.cover_url) thumbnailById.set(c.wp_course_id, c.cover_url)
   }
 
   const courses = employee.courses as PortalCourseRecord[]
@@ -97,7 +95,7 @@ export default async function EmployeeCourses() {
   let dc3MetaMap = new Map<number, { duration_hours: number | null }>()
   let pkgCourseMap = new Map<number, { description: string | null; lesson_count: number | null }>()
 
-  if (session.user.empresa_id && courses.length > 0) {
+  if (courses.length > 0) {
     try {
       const wpIds = courses.map((c) => c.wp_course_id)
       const [dc3MetaRecords, pkgCourses] = await Promise.all([
@@ -241,7 +239,12 @@ export default async function EmployeeCourses() {
                     }}
                   >
                     <Typography
-                      sx={{ fontSize: 30, fontWeight: 800, color: "var(--portal-blue)", opacity: 0.4 }}
+                      sx={{
+                        fontSize: 30,
+                        fontWeight: 800,
+                        color: "var(--portal-blue)",
+                        opacity: 0.4,
+                      }}
                     >
                       {course.course_name.charAt(0).toUpperCase()}
                     </Typography>
@@ -407,7 +410,9 @@ export default async function EmployeeCourses() {
                           fontWeight: 600,
                           bgcolor: course.completed ? "var(--portal-blue)" : "#1a1a1a",
                           color: "#fff",
-                          "&:hover": { bgcolor: course.completed ? "var(--portal-blue-hover)" : "#333" },
+                          "&:hover": {
+                            bgcolor: course.completed ? "var(--portal-blue-hover)" : "#333",
+                          },
                         }}
                       >
                         {course.completed

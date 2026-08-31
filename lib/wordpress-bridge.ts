@@ -313,9 +313,10 @@ export function isWordPressBridgeConfigured() {
   )
 }
 
-type BridgeRequestInit = RequestInit & { retryable?: boolean }
+type BridgeRequestInit = RequestInit & { retryable?: boolean; timeoutMs?: number }
 
 const BRIDGE_TIMEOUT_MS = 15_000
+const BRIDGE_READ_TIMEOUT_MS = 8_000
 const BRIDGE_RETRY_BACKOFF_MS = [500, 2000]
 
 function sleep(ms: number) {
@@ -328,7 +329,7 @@ async function bridgeRequest<T>(path: string, init?: BridgeRequestInit): Promise
     throw new Error("WP bridge base URL is not configured")
   }
 
-  const { retryable, ...fetchInit } = init ?? {}
+  const { retryable, timeoutMs, ...fetchInit } = init ?? {}
   const method = fetchInit.method ?? "GET"
   const shouldRetry = retryable ?? method === "GET"
   const maxAttempts = shouldRetry ? BRIDGE_RETRY_BACKOFF_MS.length + 1 : 1
@@ -346,7 +347,7 @@ async function bridgeRequest<T>(path: string, init?: BridgeRequestInit): Promise
           ...(fetchInit.headers ?? {}),
         },
         cache: "no-store",
-        signal: AbortSignal.timeout(BRIDGE_TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs ?? BRIDGE_TIMEOUT_MS),
       })
     } catch (error) {
       lastError = error
@@ -552,6 +553,7 @@ export async function bridgeGetStudentDiagnostics(studentId: number, courseId?: 
 export async function bridgeListCourses() {
   return bridgeRequest<BridgeCoursesResponse>("/courses", {
     method: "GET",
+    timeoutMs: BRIDGE_READ_TIMEOUT_MS,
   })
 }
 

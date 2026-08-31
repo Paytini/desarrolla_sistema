@@ -46,18 +46,20 @@ export async function POST(request: Request) {
     force: forceRequested,
   })
 
-  revalidatePath("/employee/courses")
-  revalidatePath("/employee/certificates")
+  if (result.synced) {
+    revalidatePath("/employee/courses")
+    revalidatePath("/employee/certificates")
 
-  if (result.companyId) {
-    const branding = await getCompanyBranding(result.companyId)
-    if (branding) {
-      revalidatePath(companyPath(branding.slug, "/home"))
-      revalidatePath(companyPath(branding.slug, "/progress"))
-      revalidatePath(companyPath(branding.slug, "/certificates"))
+    if (forceRequested && result.companyId) {
+      const branding = await getCompanyBranding(result.companyId)
+      if (branding) {
+        revalidatePath(companyPath(branding.slug, "/home"))
+        revalidatePath(companyPath(branding.slug, "/progress"))
+        revalidatePath(companyPath(branding.slug, "/certificates"))
+      }
+      revalidateTag(companyCacheRootTag(result.companyId), "max")
+      revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
     }
-    revalidateTag(companyCacheRootTag(result.companyId), "max")
-    revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   }
 
   return NextResponse.json(result)

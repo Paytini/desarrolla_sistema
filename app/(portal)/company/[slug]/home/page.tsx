@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
-import { prisma } from "@/lib/prisma"
+import { getHrHomeSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { companyPath } from "@/lib/company-routes"
@@ -47,44 +47,28 @@ export default async function CompanyHome() {
 
   const companyId = session.user.empresa_id
 
-  const company = await prisma.company.findUnique({
-    where: { id: companyId },
-    include: {
-      packages: {
-        where: { active: true },
-        orderBy: { created_at: "desc" },
-        include: { package: { include: { courses: true } } },
-        take: 1,
-      },
-    },
-  })
+  const snapshot = await getHrHomeSnapshot(companyId)
+  if (!snapshot) redirect("/login")
 
-  if (!company) redirect("/login")
-
-  const [activeEmployees, totalCertificates, progressAverage] = await Promise.all([
-    prisma.employee.count({ where: { company_id: companyId, active: true } }),
-    prisma.certificate.count({ where: { employee: { company_id: companyId, active: true } } }),
-    prisma.employeeCourse.aggregate({
-      where: { employee: { company_id: companyId, active: true } },
-      _avg: { progress_pct: true },
-    }),
-  ])
-
-  const activePackage = company.packages[0]?.package
-  const averageProgress = Math.round(progressAverage._avg.progress_pct ?? 0)
+  const {
+    companyName,
+    companySlug,
+    activePackageName,
+    activePackageCourseCount,
+    activeEmployees,
+    totalCertificates,
+    averageProgress,
+  } = snapshot
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={company.name}
-        description="Panel de operación académica"
-      />
+      <PageHeader title={companyName} description="Panel de operación académica" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Paquete activo"
-          value={activePackage?.name ?? "Sin paquete"}
-          sub={`${activePackage?.courses.length ?? 0} cursos`}
+          value={activePackageName ?? "Sin paquete"}
+          sub={`${activePackageCourseCount} cursos`}
           icon={Package}
           borderColor="amber"
           valueSize="sm"
@@ -115,25 +99,25 @@ export default async function CompanyHome() {
       <div className="grid gap-4 xl:grid-cols-[1fr_auto]">
         <div className="grid gap-3 sm:grid-cols-2">
           <QuickLink
-            href={companyPath(company.slug, "/employees")}
+            href={companyPath(companySlug, "/employees")}
             label="Gestión de empleados"
             Icon={Users}
             iconCls="bg-portal-blue-soft text-portal-blue"
           />
           <QuickLink
-            href={companyPath(company.slug, "/assignments")}
+            href={companyPath(companySlug, "/assignments")}
             label="Asignación de cursos"
             Icon={ClipboardList}
             iconCls="bg-portal-blue-soft text-portal-blue"
           />
           <QuickLink
-            href={companyPath(company.slug, "/progress")}
+            href={companyPath(companySlug, "/progress")}
             label="Progreso y trayectorias"
             Icon={BarChart3}
             iconCls="bg-portal-blue-soft text-portal-blue"
           />
           <QuickLink
-            href={companyPath(company.slug, "/certificates")}
+            href={companyPath(companySlug, "/certificates")}
             label="Constancias DC-3"
             Icon={Award}
             iconCls="bg-portal-blue-soft text-portal-blue"

@@ -3,6 +3,7 @@
 import bcrypt from "bcrypt"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { after } from "next/server"
 import {
   createAuditEvent,
   createSeatHistoryEntry,
@@ -113,31 +114,8 @@ export async function createCompanyAction(
     return { companyId: company.id, assignedPackageId }
   })
 
-  const seatSnapshot = await getCompanySeatSnapshot(createdResult.companyId)
-  if (seatSnapshot) {
-    await createSeatHistoryEntry({
-      actor,
-      companyId: createdResult.companyId,
-      motivo: "empresa_creada",
-      detalle: "Se inicializaron los cupos al crear la empresa en SuperAdmin.",
-      before: { asientos_contratados: 0, asientos_usados: 0, empleados_suspendidos: 0 },
-      after: seatSnapshot,
-    })
-  }
-
-  await createAuditEvent({
-    actor,
-    accion: "EMPRESA_CREADA",
-    entityType: "EMPRESA",
-    entityId: createdResult.companyId,
-    companyId: createdResult.companyId,
-    resumen: `Se creo la empresa ${nombre} y su acceso HR inicial.`,
-    metadata: {
-      email_hr: emailHr,
-      asientos_contratados: contractedSeats,
-      paquete_inicial_id: createdResult.assignedPackageId,
-    },
-  })
+  let emailQueued = false
+  let emailError: string | null = null
 
   try {
     const { subject, html, text } = buildCredentialsEmail({
@@ -147,50 +125,77 @@ export async function createCompanyAction(
       password: passwordHr,
     })
     await enqueueEmailSendJob({ to: emailHr, subject, html, text })
-    await createAuditEvent({
-      actor,
-      accion: "EMAIL_CREDENCIALES_ENCOLADO",
-      entityType: "EMPRESA",
-      entityId: createdResult.companyId,
-      companyId: createdResult.companyId,
-      resumen: `Se encolo el correo de credenciales para ${emailHr}.`,
-    })
+    emailQueued = true
   } catch (error) {
+    emailError = error instanceof Error ? error.message : String(error)
+  }
+
+  after(async () => {
+    try {
+      const seatSnapshot = await getCompanySeatSnapshot(createdResult.companyId)
+      if (seatSnapshot) {
+        await createSeatHistoryEntry({
+          actor,
+          companyId: createdResult.companyId,
+          motivo: "empresa_creada",
+          detalle: "Se inicializaron los cupos al crear la empresa en SuperAdmin.",
+          before: { asientos_contratados: 0, asientos_usados: 0, empleados_suspendidos: 0 },
+          after: seatSnapshot,
+        })
+      }
+    } catch (error) {
+      console.error("createCompanyAction seat history failed", { error })
+    }
+
     await createAuditEvent({
       actor,
-      accion: "EMAIL_CREDENCIALES_FALLIDO",
+      accion: "EMPRESA_CREADA",
       entityType: "EMPRESA",
       entityId: createdResult.companyId,
       companyId: createdResult.companyId,
-      resumen: `No se pudo encolar el correo de credenciales para ${emailHr}.`,
+      resumen: `Se creo la empresa ${nombre} y su acceso HR inicial.`,
       metadata: {
-        error: error instanceof Error ? error.message : String(error),
+        email_hr: emailHr,
+        asientos_contratados: contractedSeats,
+        paquete_inicial_id: createdResult.assignedPackageId,
       },
     })
-  }
 
-  if (createdResult.assignedPackageId) {
     await createAuditEvent({
       actor,
-      accion: "PAQUETE_ASIGNADO",
-      entityType: "EMPRESA_PAQUETE",
-      entityId: createdResult.assignedPackageId,
+      accion: emailQueued ? "EMAIL_CREDENCIALES_ENCOLADO" : "EMAIL_CREDENCIALES_FALLIDO",
+      entityType: "EMPRESA",
+      entityId: createdResult.companyId,
       companyId: createdResult.companyId,
-      resumen: `Se asigno paquete inicial a la empresa ${nombre}.`,
-      metadata: {
-        paquete_id: createdResult.assignedPackageId,
-        fecha_vencimiento: expirationDate?.toISOString() ?? null,
-      },
+      resumen: emailQueued
+        ? `Se encolo el correo de credenciales para ${emailHr}.`
+        : `No se pudo encolar el correo de credenciales para ${emailHr}.`,
+      metadata: emailError ? { error: emailError } : undefined,
     })
-  }
 
-  await notifySuperadmins({
-    tipo: "EMPRESA_CREADA",
-    titulo: "Nueva empresa registrada",
-    mensaje: `${actor.nombre} creó la empresa ${nombre}.`,
-    entidadTipo: "EMPRESA",
-    entidadId: createdResult.companyId,
-    excludeUsuarioId: actor.userId,
+    if (createdResult.assignedPackageId) {
+      await createAuditEvent({
+        actor,
+        accion: "PAQUETE_ASIGNADO",
+        entityType: "EMPRESA_PAQUETE",
+        entityId: createdResult.assignedPackageId,
+        companyId: createdResult.companyId,
+        resumen: `Se asigno paquete inicial a la empresa ${nombre}.`,
+        metadata: {
+          paquete_id: createdResult.assignedPackageId,
+          fecha_vencimiento: expirationDate?.toISOString() ?? null,
+        },
+      })
+    }
+
+    await notifySuperadmins({
+      tipo: "EMPRESA_CREADA",
+      titulo: "Nueva empresa registrada",
+      mensaje: `${actor.nombre} creó la empresa ${nombre}.`,
+      entidadTipo: "EMPRESA",
+      entidadId: createdResult.companyId,
+      excludeUsuarioId: actor.userId,
+    })
   })
 
   revalidatePath("/superadmin/companies")
@@ -223,22 +228,24 @@ export async function toggleCompanyStatusAction(formData: FormData) {
     data: { active: !company.active },
   })
 
-  await createAuditEvent({
-    actor,
-    accion: company.active ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
-    entityType: "EMPRESA",
-    entityId: companyId,
-    companyId,
-    resumen: `${actor.nombre} ${company.active ? "suspendio" : "reactivo"} la empresa ${company.name}.`,
-  })
+  after(async () => {
+    await createAuditEvent({
+      actor,
+      accion: company.active ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
+      entityType: "EMPRESA",
+      entityId: companyId,
+      companyId,
+      resumen: `${actor.nombre} ${company.active ? "suspendio" : "reactivo"} la empresa ${company.name}.`,
+    })
 
-  await notifySuperadmins({
-    tipo: company.active ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
-    titulo: company.active ? "Empresa suspendida" : "Empresa reactivada",
-    mensaje: `${actor.nombre} ${company.active ? "suspendió" : "reactivó"} la empresa ${company.name}.`,
-    entidadTipo: "EMPRESA",
-    entidadId: companyId,
-    excludeUsuarioId: actor.userId,
+    await notifySuperadmins({
+      tipo: company.active ? "EMPRESA_SUSPENDIDA" : "EMPRESA_REACTIVADA",
+      titulo: company.active ? "Empresa suspendida" : "Empresa reactivada",
+      mensaje: `${actor.nombre} ${company.active ? "suspendió" : "reactivó"} la empresa ${company.name}.`,
+      entidadTipo: "EMPRESA",
+      entidadId: companyId,
+      excludeUsuarioId: actor.userId,
+    })
   })
 
   revalidatePath("/superadmin/companies")
@@ -267,14 +274,16 @@ export async function updateCompanyBrandingAction(formData: FormData) {
     select: { name: true, slug: true },
   })
 
-  await createAuditEvent({
-    actor,
-    accion: "EMPRESA_MARCA_ACTUALIZADA",
-    entityType: "EMPRESA",
-    entityId: companyId,
-    companyId,
-    resumen: `${actor.nombre} actualizo el logo de la empresa ${company.name}.`,
-    metadata: { tiene_logo: Boolean(logoUrl) },
+  after(async () => {
+    await createAuditEvent({
+      actor,
+      accion: "EMPRESA_MARCA_ACTUALIZADA",
+      entityType: "EMPRESA",
+      entityId: companyId,
+      companyId,
+      resumen: `${actor.nombre} actualizo el logo de la empresa ${company.name}.`,
+      metadata: { tiene_logo: Boolean(logoUrl) },
+    })
   })
 
   revalidatePath(`/superadmin/companies/${companyId}`)

@@ -11,7 +11,7 @@ type Company = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["empre
 
 export function CompanyRow({ company }: { company: Company }) {
   const packageName = company.packages[0]?.package?.name ?? "—"
-  const activeEmployeesCount = company.employees.filter((e) => e.active).length
+  const activeEmployeesCount = company._count.employees
 
   return (
     <tr className="bg-white transition-colors hover:bg-gray-50">
