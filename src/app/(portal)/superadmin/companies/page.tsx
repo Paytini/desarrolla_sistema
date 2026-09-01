@@ -1,6 +1,5 @@
-import { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
+import { getSuperadminCompaniesListSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
-import { paginate } from "@/lib/pagination"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -29,8 +28,6 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-const PAGE_SIZE = 20
-
 export default async function CompaniesPage({ searchParams }: PageProps) {
   const params = await searchParams
   const success = readSearchParam(params, "success")
@@ -39,24 +36,12 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
   const statusFilter = readSearchParam(params, "status") ?? "all"
   const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
 
-  const { empresas: companies } = await getSuperadminCompaniesSnapshot()
-
-  const filteredCompanies = companies.filter((e) => {
-    const matchQ = q
-      ? e.name.toLowerCase().includes(q) ||
-        (e.rfc?.toLowerCase().includes(q) ?? false) ||
-        e.hr_email.toLowerCase().includes(q)
-      : true
-    const matchStatus =
-      statusFilter === "activa" ? e.active : statusFilter === "suspendida" ? !e.active : true
-    return matchQ && matchStatus
-  })
-
   const {
-    items: pagedCompanies,
+    companies: pagedCompanies,
+    filteredCount,
     currentPage,
     totalPages,
-  } = paginate(filteredCompanies, page, PAGE_SIZE)
+  } = await getSuperadminCompaniesListSnapshot(q, statusFilter, page)
 
   function pageUrl(p: number) {
     const qs = new URLSearchParams()
@@ -170,10 +155,10 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
 
       <PanelBox
         title="Empresas registradas"
-        description={`${filteredCompanies.length} resultado${filteredCompanies.length !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
+        description={`${filteredCount} resultado${filteredCount !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
         noPadding
       >
-        {filteredCompanies.length === 0 ? (
+        {filteredCount === 0 ? (
           <Box sx={{ px: 3, py: 2 }}>
             <EmptyState
               icon={<Building2 size={28} className="text-slate-300" />}
@@ -245,7 +230,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalResults={filteredCompanies.length}
+          totalResults={filteredCount}
           buildPageUrl={pageUrl}
         />
       </PanelBox>
