@@ -4,10 +4,10 @@ import { ExternalLink } from "lucide-react"
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
 import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButton"
 import StatusBadge from "@/components/shared/StatusBadge"
-import type { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
+import type { getSuperadminCompaniesListSnapshot } from "@/lib/dashboard-cache"
 import { formatDate } from "@/lib/format"
 
-type Company = Awaited<ReturnType<typeof getSuperadminCompaniesSnapshot>>["empresas"][number]
+type Company = Awaited<ReturnType<typeof getSuperadminCompaniesListSnapshot>>["companies"][number]
 
 export function CompanyRow({ company }: { company: Company }) {
   const packageName = company.packages[0]?.package?.name ?? "—"

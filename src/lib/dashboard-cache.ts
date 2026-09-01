@@ -207,6 +207,67 @@ export async function getSuperadminCompaniesSnapshot() {
   return getSuperadminCompaniesSnapshotCached()
 }
 
+export const SUPERADMIN_COMPANIES_PAGE_SIZE = 20
+
+export async function getSuperadminCompaniesListSnapshot(
+  query: string,
+  status: string,
+  page: number,
+) {
+  const snapshot = unstable_cache(
+    async () => {
+      const statusFilter =
+        status === "activa" ? { active: true } : status === "suspendida" ? { active: false } : {}
+
+      const where = {
+        ...statusFilter,
+        ...(query
+          ? {
+              OR: [
+                { name: { contains: query, mode: "insensitive" as const } },
+                { rfc: { contains: query, mode: "insensitive" as const } },
+                { hr_email: { contains: query, mode: "insensitive" as const } },
+              ],
+            }
+          : {}),
+      }
+
+      const filteredCount = await prisma.company.count({ where })
+      const totalPages = Math.max(1, Math.ceil(filteredCount / SUPERADMIN_COMPANIES_PAGE_SIZE))
+      const currentPage = Math.min(Math.max(1, page), totalPages)
+
+      const companies = await prisma.company.findMany({
+        where,
+        orderBy: { created_at: "desc" },
+        skip: (currentPage - 1) * SUPERADMIN_COMPANIES_PAGE_SIZE,
+        take: SUPERADMIN_COMPANIES_PAGE_SIZE,
+        select: {
+          id: true,
+          name: true,
+          hr_email: true,
+          rfc: true,
+          contracted_seats: true,
+          created_at: true,
+          active: true,
+          packages: {
+            where: { active: true },
+            orderBy: { created_at: "desc" },
+            select: { package: { select: { name: true } } },
+            take: 1,
+          },
+          _count: { select: { employees: { where: { active: true } } } },
+        },
+      })
+
+      return { companies, filteredCount, totalPages, currentPage }
+    },
+    ["dashboard-snapshot", "superadmin", "empresas-lista", status, query, String(page)],
+    { revalidate: 45, tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_COMPANIES_TAG] },
+  )
+
+  return snapshot()
+}
+
 const getSuperadminPackagesSnapshotCached = unstable_cache(
   async () => {
     const [packages, companies] = await Promise.all([
