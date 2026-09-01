@@ -4,6 +4,8 @@ import { getTutorLearningWebhookDiagnostics } from "@/lib/webhook-monitor"
 import { notifySuperadmins } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
 
+export const maxDuration = 60
+
 const STALE_WEBHOOK_THRESHOLD_MS = 26 * 60 * 60 * 1000
 const ALERT_COOLDOWN_MS = 6 * 60 * 60 * 1000
 const ALERT_STATE_KEY = "bridge_health_alert"

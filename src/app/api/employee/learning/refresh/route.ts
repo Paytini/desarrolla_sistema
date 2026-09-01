@@ -8,6 +8,8 @@ import { companyPath } from "@/lib/company/routes"
 import { syncEmployeeLearningByEmail } from "@/lib/employee-learning"
 import { prisma } from "@/lib/prisma"
 
+export const maxDuration = 60
+
 const FORCE_SYNC_COOLDOWN_MS = 30_000
 
 export async function POST(request: Request) {

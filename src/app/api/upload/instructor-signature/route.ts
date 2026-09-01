@@ -5,6 +5,8 @@ import { getSession } from "@/lib/session"
 
 export const runtime = "nodejs"
 
+export const maxDuration = 60
+
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
 const MAX_SIZE_BYTES = 2 * 1024 * 1024
 

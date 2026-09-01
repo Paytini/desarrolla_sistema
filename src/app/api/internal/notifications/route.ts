@@ -6,6 +6,8 @@ import {
   markAllNotificationsRead,
 } from "@/lib/notifications"
 
+export const maxDuration = 60
+
 export async function GET(request: NextRequest) {
   const session = await getSession()
   if (!session) {

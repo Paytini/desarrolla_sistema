@@ -6,6 +6,8 @@ import { isUuid } from "@/lib/uuid"
 
 export const runtime = "nodejs"
 
+export const maxDuration = 60
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
   if (!session?.user) {

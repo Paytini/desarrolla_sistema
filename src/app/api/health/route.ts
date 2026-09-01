@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 
+export const maxDuration = 60
+
 const REQUIRED_VARS = [
   "DATABASE_URL",
   "NEXTAUTH_URL",

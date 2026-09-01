@@ -2,6 +2,8 @@ import { auth } from "@/auth"
 import { bridgeGetCourseDetails, isWordPressBridgeConfigured } from "@/lib/wordpress/bridge"
 import { NextResponse } from "next/server"
 
+export const maxDuration = 60
+
 type RouteContext = {
   params: { courseId: string } | Promise<{ courseId: string }>
 }

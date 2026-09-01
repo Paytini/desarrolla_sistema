@@ -3,6 +3,8 @@ import path from "node:path"
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 
+export const maxDuration = 60
+
 export async function GET() {
   const session = await getSession()
   if (!session || session.user.role !== "SUPERADMIN") {
