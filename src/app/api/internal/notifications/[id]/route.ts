@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { setNotificationArchived } from "@/lib/notifications"
 
+export const maxDuration = 60
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
   if (!session) {

@@ -8,6 +8,8 @@ import { formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { toCsvText } from "@/lib/csv"
 
+export const maxDuration = 60
+
 export async function GET(request: Request) {
   const session = await auth()
   if (!session || session.user.role !== "HR" || !session.user.empresa_id) {

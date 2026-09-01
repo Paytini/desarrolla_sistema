@@ -3,6 +3,8 @@ import { getWordPressCourseCatalog } from "@/lib/wordpress/course-catalog"
 import { isWordPressBridgeConfigured } from "@/lib/wordpress/bridge"
 import { NextResponse } from "next/server"
 
+export const maxDuration = 60
+
 export async function GET() {
   const session = await auth()
 

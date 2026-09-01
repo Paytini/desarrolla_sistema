@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 
+export const maxDuration = 60
+
 export async function GET(req: NextRequest) {
   const session = await getSession()
   if (!session || session.user.role !== "SUPERADMIN") {
