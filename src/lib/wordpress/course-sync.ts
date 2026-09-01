@@ -1,14 +1,19 @@
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
+import { mapWithConcurrency } from "@/lib/concurrency"
 import {
   assertAccessConfirmationSucceeded,
   assertEnrollmentSucceeded,
   assertStudentHasCourses,
+  bridgeCompanyBatchEnrollAndEnsureAccess,
   bridgeEnrollCourses,
-  bridgeEnsureStudentAccess,
   bridgeGetStudentCourses,
   isWordPressBridgeConfigured,
+  type BridgeCompanyBatchStudentResult,
+  type BridgeStudentCourse,
 } from "@/lib/wordpress/bridge"
+
+const BATCH_VERIFY_CONCURRENCY = 5
 
 type PackageCourseInput = {
   wp_course_id: number
@@ -200,82 +205,77 @@ export type PackageEnrollmentSyncResult = {
   error?: string
 }
 
-export async function syncSingleEmployeePackageEnrollment(
-  employee: { id: string; wp_user_id: number | null },
-  packageCourses: PackageCourseInput[],
+function buildStudentCourseUpsertOperation(
+  employeeId: string,
+  course: BridgeStudentCourse & { wp_course_id: number },
+  deliveryMode: string,
+  syncedAt: Date,
+) {
+  const startedAt = parseBridgeDate(course.started_at)
+  const completedAt = parseBridgeDate(course.completed_at)
+
+  return prisma.employeeCourse.upsert({
+    where: {
+      employee_id_wp_course_id: {
+        employee_id: employeeId,
+        wp_course_id: course.wp_course_id,
+      },
+    },
+    update: {
+      course_name: decodeHtmlEntities(course.title),
+      progress_pct: course.progress_pct,
+      completed: course.completed,
+      access_status: "ACTIVE",
+      access_source: deliveryMode,
+      access_error: null,
+      last_access_attempt: syncedAt,
+      course_start_date: startedAt,
+      completed_at: completedAt,
+      last_synced_at: syncedAt,
+    },
+    create: {
+      employee_id: employeeId,
+      wp_course_id: course.wp_course_id,
+      course_name: decodeHtmlEntities(course.title),
+      progress_pct: course.progress_pct,
+      completed: course.completed,
+      access_status: "ACTIVE",
+      access_source: deliveryMode,
+      access_error: null,
+      last_access_attempt: syncedAt,
+      course_start_date: startedAt,
+      completed_at: completedAt,
+      last_synced_at: syncedAt,
+    },
+  })
+}
+
+async function verifyAndUpsertEmployeeEnrollment(
+  employee: { id: string; wp_user_id: number },
   courseIds: number[],
   courseIdSet: Set<number>,
   deliveryMode: string,
 ): Promise<PackageEnrollmentSyncResult> {
-  const wpUserId = employee.wp_user_id
-
   try {
-    await replaceEmployeePackageCourses(employee.id, packageCourses)
-
-    if (!wpUserId) {
-      return { employeeId: employee.id, wpUserId: 0, enrolledCount: 0, seededOnly: true }
-    }
-
-    if (courseIds.length > 0) {
-      const enrollment = await bridgeEnrollCourses(wpUserId, courseIds)
-      assertEnrollmentSucceeded(enrollment, courseIds)
-      const accessConfirmation = await bridgeEnsureStudentAccess(wpUserId, courseIds)
-      assertAccessConfirmationSucceeded(accessConfirmation, courseIds)
-    }
-
-    const studentCourses = await bridgeGetStudentCourses(wpUserId)
-    if (courseIds.length > 0) {
-      assertStudentHasCourses(studentCourses, courseIds)
-    }
+    const studentCourses = await bridgeGetStudentCourses(employee.wp_user_id)
+    assertStudentHasCourses(studentCourses, courseIds)
 
     const syncedAt = new Date()
     const upsertOperations = studentCourses.courses
       .filter((course) => hasValidWpCourseId(course) && courseIdSet.has(course.wp_course_id))
-      .map((course) => {
-        const startedAt = parseBridgeDate(course.started_at)
-        const completedAt = parseBridgeDate(course.completed_at)
-
-        return prisma.employeeCourse.upsert({
-          where: {
-            employee_id_wp_course_id: {
-              employee_id: employee.id,
-              wp_course_id: course.wp_course_id,
-            },
-          },
-          update: {
-            course_name: decodeHtmlEntities(course.title),
-            progress_pct: course.progress_pct,
-            completed: course.completed,
-            access_status: "ACTIVE",
-            access_source: deliveryMode,
-            access_error: null,
-            last_access_attempt: syncedAt,
-            course_start_date: startedAt,
-            completed_at: completedAt,
-            last_synced_at: syncedAt,
-          },
-          create: {
-            employee_id: employee.id,
-            wp_course_id: course.wp_course_id,
-            course_name: decodeHtmlEntities(course.title),
-            progress_pct: course.progress_pct,
-            completed: course.completed,
-            access_status: "ACTIVE",
-            access_source: deliveryMode,
-            access_error: null,
-            last_access_attempt: syncedAt,
-            course_start_date: startedAt,
-            completed_at: completedAt,
-            last_synced_at: syncedAt,
-          },
-        })
-      })
+      .map((course) =>
+        buildStudentCourseUpsertOperation(employee.id, course, deliveryMode, syncedAt),
+      )
 
     if (upsertOperations.length > 0) {
       await prisma.$transaction(upsertOperations)
     }
 
-    return { employeeId: employee.id, wpUserId, enrolledCount: courseIds.length }
+    return {
+      employeeId: employee.id,
+      wpUserId: employee.wp_user_id,
+      enrolledCount: courseIds.length,
+    }
   } catch (error) {
     const message =
       error instanceof Error
@@ -284,8 +284,137 @@ export async function syncSingleEmployeePackageEnrollment(
 
     await markEmployeeCourseAccessError(employee.id, courseIds, deliveryMode, message)
 
-    return { employeeId: employee.id, wpUserId: wpUserId ?? 0, enrolledCount: 0, error: message }
+    return {
+      employeeId: employee.id,
+      wpUserId: employee.wp_user_id,
+      enrolledCount: 0,
+      error: message,
+    }
   }
+}
+
+export async function syncEmployeeChunkPackageEnrollment(
+  employees: { id: string; wp_user_id: number | null }[],
+  packageCourses: PackageCourseInput[],
+  courseIds: number[],
+  courseIdSet: Set<number>,
+  deliveryMode: string,
+): Promise<PackageEnrollmentSyncResult[]> {
+  const seededResults: PackageEnrollmentSyncResult[] = []
+  const readyEmployees: { id: string; wp_user_id: number | null }[] = []
+
+  await Promise.all(
+    employees.map(async (employee) => {
+      try {
+        await replaceEmployeePackageCourses(employee.id, packageCourses)
+        readyEmployees.push(employee)
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message.slice(0, 500)
+            : "No fue posible actualizar los cursos asignados del empleado."
+
+        await markEmployeeCourseAccessError(employee.id, courseIds, deliveryMode, message)
+        seededResults.push({
+          employeeId: employee.id,
+          wpUserId: employee.wp_user_id ?? 0,
+          enrolledCount: 0,
+          error: message,
+        })
+      }
+    }),
+  )
+
+  const withWpUser = readyEmployees.filter(
+    (employee): employee is { id: string; wp_user_id: number } => Boolean(employee.wp_user_id),
+  )
+  seededResults.push(
+    ...readyEmployees
+      .filter((employee) => !employee.wp_user_id)
+      .map((employee) => ({
+        employeeId: employee.id,
+        wpUserId: 0,
+        enrolledCount: 0,
+        seededOnly: true,
+      })),
+  )
+
+  if (courseIds.length === 0 || withWpUser.length === 0) {
+    return [
+      ...seededResults,
+      ...withWpUser.map((employee) => ({
+        employeeId: employee.id,
+        wpUserId: employee.wp_user_id,
+        enrolledCount: 0,
+        seededOnly: true,
+      })),
+    ]
+  }
+
+  let batchByUserId = new Map<number, BridgeCompanyBatchStudentResult>()
+  let batchError: string | null = null
+
+  try {
+    const batch = await bridgeCompanyBatchEnrollAndEnsureAccess(
+      withWpUser.map((employee) => ({ userId: employee.wp_user_id, courseIds })),
+    )
+    batchByUserId = new Map(batch.students.map((student) => [student.user_id, student]))
+  } catch (error) {
+    batchError =
+      error instanceof Error
+        ? error.message.slice(0, 500)
+        : "No fue posible enrolar el lote en Tutor LMS."
+  }
+
+  const bridgeResults = await mapWithConcurrency(
+    withWpUser,
+    BATCH_VERIFY_CONCURRENCY,
+    async (employee) => {
+      if (batchError) {
+        await markEmployeeCourseAccessError(employee.id, courseIds, deliveryMode, batchError)
+        return {
+          employeeId: employee.id,
+          wpUserId: employee.wp_user_id,
+          enrolledCount: 0,
+          error: batchError,
+        }
+      }
+
+      const studentResult = batchByUserId.get(employee.wp_user_id)
+      if (!studentResult) {
+        const message = "Tutor LMS no devolvio resultado para este alumno en el lote."
+        await markEmployeeCourseAccessError(employee.id, courseIds, deliveryMode, message)
+        return {
+          employeeId: employee.id,
+          wpUserId: employee.wp_user_id,
+          enrolledCount: 0,
+          error: message,
+        }
+      }
+
+      try {
+        assertEnrollmentSucceeded(studentResult, courseIds)
+        assertAccessConfirmationSucceeded(studentResult, courseIds)
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message.slice(0, 500)
+            : "No fue posible confirmar el acceso academico en Tutor LMS."
+
+        await markEmployeeCourseAccessError(employee.id, courseIds, deliveryMode, message)
+        return {
+          employeeId: employee.id,
+          wpUserId: employee.wp_user_id,
+          enrolledCount: 0,
+          error: message,
+        }
+      }
+
+      return verifyAndUpsertEmployeeEnrollment(employee, courseIds, courseIdSet, deliveryMode)
+    },
+  )
+
+  return [...seededResults, ...bridgeResults]
 }
 
 export async function enqueuePackageEnrollmentSyncJob(companyId: string) {
