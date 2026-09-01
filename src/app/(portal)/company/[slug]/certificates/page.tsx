@@ -3,6 +3,7 @@ import { ZipDownloadButton } from "@/components/company/ZipDownloadButton"
 import { SearchInput } from "@/components/shared/SearchInput"
 import { Pagination } from "@/components/shared/Pagination"
 import EmptyState from "@/components/shared/EmptyState"
+import { DataTable } from "@/components/shared/DataTable"
 import { formatDateTime, getInitials } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
 import {
@@ -193,81 +194,69 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
             </form>
           ) : null}
 
-          {certificates.length === 0 ? (
-            <EmptyState message="Aún no hay constancias emitidas para los empleados activos." />
-          ) : filteredCertificates.length === 0 ? (
-            <EmptyState message="Sin resultados para estos filtros." />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-[#f0f0f0] text-left text-xs font-semibold uppercase tracking-wide text-[#94a3b8]">
-                    <th className="px-3 py-2 font-semibold">Empleado</th>
-                    <th className="px-3 py-2 font-semibold">Departamento</th>
-                    <th className="px-3 py-2 font-semibold">Curso</th>
-                    <th className="px-3 py-2 font-semibold">Folio</th>
-                    <th className="hidden px-3 py-2 font-semibold sm:table-cell">Emitido</th>
-                    <th className="px-3 py-2 font-semibold">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedCertificates.map((certificate) => {
-                    return (
-                      <tr
-                        key={certificate.id}
-                        className="border-b border-[#f5f5f5] transition hover:bg-gray-50"
+          <DataTable
+            ariaLabel="Constancias emitidas"
+            columns={[
+              { label: "Empleado" },
+              { label: "Departamento" },
+              { label: "Curso" },
+              { label: "Folio" },
+              { label: "Emitido", className: "hidden sm:table-cell" },
+              { label: "Acciones" },
+            ]}
+            rows={pagedCertificates.map((certificate) => (
+              <tr key={certificate.id} className="bg-white transition-colors hover:bg-gray-50">
+                <td className="rounded-l-lg px-3 py-3">
+                  <span className="min-w-0 truncate font-medium text-[#1a1a1a]">
+                    {certificate.employeeName}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap px-3 py-3 text-[#64748b]">
+                  {certificate.department ?? "—"}
+                </td>
+                <td
+                  className="max-w-[240px] truncate px-3 py-3 text-[#1a1a1a]"
+                  title={certificate.course_name}
+                >
+                  {certificate.course_name}
+                </td>
+                <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-[#64748b]">
+                  {certificate.reference_number}
+                </td>
+                <td className="hidden whitespace-nowrap px-3 py-3 text-xs text-[#94a3b8] sm:table-cell">
+                  {formatDateTime(certificate.issued_at)}
+                </td>
+                <td className="rounded-r-lg whitespace-nowrap px-3 py-3">
+                  <div className="flex gap-2">
+                    {certificate.certificate_url ? (
+                      <a
+                        href={certificate.certificate_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="whitespace-nowrap rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition hover:bg-gray-200"
                       >
-                        <td className="px-3 py-3">
-                          <div className="flex items-center gap-2.5">
-                            <span className="min-w-0 truncate font-medium text-[#1a1a1a]">
-                              {certificate.employeeName}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 text-[#64748b]">
-                          {certificate.department ?? "—"}
-                        </td>
-                        <td
-                          className="max-w-[240px] truncate px-3 py-3 text-[#1a1a1a]"
-                          title={certificate.course_name}
-                        >
-                          {certificate.course_name}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-[#64748b]">
-                          {certificate.reference_number}
-                        </td>
-                        <td className="hidden whitespace-nowrap px-3 py-3 text-xs text-[#94a3b8] sm:table-cell">
-                          {formatDateTime(certificate.issued_at)}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3">
-                          <div className="flex gap-2">
-                            {certificate.certificate_url ? (
-                              <a
-                                href={certificate.certificate_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="whitespace-nowrap rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition hover:bg-gray-200"
-                              >
-                                Ver Diploma
-                              </a>
-                            ) : null}
-                            <a
-                              href={`/api/certificates/${certificate.id}/dc3`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="whitespace-nowrap rounded-xl bg-portal-blue px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-portal-blue-hover"
-                            >
-                              DC-3
-                            </a>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                        Ver Diploma
+                      </a>
+                    ) : null}
+                    <a
+                      href={`/api/certificates/${certificate.id}/dc3`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="whitespace-nowrap rounded-xl bg-portal-blue px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-portal-blue-hover"
+                    >
+                      DC-3
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            emptyState={{
+              message:
+                certificates.length === 0
+                  ? "Aún no hay constancias emitidas para los empleados activos."
+                  : "Sin resultados para estos filtros.",
+            }}
+          />
           <Pagination
             currentPage={issuedCurrentPage}
             totalPages={issuedTotalPages}

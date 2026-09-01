@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { BookOpen, Check, ChevronLeft, ChevronRight, Minus, Search, X } from "lucide-react"
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
-import { PaginatedTable } from "@/components/shared/PaginatedTable"
+import { DataTable } from "@/components/shared/DataTable"
 import ProgressBar from "@/components/shared/ProgressBar"
 import StatusToast from "@/components/shared/StatusToast"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
@@ -117,7 +117,10 @@ export default function AssignmentBoard({
       ? (workingAssignments[selectedCourseId] ?? new Set<string>())
       : new Set<string>()
   const savedSet = useMemo(
-    () => (selectedCourseId != null ? (savedAssignments[selectedCourseId] ?? new Set<string>()) : new Set<string>()),
+    () =>
+      selectedCourseId != null
+        ? (savedAssignments[selectedCourseId] ?? new Set<string>())
+        : new Set<string>(),
     [selectedCourseId, savedAssignments],
   )
   const isDirty =
@@ -189,7 +192,11 @@ export default function AssignmentBoard({
       if (result.ok) {
         setSavedAssignments((prev) => ({ ...prev, [selectedCourseId]: new Set(employeeIds) }))
       }
-      setFeedback({ id: Date.now(), tone: result.ok ? "success" : "error", message: result.message })
+      setFeedback({
+        id: Date.now(),
+        tone: result.ok ? "success" : "error",
+        message: result.message,
+      })
     })
   }
 
@@ -430,7 +437,7 @@ export default function AssignmentBoard({
               ) : null}
             </div>
           ) : (
-            <PaginatedTable
+            <DataTable
               key={employeeFilterKey}
               ariaLabel="Colaboradores"
               pageSize={EMPLOYEES_PAGE_SIZE}

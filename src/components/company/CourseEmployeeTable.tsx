@@ -5,7 +5,7 @@ import { Eye, Search, X } from "lucide-react"
 import Tooltip from "@mui/material/Tooltip"
 import Link from "next/link"
 import EmptyState from "@/components/shared/EmptyState"
-import { PaginatedTable } from "@/components/shared/PaginatedTable"
+import { DataTable } from "@/components/shared/DataTable"
 import ProgressBar from "@/components/shared/ProgressBar"
 import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company/routes"
@@ -95,7 +95,7 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
       ) : filteredRows.length === 0 ? (
         <EmptyState message={`Sin resultados para "${search}".`} />
       ) : (
-        <PaginatedTable
+        <DataTable
           ariaLabel="Progreso por empleado"
           pageSize={TABLE_PAGE_SIZE}
           columns={[

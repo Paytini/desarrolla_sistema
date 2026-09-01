@@ -5,7 +5,7 @@ import Stack from "@mui/material/Stack"
 import { ConsultingFilters } from "@/components/superadmin/ConsultingFilters"
 import { ConsultingRequestActions } from "@/components/superadmin/ConsultingRequestActions"
 import { ConsultingRequestDetailsButton } from "@/components/company/consulting/ConsultingRequestDetailsButton"
-import { ConsultingRequestsTable } from "@/components/shared/ConsultingRequestsTable"
+import { DataTable } from "@/components/shared/DataTable"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Pagination } from "@/components/shared/Pagination"
@@ -97,8 +97,8 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
       CONSULTING_CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method
 
     return (
-      <tr key={request.id} className="border-b border-[#f5f5f5] transition hover:bg-gray-50">
-        <td className="px-3 py-3 text-[#1a1a1a]">{request.company.name}</td>
+      <tr key={request.id} className="bg-white transition-colors hover:bg-gray-50">
+        <td className="rounded-l-lg px-3 py-3 text-[#1a1a1a]">{request.company.name}</td>
         <td className="px-3 py-3">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-portal-blue">
@@ -122,7 +122,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
             labelMap={CONSULTING_STATUS_LABEL}
           />
         </td>
-        <td className="px-3 py-3">
+        <td className="rounded-r-lg px-3 py-3">
           <div className="flex gap-1">
             <ConsultingRequestDetailsButton
               areaLabel={areaLabel}
@@ -214,7 +214,8 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
           </div>
         ) : (
           <>
-            <ConsultingRequestsTable
+            <DataTable
+              ariaLabel="Solicitudes pendientes"
               columns={[
                 { label: "Empresa" },
                 { label: "Área" },

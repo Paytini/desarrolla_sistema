@@ -10,19 +10,15 @@ import {
   Paper,
   Stack,
   Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Tabs,
   Typography,
 } from "@mui/material"
 import { alpha } from "@mui/material/styles"
-import { Pause, Play, Trash2, Users, UserX, type LucideIcon } from "lucide-react"
+import { Pause, Play, Trash2, Users, UserX } from "lucide-react"
 import { ConfirmIconButton } from "@/components/shared/ConfirmIconButton"
 import { SearchInput } from "@/components/shared/SearchInput"
 import { Pagination } from "@/components/shared/Pagination"
+import { DataTable } from "@/components/shared/DataTable"
 import { getInitials } from "@/components/layout/nav-config"
 import {
   deleteEmployeeAsSuperAdminAction,
@@ -53,17 +49,6 @@ export type EmployeeAccessRow = {
   portalActive: boolean | null
   portalLastAccess: string
 }
-
-const headerCellSx = {
-  fontSize: 10,
-  fontWeight: 700,
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  color: "text.secondary",
-  borderBottom: "none",
-} as const
-
-const cellSx = { px: 1.5, py: 2 } as const
 
 function StatusBadge({
   active,
@@ -162,17 +147,6 @@ function SectionHeader({ title, description }: { title: string; description: str
   )
 }
 
-function EmptyState({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
-  return (
-    <Stack spacing={1.5} sx={{ alignItems: "center", py: 8, textAlign: "center" }}>
-      <Avatar sx={{ width: 48, height: 48, bgcolor: "action.hover", color: "text.disabled" }}>
-        <Icon size={20} />
-      </Avatar>
-      <Typography sx={{ fontSize: 13, color: "text.secondary" }}>{label}</Typography>
-    </Stack>
-  )
-}
-
 type EmployeePagination = {
   currentPage: number
   totalPages: number
@@ -260,76 +234,74 @@ export function AccessTabs({
               width={280}
             />
           </Box>
-          {hrUsers.length === 0 ? (
-            <EmptyState icon={Users} label="Aún no hay usuarios HR registrados." />
-          ) : filteredHr.length === 0 ? (
-            <EmptyState icon={Users} label={`Sin resultados para "${hrSearch}".`} />
-          ) : (
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: "action.hover" }}>
-                  <TableCell sx={headerCellSx}>Nombre</TableCell>
-                  <TableCell sx={headerCellSx}>Empresa</TableCell>
-                  <TableCell sx={headerCellSx}>Estado</TableCell>
-                  <TableCell sx={headerCellSx}>Último acceso</TableCell>
-                  <TableCell sx={headerCellSx}>Cupos</TableCell>
-                  <TableCell sx={headerCellSx}>Alta</TableCell>
-                  <TableCell sx={{ ...headerCellSx, textAlign: "right" }}>Acción</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredHr.map((user) => (
-                  <TableRow key={user.id} hover>
-                    <TableCell sx={cellSx}>
-                      <RowIdentity name={user.name} email={user.email} avatarLabel={user.name} />
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 13 }}>{user.companyName}</Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <StatusBadge
-                        active={user.active}
-                        activeLabel="Activo"
-                        inactiveLabel="Suspendido"
-                      />
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {user.lastAccess}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <SeatsRing used={user.usedSeats} total={user.contractedSeats} />
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {user.createdAt}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={{ ...cellSx, textAlign: "right" }}>
-                      <ConfirmIconButton
-                        showLabel
-                        tone={user.active ? "outline" : "brand"}
-                        icon={user.active ? <Pause size={13} /> : <Play size={13} />}
-                        label={user.active ? "Suspender" : "Reactivar"}
-                        title={
-                          user.active ? `¿Suspender a ${user.name}?` : `¿Reactivar a ${user.name}?`
-                        }
-                        description={
-                          user.active
-                            ? "El usuario perderá acceso al portal de inmediato."
-                            : "El usuario recuperará acceso al portal de inmediato."
-                        }
-                        confirmLabel={user.active ? "Sí, suspender" : "Sí, reactivar"}
-                        action={toggleHrUserStatusAction}
-                        hiddenFields={{ user_id: user.id }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          <DataTable
+            ariaLabel="Usuarios HR por empresa"
+            columns={[
+              { label: "Nombre" },
+              { label: "Empresa" },
+              { label: "Estado" },
+              { label: "Último acceso" },
+              { label: "Cupos" },
+              { label: "Alta" },
+              { label: "Acción", className: "text-right" },
+            ]}
+            rows={filteredHr.map((user) => (
+              <tr key={user.id} className="bg-white transition-colors hover:bg-gray-50">
+                <td className="rounded-l-lg px-4 py-3">
+                  <RowIdentity name={user.name} email={user.email} avatarLabel={user.name} />
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 13 }}>{user.companyName}</Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge
+                    active={user.active}
+                    activeLabel="Activo"
+                    inactiveLabel="Suspendido"
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {user.lastAccess}
+                  </Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <SeatsRing used={user.usedSeats} total={user.contractedSeats} />
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {user.createdAt}
+                  </Typography>
+                </td>
+                <td className="rounded-r-lg px-4 py-3 text-right">
+                  <ConfirmIconButton
+                    showLabel
+                    tone={user.active ? "outline" : "brand"}
+                    icon={user.active ? <Pause size={13} /> : <Play size={13} />}
+                    label={user.active ? "Suspender" : "Reactivar"}
+                    title={
+                      user.active ? `¿Suspender a ${user.name}?` : `¿Reactivar a ${user.name}?`
+                    }
+                    description={
+                      user.active
+                        ? "El usuario perderá acceso al portal de inmediato."
+                        : "El usuario recuperará acceso al portal de inmediato."
+                    }
+                    confirmLabel={user.active ? "Sí, suspender" : "Sí, reactivar"}
+                    action={toggleHrUserStatusAction}
+                    hiddenFields={{ user_id: user.id }}
+                  />
+                </td>
+              </tr>
+            ))}
+            emptyState={{
+              icon: <Users size={28} className="text-slate-300" />,
+              message:
+                hrUsers.length === 0
+                  ? "Aún no hay usuarios HR registrados."
+                  : `Sin resultados para "${hrSearch}".`,
+            }}
+          />
         </Stack>
       )}
 
@@ -363,92 +335,90 @@ export function AccessTabs({
               />
             </Box>
           </Box>
-          {employeePagination.totalResults === 0 && !employeeSearch ? (
-            <EmptyState icon={UserX} label="Aún no hay empleados registrados." />
-          ) : employees.length === 0 ? (
-            <EmptyState icon={UserX} label={`Sin resultados para "${employeeSearch}".`} />
-          ) : (
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: "action.hover" }}>
-                  <TableCell sx={headerCellSx}>Empleado</TableCell>
-                  <TableCell sx={headerCellSx}>Empresa</TableCell>
-                  <TableCell sx={headerCellSx}>Estado</TableCell>
-                  <TableCell sx={headerCellSx}>Portal</TableCell>
-                  <TableCell sx={headerCellSx}>WP ID</TableCell>
-                  <TableCell sx={headerCellSx}>Último acceso</TableCell>
-                  <TableCell sx={headerCellSx}>Alta</TableCell>
-                  <TableCell sx={{ ...headerCellSx, textAlign: "right" }}>Acción</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {employees.map((employee) => (
-                  <TableRow key={employee.id} hover>
-                    <TableCell sx={cellSx}>
-                      <RowIdentity
-                        name={`${employee.name} ${employee.lastName}`}
-                        email={employee.email}
-                        avatarLabel={`${employee.name} ${employee.lastName}`}
-                      />
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 13 }}>{employee.companyName}</Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <StatusBadge
-                        active={employee.active}
-                        activeLabel="Activo"
-                        inactiveLabel="Suspendido"
-                      />
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      {employee.portalActive === null ? (
-                        <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                          Sin cuenta
-                        </Typography>
-                      ) : (
-                        <StatusBadge
-                          active={employee.portalActive}
-                          activeLabel="Activo"
-                          inactiveLabel="Suspendido"
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography
-                        sx={{ fontSize: 12, color: "text.secondary", fontFamily: "monospace" }}
-                      >
-                        {employee.wpUserId ?? "—"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {employee.portalLastAccess}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={cellSx}>
-                      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                        {employee.createdAt}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={{ ...cellSx, textAlign: "right" }}>
-                      <ConfirmIconButton
-                        showLabel
-                        tone="outline-destructive"
-                        icon={<Trash2 size={13} />}
-                        label="Eliminar"
-                        title={`¿Eliminar a ${employee.name} ${employee.lastName}?`}
-                        description="Esta acción eliminará al empleado del portal y también intentará remover su usuario en WordPress/Tutor LMS."
-                        confirmLabel="Sí, eliminar"
-                        action={deleteEmployeeAsSuperAdminAction}
-                        hiddenFields={{ empleado_id: employee.id }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          <DataTable
+            ariaLabel="Empleados del portal"
+            columns={[
+              { label: "Empleado" },
+              { label: "Empresa" },
+              { label: "Estado" },
+              { label: "Portal" },
+              { label: "WP ID" },
+              { label: "Último acceso" },
+              { label: "Alta" },
+              { label: "Acción", className: "text-right" },
+            ]}
+            rows={employees.map((employee) => (
+              <tr key={employee.id} className="bg-white transition-colors hover:bg-gray-50">
+                <td className="rounded-l-lg px-4 py-3">
+                  <RowIdentity
+                    name={`${employee.name} ${employee.lastName}`}
+                    email={employee.email}
+                    avatarLabel={`${employee.name} ${employee.lastName}`}
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 13 }}>{employee.companyName}</Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge
+                    active={employee.active}
+                    activeLabel="Activo"
+                    inactiveLabel="Suspendido"
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  {employee.portalActive === null ? (
+                    <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                      Sin cuenta
+                    </Typography>
+                  ) : (
+                    <StatusBadge
+                      active={employee.portalActive}
+                      activeLabel="Activo"
+                      inactiveLabel="Suspendido"
+                    />
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  <Typography
+                    sx={{ fontSize: 12, color: "text.secondary", fontFamily: "monospace" }}
+                  >
+                    {employee.wpUserId ?? "—"}
+                  </Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {employee.portalLastAccess}
+                  </Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {employee.createdAt}
+                  </Typography>
+                </td>
+                <td className="rounded-r-lg px-4 py-3 text-right">
+                  <ConfirmIconButton
+                    showLabel
+                    tone="outline-destructive"
+                    icon={<Trash2 size={13} />}
+                    label="Eliminar"
+                    title={`¿Eliminar a ${employee.name} ${employee.lastName}?`}
+                    description="Esta acción eliminará al empleado del portal y también intentará remover su usuario en WordPress/Tutor LMS."
+                    confirmLabel="Sí, eliminar"
+                    action={deleteEmployeeAsSuperAdminAction}
+                    hiddenFields={{ empleado_id: employee.id }}
+                  />
+                </td>
+              </tr>
+            ))}
+            emptyState={{
+              icon: <UserX size={28} className="text-slate-300" />,
+              message:
+                employeePagination.totalResults === 0 && !employeeSearch
+                  ? "Aún no hay empleados registrados."
+                  : `Sin resultados para "${employeeSearch}".`,
+            }}
+          />
         </Stack>
       )}
       {tab === "employees" && employees.length > 0 && (

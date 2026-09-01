@@ -2,29 +2,60 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useState, type ReactNode } from "react"
+import EmptyState from "@/components/shared/EmptyState"
 
-type PaginatedTableColumn = {
+export type DataTableColumn = {
   label: ReactNode
   className?: string
 }
 
-type PaginatedTableProps = {
-  columns: PaginatedTableColumn[]
-  rows: ReactNode[]
-  pageSize: number
-  ariaLabel: string
+export type DataTableEmptyState = {
+  message: string
+  description?: string
+  icon?: ReactNode
 }
 
-export function PaginatedTable({ columns, rows, pageSize, ariaLabel }: PaginatedTableProps) {
+type DataTableProps = {
+  ariaLabel: string
+  columns: DataTableColumn[]
+  rows: ReactNode[]
+  emptyState?: DataTableEmptyState
+  pageSize?: number
+  className?: string
+}
+
+export function DataTable({
+  ariaLabel,
+  columns,
+  rows,
+  emptyState,
+  pageSize,
+  className = "",
+}: DataTableProps) {
   const [page, setPage] = useState(0)
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize))
+  if (rows.length === 0) {
+    if (!emptyState) return null
+
+    return (
+      <div className="px-3 py-2">
+        <EmptyState
+          icon={emptyState.icon}
+          message={emptyState.message}
+          description={emptyState.description}
+        />
+      </div>
+    )
+  }
+
+  const totalPages = pageSize ? Math.max(1, Math.ceil(rows.length / pageSize)) : 1
   const currentPage = Math.min(page, totalPages - 1)
-  const start = currentPage * pageSize
-  const visibleRows = rows.slice(start, start + pageSize)
+  const visibleRows = pageSize
+    ? rows.slice(currentPage * pageSize, currentPage * pageSize + pageSize)
+    : rows
 
   return (
-    <div className="overflow-x-auto">
+    <div className={`overflow-x-auto ${className}`}>
       <table className="w-full border-separate border-spacing-y-2" aria-label={ariaLabel}>
         <thead>
           <tr>
@@ -42,7 +73,7 @@ export function PaginatedTable({ columns, rows, pageSize, ariaLabel }: Paginated
         <tbody>{visibleRows}</tbody>
       </table>
 
-      {totalPages > 1 ? (
+      {pageSize && totalPages > 1 ? (
         <div className="flex items-center justify-between px-4 pt-2">
           <button
             type="button"

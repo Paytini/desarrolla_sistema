@@ -3,7 +3,7 @@ import EmployeeListFilters from "@/components/company/EmployeeListFilters"
 import EmployeeRowActionsMenu from "@/components/company/EmployeeRowActionsMenu"
 import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModal"
 import ManualEmployeeForm from "@/components/company/ManualEmployeeForm"
-import EmptyState from "@/components/shared/EmptyState"
+import { DataTable } from "@/components/shared/DataTable"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
 import StatusBadge from "@/components/shared/StatusBadge"
@@ -188,132 +188,85 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
           initialStatus={status}
         />
 
-        {totalEmployees === 0 ? (
-          <EmptyState message="Aún no hay empleados registrados para esta empresa." />
-        ) : null}
+        <DataTable
+          ariaLabel="Plantilla de empleados"
+          columns={[
+            { label: "Empleado" },
+            { label: "Correo" },
+            { label: "Puesto", className: "hidden md:table-cell" },
+            { label: "Departamento", className: "hidden md:table-cell" },
+            { label: "Avance", className: "hidden md:table-cell" },
+            { label: "Estado", className: "hidden md:table-cell" },
+            { label: <span className="sr-only">Acciones</span> },
+          ]}
+          rows={pagedEmployees.map((employee) => {
+            const avgProgress = employee.courses.length
+              ? Math.round(
+                  employee.courses.reduce((sum, c) => sum + c.progress_pct, 0) /
+                    employee.courses.length,
+                )
+              : 0
 
-        {totalEmployees > 0 && filteredCount === 0 ? (
-          <EmptyState message="No encontramos empleados que coincidan con ese filtro." />
-        ) : null}
-
-        {filteredCount > 0 ? (
-          <div className="overflow-x-auto">
-            <table
-              className="w-full border-separate border-spacing-y-2"
-              aria-label="Plantilla de empleados"
-            >
-              <thead>
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                  >
-                    Empleado
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                  >
-                    Correo
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
-                  >
-                    Puesto
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
-                  >
-                    Departamento
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
-                  >
-                    Avance
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
-                  >
-                    Estado
-                  </th>
-                  <th scope="col" className="px-4 pb-2">
-                    <span className="sr-only">Acciones</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedEmployees.map((employee) => {
-                  const avgProgress = employee.courses.length
-                    ? Math.round(
-                        employee.courses.reduce((sum, c) => sum + c.progress_pct, 0) /
-                          employee.courses.length,
-                      )
-                    : 0
-
-                  return (
-                    <tr key={employee.id} className="bg-white transition-colors hover:bg-gray-50">
-                      <td className="min-w-0 rounded-l-lg py-3 pl-4">
-                        <p className="truncate text-sm font-semibold text-slate-950">
-                          {employee.first_name} {employee.last_name}
-                        </p>
-                      </td>
-                      <td className="truncate px-4 py-3 text-sm text-slate-500">
-                        {employee.email}
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-slate-700 md:table-cell">
-                        {employee.position ?? "—"}
-                      </td>
-                      <td className="hidden px-4 py-3 text-sm text-slate-700 md:table-cell">
-                        {employee.department ?? "—"}
-                      </td>
-                      <td className="hidden px-4 py-3 md:table-cell">
-                        <div className="flex items-center gap-2">
-                          <ProgressBar
-                            value={avgProgress}
-                            className="w-16 shrink-0 border border-slate-300"
-                          />
-                          <span className="w-9 shrink-0 text-sm tabular-nums text-slate-700">
-                            {avgProgress}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="hidden px-4 py-3 md:table-cell">
-                        <StatusBadge variant={employee.active ? "green" : "slate"} dot>
-                          {employee.active ? "Activo" : "Suspendido"}
-                        </StatusBadge>
-                      </td>
-                      <td className="rounded-r-lg py-3 pr-2 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Tooltip title="Ver perfil">
-                            <Link
-                              href={companyPath(company.slug, `/employees/${employee.id}`)}
-                              aria-label={`Ver perfil de ${employee.first_name} ${employee.last_name}`}
-                              className="inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
-                            >
-                              <Eye size={18} strokeWidth={2} />
-                            </Link>
-                          </Tooltip>
-                          <EmployeeRowActionsMenu
-                            employeeId={employee.id}
-                            employeeName={`${employee.first_name} ${employee.last_name}`.trim()}
-                            employeeActive={employee.active}
-                            returnTo={currentListPath}
-                            toggleEmployeeStatusAction={toggleEmployeeStatusAction}
-                            deleteEmployeeAction={deleteEmployeeAction}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
+            return (
+              <tr key={employee.id} className="bg-white transition-colors hover:bg-gray-50">
+                <td className="min-w-0 rounded-l-lg py-3 pl-4">
+                  <p className="truncate text-sm font-semibold text-slate-950">
+                    {employee.first_name} {employee.last_name}
+                  </p>
+                </td>
+                <td className="truncate px-4 py-3 text-sm text-slate-500">{employee.email}</td>
+                <td className="hidden px-4 py-3 text-sm text-slate-700 md:table-cell">
+                  {employee.position ?? "—"}
+                </td>
+                <td className="hidden px-4 py-3 text-sm text-slate-700 md:table-cell">
+                  {employee.department ?? "—"}
+                </td>
+                <td className="hidden px-4 py-3 md:table-cell">
+                  <div className="flex items-center gap-2">
+                    <ProgressBar
+                      value={avgProgress}
+                      className="w-16 shrink-0 border border-slate-300"
+                    />
+                    <span className="w-9 shrink-0 text-sm tabular-nums text-slate-700">
+                      {avgProgress}%
+                    </span>
+                  </div>
+                </td>
+                <td className="hidden px-4 py-3 md:table-cell">
+                  <StatusBadge variant={employee.active ? "green" : "slate"} dot>
+                    {employee.active ? "Activo" : "Suspendido"}
+                  </StatusBadge>
+                </td>
+                <td className="rounded-r-lg py-3 pr-2 text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Tooltip title="Ver perfil">
+                      <Link
+                        href={companyPath(company.slug, `/employees/${employee.id}`)}
+                        aria-label={`Ver perfil de ${employee.first_name} ${employee.last_name}`}
+                        className="inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
+                      >
+                        <Eye size={18} strokeWidth={2} />
+                      </Link>
+                    </Tooltip>
+                    <EmployeeRowActionsMenu
+                      employeeId={employee.id}
+                      employeeName={`${employee.first_name} ${employee.last_name}`.trim()}
+                      employeeActive={employee.active}
+                      returnTo={currentListPath}
+                      toggleEmployeeStatusAction={toggleEmployeeStatusAction}
+                      deleteEmployeeAction={deleteEmployeeAction}
+                    />
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+          emptyState={
+            totalEmployees === 0
+              ? { message: "Aún no hay empleados registrados para esta empresa." }
+              : { message: "No encontramos empleados que coincidan con ese filtro." }
+          }
+        />
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

@@ -2,7 +2,7 @@ import { PackageRow } from "@/components/superadmin/PackageRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { SearchInput } from "@/components/shared/SearchInput"
-import EmptyState from "@/components/shared/EmptyState"
+import { DataTable } from "@/components/shared/DataTable"
 import { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3/fields"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
@@ -15,7 +15,6 @@ import { SubmitButton } from "@/components/shared/SubmitButton"
 import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
-import Typography from "@mui/material/Typography"
 
 const successMessages: Record<string, string> = {
   paquete_creado: "El paquete se creó correctamente.",
@@ -270,159 +269,45 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
         description={`${sortedPackages.length} paquete${sortedPackages.length !== 1 ? "s" : ""}${hasFilters ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
         noPadding
       >
-        {packages.length === 0 ? (
-          <Box sx={{ px: 3, py: 2 }}>
-            <EmptyState
-              icon={<Package size={28} className="text-slate-300" />}
-              message="Aún no hay paquetes registrados."
-            />
-          </Box>
-        ) : sortedPackages.length === 0 ? (
-          <Box sx={{ px: 3, py: 2 }}>
-            <EmptyState
-              icon={<Package size={28} className="text-slate-300" />}
-              message="Sin resultados para ese filtro."
-            />
-          </Box>
-        ) : (
-          <>
-            <div className="overflow-x-auto px-2">
-              <table
-                className="w-full border-separate border-spacing-y-2"
-                aria-label="Catálogo de paquetes"
-              >
-                <thead>
-                  <tr>
-                    <th scope="col" className="w-8 pb-2" />
-                    <th
-                      scope="col"
-                      className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                    >
-                      Paquete
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:table-cell"
-                    >
-                      Cursos
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
-                    >
-                      Empresas
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                    >
-                      DC-3
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 lg:table-cell"
-                    >
-                      Alta
-                    </th>
-                    <th scope="col" className="px-4 pb-2">
-                      <span className="sr-only">Acciones</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedPackages.map(({ pkg, dc3Complete, dc3Total, dc3AllOk, companyNames }) => (
-                    <PackageRow
-                      key={pkg.id}
-                      pkg={pkg}
-                      dc3Complete={dc3Complete}
-                      dc3Total={dc3Total}
-                      dc3AllOk={dc3AllOk}
-                      companyNames={companyNames}
-                      dc3MetadataByCourseId={dc3MetadataByCourseId}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        <div className="px-2">
+          <DataTable
+            ariaLabel="Catálogo de paquetes"
+            columns={[
+              { label: "", className: "w-8" },
+              { label: "Paquete" },
+              { label: "Cursos", className: "hidden sm:table-cell" },
+              { label: "Empresas", className: "hidden md:table-cell" },
+              { label: "DC-3" },
+              { label: "Alta", className: "hidden lg:table-cell" },
+              { label: <span className="sr-only">Acciones</span> },
+            ]}
+            rows={pagedPackages.map(({ pkg, dc3Complete, dc3Total, dc3AllOk, companyNames }) => (
+              <PackageRow
+                key={pkg.id}
+                pkg={pkg}
+                dc3Complete={dc3Complete}
+                dc3Total={dc3Total}
+                dc3AllOk={dc3AllOk}
+                companyNames={companyNames}
+                dc3MetadataByCourseId={dc3MetadataByCourseId}
+              />
+            ))}
+            emptyState={{
+              icon: <Package size={28} className="text-slate-300" />,
+              message:
+                packages.length === 0
+                  ? "Aún no hay paquetes registrados."
+                  : "Sin resultados para ese filtro.",
+            }}
+          />
+        </div>
 
-            {totalPages > 1 && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  borderTop: "1px solid",
-                  borderColor: "divider",
-                  px: 2.5,
-                  py: 1.5,
-                }}
-              >
-                <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-                  {sortedPackages.length} resultado{sortedPackages.length !== 1 ? "s" : ""} · página{" "}
-                  {currentPage} de {totalPages}
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                  {currentPage > 1 ? (
-                    <Link
-                      href={pageUrl(currentPage - 1)}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        height: 28,
-                        paddingLeft: 10,
-                        paddingRight: 10,
-                        fontSize: 12,
-                        fontWeight: 500,
-                        color: "#0f172a",
-                        textDecoration: "none",
-                        border: "1px solid #e2e8f0",
-                      }}
-                    >
-                      ← Anterior
-                    </Link>
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      disabled
-                      sx={{ height: 28, fontSize: 12 }}
-                    >
-                      ← Anterior
-                    </Button>
-                  )}
-                  {currentPage < totalPages ? (
-                    <Link
-                      href={pageUrl(currentPage + 1)}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        height: 28,
-                        paddingLeft: 10,
-                        paddingRight: 10,
-                        fontSize: 12,
-                        fontWeight: 500,
-                        color: "#0f172a",
-                        textDecoration: "none",
-                        border: "1px solid #e2e8f0",
-                      }}
-                    >
-                      Siguiente →
-                    </Link>
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      disabled
-                      sx={{ height: 28, fontSize: 12 }}
-                    >
-                      Siguiente →
-                    </Button>
-                  )}
-                </Box>
-              </Box>
-            )}
-          </>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalResults={sortedPackages.length}
+          buildPageUrl={pageUrl}
+        />
       </PanelBox>
 
       <PanelBox
@@ -454,138 +339,103 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
         }
         noPadding
       >
-        {filteredCompanies.length === 0 ? (
-          <Box sx={{ py: 6, textAlign: "center" }}>
-            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
-              Sin resultados para ese filtro.
-            </Typography>
-          </Box>
-        ) : (
-          <div className="overflow-x-auto px-2">
-            <table
-              className="w-full border-separate border-spacing-y-2"
-              aria-label="Asignación por empresa"
-            >
-              <thead>
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                  >
-                    Empresa
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                  >
-                    Paquete activo
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                  >
-                    Cambiar paquete
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:table-cell"
-                  >
-                    Empleados
-                  </th>
-                  <th scope="col" className="px-4 pb-2">
-                    <span className="sr-only">Sync</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedCompanies.map((company) => {
-                  const activePackage = company.packages[0]?.package
-                  const syncable = company.employees.filter((e) => e.wp_user_id).length
+        <div className="px-2">
+          <DataTable
+            ariaLabel="Asignación por empresa"
+            columns={[
+              { label: "Empresa" },
+              { label: "Paquete activo" },
+              { label: "Cambiar paquete" },
+              { label: "Empleados", className: "hidden sm:table-cell" },
+              { label: <span className="sr-only">Sync</span> },
+            ]}
+            rows={pagedCompanies.map((company) => {
+              const activePackage = company.packages[0]?.package
+              const syncable = company.employees.filter((e) => e.wp_user_id).length
 
-                  return (
-                    <tr key={company.id} className="bg-white transition-colors hover:bg-gray-50">
-                      <td className="rounded-l-lg px-4 py-3 text-sm font-medium text-slate-900">
-                        {company.name}
-                      </td>
-                      <td className="px-4 py-3">
-                        {activePackage ? (
-                          <span className="inline-flex h-5 items-center rounded-full border border-slate-200 px-2 text-[11px] text-slate-600">
-                            {activePackage.name}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-500">Sin paquete</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Box
-                          component="form"
-                          action={assignPackageToCompanyAction}
-                          sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
-                        >
-                          <input type="hidden" name="empresa_id" value={company.id} />
-                          <Box
-                            component="select"
-                            name="paquete_id"
-                            required
-                            aria-label="Paquete"
-                            defaultValue={company.packages[0]?.package_id ?? ""}
-                            sx={SELECT_SX}
-                          >
-                            <option value="" disabled>
-                              Selecciona un paquete
-                            </option>
-                            {packages.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}
-                              </option>
-                            ))}
-                          </Box>
-                          <Box
-                            component="input"
-                            type="date"
-                            name="fecha_vencimiento"
-                            aria-label="Fecha de vencimiento"
-                            sx={SELECT_SX}
-                          />
-                          <SubmitButton
-                            size="small"
-                            variant="contained"
-                            disableElevation
-                            sx={{ height: 32, px: 2.5, fontSize: "0.8125rem", borderRadius: "8px" }}
-                          >
-                            Asignar
-                          </SubmitButton>
-                        </Box>
-                      </td>
-                      <td className="hidden px-4 py-3 text-xs text-slate-500 sm:table-cell">
-                        {company.employees.length} empleados · {syncable} con WP ID
-                      </td>
-                      <td className="rounded-r-lg px-4 py-3 text-right">
-                        <form action={syncPackageToCompanyEmployeesAction}>
-                          <input type="hidden" name="empresa_id" value={company.id} />
-                          <SubmitButton
-                            variant="outlined"
-                            size="small"
-                            startIcon={<RotateCw size={11} />}
-                            sx={{
-                              height: 32,
-                              fontSize: 12,
-                              borderColor: "divider",
-                              color: "text.secondary",
-                              "&:hover": { borderColor: "text.secondary" },
-                            }}
-                          >
-                            Sincronizar
-                          </SubmitButton>
-                        </form>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+              return (
+                <tr key={company.id} className="bg-white transition-colors hover:bg-gray-50">
+                  <td className="rounded-l-lg px-4 py-3 text-sm font-medium text-slate-900">
+                    {company.name}
+                  </td>
+                  <td className="px-4 py-3">
+                    {activePackage ? (
+                      <span className="inline-flex h-5 items-center rounded-full border border-slate-200 px-2 text-[11px] text-slate-600">
+                        {activePackage.name}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-500">Sin paquete</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Box
+                      component="form"
+                      action={assignPackageToCompanyAction}
+                      sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
+                    >
+                      <input type="hidden" name="empresa_id" value={company.id} />
+                      <Box
+                        component="select"
+                        name="paquete_id"
+                        required
+                        aria-label="Paquete"
+                        defaultValue={company.packages[0]?.package_id ?? ""}
+                        sx={SELECT_SX}
+                      >
+                        <option value="" disabled>
+                          Selecciona un paquete
+                        </option>
+                        {packages.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </Box>
+                      <Box
+                        component="input"
+                        type="date"
+                        name="fecha_vencimiento"
+                        aria-label="Fecha de vencimiento"
+                        sx={SELECT_SX}
+                      />
+                      <SubmitButton
+                        size="small"
+                        variant="contained"
+                        disableElevation
+                        sx={{ height: 32, px: 2.5, fontSize: "0.8125rem", borderRadius: "8px" }}
+                      >
+                        Asignar
+                      </SubmitButton>
+                    </Box>
+                  </td>
+                  <td className="hidden px-4 py-3 text-xs text-slate-500 sm:table-cell">
+                    {company.employees.length} empleados · {syncable} con WP ID
+                  </td>
+                  <td className="rounded-r-lg px-4 py-3 text-right">
+                    <form action={syncPackageToCompanyEmployeesAction}>
+                      <input type="hidden" name="empresa_id" value={company.id} />
+                      <SubmitButton
+                        variant="outlined"
+                        size="small"
+                        startIcon={<RotateCw size={11} />}
+                        sx={{
+                          height: 32,
+                          fontSize: 12,
+                          borderColor: "divider",
+                          color: "text.secondary",
+                          "&:hover": { borderColor: "text.secondary" },
+                        }}
+                      >
+                        Sincronizar
+                      </SubmitButton>
+                    </form>
+                  </td>
+                </tr>
+              )
+            })}
+            emptyState={{ message: "Sin resultados para ese filtro." }}
+          />
+        </div>
         <Pagination
           currentPage={companiesCurrentPage}
           totalPages={companiesTotalPages}
