@@ -62,9 +62,9 @@ export async function createCompanyAction(
   }
 
   if (
-    logoFile &&
-    (!COMPANY_LOGO_ALLOWED_TYPES.includes(logoFile.type) ||
-      logoFile.size > COMPANY_LOGO_MAX_SIZE_BYTES)
+    !logoFile ||
+    !COMPANY_LOGO_ALLOWED_TYPES.includes(logoFile.type) ||
+    logoFile.size > COMPANY_LOGO_MAX_SIZE_BYTES
   ) {
     return { error: "logo" }
   }
@@ -212,20 +212,18 @@ export async function createCompanyAction(
       excludeUsuarioId: actor.userId,
     })
 
-    if (logoFile) {
-      try {
-        const logoUrl = await uploadCompanyLogo(createdResult.companyId, logoFile)
-        await prisma.company.update({
-          where: { id: createdResult.companyId },
-          data: { logo_url: logoUrl },
-        })
-        revalidateTag(companyCacheRootTag(createdResult.companyId), "max")
-      } catch (error) {
-        console.error("createCompanyAction logo upload failed", {
-          companyId: createdResult.companyId,
-          error,
-        })
-      }
+    try {
+      const logoUrl = await uploadCompanyLogo(createdResult.companyId, logoFile)
+      await prisma.company.update({
+        where: { id: createdResult.companyId },
+        data: { logo_url: logoUrl },
+      })
+      revalidateTag(companyCacheRootTag(createdResult.companyId), "max")
+    } catch (error) {
+      console.error("createCompanyAction logo upload failed", {
+        companyId: createdResult.companyId,
+        error,
+      })
     }
   })
 
