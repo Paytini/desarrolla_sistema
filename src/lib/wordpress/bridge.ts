@@ -338,6 +338,7 @@ type BridgeRequestInit = RequestInit & { retryable?: boolean; timeoutMs?: number
 
 const BRIDGE_TIMEOUT_MS = 15_000
 const BRIDGE_READ_TIMEOUT_MS = 8_000
+const BRIDGE_COMPANY_BATCH_TIMEOUT_MS = 90_000
 const BRIDGE_RETRY_BACKOFF_MS = [500, 2000]
 
 function sleep(ms: number) {
@@ -480,6 +481,7 @@ export async function bridgeCompanyBatchEnrollAndEnsureAccess(
 ) {
   return bridgeRequest<BridgeCompanyBatchEnrollmentResponse>("/enrollments/company-batch", {
     method: "POST",
+    timeoutMs: BRIDGE_COMPANY_BATCH_TIMEOUT_MS,
     body: JSON.stringify({
       students: students.map((student) => ({
         user_id: student.userId,
