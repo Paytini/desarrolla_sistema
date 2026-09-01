@@ -34,31 +34,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!credentials?.email || !credentials?.password) return null
 
         const remoteIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-        const captchaValid = await verifyTurnstileToken(
-          credentials.turnstileToken as string | undefined,
-          remoteIp,
-        )
-        if (!captchaValid) return null
 
         try {
-          const usuario = await prisma.user.findUnique({
-            where: { email: credentials.email as string },
-            include: {
-              company: {
-                select: {
-                  name: true,
-                  slug: true,
-                  active: true,
-                  packages: {
-                    where: { active: true },
-                    select: { expiration_date: true },
-                    take: 1,
+          const [captchaValid, usuario] = await Promise.all([
+            verifyTurnstileToken(credentials.turnstileToken as string | undefined, remoteIp),
+            prisma.user.findUnique({
+              where: { email: credentials.email as string },
+              include: {
+                company: {
+                  select: {
+                    name: true,
+                    slug: true,
+                    active: true,
+                    packages: {
+                      where: { active: true },
+                      select: { expiration_date: true },
+                      take: 1,
+                    },
                   },
                 },
               },
-            },
-          })
+            }),
+          ])
 
+          if (!captchaValid) return null
           if (!usuario || !usuario.active) return null
 
           const valida = await bcrypt.compare(credentials.password as string, usuario.password_hash)
