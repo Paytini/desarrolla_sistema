@@ -14,6 +14,8 @@ import {
 } from "@/lib/wordpress/bridge"
 
 const BATCH_VERIFY_CONCURRENCY = 5
+const COMPANY_BATCH_SIZE = 5
+const COMPANY_BATCH_CONCURRENCY = 2
 
 type PackageCourseInput = {
   wp_course_id: number
@@ -351,25 +353,39 @@ export async function syncEmployeeChunkPackageEnrollment(
     ]
   }
 
-  let batchByUserId = new Map<number, BridgeCompanyBatchStudentResult>()
-  let batchError: string | null = null
-
-  try {
-    const batch = await bridgeCompanyBatchEnrollAndEnsureAccess(
-      withWpUser.map((employee) => ({ userId: employee.wp_user_id, courseIds })),
-    )
-    batchByUserId = new Map(batch.students.map((student) => [student.user_id, student]))
-  } catch (error) {
-    batchError =
-      error instanceof Error
-        ? error.message.slice(0, 500)
-        : "No fue posible enrolar el lote en Tutor LMS."
+  const subBatches: { id: string; wp_user_id: number }[][] = []
+  for (let i = 0; i < withWpUser.length; i += COMPANY_BATCH_SIZE) {
+    subBatches.push(withWpUser.slice(i, i + COMPANY_BATCH_SIZE))
   }
+
+  const batchByUserId = new Map<number, BridgeCompanyBatchStudentResult>()
+  const batchErrorByUserId = new Map<number, string>()
+
+  await mapWithConcurrency(subBatches, COMPANY_BATCH_CONCURRENCY, async (subBatch) => {
+    try {
+      const batch = await bridgeCompanyBatchEnrollAndEnsureAccess(
+        subBatch.map((employee) => ({ userId: employee.wp_user_id, courseIds })),
+      )
+      for (const student of batch.students) {
+        batchByUserId.set(student.user_id, student)
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message.slice(0, 500)
+          : "No fue posible enrolar el lote en Tutor LMS."
+
+      for (const employee of subBatch) {
+        batchErrorByUserId.set(employee.wp_user_id, message)
+      }
+    }
+  })
 
   const bridgeResults = await mapWithConcurrency(
     withWpUser,
     BATCH_VERIFY_CONCURRENCY,
     async (employee) => {
+      const batchError = batchErrorByUserId.get(employee.wp_user_id)
       if (batchError) {
         await markEmployeeCourseAccessError(employee.id, courseIds, deliveryMode, batchError)
         return {
