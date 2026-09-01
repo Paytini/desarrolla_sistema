@@ -564,9 +564,10 @@ export function assertStudentHasCourses(
   )
 }
 
-export async function bridgeGetStudentCourses(studentId: number) {
+export async function bridgeGetStudentCourses(studentId: number, timeoutMs?: number) {
   return bridgeRequest<BridgeStudentCoursesResponse>(`/students/${studentId}/courses`, {
     method: "GET",
+    timeoutMs,
   })
 }
 

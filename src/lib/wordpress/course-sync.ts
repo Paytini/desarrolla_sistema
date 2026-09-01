@@ -16,6 +16,7 @@ import {
 const BATCH_VERIFY_CONCURRENCY = 5
 const COMPANY_BATCH_SIZE = 5
 const COMPANY_BATCH_CONCURRENCY = 2
+const BATCH_VERIFY_STUDENT_COURSES_TIMEOUT_MS = 60_000
 
 type PackageCourseInput = {
   wp_course_id: number
@@ -259,7 +260,10 @@ async function verifyAndUpsertEmployeeEnrollment(
   deliveryMode: string,
 ): Promise<PackageEnrollmentSyncResult> {
   try {
-    const studentCourses = await bridgeGetStudentCourses(employee.wp_user_id)
+    const studentCourses = await bridgeGetStudentCourses(
+      employee.wp_user_id,
+      BATCH_VERIFY_STUDENT_COURSES_TIMEOUT_MS,
+    )
     assertStudentHasCourses(studentCourses, courseIds)
 
     const syncedAt = new Date()
