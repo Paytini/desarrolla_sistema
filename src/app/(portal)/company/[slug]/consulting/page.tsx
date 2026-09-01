@@ -5,7 +5,7 @@ import { CalendarClock, CalendarPlus } from "lucide-react"
 import { cancelConsultingRequestAction } from "./actions"
 import { CancelConsultingRequestButton } from "@/components/company/consulting/CancelConsultingRequestButton"
 import { ConsultingRequestDetailsButton } from "@/components/company/consulting/ConsultingRequestDetailsButton"
-import { ConsultingRequestsTable } from "@/components/shared/ConsultingRequestsTable"
+import { DataTable } from "@/components/shared/DataTable"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Pagination } from "@/components/shared/Pagination"
 import { StatusLabel } from "@/components/shared/StatusLabel"
@@ -87,8 +87,8 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
     const Icon = areaOption?.icon ?? CalendarClock
 
     return (
-      <tr key={request.id} className="border-b border-[#f5f5f5] transition hover:bg-gray-50">
-        <td className="px-3 py-3">
+      <tr key={request.id} className="bg-white transition-colors hover:bg-gray-50">
+        <td className="rounded-l-lg px-3 py-3">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-portal-blue">
               <Icon size={16} />
@@ -113,7 +113,7 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             labelMap={CONSULTING_STATUS_LABEL}
           />
         </td>
-        <td className="px-3 py-3">
+        <td className="rounded-r-lg px-3 py-3">
           <div className="flex gap-1">
             <ConsultingRequestDetailsButton
               areaLabel={areaOption?.label ?? request.area}
@@ -207,7 +207,8 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             </div>
           ) : (
             <>
-              <ConsultingRequestsTable
+              <DataTable
+                ariaLabel="Consultorías próximas"
                 columns={[
                   { label: "Área" },
                   { label: "Fecha y hora" },

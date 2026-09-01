@@ -2,7 +2,7 @@ import { FileQuestion } from "lucide-react"
 import { BackButton } from "@/components/shared/BackButton"
 import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
-import { PaginatedTable } from "@/components/shared/PaginatedTable"
+import { DataTable } from "@/components/shared/DataTable"
 import ProgressBar from "@/components/shared/ProgressBar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { StatusLabel } from "@/components/shared/StatusLabel"
@@ -174,7 +174,7 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
             description="Este empleado aún no ha presentado ningún examen en sus cursos asignados."
           />
         ) : (
-          <PaginatedTable
+          <DataTable
             ariaLabel="Intentos de examen"
             pageSize={TABLE_PAGE_SIZE}
             columns={[
