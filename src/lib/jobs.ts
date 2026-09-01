@@ -1,10 +1,7 @@
 import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:crypto"
 import { prisma } from "@/lib/prisma"
 import { mapWithConcurrency } from "@/lib/concurrency"
-import {
-  syncSingleEmployeePackageEnrollment,
-  type PackageEnrollmentSyncResult,
-} from "@/lib/wordpress/course-sync"
+import { syncEmployeeChunkPackageEnrollment } from "@/lib/wordpress/course-sync"
 import { bridgeUpsertEmployee } from "@/lib/wordpress/bridge"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
 import { sendEmail } from "@/lib/ses"
@@ -338,17 +335,12 @@ async function processPackageEnrollmentSyncJob(
     select: { id: true, wp_user_id: true },
   })
 
-  const results: PackageEnrollmentSyncResult[] = await mapWithConcurrency(
+  const results = await syncEmployeeChunkPackageEnrollment(
     employees,
-    JOB_CONCURRENCY,
-    (employee) =>
-      syncSingleEmployeePackageEnrollment(
-        employee,
-        packageCourses,
-        courseIds,
-        courseIdSet,
-        activePackage.package.delivery_mode,
-      ),
+    packageCourses,
+    courseIds,
+    courseIdSet,
+    activePackage.package.delivery_mode,
   )
 
   const newProcessedIds = [...processedIds, ...chunkIds]

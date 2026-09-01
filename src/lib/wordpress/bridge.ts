@@ -97,6 +97,27 @@ export type BridgeEnsureAccessResponse = {
   }>
 }
 
+export type BridgeCompanyBatchStudentInput = {
+  userId: number
+  courseIds: number[]
+}
+
+export type BridgeCompanyBatchStudentResult = {
+  user_id: number
+  student_id: number
+  enrolled_course_ids: number[]
+  completed_course_ids: number[]
+  already_active_ids: number[]
+  failed_course_ids: Array<{
+    course_id: number
+    message: string
+  }>
+}
+
+export type BridgeCompanyBatchEnrollmentResponse = {
+  students: BridgeCompanyBatchStudentResult[]
+}
+
 export type BridgeQuizAttempt = {
   attempt_id: number
   quiz_id: number
@@ -450,6 +471,20 @@ export async function bridgeEnrollCourses(userId: number, courseIds: number[]) {
     body: JSON.stringify({
       user_id: userId,
       course_ids: courseIds,
+    }),
+  })
+}
+
+export async function bridgeCompanyBatchEnrollAndEnsureAccess(
+  students: BridgeCompanyBatchStudentInput[],
+) {
+  return bridgeRequest<BridgeCompanyBatchEnrollmentResponse>("/enrollments/company-batch", {
+    method: "POST",
+    body: JSON.stringify({
+      students: students.map((student) => ({
+        user_id: student.userId,
+        course_ids: student.courseIds,
+      })),
     }),
   })
 }

@@ -494,6 +494,16 @@ function d360_bridge_register_rest_routes() {
 
 	register_rest_route(
 		'desarrolla360/v1',
+		'/enrollments/company-batch',
+		array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => 'd360_bridge_company_batch_enrollments',
+			'permission_callback' => 'd360_bridge_rest_permissions',
+		)
+	);
+
+	register_rest_route(
+		'desarrolla360/v1',
 		'/students/(?P<student_id>\d+)/courses',
 		array(
 			'methods'             => WP_REST_Server::READABLE,
@@ -2136,6 +2146,39 @@ function d360_bridge_debug_extract_course_ids_from_meta_value( $value ) {
 	return array();
 }
 
+function d360_bridge_enroll_single_course( $user_id, $course_id ) {
+	$direct_access = d360_bridge_sync_direct_course_access( $user_id, $course_id );
+	if ( ! is_wp_error( $direct_access ) ) {
+		return true;
+	}
+
+	$response = d360_bridge_dispatch_tutor_request(
+		'POST',
+		'/tutor/v1/enrollments',
+		array(
+			'user_id'   => $user_id,
+			'course_id' => $course_id,
+		)
+	);
+
+	if ( is_wp_error( $response ) && d360_bridge_is_permission_error( $response ) ) {
+		$response = d360_bridge_dispatch_tutor_http_request(
+			'POST',
+			'/tutor/v1/enrollments',
+			array(
+				'user_id'   => $user_id,
+				'course_id' => $course_id,
+			)
+		);
+	}
+
+	if ( is_wp_error( $response ) ) {
+		return $response;
+	}
+
+	return true;
+}
+
 function d360_bridge_batch_enrollments( WP_REST_Request $request ) {
 	$params    = $request->get_json_params();
 	$params    = is_array( $params ) ? $params : array();
@@ -2159,36 +2202,11 @@ function d360_bridge_batch_enrollments( WP_REST_Request $request ) {
 			continue;
 		}
 
-		$direct_access = d360_bridge_sync_direct_course_access( $user_id, $course_id );
-		if ( ! is_wp_error( $direct_access ) ) {
-			$enrolled[] = $course_id;
-			continue;
-		}
-
-		$response = d360_bridge_dispatch_tutor_request(
-			'POST',
-			'/tutor/v1/enrollments',
-			array(
-				'user_id'   => $user_id,
-				'course_id' => $course_id,
-			)
-		);
-
-		if ( is_wp_error( $response ) && d360_bridge_is_permission_error( $response ) ) {
-			$response = d360_bridge_dispatch_tutor_http_request(
-				'POST',
-				'/tutor/v1/enrollments',
-				array(
-					'user_id'   => $user_id,
-					'course_id' => $course_id,
-				)
-			);
-		}
-
-		if ( is_wp_error( $response ) ) {
+		$result = d360_bridge_enroll_single_course( $user_id, $course_id );
+		if ( is_wp_error( $result ) ) {
 			$failed[] = array(
 				'course_id' => $course_id,
-				'message'   => $response->get_error_message(),
+				'message'   => $result->get_error_message(),
 			);
 			continue;
 		}
@@ -2203,6 +2221,101 @@ function d360_bridge_batch_enrollments( WP_REST_Request $request ) {
 			'failed_course_ids'   => $failed,
 		)
 	);
+}
+
+function d360_bridge_company_batch_enrollments( WP_REST_Request $request ) {
+	$params   = $request->get_json_params();
+	$params   = is_array( $params ) ? $params : array();
+	$students = isset( $params['students'] ) && is_array( $params['students'] ) ? $params['students'] : array();
+
+	if ( empty( $students ) ) {
+		return new WP_Error(
+			'd360_bridge_invalid_company_batch',
+			'students es obligatorio y debe tener al menos un elemento.',
+			array( 'status' => 400 )
+		);
+	}
+
+	if ( count( $students ) > 25 ) {
+		return new WP_Error(
+			'd360_bridge_company_batch_too_large',
+			'Maximo 25 estudiantes por lote.',
+			array( 'status' => 400 )
+		);
+	}
+
+	$results = array();
+
+	foreach ( $students as $student ) {
+		$student    = is_array( $student ) ? $student : array();
+		$user_id    = isset( $student['user_id'] ) ? absint( $student['user_id'] ) : 0;
+		$course_ids = isset( $student['course_ids'] ) && is_array( $student['course_ids'] ) ? $student['course_ids'] : array();
+
+		if ( ! $user_id || empty( $course_ids ) ) {
+			$results[] = array(
+				'user_id'              => $user_id,
+				'student_id'           => $user_id,
+				'enrolled_course_ids'  => array(),
+				'completed_course_ids' => array(),
+				'already_active_ids'   => array(),
+				'failed_course_ids'    => array(
+					array(
+						'course_id' => 0,
+						'message'   => 'user_id y course_ids son obligatorios.',
+					),
+				),
+			);
+			continue;
+		}
+
+		$enrolled   = array();
+		$completed  = array();
+		$already_ok = array();
+		$failed     = array();
+
+		foreach ( $course_ids as $course_id ) {
+			$course_id = absint( $course_id );
+			if ( ! $course_id ) {
+				continue;
+			}
+
+			$enroll_result = d360_bridge_enroll_single_course( $user_id, $course_id );
+			if ( is_wp_error( $enroll_result ) ) {
+				$failed[] = array(
+					'course_id' => $course_id,
+					'message'   => $enroll_result->get_error_message(),
+				);
+				continue;
+			}
+			$enrolled[] = $course_id;
+
+			$access_result = d360_bridge_ensure_single_course_access( $user_id, $course_id );
+			if ( is_wp_error( $access_result ) ) {
+				$failed[] = array(
+					'course_id' => $course_id,
+					'message'   => $access_result->get_error_message(),
+				);
+				continue;
+			}
+
+			if ( 'already_active' === $access_result ) {
+				$already_ok[] = $course_id;
+			} else {
+				$completed[] = $course_id;
+			}
+		}
+
+		$results[] = array(
+			'user_id'              => $user_id,
+			'student_id'           => $user_id,
+			'enrolled_course_ids'  => $enrolled,
+			'completed_course_ids' => $completed,
+			'already_active_ids'   => $already_ok,
+			'failed_course_ids'    => $failed,
+		);
+	}
+
+	return rest_ensure_response( array( 'students' => $results ) );
 }
 
 function d360_bridge_student_courses( WP_REST_Request $request ) {
@@ -2414,6 +2527,75 @@ function d360_bridge_student_diagnostics( WP_REST_Request $request ) {
 	);
 }
 
+function d360_bridge_ensure_single_course_access( $student_id, $course_id ) {
+	$direct_access = d360_bridge_sync_direct_course_access( $student_id, $course_id );
+	if ( ! is_wp_error( $direct_access ) ) {
+		return ! empty( $direct_access['already_completed'] ) ? 'already_active' : 'completed';
+	}
+
+	$enrollments_response = d360_bridge_dispatch_tutor_request(
+		'GET',
+		'/tutor/v1/enrollments',
+		array(
+			'course_id' => $course_id,
+		)
+	);
+
+	if ( is_wp_error( $enrollments_response ) && d360_bridge_is_permission_error( $enrollments_response ) ) {
+		$enrollments_response = d360_bridge_dispatch_tutor_http_request(
+			'GET',
+			'/tutor/v1/enrollments',
+			array(
+				'course_id' => $course_id,
+			)
+		);
+	}
+
+	if ( is_wp_error( $enrollments_response ) ) {
+		return $enrollments_response;
+	}
+
+	$matched_enrollment = d360_bridge_find_student_enrollment( $student_id, $course_id, $enrollments_response );
+
+	if ( empty( $matched_enrollment ) || empty( $matched_enrollment['enrollment_id'] ) ) {
+		return new WP_Error(
+			'd360_bridge_no_enrollment',
+			'Tutor LMS no devolvio una matricula utilizable para este alumno.'
+		);
+	}
+
+	$status = isset( $matched_enrollment['status'] ) ? strtolower( (string) $matched_enrollment['status'] ) : '';
+	if ( 'completed' === $status ) {
+		return 'already_active';
+	}
+
+	$complete_response = d360_bridge_dispatch_tutor_request(
+		'PUT',
+		'/tutor/v1/enrollments/completed',
+		array(
+			'enrollment_id' => (int) $matched_enrollment['enrollment_id'],
+			'status'        => 'completed',
+		)
+	);
+
+	if ( is_wp_error( $complete_response ) && d360_bridge_is_permission_error( $complete_response ) ) {
+		$complete_response = d360_bridge_dispatch_tutor_http_request(
+			'PUT',
+			'/tutor/v1/enrollments/completed',
+			array(
+				'enrollment_id' => (int) $matched_enrollment['enrollment_id'],
+				'status'        => 'completed',
+			)
+		);
+	}
+
+	if ( is_wp_error( $complete_response ) ) {
+		return $complete_response;
+	}
+
+	return 'completed';
+}
+
 function d360_bridge_ensure_student_access( WP_REST_Request $request ) {
 	$student_id = absint( $request['student_id'] );
 	$params     = $request->get_json_params();
@@ -2439,87 +2621,21 @@ function d360_bridge_ensure_student_access( WP_REST_Request $request ) {
 			continue;
 		}
 
-		$direct_access = d360_bridge_sync_direct_course_access( $student_id, $course_id );
-		if ( ! is_wp_error( $direct_access ) ) {
-			if ( ! empty( $direct_access['already_completed'] ) ) {
-				$already_ok[] = $course_id;
-			} else {
-				$completed[] = $course_id;
-			}
-			continue;
-		}
+		$result = d360_bridge_ensure_single_course_access( $student_id, $course_id );
 
-		$enrollments_response = d360_bridge_dispatch_tutor_request(
-			'GET',
-			'/tutor/v1/enrollments',
-			array(
-				'course_id' => $course_id,
-			)
-		);
-
-		if ( is_wp_error( $enrollments_response ) && d360_bridge_is_permission_error( $enrollments_response ) ) {
-			$enrollments_response = d360_bridge_dispatch_tutor_http_request(
-				'GET',
-				'/tutor/v1/enrollments',
-				array(
-					'course_id' => $course_id,
-				)
-			);
-		}
-
-		if ( is_wp_error( $enrollments_response ) ) {
+		if ( is_wp_error( $result ) ) {
 			$failed[] = array(
 				'course_id' => $course_id,
-				'message'   => $enrollments_response->get_error_message(),
+				'message'   => $result->get_error_message(),
 			);
 			continue;
 		}
 
-		$matched_enrollment = d360_bridge_find_student_enrollment( $student_id, $course_id, $enrollments_response );
-
-		if ( empty( $matched_enrollment ) || empty( $matched_enrollment['enrollment_id'] ) ) {
-			$failed[] = array(
-				'course_id' => $course_id,
-				'message'   => 'Tutor LMS no devolvio una matricula utilizable para este alumno.',
-			);
-			continue;
-		}
-
-		$status = isset( $matched_enrollment['status'] ) ? strtolower( (string) $matched_enrollment['status'] ) : '';
-		if ( 'completed' === $status ) {
+		if ( 'already_active' === $result ) {
 			$already_ok[] = $course_id;
-			continue;
+		} else {
+			$completed[] = $course_id;
 		}
-
-		$complete_response = d360_bridge_dispatch_tutor_request(
-			'PUT',
-			'/tutor/v1/enrollments/completed',
-			array(
-				'enrollment_id' => (int) $matched_enrollment['enrollment_id'],
-				'status'        => 'completed',
-			)
-		);
-
-		if ( is_wp_error( $complete_response ) && d360_bridge_is_permission_error( $complete_response ) ) {
-			$complete_response = d360_bridge_dispatch_tutor_http_request(
-				'PUT',
-				'/tutor/v1/enrollments/completed',
-				array(
-					'enrollment_id' => (int) $matched_enrollment['enrollment_id'],
-					'status'        => 'completed',
-				)
-			);
-		}
-
-		if ( is_wp_error( $complete_response ) ) {
-			$failed[] = array(
-				'course_id' => $course_id,
-				'message'   => $complete_response->get_error_message(),
-			);
-			continue;
-		}
-
-		$completed[] = $course_id;
 	}
 
 	return rest_ensure_response(
