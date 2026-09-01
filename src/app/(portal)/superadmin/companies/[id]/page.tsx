@@ -13,14 +13,10 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
+import { DataTable } from "@/components/shared/DataTable"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
 import Divider from "@mui/material/Divider"
-import Table from "@mui/material/Table"
-import TableBody from "@mui/material/TableBody"
-import TableCell from "@mui/material/TableCell"
-import TableHead from "@mui/material/TableHead"
-import TableRow from "@mui/material/TableRow"
 import Typography from "@mui/material/Typography"
 
 const brandingSuccessMessages: Record<string, string> = {
@@ -76,18 +72,6 @@ function getInitials(firstName: string, lastName: string) {
 function progressColor(pct: number) {
   return pct >= 75 ? "#1a4f8a" : pct >= 40 ? "#d97706" : "#dc2626"
 }
-
-const TH_SX = {
-  fontSize: "10px",
-  fontWeight: 700,
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.1em",
-  color: "#94a3b8",
-  bgcolor: "#fafafa",
-  borderBottom: "1px solid #f1f5f9",
-}
-
-const TD_SX = { borderBottom: "1px solid #f8fafc" }
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -575,10 +559,11 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
         </Box>
       </Box>
 
-      <Box
-        sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "320px 1fr" } }}
-      >
-        <PanelBox title="Logotipo de la empresa" description="Logo que observará esta empresa dentro del portal">
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "320px 1fr" } }}>
+        <PanelBox
+          title="Logotipo de la empresa"
+          description="Logo que observará esta empresa dentro del portal"
+        >
           <CompanyBrandingForm
             companyId={company.id}
             currentLogoUrl={company.logo_url}
@@ -597,47 +582,27 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
           }
           noPadding
         >
-        {employeeStats.length === 0 ? (
-          <Box sx={{ px: 3, py: 5 }}>
-            <Box
-              sx={{
-                borderRadius: 1.5,
-                border: "1px dashed #e2e8f0",
-                bgcolor: "#fafafa",
-                py: 4,
-                textAlign: "center",
-              }}
-            >
-              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
-                Sin empleados activos registrados.
-              </Typography>
-            </Box>
-          </Box>
-        ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                {["Empleado", "Progreso", "Cursos", "Constancias", "WP sync", "Última sync"].map(
-                  (h) => (
-                    <TableCell key={h} sx={TH_SX}>
-                      {h}
-                    </TableCell>
-                  ),
-                )}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pagedEmployeeDetails.map((e) => (
-                <TableRow
+          <div className="px-2">
+            <DataTable
+              ariaLabel="Detalle de empleados"
+              columns={[
+                { label: "Empleado" },
+                { label: "Progreso" },
+                { label: "Cursos" },
+                { label: "Constancias" },
+                { label: "WP sync" },
+                { label: "Última sync" },
+              ]}
+              rows={pagedEmployeeDetails.map((e) => (
+                <tr
                   key={e.id}
-                  sx={{
-                    height: 48,
-                    bgcolor: e.hasError ? "rgba(254,242,242,0.4)" : "transparent",
-                    "&:hover": { bgcolor: "rgba(248,250,252,0.5)" },
-                    ...TD_SX,
-                  }}
+                  className={
+                    e.hasError
+                      ? "bg-red-50/40 transition-colors hover:bg-slate-50/50"
+                      : "bg-white transition-colors hover:bg-gray-50"
+                  }
                 >
-                  <TableCell sx={TD_SX}>
+                  <td className="rounded-l-lg px-4 py-3">
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Box
                         sx={{
@@ -664,8 +629,8 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                         <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{e.email}</Typography>
                       </Box>
                     </Box>
-                  </TableCell>
-                  <TableCell sx={TD_SX}>
+                  </td>
+                  <td className="px-4 py-3">
                     <Box sx={{ width: 96 }}>
                       <Box
                         sx={{
@@ -696,8 +661,8 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                         {e.avg}%
                       </Typography>
                     </Box>
-                  </TableCell>
-                  <TableCell sx={TD_SX}>
+                  </td>
+                  <td className="px-4 py-3">
                     <Typography
                       sx={{
                         fontSize: 13,
@@ -708,8 +673,8 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                     >
                       {e.completed}/{e.total}
                     </Typography>
-                  </TableCell>
-                  <TableCell sx={TD_SX}>
+                  </td>
+                  <td className="px-4 py-3">
                     <Typography
                       sx={{
                         fontSize: 13,
@@ -720,8 +685,8 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                     >
                       {e.certificatesCount}
                     </Typography>
-                  </TableCell>
-                  <TableCell sx={TD_SX}>
+                  </td>
+                  <td className="px-4 py-3">
                     {e.hasError ? (
                       <Chip
                         label="Error"
@@ -765,17 +730,17 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                         }}
                       />
                     )}
-                  </TableCell>
-                  <TableCell sx={TD_SX}>
+                  </td>
+                  <td className="rounded-r-lg px-4 py-3">
                     <Typography sx={{ fontFamily: "monospace", fontSize: 11, color: "#94a3b8" }}>
                       {e.lastSync ? formatDateTime(e.lastSync) : "—"}
                     </Typography>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        )}
+              emptyState={{ message: "Sin empleados activos registrados." }}
+            />
+          </div>
           <Pagination
             currentPage={detailCurrentPage}
             totalPages={detailTotalPages}

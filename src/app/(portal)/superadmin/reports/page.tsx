@@ -12,14 +12,10 @@ import { retryCompanySyncAction, triggerGlobalLearningSyncAction } from "./actio
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
 import { SearchInput } from "@/components/shared/SearchInput"
+import { DataTable } from "@/components/shared/DataTable"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
 import Paper from "@mui/material/Paper"
-import Table from "@mui/material/Table"
-import TableBody from "@mui/material/TableBody"
-import TableCell from "@mui/material/TableCell"
-import TableHead from "@mui/material/TableHead"
-import TableRow from "@mui/material/TableRow"
 import Typography from "@mui/material/Typography"
 
 const DAY_MS = 1000 * 60 * 60 * 24
@@ -56,25 +52,6 @@ const SYNC_CHIP_STYLES: Record<SyncStatus, { bg: string; color: string; border: 
   PARCIAL: { bg: "#fffbeb", color: "#b45309", border: "#fde68a" },
   ERROR: { bg: "#fef2f2", color: "#dc2626", border: "#fecaca" },
   SUSPENDIDA: { bg: "#f8fafc", color: "#64748b", border: "#e2e8f0" },
-}
-
-const TH_SX = {
-  fontSize: "10.5px",
-  fontWeight: 700,
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.08em",
-  color: "#94a3b8",
-  bgcolor: "transparent",
-  borderBottom: "1px solid #f1f5f9",
-  py: 1.25,
-  px: 2,
-}
-
-const TD_SX = {
-  py: 1.25,
-  px: 2,
-  borderBottom: "1px solid #f8fafc",
-  fontSize: 13,
 }
 
 export default async function SuperAdminReportsPage({ searchParams }: PageProps) {
@@ -330,60 +307,60 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                 </Typography>
               </Box>
             ) : (
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={TH_SX}>Empresa</TableCell>
-                    <TableCell sx={TH_SX}>Paquete</TableCell>
-                    <TableCell sx={TH_SX}>Vence</TableCell>
-                    <TableCell sx={TH_SX}>Estado</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {renewalAlerts.map((item) => {
-                    const days = item.remainingDays as number
-                    return (
-                      <TableRow key={item.company.id} sx={{ height: 44 }}>
-                        <TableCell sx={{ ...TD_SX, fontWeight: 500, color: "#0f172a" }}>
-                          {item.company.name}
-                        </TableCell>
-                        <TableCell sx={{ ...TD_SX, color: "#64748b" }}>
-                          {item.activePackage?.package.name ?? "—"}
-                        </TableCell>
-                        <TableCell sx={{ ...TD_SX, color: "#64748b" }}>
-                          {formatDate(item.activePackage?.expiration_date)}
-                        </TableCell>
-                        <TableCell sx={TD_SX}>
-                          <Box
-                            component="span"
-                            sx={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              borderRadius: 0.75,
-                              border: "1px solid",
-                              px: 0.75,
-                              py: 0.25,
-                              fontSize: "10px",
-                              fontWeight: 600,
-                              ...(days < 0
-                                ? { borderColor: "#fecaca", bgcolor: "#fef2f2", color: "#dc2626" }
-                                : days <= 7
-                                  ? { borderColor: "#fde68a", bgcolor: "#fffbeb", color: "#d97706" }
-                                  : {
-                                      borderColor: "#e2e8f0",
-                                      bgcolor: "#f8fafc",
-                                      color: "#64748b",
-                                    }),
-                            }}
-                          >
-                            {days < 0 ? `Vencido ${Math.abs(days)}d` : `${days}d`}
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+              <DataTable
+                ariaLabel="Control de vencimientos"
+                columns={[
+                  { label: "Empresa" },
+                  { label: "Paquete" },
+                  { label: "Vence" },
+                  { label: "Estado" },
+                ]}
+                rows={renewalAlerts.map((item) => {
+                  const days = item.remainingDays as number
+                  return (
+                    <tr
+                      key={item.company.id}
+                      className="bg-white transition-colors hover:bg-gray-50"
+                    >
+                      <td className="rounded-l-lg px-4 py-3 text-sm font-medium text-slate-900">
+                        {item.company.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-500">
+                        {item.activePackage?.package.name ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-500">
+                        {formatDate(item.activePackage?.expiration_date)}
+                      </td>
+                      <td className="rounded-r-lg px-4 py-3">
+                        <Box
+                          component="span"
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            borderRadius: 0.75,
+                            border: "1px solid",
+                            px: 0.75,
+                            py: 0.25,
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            ...(days < 0
+                              ? { borderColor: "#fecaca", bgcolor: "#fef2f2", color: "#dc2626" }
+                              : days <= 7
+                                ? { borderColor: "#fde68a", bgcolor: "#fffbeb", color: "#d97706" }
+                                : {
+                                    borderColor: "#e2e8f0",
+                                    bgcolor: "#f8fafc",
+                                    color: "#64748b",
+                                  }),
+                          }}
+                        >
+                          {days < 0 ? `Vencido ${Math.abs(days)}d` : `${days}d`}
+                        </Box>
+                      </td>
+                    </tr>
+                  )
+                })}
+              />
             )}
           </Box>
         </Paper>
@@ -501,97 +478,97 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                 </Typography>
               </Box>
             ) : (
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={TH_SX}>Empresa</TableCell>
-                    <TableCell sx={TH_SX}>Sync</TableCell>
-                    <TableCell sx={TH_SX}>Errores</TableCell>
-                    <TableCell sx={TH_SX}>Pend.</TableCell>
-                    <TableCell sx={TH_SX}>Sin WP</TableCell>
-                    <TableCell sx={{ ...TH_SX, textAlign: "right" }}>Acción</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {pagedCompanyStats.map((item) => {
-                    const style = SYNC_CHIP_STYLES[item.syncStatus]
-                    return (
-                      <TableRow key={item.company.id} sx={{ height: 44 }}>
-                        <TableCell sx={{ ...TD_SX, fontWeight: 500, color: "#0f172a" }}>
-                          {item.company.name}
-                        </TableCell>
-                        <TableCell sx={TD_SX}>
-                          <Chip
-                            label={item.syncStatus}
+              <DataTable
+                ariaLabel="Estado de sincronización WP/Tutor"
+                columns={[
+                  { label: "Empresa" },
+                  { label: "Sync" },
+                  { label: "Errores" },
+                  { label: "Pend." },
+                  { label: "Sin WP" },
+                  { label: "Acción", className: "text-right" },
+                ]}
+                rows={pagedCompanyStats.map((item) => {
+                  const style = SYNC_CHIP_STYLES[item.syncStatus]
+                  return (
+                    <tr
+                      key={item.company.id}
+                      className="bg-white transition-colors hover:bg-gray-50"
+                    >
+                      <td className="rounded-l-lg px-4 py-3 text-sm font-medium text-slate-900">
+                        {item.company.name}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Chip
+                          label={item.syncStatus}
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            border: "1px solid",
+                            borderColor: style.border,
+                            bgcolor: style.bg,
+                            color: style.color,
+                            "& .MuiChip-label": { px: 1 },
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Typography
+                          sx={{
+                            fontSize: 13,
+                            fontWeight: item.errorCourses > 0 ? 600 : 400,
+                            color: item.errorCourses > 0 ? "#dc2626" : "#94a3b8",
+                          }}
+                        >
+                          {item.errorCourses}
+                        </Typography>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Typography
+                          sx={{
+                            fontSize: 13,
+                            fontWeight: item.pendingCourses > 0 ? 600 : 400,
+                            color: item.pendingCourses > 0 ? "#d97706" : "#94a3b8",
+                          }}
+                        >
+                          {item.pendingCourses}
+                        </Typography>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Typography
+                          sx={{
+                            fontSize: 13,
+                            fontWeight: item.employeesWithoutWpUser > 0 ? 600 : 400,
+                            color: item.employeesWithoutWpUser > 0 ? "#334155" : "#94a3b8",
+                          }}
+                        >
+                          {item.employeesWithoutWpUser}
+                        </Typography>
+                      </td>
+                      <td className="rounded-r-lg px-4 py-3 text-right">
+                        <form action={retryCompanySyncAction}>
+                          <input type="hidden" name="empresa_id" value={item.company.id} />
+                          <SubmitButton
+                            variant="outlined"
                             size="small"
                             sx={{
-                              height: 20,
-                              fontSize: "10px",
-                              fontWeight: 600,
-                              border: "1px solid",
-                              borderColor: style.border,
-                              bgcolor: style.bg,
-                              color: style.color,
-                              "& .MuiChip-label": { px: 1 },
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell sx={TD_SX}>
-                          <Typography
-                            sx={{
-                              fontSize: 13,
-                              fontWeight: item.errorCourses > 0 ? 600 : 400,
-                              color: item.errorCourses > 0 ? "#dc2626" : "#94a3b8",
+                              height: 28,
+                              fontSize: 12,
+                              borderColor: "divider",
+                              color: "text.secondary",
+                              "&:hover": { borderColor: "text.secondary" },
                             }}
                           >
-                            {item.errorCourses}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={TD_SX}>
-                          <Typography
-                            sx={{
-                              fontSize: 13,
-                              fontWeight: item.pendingCourses > 0 ? 600 : 400,
-                              color: item.pendingCourses > 0 ? "#d97706" : "#94a3b8",
-                            }}
-                          >
-                            {item.pendingCourses}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={TD_SX}>
-                          <Typography
-                            sx={{
-                              fontSize: 13,
-                              fontWeight: item.employeesWithoutWpUser > 0 ? 600 : 400,
-                              color: item.employeesWithoutWpUser > 0 ? "#334155" : "#94a3b8",
-                            }}
-                          >
-                            {item.employeesWithoutWpUser}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ ...TD_SX, textAlign: "right" }}>
-                          <form action={retryCompanySyncAction}>
-                            <input type="hidden" name="empresa_id" value={item.company.id} />
-                            <SubmitButton
-                              variant="outlined"
-                              size="small"
-                              sx={{
-                                height: 28,
-                                fontSize: 12,
-                                borderColor: "divider",
-                                color: "text.secondary",
-                                "&:hover": { borderColor: "text.secondary" },
-                              }}
-                            >
-                              Reintentar
-                            </SubmitButton>
-                          </form>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+                            Reintentar
+                          </SubmitButton>
+                        </form>
+                      </td>
+                    </tr>
+                  )
+                })}
+              />
             )}
             <Pagination
               currentPage={syncCurrentPage}

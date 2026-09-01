@@ -3,7 +3,7 @@ import { readSearchParam } from "@/lib/search-params"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
-import EmptyState from "@/components/shared/EmptyState"
+import { DataTable } from "@/components/shared/DataTable"
 import { Building2, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
@@ -158,74 +158,30 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         description={`${filteredCount} resultado${filteredCount !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
         noPadding
       >
-        {filteredCount === 0 ? (
-          <Box sx={{ px: 3, py: 2 }}>
-            <EmptyState
-              icon={<Building2 size={28} className="text-slate-300" />}
-              message={
+        <div className="px-2">
+          <DataTable
+            ariaLabel="Empresas registradas"
+            columns={[
+              { label: "Empresa" },
+              { label: "RFC", className: "hidden sm:table-cell" },
+              { label: "Plan", className: "hidden md:table-cell" },
+              { label: "Cupos" },
+              { label: "Alta", className: "hidden lg:table-cell" },
+              { label: "Estado" },
+              { label: <span className="sr-only">Acciones</span> },
+            ]}
+            rows={pagedCompanies.map((company) => (
+              <CompanyRow key={company.id} company={company} />
+            ))}
+            emptyState={{
+              icon: <Building2 size={28} className="text-slate-300" />,
+              message:
                 q || statusFilter !== "all"
                   ? "Sin resultados para ese filtro."
-                  : "Aún no hay empresas registradas."
-              }
-            />
-          </Box>
-        ) : (
-          <div className="overflow-x-auto px-2">
-            <table
-              className="w-full border-separate border-spacing-y-2"
-              aria-label="Empresas registradas"
-            >
-              <thead>
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                  >
-                    Empresa
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:table-cell"
-                  >
-                    RFC
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 md:table-cell"
-                  >
-                    Plan
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                  >
-                    Cupos
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 lg:table-cell"
-                  >
-                    Alta
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400"
-                  >
-                    Estado
-                  </th>
-                  <th scope="col" className="px-4 pb-2">
-                    <span className="sr-only">Acciones</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedCompanies.map((company) => (
-                  <CompanyRow key={company.id} company={company} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  : "Aún no hay empresas registradas.",
+            }}
+          />
+        </div>
 
         <Pagination
           currentPage={currentPage}
