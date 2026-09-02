@@ -33,7 +33,7 @@ export async function submitSupportRequestAction(
     return { error: "Cuéntanos un poco más sobre tu solicitud (entre 10 y 1000 caracteres)." }
   }
 
-  const { subject, html, text } = buildSupportRequestEmail({
+  const { subject, html, text } = await buildSupportRequestEmail({
     nombreUsuario: session.user.nombre as string,
     email: session.user.email as string,
     empresa: (session.user.empresa as string | undefined) ?? null,

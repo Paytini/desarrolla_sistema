@@ -94,7 +94,7 @@ export async function createConsultingRequestAction(
   try {
     const notifyTo = process.env.CONSULTING_NOTIFICATION_EMAIL
     if (notifyTo) {
-      const { subject, html, text } = buildConsultingRequestEmail({
+      const { subject, html, text } = await buildConsultingRequestEmail({
         companyName: branding.name,
         requesterName: session.user.nombre,
         requesterEmail: session.user.email ?? "",
