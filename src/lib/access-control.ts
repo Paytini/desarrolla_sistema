@@ -78,10 +78,6 @@ export async function deleteEmployeeRecord({
         where: { user_id: user.id },
       })
 
-      await tx.portalSession.deleteMany({
-        where: { user_id: user.id },
-      })
-
       await tx.user.delete({
         where: { id: user.id },
       })
