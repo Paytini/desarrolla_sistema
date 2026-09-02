@@ -208,7 +208,7 @@ export function AccessTabs({
         onChange={(_, value: "hr" | "employees") => handleTabChange(value)}
         sx={{ px: 2.5, pt: 1, borderBottom: "1px solid var(--portal-border)" }}
       >
-        <Tab value="hr" label={`Usuarios HR (${hrUsers.length})`} />
+        <Tab value="hr" label={`Empresas (${hrUsers.length})`} />
         <Tab value="employees" label={`Empleados (${employeesGrandTotal})`} />
       </Tabs>
 
@@ -224,7 +224,7 @@ export function AccessTabs({
             }}
           >
             <SectionHeader
-              title="Usuarios HR por empresa"
+              title="Cuentas de empresas"
               description="Pausa o reactiva accesos sin necesidad de eliminar la cuenta."
             />
             <SearchInput
@@ -235,7 +235,7 @@ export function AccessTabs({
             />
           </Box>
           <DataTable
-            ariaLabel="Usuarios HR por empresa"
+            ariaLabel="Empresas"
             columns={[
               { label: "Nombre" },
               { label: "Empresa" },
@@ -275,7 +275,6 @@ export function AccessTabs({
                 </td>
                 <td className="rounded-r-lg px-4 py-3 text-right">
                   <ConfirmIconButton
-                    showLabel
                     tone={user.active ? "outline" : "brand"}
                     icon={user.active ? <Pause size={13} /> : <Play size={13} />}
                     label={user.active ? "Suspender" : "Reactivar"}
@@ -298,7 +297,7 @@ export function AccessTabs({
               icon: <Users size={28} className="text-slate-300" />,
               message:
                 hrUsers.length === 0
-                  ? "Aún no hay usuarios HR registrados."
+                  ? "Aún no hay empresas registrados."
                   : `Sin resultados para "${hrSearch}".`,
             }}
           />
@@ -398,7 +397,6 @@ export function AccessTabs({
                 </td>
                 <td className="rounded-r-lg px-4 py-3 text-right">
                   <ConfirmIconButton
-                    showLabel
                     tone="outline-destructive"
                     icon={<Trash2 size={13} />}
                     label="Eliminar"
