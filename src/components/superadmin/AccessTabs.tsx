@@ -22,6 +22,7 @@ import { DataTable } from "@/components/shared/DataTable"
 import { getInitials } from "@/components/layout/nav-config"
 import {
   deleteEmployeeAsSuperAdminAction,
+  toggleEmployeeStatusAsSuperAdminAction,
   toggleHrUserStatusAction,
 } from "@/app/(portal)/superadmin/access/actions"
 
@@ -208,7 +209,7 @@ export function AccessTabs({
         onChange={(_, value: "hr" | "employees") => handleTabChange(value)}
         sx={{ px: 2.5, pt: 1, borderBottom: "1px solid var(--portal-border)" }}
       >
-        <Tab value="hr" label={`Usuarios HR (${hrUsers.length})`} />
+        <Tab value="hr" label={`Empresas (${hrUsers.length})`} />
         <Tab value="employees" label={`Empleados (${employeesGrandTotal})`} />
       </Tabs>
 
@@ -224,7 +225,7 @@ export function AccessTabs({
             }}
           >
             <SectionHeader
-              title="Usuarios HR por empresa"
+              title="Cuentas de empresas"
               description="Pausa o reactiva accesos sin necesidad de eliminar la cuenta."
             />
             <SearchInput
@@ -235,7 +236,7 @@ export function AccessTabs({
             />
           </Box>
           <DataTable
-            ariaLabel="Usuarios HR por empresa"
+            ariaLabel="Empresas"
             columns={[
               { label: "Nombre" },
               { label: "Empresa" },
@@ -275,7 +276,6 @@ export function AccessTabs({
                 </td>
                 <td className="rounded-r-lg px-4 py-3 text-right">
                   <ConfirmIconButton
-                    showLabel
                     tone={user.active ? "outline" : "brand"}
                     icon={user.active ? <Pause size={13} /> : <Play size={13} />}
                     label={user.active ? "Suspender" : "Reactivar"}
@@ -298,7 +298,7 @@ export function AccessTabs({
               icon: <Users size={28} className="text-slate-300" />,
               message:
                 hrUsers.length === 0
-                  ? "Aún no hay usuarios HR registrados."
+                  ? "Aún no hay empresas registrados."
                   : `Sin resultados para "${hrSearch}".`,
             }}
           />
@@ -397,17 +397,36 @@ export function AccessTabs({
                   </Typography>
                 </td>
                 <td className="rounded-r-lg px-4 py-3 text-right">
-                  <ConfirmIconButton
-                    showLabel
-                    tone="outline-destructive"
-                    icon={<Trash2 size={13} />}
-                    label="Eliminar"
-                    title={`¿Eliminar a ${employee.name} ${employee.lastName}?`}
-                    description="Esta acción eliminará al empleado del portal y también intentará remover su usuario en WordPress/Tutor LMS."
-                    confirmLabel="Sí, eliminar"
-                    action={deleteEmployeeAsSuperAdminAction}
-                    hiddenFields={{ empleado_id: employee.id }}
-                  />
+                  <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
+                    <ConfirmIconButton
+                      tone={employee.active ? "outline" : "brand"}
+                      icon={employee.active ? <Pause size={13} /> : <Play size={13} />}
+                      label={employee.active ? "Suspender" : "Reactivar"}
+                      title={
+                        employee.active
+                          ? `¿Suspender a ${employee.name} ${employee.lastName}?`
+                          : `¿Reactivar a ${employee.name} ${employee.lastName}?`
+                      }
+                      description={
+                        employee.active
+                          ? "El empleado perderá acceso al portal de inmediato."
+                          : "El empleado recuperará acceso al portal de inmediato."
+                      }
+                      confirmLabel={employee.active ? "Sí, suspender" : "Sí, reactivar"}
+                      action={toggleEmployeeStatusAsSuperAdminAction}
+                      hiddenFields={{ empleado_id: employee.id }}
+                    />
+                    <ConfirmIconButton
+                      tone="outline-destructive"
+                      icon={<Trash2 size={13} />}
+                      label="Eliminar"
+                      title={`¿Eliminar a ${employee.name} ${employee.lastName}?`}
+                      description="Esta acción eliminará al empleado del portal y también intentará remover su usuario en WordPress/Tutor LMS."
+                      confirmLabel="Sí, eliminar"
+                      action={deleteEmployeeAsSuperAdminAction}
+                      hiddenFields={{ empleado_id: employee.id }}
+                    />
+                  </Stack>
                 </td>
               </tr>
             ))}

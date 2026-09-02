@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { deleteEmployeeRecord } from "@/lib/access-control"
+import { deleteEmployeeRecord, toggleEmployeeStatus } from "@/lib/access-control"
 import {
   createAuditEvent,
   createSeatHistoryEntry,
@@ -715,9 +715,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
     const truncated = generatedPasswords.length > GENERATED_PASSWORDS_COOKIE_LIMIT
     const cookiePayload = {
       passwords: generatedPasswords.slice(0, GENERATED_PASSWORDS_COOKIE_LIMIT),
-      omittedCount: truncated
-        ? generatedPasswords.length - GENERATED_PASSWORDS_COOKIE_LIMIT
-        : 0,
+      omittedCount: truncated ? generatedPasswords.length - GENERATED_PASSWORDS_COOKIE_LIMIT : 0,
     }
     cookieStore.set("d360_csv_generated_passwords", JSON.stringify(cookiePayload), {
       httpOnly: true,
@@ -749,77 +747,17 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
-  const [employee, beforeSeatSnapshot] = await Promise.all([
-    prisma.employee.findFirst({
-      where: {
-        id: employeeId,
-        company_id: companyId,
-      },
-      select: {
-        id: true,
-        active: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-      },
-    }),
-    getCompanySeatSnapshot(companyId),
-  ])
-
-  if (!employee || !beforeSeatSnapshot) {
+  let employee: Awaited<ReturnType<typeof toggleEmployeeStatus>>
+  try {
+    employee = await toggleEmployeeStatus({
+      employeeId,
+      companyId,
+      actor,
+      source: "HR",
+    })
+  } catch {
     redirect(withStatus(returnTo, "error", "empleado"))
   }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.employee.update({
-      where: { id: employee.id },
-      data: { active: !employee.active },
-    })
-
-    await tx.user.updateMany({
-      where: {
-        email: employee.email,
-        company_id: companyId,
-      },
-      data: { active: !employee.active },
-    })
-
-    const activeEmployees = await tx.employee.count({
-      where: {
-        company_id: companyId,
-        active: true,
-      },
-    })
-
-    await tx.company.update({
-      where: { id: companyId },
-      data: { used_seats: activeEmployees },
-    })
-  })
-
-  const afterSeatSnapshot = await getCompanySeatSnapshot(companyId)
-  if (afterSeatSnapshot) {
-    await createSeatHistoryEntry({
-      actor,
-      companyId,
-      motivo: employee.active ? "empleado_suspendido" : "empleado_reactivado",
-      detalle: `${employee.first_name} ${employee.last_name} (${employee.email})`,
-      before: beforeSeatSnapshot,
-      after: afterSeatSnapshot,
-    })
-  }
-
-  await createAuditEvent({
-    actor,
-    accion: employee.active ? "EMPLEADO_SUSPENDIDO" : "EMPLEADO_REACTIVADO",
-    entityType: "EMPLEADO",
-    entityId: employee.id,
-    companyId,
-    resumen: `${actor.nombre} ${employee.active ? "suspendio" : "reactivo"} al empleado ${employee.first_name} ${employee.last_name}.`,
-    metadata: {
-      email: employee.email,
-    },
-  })
 
   revalidatePath(employeesPath(slug))
   revalidatePath("/superadmin/reports")
