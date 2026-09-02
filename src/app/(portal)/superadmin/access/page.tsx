@@ -16,10 +16,12 @@ const successMessages: Record<string, string> = {
   hr_suspendido: "Usuario HR suspendido.",
   hr_activado: "Usuario HR reactivado.",
   empleado_eliminado: "Empleado eliminado del portal.",
+  empleado_suspendido: "Empleado suspendido.",
+  empleado_activado: "Empleado reactivado.",
 }
 const errorMessages: Record<string, string> = {
   usuario: "No fue posible actualizar el usuario.",
-  empleado: "No fue posible eliminar el empleado.",
+  empleado: "No fue posible actualizar el empleado.",
 }
 
 type PageProps = {

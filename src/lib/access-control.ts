@@ -148,6 +148,102 @@ export async function deleteEmployeeRecord({
   return employee
 }
 
+type ToggleEmployeeStatusOptions = {
+  employeeId: string
+  companyId?: string
+  actor?: AuditActor
+  source?: "HR" | "SUPERADMIN" | "SYSTEM"
+}
+
+export async function toggleEmployeeStatus({
+  employeeId,
+  companyId,
+  actor,
+  source = "SYSTEM",
+}: ToggleEmployeeStatusOptions) {
+  const employee = await prisma.employee.findFirst({
+    where: {
+      id: employeeId,
+      ...(companyId ? { company_id: companyId } : {}),
+    },
+    select: {
+      id: true,
+      company_id: true,
+      active: true,
+      email: true,
+      first_name: true,
+      last_name: true,
+    },
+  })
+
+  if (!employee) {
+    throw new Error("Empleado no encontrado")
+  }
+
+  const actingUser: AuditActor = actor ?? {
+    userId: null,
+    nombre: "Sistema",
+    email: null,
+    role: source,
+  }
+
+  const beforeSeatSnapshot = await getCompanySeatSnapshot(employee.company_id)
+
+  await prisma.$transaction(async (tx) => {
+    await tx.employee.update({
+      where: { id: employee.id },
+      data: { active: !employee.active },
+    })
+
+    await tx.user.updateMany({
+      where: {
+        email: employee.email,
+        company_id: employee.company_id,
+      },
+      data: { active: !employee.active },
+    })
+
+    const activeEmployees = await tx.employee.count({
+      where: {
+        company_id: employee.company_id,
+        active: true,
+      },
+    })
+
+    await tx.company.update({
+      where: { id: employee.company_id },
+      data: { used_seats: activeEmployees },
+    })
+  })
+
+  const afterSeatSnapshot = await getCompanySeatSnapshot(employee.company_id)
+  if (beforeSeatSnapshot && afterSeatSnapshot) {
+    await createSeatHistoryEntry({
+      actor: actingUser,
+      companyId: employee.company_id,
+      motivo: employee.active ? "empleado_suspendido" : "empleado_reactivado",
+      detalle: `${employee.first_name} ${employee.last_name} (${employee.email})`,
+      before: beforeSeatSnapshot,
+      after: afterSeatSnapshot,
+    })
+  }
+
+  await createAuditEvent({
+    actor: actingUser,
+    accion: employee.active ? "EMPLEADO_SUSPENDIDO" : "EMPLEADO_REACTIVADO",
+    entityType: "EMPLEADO",
+    entityId: employee.id,
+    companyId: employee.company_id,
+    resumen: `${actingUser.nombre} ${employee.active ? "suspendio" : "reactivo"} al empleado ${employee.first_name} ${employee.last_name}.`,
+    metadata: {
+      email: employee.email,
+      source,
+    },
+  })
+
+  return employee
+}
+
 export async function togglePortalUserStatus(
   userId: string,
   callerRole: "SUPERADMIN" | "HR" | "SYSTEM" = "SYSTEM",
