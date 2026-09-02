@@ -25,6 +25,8 @@ import { ensureUniqueCompanySlug } from "@/lib/slug"
 import { buildCredentialsEmail } from "@/lib/email-templates/credentials"
 import { isUuid } from "@/lib/uuid"
 
+const CREDENTIALS_EMAIL_ENABLED = process.env.CREDENTIALS_EMAIL_ENABLED !== "false"
+
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
 }
@@ -132,17 +134,19 @@ export async function createCompanyAction(
   let emailQueued = false
   let emailError: string | null = null
 
-  try {
-    const { subject, html, text } = await buildCredentialsEmail({
-      nombreHr,
-      nombreEmpresa: nombre,
-      email: emailHr,
-      password: passwordHr,
-    })
-    await enqueueEmailSendJob({ to: emailHr, subject, html, text })
-    emailQueued = true
-  } catch (error) {
-    emailError = error instanceof Error ? error.message : String(error)
+  if (CREDENTIALS_EMAIL_ENABLED) {
+    try {
+      const { subject, html, text } = await buildCredentialsEmail({
+        nombreHr,
+        nombreEmpresa: nombre,
+        email: emailHr,
+        password: passwordHr,
+      })
+      await enqueueEmailSendJob({ to: emailHr, subject, html, text })
+      emailQueued = true
+    } catch (error) {
+      emailError = error instanceof Error ? error.message : String(error)
+    }
   }
 
   after(async () => {
@@ -178,13 +182,19 @@ export async function createCompanyAction(
 
     await createAuditEvent({
       actor,
-      accion: emailQueued ? "EMAIL_CREDENCIALES_ENCOLADO" : "EMAIL_CREDENCIALES_FALLIDO",
+      accion: emailQueued
+        ? "EMAIL_CREDENCIALES_ENCOLADO"
+        : CREDENTIALS_EMAIL_ENABLED
+          ? "EMAIL_CREDENCIALES_FALLIDO"
+          : "EMAIL_CREDENCIALES_DESHABILITADO",
       entityType: "EMPRESA",
       entityId: createdResult.companyId,
       companyId: createdResult.companyId,
       resumen: emailQueued
         ? `Se encolo el correo de credenciales para ${emailHr}.`
-        : `No se pudo encolar el correo de credenciales para ${emailHr}.`,
+        : CREDENTIALS_EMAIL_ENABLED
+          ? `No se pudo encolar el correo de credenciales para ${emailHr}.`
+          : `El envio del correo de credenciales esta deshabilitado por configuracion; no se envio a ${emailHr}.`,
       metadata: emailError ? { error: emailError } : undefined,
     })
 
