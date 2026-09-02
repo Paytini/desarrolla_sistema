@@ -13,12 +13,12 @@ import {
 import { PageHeader } from "@/components/shared/PageHeader"
 
 const successMessages: Record<string, string> = {
-  hr_suspendido: "Usuario HR suspendido.",
-  hr_activado: "Usuario HR reactivado.",
+  hr_suspendido: "Empresa suspendida.",
+  hr_activado: "Empresa reactivada.",
   empleado_eliminado: "Empleado eliminado del portal.",
 }
 const errorMessages: Record<string, string> = {
-  usuario: "No fue posible actualizar el usuario.",
+  usuario: "No fue posible actualizar la empresa.",
   empleado: "No fue posible eliminar el empleado.",
 }
 
@@ -81,7 +81,7 @@ export default async function SuperAdminAccessPage({ searchParams }: PageProps) 
     <Stack spacing={3}>
       <PageHeader
         title="Control de accesos"
-        description="Administra usuarios HR, empleados activos y suspensiones."
+        description="Administra cuentas de empresas, empleados activos y suspensiones."
       />
 
       {success && (
