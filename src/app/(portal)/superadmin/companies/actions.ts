@@ -133,7 +133,7 @@ export async function createCompanyAction(
   let emailError: string | null = null
 
   try {
-    const { subject, html, text } = buildCredentialsEmail({
+    const { subject, html, text } = await buildCredentialsEmail({
       nombreHr,
       nombreEmpresa: nombre,
       email: emailHr,

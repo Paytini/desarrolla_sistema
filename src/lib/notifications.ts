@@ -83,7 +83,7 @@ export async function notifyEmployeeNewCertificates(
   })
 
   try {
-    const { subject, html, text } = buildCertificateReadyEmail({
+    const { subject, html, text } = await buildCertificateReadyEmail({
       employeeName: `${employee.first_name} ${employee.last_name}`.trim(),
       certificates,
     })
@@ -154,7 +154,7 @@ export async function checkAndNotifyExpiringPackages() {
 
     for (const hrUser of ep.company.users) {
       try {
-        const { subject, html, text } = buildPackageExpiringEmail({
+        const { subject, html, text } = await buildPackageExpiringEmail({
           nombreHr: hrUser.name,
           nombreEmpresa: ep.company.name,
           daysLabel,
