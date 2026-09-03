@@ -57,7 +57,8 @@
     "prisma": "^7.7.0",
     "ts-node": "^10.9.2",
     "typescript": "6.0.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "vitest-mock-extended": "^5.1.1"
   },
   "overrides": {
     "postcss": "8.5.10",
