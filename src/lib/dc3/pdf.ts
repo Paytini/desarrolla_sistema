@@ -2,7 +2,12 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import sharp from "sharp"
 import { PDFDocument, PDFImage, StandardFonts, rgb } from "pdf-lib"
-import { put } from "@vercel/blob"
+import {
+  downloadPrivateFile,
+  isSupabaseStorageUrl,
+  storagePathFromUrl,
+  uploadPrivateFile,
+} from "@/lib/supabase-storage"
 import { prisma } from "@/lib/prisma"
 
 const POS = {
@@ -247,16 +252,11 @@ export async function getOrCreateDc3PdfBytes({
 
   try {
     const pathname = `constancias/${cached.employee.company_id}/${cached.employee_id}/dc3-${certificateId}.pdf`
-    const blob = await put(pathname, Buffer.from(pdfBytes), {
-      access: "private",
-      contentType: "application/pdf",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-    })
+    const url = await uploadPrivateFile(pathname, Buffer.from(pdfBytes), "application/pdf")
 
     await prisma.certificate.update({
       where: { id: certificateId },
-      data: { dc3_pdf_url: blob.url },
+      data: { dc3_pdf_url: url },
     })
   } catch (err) {
     console.error(
@@ -301,30 +301,13 @@ function formatHours(hours: number) {
 
 async function fetchImageBytes(urlOrPath: string): Promise<Buffer> {
   if (urlOrPath.startsWith("http://") || urlOrPath.startsWith("https://")) {
-    let parsed: URL
-    try {
-      parsed = new URL(urlOrPath)
-    } catch {
-      throw new Error(`URL de imagen inválida: ${urlOrPath}`)
-    }
-
-    const isVercelBlob =
-      parsed.hostname === "blob.vercel-storage.com" ||
-      parsed.hostname.endsWith(".vercel-storage.com")
-
-    if (!isVercelBlob) {
+    if (!isSupabaseStorageUrl(urlOrPath)) {
       throw new Error(
-        `URL de imagen no permitida. Solo se aceptan imágenes de Vercel Blob: ${urlOrPath}`,
+        `URL de imagen no permitida. Solo se aceptan imágenes de Supabase Storage: ${urlOrPath}`,
       )
     }
 
-    const headers: HeadersInit = {}
-    const token = process.env.BLOB_READ_WRITE_TOKEN
-    if (token) headers["Authorization"] = `Bearer ${token}`
-
-    const res = await fetch(urlOrPath, { headers })
-    if (!res.ok) throw new Error(`HTTP ${res.status} al obtener imagen: ${urlOrPath}`)
-    return Buffer.from(await res.arrayBuffer())
+    return downloadPrivateFile(storagePathFromUrl(urlOrPath))
   }
   const relative = urlOrPath.startsWith("/") ? urlOrPath.slice(1) : urlOrPath
   return fs.readFile(path.join(process.cwd(), "public", relative))

@@ -6,6 +6,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prisma:generate": "prisma generate",
@@ -24,8 +26,8 @@
     "@prisma/client": "^7.7.0",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.0",
+    "@supabase/supabase-js": "^2.115.0",
     "@tailwindcss/postcss": "^4.2.2",
-    "@vercel/blob": "^2.4.0",
     "@vercel/speed-insights": "^2.0.0",
     "bcrypt": "^6.0.0",
     "clsx": "^2.1.1",
@@ -55,7 +57,9 @@
     "prettier": "3.9.6",
     "prisma": "^7.7.0",
     "ts-node": "^10.9.2",
-    "typescript": "6.0.2"
+    "typescript": "6.0.2",
+    "vitest": "^5.0.0",
+    "vitest-mock-extended": "^5.1.1"
   },
   "overrides": {
     "postcss": "8.5.10",
