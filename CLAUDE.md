@@ -75,7 +75,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 npm run dev              # dev server (Next.js)
 npm run build            # prisma generate && next build
 npm run lint             # eslint .
-npx tsc --noEmit         # typecheck (CI runs lint + tsc + build; no test suite exists)
+npx tsc --noEmit         # typecheck
+npm test                 # vitest — unit tests for pure lib functions (CI runs lint + tsc + test + build)
 npm run prisma:generate  # regenerate Prisma client after schema changes
 npm run prisma:migrate   # prisma migrate dev
 npx prisma db seed       # seed demo users (see prisma/seed.ts)
