@@ -13,7 +13,7 @@ import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { blobProxyUrl } from "@/lib/blob-proxy"
+import { storageProxyUrl } from "@/lib/storage-proxy"
 import { getCompanyBranding } from "@/lib/company/branding"
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +30,7 @@ export default async function PortalLayout({ children }: { children: React.React
       ? await getCompanyBranding(session.user.empresa_id)
       : null
 
-  const logoSrc = branding?.logo_url ? blobProxyUrl(branding.logo_url) : null
+  const logoSrc = branding?.logo_url ? storageProxyUrl(branding.logo_url) : null
   const companyName = company ?? branding?.name ?? undefined
 
   const content = (
@@ -57,7 +57,10 @@ export default async function PortalLayout({ children }: { children: React.React
           <div className="flex flex-1 items-center justify-end gap-1">
             <NotificationBell />
             <FullscreenToggle />
-            <TopbarUserMenu name={name} companyName={role !== "SUPERADMIN" ? companyName : undefined} />
+            <TopbarUserMenu
+              name={name}
+              companyName={role !== "SUPERADMIN" ? companyName : undefined}
+            />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-[#F8F9FC] px-8 py-7">

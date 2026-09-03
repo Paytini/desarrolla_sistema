@@ -7,7 +7,7 @@ import Button from "@mui/material/Button"
 import CircularProgress from "@mui/material/CircularProgress"
 import Typography from "@mui/material/Typography"
 import EyebrowLabel from "@/components/shared/EyebrowLabel"
-import { blobProxyUrl } from "@/lib/blob-proxy"
+import { storageProxyUrl } from "@/lib/storage-proxy"
 
 const LOGO_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"]
 const LOGO_MAX_SIZE_BYTES = 2 * 1024 * 1024
@@ -161,7 +161,7 @@ export function CompanyBrandingForm({
             </Button>
             {/* eslint-disable-next-line @next/next/no-img-element -- private blob URL, served through the authenticated proxy */}
             <img
-              src={blobProxyUrl(logoUrl)}
+              src={storageProxyUrl(logoUrl)}
               alt="Logo de la empresa"
               style={{ maxWidth: 180, maxHeight: 130, objectFit: "contain" }}
             />

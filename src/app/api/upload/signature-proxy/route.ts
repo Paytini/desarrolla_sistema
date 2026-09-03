@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
+import {
+  downloadPrivateFile,
+  isSupabaseStorageUrl,
+  storagePathFromUrl,
+} from "@/lib/supabase-storage"
 
 export const runtime = "nodejs"
 
@@ -11,42 +16,21 @@ export async function GET(request: NextRequest) {
     return new NextResponse("No autorizado", { status: 401 })
   }
 
-  const blobUrl = request.nextUrl.searchParams.get("url")
-  if (!blobUrl) {
+  const fileUrl = request.nextUrl.searchParams.get("url")
+  if (!fileUrl || !isSupabaseStorageUrl(fileUrl)) {
     return new NextResponse("URL inválida", { status: 400 })
   }
 
+  let buffer: Buffer
   try {
-    const parsed = new URL(blobUrl)
-    const isVercelBlob =
-      parsed.hostname === "blob.vercel-storage.com" ||
-      parsed.hostname.endsWith(".vercel-storage.com")
-    if (!isVercelBlob) {
-      return new NextResponse("URL inválida", { status: 400 })
-    }
+    buffer = await downloadPrivateFile(storagePathFromUrl(fileUrl))
   } catch {
-    return new NextResponse("URL inválida", { status: 400 })
+    return new NextResponse("No se pudo obtener la imagen", { status: 502 })
   }
 
-  const token = process.env.BLOB_READ_WRITE_TOKEN
-  if (!token) {
-    return new NextResponse("Token de blob no configurado", { status: 500 })
-  }
-
-  const upstream = await fetch(blobUrl, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-
-  if (!upstream.ok) {
-    return new NextResponse("No se pudo obtener la imagen", { status: upstream.status })
-  }
-
-  const buffer = await upstream.arrayBuffer()
-  const contentType = upstream.headers.get("content-type") ?? "image/png"
-
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
-      "Content-Type": contentType,
+      "Content-Type": "image/png",
       "Cache-Control": "private, max-age=3600",
     },
   })
