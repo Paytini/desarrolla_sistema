@@ -76,7 +76,6 @@ model User {
   updated_at            DateTime  @updatedAt
 
   company            Company?            @relation(fields: [company_id], references: [id])
-  sessions           PortalSession[]
   notifications      Notification[]
   consultingRequests ConsultingRequest[]
 
@@ -409,27 +408,6 @@ model IntegrationState {
   updated_at DateTime @updatedAt
 
   @@map("integration_states")
-}
-
-// ─────────────────────────────────────────────────────────────
-//  PORTAL_SESSION
-//  Active portal session tokens.
-//  NextAuth manages these automatically, but this table lets
-//  SuperAdmin revoke access from the admin panel.
-// ─────────────────────────────────────────────────────────────
-
-model PortalSession {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String   @db.Uuid
-  token      String   @unique @db.VarChar(512)
-  expires_at DateTime
-  ip_address String?
-  created_at DateTime @default(now())
-
-  user User @relation(fields: [user_id], references: [id])
-
-  @@index([user_id])
-  @@map("portal_sessions")
 }
 
 // ─────────────────────────────────────────────────────────────

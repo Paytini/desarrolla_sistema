@@ -91,23 +91,23 @@ B2B portal ("Portal Empresarial Desarrolla360") that manages companies, their em
 
 ### Three role-gated portals
 
-`Role` enum: `SUPERADMIN` (Desarrolla360 staff), `HR` (company HR manager), `EMPLOYEE` (worker). Each has its own route tree under `app/(portal)/superadmin|company/[slug]|employee`, enforced twice:
+`Role` enum: `SUPERADMIN` (Desarrolla360 staff), `HR` (company HR manager), `EMPLOYEE` (worker). Each has its own route tree under `src/app/(portal)/superadmin|company/[slug]|employee`, enforced twice:
 
-- `proxy.ts` (Next 16's middleware) redirects by JWT role per path prefix.
-- `auth.ts` — NextAuth v5 credentials provider: bcrypt check, Cloudflare Turnstile captcha, blocks login when the company is suspended/expired (`lib/empresa-status.ts`).
+- `src/proxy.ts` (Next 16's middleware) redirects by JWT role per path prefix.
+- `src/auth.ts` — NextAuth v5 credentials provider: bcrypt check, Cloudflare Turnstile captcha, blocks login when the company is suspended/expired (`src/lib/empresa-status.ts`).
 
-Mutations are server actions colocated per route (`app/(portal)/**/actions.ts`), guarded by helpers in `lib/auth-guards.ts` / `lib/access-control.ts`. Cache invalidation uses tags from `lib/cache-tags.ts` (per-company root tag + global superadmin tag).
+Mutations are server actions colocated per route (`src/app/(portal)/**/actions.ts`), guarded by helpers in `src/lib/auth-guards.ts` / `src/lib/access-control.ts`. Cache invalidation uses tags from `src/lib/cache-tags.ts` (per-company root tag + global superadmin tag).
 
 ### Database
 
-PostgreSQL on **Supabase**, accessed with Prisma 7 through the `pg` driver adapter (`@prisma/adapter-pg`) — singleton in `lib/prisma.ts`. Schema in `prisma/schema.prisma`; tables and columns were renamed from Spanish to English in August 2026. `lib/prisma.ts` also mounts a tenant guard that forces `company_id` onto every query against `Employee`/`CompanyPackage`/`ConsultingRequest` while an HR request is active (`lib/tenant-context.ts`).
+PostgreSQL on **Supabase**, accessed with Prisma 7 through the `pg` driver adapter (`@prisma/adapter-pg`) — singleton in `src/lib/prisma.ts`. Schema in `prisma/schema.prisma`; tables and columns were renamed from Spanish to English in August 2026. `src/lib/prisma.ts` also mounts a tenant guard that forces `company_id` onto every query against `Employee`/`CompanyPackage`/`ConsultingRequest` while an HR request is active (`src/lib/tenant-context.ts`).
 
 Core idea: the portal is the **source of truth for corporate structure** (usuarios, empresas, paquetes, cupos) and a **cache/mirror of academic data** owned by Tutor LMS. Mirror tables carry `wp_*` link columns and a `ultima_sincronizacion` timestamp:
 
 - `employee_courses` — per-employee course progress snapshot + enrollment state machine `access_status`: `PENDING → ACTIVE | ERROR | REQUIRES_REVIEW`. Companions: `quiz_attempts`, `lesson_completions`.
 - `certificates` — issued certificates, portal-generated `reference_number`, link to the Tutor LMS PDF, plus `dc3_pdf_url`: the portal's own DC-3, generated once and cached in Vercel Blob.
 - `course_dc3_metadata` — official DC-3 certificate data per course (duración, área temática, agente capacitador, instructor + firma), source `MANUAL` or `WORDPRESS_BRIDGE`.
-- `integration_states` — key/value JSON store for webhook diagnostics state (`lib/webhook-monitor.ts`).
+- `integration_states` — key/value JSON store for webhook diagnostics state (`src/lib/webhook-monitor.ts`).
 - `jobs` — background work queue (mass enrollment, CSV import), drained by `/api/cron/process-jobs` every minute (see `vercel.json`).
 - `audit_events`, `seat_history` — audit log and seat-quota history, append-only.
 
@@ -115,8 +115,8 @@ Core idea: the portal is the **source of truth for corporate structure** (usuari
 
 **Clients (outbound):**
 
-1. `lib/wordpress-bridge.ts` → custom WP plugin endpoints `/wp-json/desarrolla360/v1/*`, authenticated by the `X-D360-Portal-Key` shared header. This is the primary channel: employee upsert/delete in WP, batch enrollment, ensure-access, student courses/certificates/diagnostics, course catalog.
-2. `lib/tutorlms-api.ts` → official Tutor LMS REST API `/wp-json/tutor/v1/*` with Basic auth (`TUTORLMS_API_KEY`:`TUTORLMS_SECRET`). Fallback used to complete enrollments when the bridge's internal route hits Tutor permission errors.
+1. `src/lib/wordpress/bridge.ts` → custom WP plugin endpoints `/wp-json/desarrolla360/v1/*`, authenticated by the `X-D360-Portal-Key` shared header. This is the primary channel: employee upsert/delete in WP, batch enrollment, ensure-access, student courses/certificates/diagnostics, course catalog.
+2. `src/lib/tutorlms-api.ts` → official Tutor LMS REST API `/wp-json/tutor/v1/*` with Basic auth (`TUTORLMS_API_KEY`:`TUTORLMS_SECRET`). Fallback used to complete enrollments when the bridge's internal route hits Tutor permission errors.
 
 The plugin source itself lives in `wordpress-plugin/desarrolla360-bridge/` (single ~4200-line PHP file). It is edited in this repo but deployed to WordPress separately — changes there require re-uploading the plugin.
 
@@ -124,21 +124,21 @@ The plugin source itself lives in `wordpress-plugin/desarrolla360-bridge/` (sing
 
 1. Webhook `POST /api/internal/webhooks/tutor-learning` — the plugin pushes changed learning snapshots; HMAC-SHA256 signature over `timestamp.body` with `BRIDGE_WEBHOOK_SECRET` (headers `x-d360-webhook-signature` / `-timestamp`, 10-min freshness window).
 2. Poll fallback `GET|POST /api/internal/sync/employee-learning` — `Authorization: Bearer CRON_SECRET`, meant for an external scheduler.
-3. Page-level background refresh in `lib/employee-learning.ts` (via `next/server` `after()`), throttled by `EMPLOYEE_SYNC_INTERVAL_MS` (min 15s), dedup with in-flight sets.
+3. Page-level background refresh in `src/lib/employee-learning.ts` (via `next/server` `after()`), throttled by `EMPLOYEE_SYNC_INTERVAL_MS` (min 15s), dedup with in-flight sets.
 
-All three converge on `syncEmployeeLearningFromBridgeSnapshot`, which upserts `employee_courses`/`certificates` and fires notifications (`lib/notifications.ts`).
+All three converge on `syncEmployeeLearningFromBridgeSnapshot`, which upserts `employee_courses`/`certificates` and fires notifications (`src/lib/notifications.ts`).
 
-**Enrollment flow** (`lib/course-sync.ts`): assigning a package to an employee upserts `employee_courses` rows as `PENDING`, calls bridge enroll + ensure-access, verifies the courses are visible to the student, then marks `ACTIVE` or records the error. Packages can optionally create a private Course Bundle in Tutor LMS (`Package.wp_bundle_id`).
+**Enrollment flow** (`src/lib/wordpress/course-sync.ts`): assigning a package to an employee upserts `employee_courses` rows as `PENDING`, calls bridge enroll + ensure-access, verifies the courses are visible to the student, then marks `ACTIVE` or records the error. Packages can optionally create a private Course Bundle in Tutor LMS (`Package.wp_bundle_id`).
 
 **SSO into WordPress**: `buildWordPressCourseLaunchUrl` builds an HMAC-signed auto-login URL (`d360_autologin` params) so employees jump from the portal into their Tutor LMS course without a second login.
 
 ### DC-3 constancias
 
-`lib/dc3-pdf.ts` fills the official DC-3 PDF with `pdf-lib` using templates from `public/templates` and metadata from `course_dc3_metadata`; `lib/dc3.ts` reports which required fields are missing. Instructor signature images upload to Vercel Blob (`app/api/upload/firma-instructor`).
+`src/lib/dc3/pdf.ts` fills the official DC-3 PDF with `pdf-lib` using templates from `public/templates` and metadata from `course_dc3_metadata`; `src/lib/dc3/fields.ts` reports which required fields are missing. Instructor signature images upload to Vercel Blob (`src/app/api/upload/instructor-signature`).
 
 ### UI
 
-MUI v9 (theme in `lib/mui-theme.ts` / `lib/theme-tokens.ts`) combined with Tailwind CSS v4. Icons: lucide-react + remixicon. Timezone-sensitive formatting goes through `lib/format.ts` using `PORTAL_TIME_ZONE`.
+MUI v9 (theme in `src/lib/mui-theme.ts` / `src/lib/theme-tokens.ts`) combined with Tailwind CSS v4. Icons: lucide-react + remixicon. Timezone-sensitive formatting goes through `src/lib/format.ts` using `PORTAL_TIME_ZONE`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

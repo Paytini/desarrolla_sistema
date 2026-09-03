@@ -25,7 +25,7 @@ tags:
     description: >
       Custom REST routes registered by the `desarrolla360-bridge` WordPress plugin
       (source in `wordpress-plugin/`), running on the client's WordPress site —
-      not on this portal. Called by `lib/wordpress-bridge.ts`.
+      not on this portal. Called by `src/lib/wordpress/bridge.ts`.
 
 components:
   securitySchemes:
@@ -574,7 +574,7 @@ paths:
         "500":
           description: No PDF could be generated for any matched certificate.
 
-  /api/company/empleados/export:
+  /api/company/employees/export:
     get:
       tags: [Company]
       summary: Export the company's employees as CSV
@@ -1307,6 +1307,70 @@ paths:
                         message: { type: string }
         "400":
           description: Missing user_id or course_ids.
+        "401":
+          description: Missing/invalid portal key.
+
+  /wp-json/desarrolla360/v1/enrollments/company-batch:
+    servers:
+      - url: https://your-wordpress-site.com
+        description: WordPress site running the desarrolla360-bridge plugin
+    post:
+      tags: [WordPress Bridge Plugin]
+      summary: Enroll and ensure access for multiple students in one request
+      description: Called by src/lib/wordpress/course-sync.ts when syncing a chunk of a mass-enrollment job. For each student, enrolls each course and confirms access, same logic as /enrollments/batch and /students/{student_id}/access/ensure combined. Capped at 25 students per request.
+      security: [{ portalKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [students]
+              properties:
+                students:
+                  type: array
+                  maxItems: 25
+                  items:
+                    type: object
+                    required: [user_id, course_ids]
+                    properties:
+                      user_id: { type: integer }
+                      course_ids:
+                        type: array
+                        items: { type: integer }
+      responses:
+        "200":
+          description: Per-student enrollment and access outcome.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  students:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user_id: { type: integer }
+                        student_id: { type: integer }
+                        enrolled_course_ids:
+                          type: array
+                          items: { type: integer }
+                        completed_course_ids:
+                          type: array
+                          items: { type: integer }
+                        already_active_ids:
+                          type: array
+                          items: { type: integer }
+                        failed_course_ids:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              course_id: { type: integer }
+                              message: { type: string }
+        "400":
+          description: Missing students, or more than 25 students in the request.
         "401":
           description: Missing/invalid portal key.
 

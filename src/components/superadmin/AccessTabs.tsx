@@ -1,0 +1,453 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import {
+  Avatar,
+  Box,
+  Chip,
+  CircularProgress,
+  Paper,
+  Stack,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material"
+import { alpha } from "@mui/material/styles"
+import { Pause, Play, Trash2, Users, UserX } from "lucide-react"
+import { ConfirmIconButton } from "@/components/shared/ConfirmIconButton"
+import { SearchInput } from "@/components/shared/SearchInput"
+import { Pagination } from "@/components/shared/Pagination"
+import { DataTable } from "@/components/shared/DataTable"
+import { getInitials } from "@/components/layout/nav-config"
+import {
+  deleteEmployeeAsSuperAdminAction,
+  toggleEmployeeStatusAsSuperAdminAction,
+  toggleHrUserStatusAction,
+} from "@/app/(portal)/superadmin/access/actions"
+
+export type HrAccessRow = {
+  id: string
+  name: string
+  email: string
+  active: boolean
+  companyName: string
+  lastAccess: string
+  createdAt: string
+  usedSeats: number | null
+  contractedSeats: number | null
+}
+
+export type EmployeeAccessRow = {
+  id: string
+  name: string
+  lastName: string
+  email: string
+  active: boolean
+  companyName: string
+  wpUserId: number | null
+  createdAt: string
+  portalActive: boolean | null
+  portalLastAccess: string
+}
+
+function StatusBadge({
+  active,
+  activeLabel,
+  inactiveLabel,
+}: {
+  active: boolean
+  activeLabel: string
+  inactiveLabel: string
+}) {
+  return (
+    <Chip
+      label={active ? activeLabel : inactiveLabel}
+      size="small"
+      sx={{
+        height: 22,
+        fontSize: 11,
+        fontWeight: 600,
+        bgcolor: active ? "#D1FAE5" : "#E2E8F0",
+        color: active ? "#047857" : "#475569",
+      }}
+    />
+  )
+}
+
+function RowIdentity({
+  name,
+  email,
+  avatarLabel,
+}: {
+  name: string
+  email: string
+  avatarLabel: string
+}) {
+  return (
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+      <Avatar
+        sx={{
+          width: 36,
+          height: 36,
+          fontSize: 12,
+          fontWeight: 700,
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
+          color: "primary.main",
+        }}
+      >
+        {getInitials(avatarLabel)}
+      </Avatar>
+      <Box>
+        <Typography sx={{ fontSize: 13, fontWeight: 500 }}>{name}</Typography>
+        <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.25 }}>{email}</Typography>
+      </Box>
+    </Stack>
+  )
+}
+
+function SeatsRing({ used, total }: { used: number | null; total: number | null }) {
+  if (!total || total <= 0) {
+    return <Typography sx={{ fontSize: 12, color: "text.secondary" }}>—</Typography>
+  }
+  const pct = Math.min(100, Math.round(((used ?? 0) / total) * 100))
+  return (
+    <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+      <Box sx={{ position: "relative", width: 32, height: 32 }}>
+        <CircularProgress
+          variant="determinate"
+          value={100}
+          size={32}
+          thickness={4}
+          sx={{ position: "absolute", color: "#EFEAE3" }}
+        />
+        <CircularProgress
+          variant="determinate"
+          value={pct}
+          size={32}
+          thickness={4}
+          sx={{ position: "absolute", color: "primary.main" }}
+        />
+      </Box>
+      <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
+        {used}/{total}
+      </Typography>
+    </Stack>
+  )
+}
+
+function SectionHeader({ title, description }: { title: string; description: string }) {
+  return (
+    <Box>
+      <Typography variant="h2" sx={{ fontSize: 16, fontWeight: 600 }}>
+        {title}
+      </Typography>
+      <Box sx={{ mt: 1.5, mb: 1, height: 2, width: 24, bgcolor: "primary.main" }} />
+      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>{description}</Typography>
+    </Box>
+  )
+}
+
+type EmployeePagination = {
+  currentPage: number
+  totalPages: number
+  totalResults: number
+}
+
+type AccessTabsProps = {
+  hrUsers: HrAccessRow[]
+  employees: EmployeeAccessRow[]
+  defaultTab?: "hr" | "employees"
+  employeeSearch: string
+  employeesGrandTotal: number
+  employeePagination: EmployeePagination
+}
+
+export function AccessTabs({
+  hrUsers,
+  employees,
+  defaultTab = "hr",
+  employeeSearch,
+  employeesGrandTotal,
+  employeePagination,
+}: AccessTabsProps) {
+  const router = useRouter()
+  const [tab, setTab] = useState<"hr" | "employees">(defaultTab)
+  const [hrSearch, setHrSearch] = useState("")
+
+  function handleTabChange(value: "hr" | "employees") {
+    setTab(value)
+    router.replace(
+      value === "employees" ? "/superadmin/access?tab=employees" : "/superadmin/access",
+      { scroll: false },
+    )
+  }
+
+  function buildEmployeePageUrl(page: number) {
+    const qs = new URLSearchParams()
+    qs.set("tab", "employees")
+    if (employeeSearch) qs.set("q", employeeSearch)
+    if (page > 1) qs.set("page", String(page))
+    return `/superadmin/access?${qs.toString()}`
+  }
+
+  const filteredHr = hrSearch.trim()
+    ? hrUsers.filter((u) => {
+        const q = hrSearch.toLowerCase()
+        return (
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          u.companyName.toLowerCase().includes(q)
+        )
+      })
+    : hrUsers
+
+  return (
+    <Paper elevation={0} sx={{ borderRadius: "8px", backgroundColor: "#FFFFFF" }}>
+      <Tabs
+        value={tab}
+        onChange={(_, value: "hr" | "employees") => handleTabChange(value)}
+        sx={{ px: 2.5, pt: 1, borderBottom: "1px solid var(--portal-border)" }}
+      >
+        <Tab value="hr" label={`Empresas (${hrUsers.length})`} />
+        <Tab value="employees" label={`Empleados (${employeesGrandTotal})`} />
+      </Tabs>
+
+      {tab === "hr" && (
+        <Stack spacing={2} sx={{ p: 2.5 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
+            <SectionHeader
+              title="Cuentas de empresas"
+              description="Pausa o reactiva accesos sin necesidad de eliminar la cuenta."
+            />
+            <SearchInput
+              value={hrSearch}
+              onChange={setHrSearch}
+              placeholder="Buscar por nombre, email o empresa…"
+              width={280}
+            />
+          </Box>
+          <DataTable
+            ariaLabel="Empresas"
+            columns={[
+              { label: "Nombre" },
+              { label: "Empresa" },
+              { label: "Estado" },
+              { label: "Último acceso" },
+              { label: "Cupos" },
+              { label: "Alta" },
+              { label: "Acción", className: "text-right" },
+            ]}
+            rows={filteredHr.map((user) => (
+              <tr key={user.id} className="bg-white transition-colors hover:bg-gray-50">
+                <td className="rounded-l-lg px-4 py-3">
+                  <RowIdentity name={user.name} email={user.email} avatarLabel={user.name} />
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 13 }}>{user.companyName}</Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge
+                    active={user.active}
+                    activeLabel="Activo"
+                    inactiveLabel="Suspendido"
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {user.lastAccess}
+                  </Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <SeatsRing used={user.usedSeats} total={user.contractedSeats} />
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {user.createdAt}
+                  </Typography>
+                </td>
+                <td className="rounded-r-lg px-4 py-3 text-right">
+                  <ConfirmIconButton
+                    tone={user.active ? "outline" : "brand"}
+                    icon={user.active ? <Pause size={13} /> : <Play size={13} />}
+                    label={user.active ? "Suspender" : "Reactivar"}
+                    title={
+                      user.active ? `¿Suspender a ${user.name}?` : `¿Reactivar a ${user.name}?`
+                    }
+                    description={
+                      user.active
+                        ? "El usuario perderá acceso al portal de inmediato."
+                        : "El usuario recuperará acceso al portal de inmediato."
+                    }
+                    confirmLabel={user.active ? "Sí, suspender" : "Sí, reactivar"}
+                    action={toggleHrUserStatusAction}
+                    hiddenFields={{ user_id: user.id }}
+                  />
+                </td>
+              </tr>
+            ))}
+            emptyState={{
+              icon: <Users size={28} className="text-slate-300" />,
+              message:
+                hrUsers.length === 0
+                  ? "Aún no hay empresas registrados."
+                  : `Sin resultados para "${hrSearch}".`,
+            }}
+          />
+        </Stack>
+      )}
+
+      {tab === "employees" && (
+        <Stack spacing={2} sx={{ p: 2.5 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
+            <SectionHeader
+              title="Empleados del portal"
+              description="Elimina accesos cuando sea necesario liberar una cuenta."
+            />
+            <Box
+              component="form"
+              method="GET"
+              action="/superadmin/access"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <input type="hidden" name="tab" value="employees" />
+              <SearchInput
+                name="q"
+                defaultValue={employeeSearch}
+                placeholder="Buscar por nombre, email o empresa…"
+                width={280}
+              />
+            </Box>
+          </Box>
+          <DataTable
+            ariaLabel="Empleados del portal"
+            columns={[
+              { label: "Empleado" },
+              { label: "Empresa" },
+              { label: "Estado" },
+              { label: "Portal" },
+              { label: "WP ID" },
+              { label: "Último acceso" },
+              { label: "Alta" },
+              { label: "Acción", className: "text-right" },
+            ]}
+            rows={employees.map((employee) => (
+              <tr key={employee.id} className="bg-white transition-colors hover:bg-gray-50">
+                <td className="rounded-l-lg px-4 py-3">
+                  <RowIdentity
+                    name={`${employee.name} ${employee.lastName}`}
+                    email={employee.email}
+                    avatarLabel={`${employee.name} ${employee.lastName}`}
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 13 }}>{employee.companyName}</Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge
+                    active={employee.active}
+                    activeLabel="Activo"
+                    inactiveLabel="Suspendido"
+                  />
+                </td>
+                <td className="px-4 py-3">
+                  {employee.portalActive === null ? (
+                    <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                      Sin cuenta
+                    </Typography>
+                  ) : (
+                    <StatusBadge
+                      active={employee.portalActive}
+                      activeLabel="Activo"
+                      inactiveLabel="Suspendido"
+                    />
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  <Typography
+                    sx={{ fontSize: 12, color: "text.secondary", fontFamily: "monospace" }}
+                  >
+                    {employee.wpUserId ?? "—"}
+                  </Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {employee.portalLastAccess}
+                  </Typography>
+                </td>
+                <td className="px-4 py-3">
+                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    {employee.createdAt}
+                  </Typography>
+                </td>
+                <td className="rounded-r-lg px-4 py-3 text-right">
+                  <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
+                    <ConfirmIconButton
+                      tone={employee.active ? "outline" : "brand"}
+                      icon={employee.active ? <Pause size={13} /> : <Play size={13} />}
+                      label={employee.active ? "Suspender" : "Reactivar"}
+                      title={
+                        employee.active
+                          ? `¿Suspender a ${employee.name} ${employee.lastName}?`
+                          : `¿Reactivar a ${employee.name} ${employee.lastName}?`
+                      }
+                      description={
+                        employee.active
+                          ? "El empleado perderá acceso al portal de inmediato."
+                          : "El empleado recuperará acceso al portal de inmediato."
+                      }
+                      confirmLabel={employee.active ? "Sí, suspender" : "Sí, reactivar"}
+                      action={toggleEmployeeStatusAsSuperAdminAction}
+                      hiddenFields={{ empleado_id: employee.id }}
+                    />
+                    <ConfirmIconButton
+                      tone="outline-destructive"
+                      icon={<Trash2 size={13} />}
+                      label="Eliminar"
+                      title={`¿Eliminar a ${employee.name} ${employee.lastName}?`}
+                      description="Esta acción eliminará al empleado del portal y también intentará remover su usuario en WordPress/Tutor LMS."
+                      confirmLabel="Sí, eliminar"
+                      action={deleteEmployeeAsSuperAdminAction}
+                      hiddenFields={{ empleado_id: employee.id }}
+                    />
+                  </Stack>
+                </td>
+              </tr>
+            ))}
+            emptyState={{
+              icon: <UserX size={28} className="text-slate-300" />,
+              message:
+                employeePagination.totalResults === 0 && !employeeSearch
+                  ? "Aún no hay empleados registrados."
+                  : `Sin resultados para "${employeeSearch}".`,
+            }}
+          />
+        </Stack>
+      )}
+      {tab === "employees" && employees.length > 0 && (
+        <Pagination
+          currentPage={employeePagination.currentPage}
+          totalPages={employeePagination.totalPages}
+          totalResults={employeePagination.totalResults}
+          buildPageUrl={buildEmployeePageUrl}
+        />
+      )}
+    </Paper>
+  )
+}

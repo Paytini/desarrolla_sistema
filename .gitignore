@@ -16,6 +16,9 @@ coverage/
 .turbo/
 *.tsbuildinfo
 
+# WordPress plugin build artifact (se genera al empaquetar wordpress-plugin/desarrolla360-bridge/)
+wordpress-plugin/*.zip
+
 # Prisma
 /generated/prisma
 

@@ -1,0 +1,195 @@
+import { getSuperadminCompaniesListSnapshot } from "@/lib/dashboard-cache"
+import { readSearchParam } from "@/lib/search-params"
+import { CompanyRow } from "@/components/superadmin/CompanyRow"
+import { PanelBox } from "@/components/superadmin/PanelBox"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { DataTable } from "@/components/shared/DataTable"
+import { Building2, Plus, X } from "lucide-react"
+import Link from "next/link"
+import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
+import { Pagination } from "@/components/shared/Pagination"
+import Box from "@mui/material/Box"
+import Button from "@mui/material/Button"
+import { SearchInput } from "@/components/shared/SearchInput"
+
+const successMessages: Record<string, string> = {
+  empresa_creada: "Empresa creada correctamente con su usuario HR inicial.",
+  empresa_suspendida: "Empresa suspendida.",
+  empresa_activada: "Empresa reactivada correctamente.",
+}
+const errorMessages: Record<string, string> = {
+  datos: "Faltan datos obligatorios.",
+  email_hr: "Ese correo HR ya está ligado a una empresa.",
+  usuario_hr: "Ese correo ya existe como usuario del portal.",
+  empresa: "No se encontró la empresa.",
+}
+
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function CompaniesPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const success = readSearchParam(params, "success")
+  const error = readSearchParam(params, "error")
+  const q = readSearchParam(params, "q")?.toLowerCase() ?? ""
+  const statusFilter = readSearchParam(params, "status") ?? "all"
+  const page = Math.max(1, Number(readSearchParam(params, "page") ?? "1"))
+
+  const {
+    companies: pagedCompanies,
+    filteredCount,
+    currentPage,
+    totalPages,
+  } = await getSuperadminCompaniesListSnapshot(q, statusFilter, page)
+
+  function pageUrl(p: number) {
+    const qs = new URLSearchParams()
+    if (q) qs.set("q", q)
+    if (statusFilter !== "all") qs.set("status", statusFilter)
+    if (p > 1) qs.set("page", String(p))
+    const str = qs.toString()
+    return `/superadmin/companies${str ? `?${str}` : ""}`
+  }
+
+  return (
+    <Box sx={{ display: "grid", gap: 3 }}>
+      <PageHeader
+        title="Empresas clientes"
+        description="Gestiona las organizaciones activas en la plataforma."
+        action={
+          <Link href="/superadmin/companies/new" style={{ textDecoration: "none" }}>
+            <Button
+              variant="contained"
+              startIcon={<Plus size={14} strokeWidth={2.5} />}
+              sx={{ height: 44, px: 3, borderRadius: "10px" }}
+            >
+              Nueva empresa
+            </Button>
+          </Link>
+        }
+      />
+
+      {success && (
+        <DismissibleAlert severity="success">
+          {successMessages[success] ?? success}
+        </DismissibleAlert>
+      )}
+      {error && (
+        <DismissibleAlert severity="error">{errorMessages[error] ?? error}</DismissibleAlert>
+      )}
+
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1.5,
+        }}
+      >
+        <Box
+          component="form"
+          method="GET"
+          sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
+        >
+          <SearchInput name="q" defaultValue={q} placeholder="Buscar empresa o RFC…" width={224} />
+          <Box
+            component="select"
+            name="status"
+            defaultValue={statusFilter}
+            sx={{
+              height: 40,
+              borderRadius: "8px",
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "#FFFFFF",
+              px: 1.5,
+              fontSize: "13px",
+              color: "text.primary",
+              outline: "none",
+              cursor: "pointer",
+              "&:focus": { borderColor: "primary.main" },
+            }}
+          >
+            <option value="all">Todos</option>
+            <option value="activa">Activas</option>
+            <option value="suspendida">Suspendidas</option>
+          </Box>
+          <Button
+            type="submit"
+            variant="outlined"
+            size="small"
+            sx={{
+              bgcolor: "#FFFFFF",
+              height: 40,
+              px: 1.5,
+              fontSize: 13,
+              borderColor: "divider",
+              color: "text.secondary",
+            }}
+          >
+            Filtrar
+          </Button>
+          {(q || statusFilter !== "all") && (
+            <Link
+              href="/superadmin/companies"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                height: 40,
+                paddingLeft: 8,
+                paddingRight: 8,
+                fontSize: 12,
+                color: "#64748b",
+                textDecoration: "none",
+              }}
+            >
+              <X size={12} strokeWidth={2.5} />
+              Limpiar
+            </Link>
+          )}
+        </Box>
+      </Box>
+
+      <PanelBox
+        title="Empresas registradas"
+        description={`${filteredCount} resultado${filteredCount !== 1 ? "s" : ""}${q || statusFilter !== "all" ? " · filtro activo" : ""}${totalPages > 1 ? ` · pág. ${currentPage}/${totalPages}` : ""}`}
+        noPadding
+      >
+        <div className="px-2">
+          <DataTable
+            ariaLabel="Empresas registradas"
+            columns={[
+              { label: "Empresa" },
+              { label: "RFC", className: "hidden sm:table-cell" },
+              { label: "Plan", className: "hidden md:table-cell" },
+              { label: "Cupos" },
+              { label: "Alta", className: "hidden lg:table-cell" },
+              { label: "Estado" },
+              { label: <span className="sr-only">Acciones</span> },
+            ]}
+            rows={pagedCompanies.map((company) => (
+              <CompanyRow key={company.id} company={company} />
+            ))}
+            emptyState={{
+              icon: <Building2 size={28} className="text-slate-300" />,
+              message:
+                q || statusFilter !== "all"
+                  ? "Sin resultados para ese filtro."
+                  : "Aún no hay empresas registradas.",
+            }}
+          />
+        </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalResults={filteredCount}
+          buildPageUrl={pageUrl}
+        />
+      </PanelBox>
+    </Box>
+  )
+}

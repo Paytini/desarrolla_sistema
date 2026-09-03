@@ -8,6 +8,7 @@ Plugin de WordPress para conectar el portal empresarial de Desarrolla360 con Wor
 - `GET /wp-json/desarrolla360/v1/courses`
 - `POST /wp-json/desarrolla360/v1/employees/upsert`
 - `POST /wp-json/desarrolla360/v1/enrollments/batch`
+- `POST /wp-json/desarrolla360/v1/enrollments/company-batch`
 - `GET /wp-json/desarrolla360/v1/students/{studentId}/courses`
 - `GET /wp-json/desarrolla360/v1/students/{studentId}/dashboard`
 - `GET /wp-json/desarrolla360/v1/students/{studentId}/certificates`
