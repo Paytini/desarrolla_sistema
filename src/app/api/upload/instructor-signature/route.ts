@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import sharp from "sharp"
-import { put } from "@vercel/blob"
+import { uploadPrivateFile } from "@/lib/supabase-storage"
 import { getSession } from "@/lib/session"
 
 export const runtime = "nodejs"
@@ -59,11 +59,7 @@ export async function POST(request: NextRequest) {
   }
 
   const filename = `signatures/instructors/${wpCourseId}/${base}-${Date.now()}.png`
-  const blob = await put(filename, pngBuffer, {
-    access: "private",
-    contentType: "image/png",
-    addRandomSuffix: false,
-  })
+  const url = await uploadPrivateFile(filename, pngBuffer, "image/png")
 
-  return NextResponse.json({ url: blob.url })
+  return NextResponse.json({ url })
 }
