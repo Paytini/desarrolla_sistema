@@ -22,6 +22,7 @@ import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { formatDate } from "@/lib/format"
+import { amber, fd as brandColors, gray, green, portalColors, red, slate } from "@/lib/theme-tokens"
 
 const DC3_PAGE_SIZE = 20
 
@@ -80,19 +81,25 @@ const STATUS_CONFIG: Record<
 > = {
   complete: {
     label: "Completo",
-    bg: "#f0fdf4",
-    color: "#15803d",
-    border: "#bbf7d0",
-    dot: "#22c55e",
+    bg: green[50],
+    color: green[700],
+    border: green[200],
+    dot: green[500],
   },
   incomplete: {
     label: "Incompleto",
-    bg: "#fffbeb",
-    color: "#b45309",
-    border: "#fde68a",
-    dot: "#f59e0b",
+    bg: amber[50],
+    color: amber[700],
+    border: amber[200],
+    dot: brandColors.accent,
   },
-  empty: { label: "Sin datos", bg: "#f8fafc", color: "#64748b", border: "#e2e8f0", dot: "#94a3b8" },
+  empty: {
+    label: "Sin datos",
+    bg: slate[50],
+    color: slate[500],
+    border: slate[200],
+    dot: slate[400],
+  },
 }
 
 function Field({
@@ -106,7 +113,7 @@ function Field({
 }) {
   return (
     <Box sx={{ display: "grid", gap: 0.75 }}>
-      <EyebrowLabel color="#0f172a">
+      <EyebrowLabel color={slate[900]}>
         {label}
         {required && (
           <Box component="span" sx={{ color: "error.main", ml: 0.5 }}>
@@ -128,7 +135,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
           fontWeight: 800,
           textTransform: "uppercase",
           letterSpacing: "0.12em",
-          color: "#94a3b8",
+          color: slate[400],
           whiteSpace: "nowrap",
         }}
       >
@@ -307,11 +314,11 @@ function CourseEditorCard({
                 height: 22,
                 fontSize: "11px",
                 fontWeight: 600,
-                bgcolor: "#f0fdf4",
-                color: "#15803d",
-                border: "1px solid #bbf7d0",
+                bgcolor: green[50],
+                color: green[700],
+                border: `1px solid ${green[200]}`,
                 "& .MuiChip-label": { px: 1 },
-                "& .MuiChip-icon": { color: "#22c55e", ml: 0.75 },
+                "& .MuiChip-icon": { color: green[500], ml: 0.75 },
               }}
             />
           )}
@@ -321,7 +328,7 @@ function CourseEditorCard({
                 fontSize: "12px",
                 fontWeight: 600,
                 fontVariantNumeric: "tabular-nums",
-                color: status === "complete" ? "#15803d" : "#b45309",
+                color: status === "complete" ? green[700] : amber[700],
               }}
             >
               {completeness}/6
@@ -342,9 +349,9 @@ function CourseEditorCard({
             }}
           />
           {open ? (
-            <ChevronUp size={15} style={{ color: "#858382", flexShrink: 0 }} />
+            <ChevronUp size={15} style={{ color: portalColors.iconMuted, flexShrink: 0 }} />
           ) : (
-            <ChevronDown size={15} style={{ color: "#858382", flexShrink: 0 }} />
+            <ChevronDown size={15} style={{ color: portalColors.iconMuted, flexShrink: 0 }} />
           )}
         </Box>
       </Box>
@@ -397,17 +404,17 @@ function CourseEditorCard({
                     height: 22,
                     fontSize: "11px",
                     fontWeight: 600,
-                    bgcolor: "#f0fdf4",
-                    color: "#15803d",
-                    border: "1px solid #bbf7d0",
-                    "& .MuiChip-icon": { color: "#22c55e", ml: 0.75 },
+                    bgcolor: green[50],
+                    color: green[700],
+                    border: `1px solid ${green[200]}`,
+                    "& .MuiChip-icon": { color: green[500], ml: 0.75 },
                     "& .MuiChip-label": { px: 1 },
                   }}
                 />
               )}
               {syncError && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                  <AlertCircle size={13} strokeWidth={2} style={{ color: "#dc2626" }} />
+                  <AlertCircle size={13} strokeWidth={2} style={{ color: red[600] }} />
                   <Typography sx={{ fontSize: 12, color: "error.main" }}>{syncError}</Typography>
                 </Box>
               )}
@@ -544,9 +551,9 @@ function CourseEditorCard({
                 <Box
                   sx={{
                     borderRadius: "12px",
-                    border: "2px solid #1E293B",
+                    border: `2px solid ${slate[800]}`,
                     overflow: "hidden",
-                    boxShadow: "3px 3px 0px 0px #1E293B",
+                    boxShadow: `3px 3px 0px 0px ${slate[800]}`,
                   }}
                 >
                   <Box
@@ -558,8 +565,8 @@ function CourseEditorCard({
                       minHeight: 100,
                       py: 3,
                       px: 4,
-                      bgcolor: "#ffffff",
-                      backgroundImage: "radial-gradient(circle, #cbd5e1 1px, transparent 1px)",
+                      bgcolor: brandColors.background,
+                      backgroundImage: `radial-gradient(circle, ${slate[300]} 1px, transparent 1px)`,
                       backgroundSize: "18px 18px",
                     }}
                   >
@@ -582,15 +589,15 @@ function CourseEditorCard({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      borderTop: "1.5px solid #e2e8f0",
-                      bgcolor: "#f8fafc",
+                      borderTop: `1.5px solid ${slate[200]}`,
+                      bgcolor: slate[50],
                       px: 2,
                       py: 1,
                     }}
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                      <CheckCircle2 size={12} strokeWidth={2.5} style={{ color: "#22c55e" }} />
-                      <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#15803d" }}>
+                      <CheckCircle2 size={12} strokeWidth={2.5} style={{ color: green[500] }} />
+                      <Typography sx={{ fontSize: 11, fontWeight: 600, color: green[700] }}>
                         Firma cargada
                       </Typography>
                     </Box>
@@ -605,9 +612,9 @@ function CourseEditorCard({
                           fontSize: 11,
                           px: 1.25,
                           borderRadius: "6px",
-                          borderColor: "#CBD5E1",
-                          color: "#64748b",
-                          "&:hover": { borderColor: "#94a3b8", bgcolor: "transparent" },
+                          borderColor: slate[300],
+                          color: slate[500],
+                          "&:hover": { borderColor: slate[400], bgcolor: "transparent" },
                         }}
                       >
                         {uploadingSignature ? "Subiendo…" : "Cambiar"}
@@ -619,8 +626,8 @@ function CourseEditorCard({
                           width: 26,
                           height: 26,
                           borderRadius: "6px",
-                          border: "1px solid #CBD5E1",
-                          color: "#94a3b8",
+                          border: `1px solid ${slate[300]}`,
+                          color: slate[400],
                           "&:hover": {
                             borderColor: "#fca5a5",
                             color: "#ef4444",
@@ -639,7 +646,7 @@ function CourseEditorCard({
                   sx={{
                     borderRadius: "12px",
                     border: "2px dashed",
-                    borderColor: uploadingSignature ? "var(--portal-blue)" : "#CBD5E1",
+                    borderColor: uploadingSignature ? "var(--portal-blue)" : slate[300],
                     bgcolor: uploadingSignature ? "rgba(53,121,245,0.03)" : "#fafafa",
                     cursor: uploadingSignature ? "default" : "pointer",
                     display: "flex",
@@ -664,13 +671,15 @@ function CourseEditorCard({
                           width: 32,
                           height: 32,
                           borderRadius: "50%",
-                          border: "2.5px solid #e2e8f0",
+                          border: `2.5px solid ${slate[200]}`,
                           borderTopColor: "var(--portal-blue)",
                           animation: "spin 0.7s linear infinite",
                           "@keyframes spin": { to: { transform: "rotate(360deg)" } },
                         }}
                       />
-                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: "var(--portal-blue)" }}>
+                      <Typography
+                        sx={{ fontSize: 12, fontWeight: 600, color: "var(--portal-blue)" }}
+                      >
                         Subiendo firma…
                       </Typography>
                     </>
@@ -681,20 +690,20 @@ function CourseEditorCard({
                           width: 40,
                           height: 40,
                           borderRadius: "10px",
-                          bgcolor: "#f1f5f9",
-                          border: "1.5px solid #e2e8f0",
+                          bgcolor: slate[100],
+                          border: `1.5px solid ${slate[200]}`,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           mb: 0.25,
                         }}
                       >
-                        <Upload size={18} strokeWidth={1.5} style={{ color: "#64748b" }} />
+                        <Upload size={18} strokeWidth={1.5} style={{ color: slate[500] }} />
                       </Box>
-                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>
+                      <Typography sx={{ fontSize: 13, fontWeight: 600, color: slate[800] }}>
                         Subir firma del instructor
                       </Typography>
-                      <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+                      <Typography sx={{ fontSize: 11, color: slate[400] }}>
                         PNG, JPG o WEBP
                       </Typography>
                     </>
@@ -704,7 +713,7 @@ function CourseEditorCard({
 
               {uploadError && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 0.75 }}>
-                  <AlertCircle size={12} strokeWidth={2} style={{ color: "#dc2626" }} />
+                  <AlertCircle size={12} strokeWidth={2} style={{ color: red[600] }} />
                   <Typography sx={{ fontSize: 12, color: "error.main" }}>{uploadError}</Typography>
                 </Box>
               )}
@@ -723,7 +732,7 @@ function CourseEditorCard({
             >
               {saveError ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                  <AlertCircle size={13} strokeWidth={2} style={{ color: "#dc2626" }} />
+                  <AlertCircle size={13} strokeWidth={2} style={{ color: red[600] }} />
                   <Typography sx={{ fontSize: 12, color: "error.main" }}>{saveError}</Typography>
                 </Box>
               ) : (
@@ -839,8 +848,8 @@ export default function Dc3EditorList({
                   borderRadius: "20px",
                   border: "1px solid",
                   borderColor: active ? "transparent" : "divider",
-                  bgcolor: active ? "#0f172a" : "background.paper",
-                  color: active ? "#fff" : "text.secondary",
+                  bgcolor: active ? slate[900] : "background.paper",
+                  color: active ? brandColors.background : "text.secondary",
                   fontSize: 14,
                   fontWeight: 500,
                   fontFamily: "inherit",
@@ -859,7 +868,7 @@ export default function Dc3EditorList({
                     fontSize: "10px",
                     fontWeight: 600,
                     bgcolor: active ? "rgba(255,255,255,0.2)" : "action.hover",
-                    color: active ? "#fff" : "text.secondary",
+                    color: active ? brandColors.background : "text.secondary",
                   }}
                 >
                   {counts[value]}
@@ -882,7 +891,7 @@ export default function Dc3EditorList({
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <Search size={14} style={{ color: "#9CA3AF" }} />
+                  <Search size={14} style={{ color: gray[400] }} />
                 </InputAdornment>
               ),
             },

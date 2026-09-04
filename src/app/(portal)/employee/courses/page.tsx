@@ -1,3 +1,4 @@
+import { amber, fd, portalColors, sky, slate } from "@/lib/theme-tokens"
 import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
@@ -137,9 +138,9 @@ export default async function EmployeeCourses() {
           severity="warning"
           sx={{
             borderRadius: 2,
-            border: "1px solid #fde68a",
-            bgcolor: "#fffbeb",
-            color: "#78350f",
+            border: `1px solid ${amber[200]}`,
+            bgcolor: amber[50],
+            color: amber[900],
           }}
         >
           No pudimos refrescar tu avance. Mostramos el último dato guardado.
@@ -151,9 +152,9 @@ export default async function EmployeeCourses() {
           severity="info"
           sx={{
             borderRadius: 2,
-            border: "1px solid #bae6fd",
-            bgcolor: "#f0f9ff",
-            color: "#0c4a6e",
+            border: `1px solid ${sky[200]}`,
+            bgcolor: sky[50],
+            color: sky[900],
           }}
         >
           Verificando tu avance más reciente. La vista se actualizará automáticamente.
@@ -181,7 +182,7 @@ export default async function EmployeeCourses() {
             const pkgMeta = pkgCourseMap.get(course.wp_course_id)
             const hasError = course.access_status === "ERROR"
             const inProgress = !course.completed && course.progress_pct > 0
-            const barColor = course.progress_pct > 0 ? "var(--portal-blue)" : "#94a3b8"
+            const barColor = course.progress_pct > 0 ? "var(--portal-blue)" : slate[400]
             const duracionLabel = dc3Meta?.duration_hours
               ? `${Math.round(dc3Meta.duration_hours)}h`
               : null
@@ -196,7 +197,7 @@ export default async function EmployeeCourses() {
                   flexDirection: "column",
                   overflow: "hidden",
                   borderRadius: 2.5,
-                  border: "1px solid #f0f0f0",
+                  border: `1px solid ${portalColors.cardBorder}`,
                   bgcolor: "background.paper",
                 }}
               >
@@ -220,7 +221,7 @@ export default async function EmployeeCourses() {
                           py: 0.375,
                           fontSize: "10px",
                           fontWeight: 600,
-                          color: "#fff",
+                          color: fd.background,
                         }}
                       >
                         {duracionLabel}
@@ -260,7 +261,7 @@ export default async function EmployeeCourses() {
                           py: 0.375,
                           fontSize: "10px",
                           fontWeight: 600,
-                          color: "#fff",
+                          color: fd.background,
                         }}
                       >
                         {duracionLabel}
@@ -283,7 +284,7 @@ export default async function EmployeeCourses() {
                       sx={{
                         fontSize: 13,
                         fontWeight: 600,
-                        color: "#1a1a1a",
+                        color: portalColors.ink,
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
@@ -304,7 +305,7 @@ export default async function EmployeeCourses() {
                       sx={{
                         mb: 1,
                         fontSize: 11,
-                        color: "#64748b",
+                        color: slate[500],
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
@@ -324,7 +325,7 @@ export default async function EmployeeCourses() {
                             alignItems: "center",
                             gap: 0.5,
                             fontSize: "11px",
-                            color: "#94a3b8",
+                            color: slate[400],
                           }}
                         >
                           <ClipboardList size={12} /> {pkgMeta.lesson_count} lecciones
@@ -355,8 +356,8 @@ export default async function EmployeeCourses() {
                       justifyContent: "space-between",
                     }}
                   >
-                    <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>Avance</Typography>
-                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a" }}>
+                    <Typography sx={{ fontSize: 11, color: slate[400] }}>Avance</Typography>
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: portalColors.ink }}>
                       {course.progress_pct}%
                     </Typography>
                   </Box>
@@ -366,7 +367,7 @@ export default async function EmployeeCourses() {
                       height: 6,
                       overflow: "hidden",
                       borderRadius: "999px",
-                      bgcolor: "#f0f0f0",
+                      bgcolor: portalColors.cardBorder,
                     }}
                   >
                     <Box
@@ -388,7 +389,7 @@ export default async function EmployeeCourses() {
                   ) : null}
 
                   {course.completed && course.completed_at ? (
-                    <Typography sx={{ mb: 1.5, fontSize: "11px", color: "#94a3b8" }}>
+                    <Typography sx={{ mb: 1.5, fontSize: "11px", color: slate[400] }}>
                       Completado: {formatDateTime(course.completed_at)}
                     </Typography>
                   ) : null}
@@ -408,8 +409,8 @@ export default async function EmployeeCourses() {
                           py: 1.25,
                           fontSize: 13,
                           fontWeight: 600,
-                          bgcolor: course.completed ? "var(--portal-blue)" : "#1a1a1a",
-                          color: "#fff",
+                          bgcolor: course.completed ? "var(--portal-blue)" : portalColors.ink,
+                          color: fd.background,
                           "&:hover": {
                             bgcolor: course.completed ? "var(--portal-blue-hover)" : "#333",
                           },
@@ -422,7 +423,7 @@ export default async function EmployeeCourses() {
                             : "Iniciar"}
                       </Button>
                     ) : (
-                      <Typography sx={{ textAlign: "center", fontSize: 11, color: "#94a3b8" }}>
+                      <Typography sx={{ textAlign: "center", fontSize: 11, color: slate[400] }}>
                         Sin URL disponible
                       </Typography>
                     )}
@@ -442,7 +443,7 @@ export default async function EmployeeCourses() {
             alignItems: "center",
             gap: 1.5,
             borderRadius: 2.5,
-            border: "1px solid #f0f0f0",
+            border: `1px solid ${portalColors.cardBorder}`,
             bgcolor: "background.paper",
             px: 2.5,
             py: 2,
@@ -464,11 +465,11 @@ export default async function EmployeeCourses() {
             <Award size={16} strokeWidth={2} />
           </Box>
           <Box sx={{ flex: 1 }}>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: portalColors.ink }}>
               Tienes {completedCourses} curso{completedCourses > 1 ? "s" : ""} completado
               {completedCourses > 1 ? "s" : ""}
             </Typography>
-            <Typography sx={{ fontSize: 11, color: "#64748b" }}>
+            <Typography sx={{ fontSize: 11, color: slate[500] }}>
               Descarga tus constancias DC-3 oficiales STPS.
             </Typography>
           </Box>
@@ -485,7 +486,7 @@ export default async function EmployeeCourses() {
               fontSize: 13,
               fontWeight: 600,
               bgcolor: "var(--portal-blue)",
-              color: "#fff",
+              color: fd.background,
               "&:hover": { bgcolor: "var(--portal-blue-hover)" },
             }}
           >

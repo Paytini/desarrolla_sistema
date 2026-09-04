@@ -1,3 +1,4 @@
+import { amber, green, portalColors, red, slate } from "@/lib/theme-tokens"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
 import { CompanyBrandingForm } from "@/components/superadmin/CompanyBrandingForm"
@@ -30,10 +31,10 @@ function DonutChart({ pct, size = 160 }: { pct: number; size?: number }) {
   const cy = size / 2
   const circ = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 75 ? "#1a4f8a" : pct >= 40 ? "#d97706" : "#dc2626"
+  const color = pct >= 75 ? portalColors.navy : pct >= 40 ? amber[600] : red[600]
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={sw} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={slate[100]} strokeWidth={sw} />
       {pct > 0 && (
         <circle
           cx={cx}
@@ -52,13 +53,13 @@ function DonutChart({ pct, size = 160 }: { pct: number; size?: number }) {
         x={cx}
         y={cy - 7}
         textAnchor="middle"
-        fill="#0f172a"
+        fill={slate[900]}
         fontSize={size * 0.17}
         fontWeight="600"
       >
         {pct === 0 ? "—" : `${pct}%`}
       </text>
-      <text x={cx} y={cy + 13} textAnchor="middle" fill="#94a3b8" fontSize={size * 0.08}>
+      <text x={cx} y={cy + 13} textAnchor="middle" fill={slate[400]} fontSize={size * 0.08}>
         avance gbl.
       </text>
     </svg>
@@ -70,7 +71,7 @@ function getInitials(firstName: string, lastName: string) {
 }
 
 function progressColor(pct: number) {
-  return pct >= 75 ? "#1a4f8a" : pct >= 40 ? "#d97706" : "#dc2626"
+  return pct >= 75 ? portalColors.navy : pct >= 40 ? amber[600] : red[600]
 }
 
 type PageProps = {
@@ -197,7 +198,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
             gap: 6,
             fontSize: 12,
             fontWeight: 500,
-            color: "#64748b",
+            color: slate[500],
             textDecoration: "none",
           }}
         >
@@ -216,7 +217,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
         >
           <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Typography sx={{ fontSize: 24, fontWeight: 600, color: "#0f172a" }}>
+              <Typography sx={{ fontSize: 24, fontWeight: 600, color: slate[900] }}>
                 {company.name}
               </Typography>
               <Chip
@@ -229,7 +230,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                       width: 6,
                       height: 6,
                       borderRadius: "50%",
-                      bgcolor: company.active ? "#22c55e" : "#cbd5e1",
+                      bgcolor: company.active ? green[500] : slate[300],
                       ml: "6px !important",
                     }}
                   />
@@ -239,9 +240,9 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                   fontSize: "11px",
                   fontWeight: 600,
                   border: "1px solid",
-                  borderColor: company.active ? "#bbf7d0" : "#e2e8f0",
-                  bgcolor: company.active ? "#f0fdf4" : "#f8fafc",
-                  color: company.active ? "#16a34a" : "#64748b",
+                  borderColor: company.active ? green[200] : slate[200],
+                  bgcolor: company.active ? green[50] : slate[50],
+                  color: company.active ? green[600] : slate[500],
                   "& .MuiChip-label": { px: 1 },
                 }}
               />
@@ -253,13 +254,13 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                 flexWrap: "wrap",
                 gap: 2,
                 fontSize: 12,
-                color: "#94a3b8",
+                color: slate[400],
               }}
             >
               {company.rfc && (
                 <Box
                   component="span"
-                  sx={{ fontFamily: "monospace", fontWeight: 500, color: "#475569" }}
+                  sx={{ fontFamily: "monospace", fontWeight: 500, color: slate[600] }}
                 >
                   {company.rfc}
                 </Box>
@@ -289,7 +290,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
         </Box>
       </Box>
 
-      <Divider sx={{ borderColor: "#f1f5f9" }} />
+      <Divider sx={{ borderColor: slate[100] }} />
 
       <Box
         sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "180px 1fr 180px" } }}
@@ -313,7 +314,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                 gap: 1,
                 pt: 1,
                 textAlign: "center",
-                borderTop: "1px solid #f1f5f9",
+                borderTop: `1px solid ${slate[100]}`,
               }}
             >
               <Box>
@@ -322,18 +323,18 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                     fontSize: 22,
                     fontWeight: 600,
                     fontVariantNumeric: "tabular-nums",
-                    color: "#0f172a",
+                    color: slate[900],
                   }}
                 >
                   {activeEmployees.length}
                   <Box
                     component="span"
-                    sx={{ ml: 0.5, fontSize: 13, fontWeight: 400, color: "#94a3b8" }}
+                    sx={{ ml: 0.5, fontSize: 13, fontWeight: 400, color: slate[400] }}
                   >
                     / {company.contracted_seats}
                   </Box>
                 </Typography>
-                <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>empleados activos</Typography>
+                <Typography sx={{ fontSize: 11, color: slate[400] }}>empleados activos</Typography>
               </Box>
               <Box>
                 <Typography
@@ -341,12 +342,12 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                     fontSize: 22,
                     fontWeight: 600,
                     fontVariantNumeric: "tabular-nums",
-                    color: "#0f172a",
+                    color: slate[900],
                   }}
                 >
                   {allCertificates.length}
                 </Typography>
-                <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+                <Typography sx={{ fontSize: 11, color: slate[400] }}>
                   constancias emitidas
                 </Typography>
               </Box>
@@ -364,13 +365,13 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                   alignItems: "center",
                   gap: 2,
                   fontSize: "10px",
-                  color: "#94a3b8",
+                  color: slate[400],
                 }}
               >
                 {[
-                  { color: "#1a4f8a", label: "Completado" },
-                  { color: "#fbbf24", label: "En curso" },
-                  { color: "#f1f5f9", label: "Pendiente" },
+                  { color: portalColors.navy, label: "Completado" },
+                  { color: amber[400], label: "En curso" },
+                  { color: slate[100], label: "Pendiente" },
                 ].map(({ color, label }) => (
                   <Box
                     key={label}
@@ -380,7 +381,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                       alignItems: "center",
                       gap: 0.5,
                       fontSize: "10px",
-                      color: "#94a3b8",
+                      color: slate[400],
                     }}
                   >
                     <Box
@@ -418,7 +419,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                         sx={{
                           fontSize: 13,
                           fontWeight: 500,
-                          color: "#334155",
+                          color: slate[700],
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
@@ -433,20 +434,22 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                           alignItems: "center",
                           gap: 1.5,
                           fontSize: 11,
-                          color: "#94a3b8",
+                          color: slate[400],
                         }}
                       >
-                        <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#1a4f8a" }}>
+                        <Typography
+                          sx={{ fontSize: 11, fontWeight: 600, color: portalColors.navy }}
+                        >
                           {c.completed} compl.
                         </Typography>
-                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+                        <Typography sx={{ fontSize: 11, color: slate[400] }}>
                           {c.inProgress} en curso
                         </Typography>
-                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>
+                        <Typography sx={{ fontSize: 11, color: slate[400] }}>
                           {c.notStarted} pend.
                         </Typography>
                         {c.assigned > 0 && (
-                          <Typography sx={{ fontSize: 11, fontWeight: 600, color: "#475569" }}>
+                          <Typography sx={{ fontSize: 11, fontWeight: 600, color: slate[600] }}>
                             {c.avgPct}% avg
                           </Typography>
                         )}
@@ -459,17 +462,17 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                           height: 10,
                           overflow: "hidden",
                           borderRadius: "999px",
-                          bgcolor: "#f1f5f9",
+                          bgcolor: slate[100],
                         }}
                       >
-                        <Box sx={{ bgcolor: "#1a4f8a", width: `${cPct}%` }} />
-                        <Box sx={{ bgcolor: "#fbbf24", width: `${iPct}%` }} />
+                        <Box sx={{ bgcolor: portalColors.navy, width: `${cPct}%` }} />
+                        <Box sx={{ bgcolor: amber[400], width: `${iPct}%` }} />
                       </Box>
                     ) : (
-                      <Box sx={{ height: 10, borderRadius: "999px", bgcolor: "#f1f5f9" }} />
+                      <Box sx={{ height: 10, borderRadius: "999px", bgcolor: slate[100] }} />
                     )}
                     {c.assigned === 0 && (
-                      <Typography sx={{ mt: 0.25, fontSize: 11, color: "#94a3b8" }}>
+                      <Typography sx={{ mt: 0.25, fontSize: 11, color: slate[400] }}>
                         Sin empleados asignados
                       </Typography>
                     )}
@@ -485,21 +488,21 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
             <Box sx={{ p: 2 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <SeatDonut used={company.used_seats} total={company.contracted_seats} />
-                <Box sx={{ display: "grid", gap: 0.5, fontSize: 12, color: "#64748b" }}>
-                  <Typography sx={{ fontSize: 12, color: "#64748b" }}>
-                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>
+                <Box sx={{ display: "grid", gap: 0.5, fontSize: 12, color: slate[500] }}>
+                  <Typography sx={{ fontSize: 12, color: slate[500] }}>
+                    <Box component="span" sx={{ fontWeight: 600, color: slate[900] }}>
                       {company.used_seats}
                     </Box>{" "}
                     en uso
                   </Typography>
-                  <Typography sx={{ fontSize: 12, color: "#64748b" }}>
-                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>
+                  <Typography sx={{ fontSize: 12, color: slate[500] }}>
+                    <Box component="span" sx={{ fontWeight: 600, color: slate[900] }}>
                       {Math.max(company.contracted_seats - company.used_seats, 0)}
                     </Box>{" "}
                     disponibles
                   </Typography>
-                  <Typography sx={{ fontSize: 12, color: "#64748b" }}>
-                    <Box component="span" sx={{ fontWeight: 600, color: "#0f172a" }}>
+                  <Typography sx={{ fontSize: 12, color: slate[500] }}>
+                    <Box component="span" sx={{ fontWeight: 600, color: slate[900] }}>
                       {company.contracted_seats}
                     </Box>{" "}
                     contratados
@@ -512,14 +515,15 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                   height: 6,
                   overflow: "hidden",
                   borderRadius: "999px",
-                  bgcolor: "#f1f5f9",
+                  bgcolor: slate[100],
                 }}
               >
                 <Box
                   sx={{
                     height: "100%",
                     borderRadius: "999px",
-                    bgcolor: seatPct >= 90 ? "#dc2626" : seatPct >= 70 ? "#d97706" : "#1a4f8a",
+                    bgcolor:
+                      seatPct >= 90 ? red[600] : seatPct >= 70 ? amber[600] : portalColors.navy,
                     width: `${seatPct}%`,
                   }}
                 />
@@ -531,26 +535,26 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
             <Box sx={{ p: 2 }}>
               {activePackage ? (
                 <>
-                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: slate[900] }}>
                     {activePackage.package?.name ?? "—"}
                   </Typography>
-                  <Box sx={{ mt: 1, display: "grid", gap: 0.5, fontSize: 12, color: "#94a3b8" }}>
-                    <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
+                  <Box sx={{ mt: 1, display: "grid", gap: 0.5, fontSize: 12, color: slate[400] }}>
+                    <Typography sx={{ fontSize: 12, color: slate[400] }}>
                       Inicio: {formatDate(activePackage.start_date)}
                     </Typography>
-                    <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
+                    <Typography sx={{ fontSize: 12, color: slate[400] }}>
                       Vence:{" "}
                       {activePackage.expiration_date
                         ? formatDate(activePackage.expiration_date)
                         : "Sin vencimiento"}
                     </Typography>
-                    <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
+                    <Typography sx={{ fontSize: 12, color: slate[400] }}>
                       {packageCourses.length} cursos incluidos
                     </Typography>
                   </Box>
                 </>
               ) : (
-                <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
+                <Typography sx={{ fontSize: 12, color: slate[400] }}>
                   Sin paquete asignado
                 </Typography>
               )}
@@ -616,17 +620,17 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                           fontSize: "10px",
                           fontWeight: 700,
                           ...(e.hasError
-                            ? { bgcolor: "#fef2f2", color: "#dc2626" }
-                            : { bgcolor: "#eff4fb", color: "#1a4f8a" }),
+                            ? { bgcolor: red[50], color: red[600] }
+                            : { bgcolor: portalColors.navySoft, color: portalColors.navy }),
                         }}
                       >
                         {getInitials(e.first_name, e.last_name)}
                       </Box>
                       <Box>
-                        <Typography sx={{ fontSize: 13, fontWeight: 500, color: "#0f172a" }}>
+                        <Typography sx={{ fontSize: 13, fontWeight: 500, color: slate[900] }}>
                           {e.first_name} {e.last_name}
                         </Typography>
-                        <Typography sx={{ fontSize: 11, color: "#94a3b8" }}>{e.email}</Typography>
+                        <Typography sx={{ fontSize: 11, color: slate[400] }}>{e.email}</Typography>
                       </Box>
                     </Box>
                   </td>
@@ -637,7 +641,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                           height: 6,
                           overflow: "hidden",
                           borderRadius: "999px",
-                          bgcolor: "#f1f5f9",
+                          bgcolor: slate[100],
                         }}
                       >
                         <Box
@@ -655,7 +659,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                           textAlign: "right",
                           fontSize: "10px",
                           fontWeight: 600,
-                          color: "#64748b",
+                          color: slate[500],
                         }}
                       >
                         {e.avg}%
@@ -668,7 +672,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                         fontSize: 13,
                         fontWeight: 600,
                         fontVariantNumeric: "tabular-nums",
-                        color: "#0f172a",
+                        color: slate[900],
                       }}
                     >
                       {e.completed}/{e.total}
@@ -680,7 +684,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                         fontSize: 13,
                         fontWeight: 600,
                         fontVariantNumeric: "tabular-nums",
-                        color: "#0f172a",
+                        color: slate[900],
                       }}
                     >
                       {e.certificatesCount}
@@ -695,9 +699,9 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                           height: 20,
                           fontSize: 11,
                           fontWeight: 600,
-                          border: "1px solid #fecaca",
-                          bgcolor: "#fef2f2",
-                          color: "#dc2626",
+                          border: `1px solid ${red[200]}`,
+                          bgcolor: red[50],
+                          color: red[600],
                           "& .MuiChip-label": { px: 1 },
                         }}
                       />
@@ -709,9 +713,9 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                           height: 20,
                           fontSize: 11,
                           fontWeight: 600,
-                          border: "1px solid #bbf7d0",
-                          bgcolor: "#f0fdf4",
-                          color: "#16a34a",
+                          border: `1px solid ${green[200]}`,
+                          bgcolor: green[50],
+                          color: green[600],
                           "& .MuiChip-label": { px: 1 },
                         }}
                       />
@@ -723,16 +727,16 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                           height: 20,
                           fontSize: 11,
                           fontWeight: 600,
-                          border: "1px solid #e2e8f0",
-                          bgcolor: "#f8fafc",
-                          color: "#64748b",
+                          border: `1px solid ${slate[200]}`,
+                          bgcolor: slate[50],
+                          color: slate[500],
                           "& .MuiChip-label": { px: 1 },
                         }}
                       />
                     )}
                   </td>
                   <td className="rounded-r-lg px-4 py-3">
-                    <Typography sx={{ fontFamily: "monospace", fontSize: 11, color: "#94a3b8" }}>
+                    <Typography sx={{ fontFamily: "monospace", fontSize: 11, color: slate[400] }}>
                       {e.lastSync ? formatDateTime(e.lastSync) : "—"}
                     </Typography>
                   </td>
@@ -753,7 +757,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
       {company.notes && (
         <PanelBox title="Notas internas">
           <Box sx={{ p: 2.5 }}>
-            <Typography sx={{ fontSize: 13, color: "#475569" }}>{company.notes}</Typography>
+            <Typography sx={{ fontSize: 13, color: slate[600] }}>{company.notes}</Typography>
           </Box>
         </PanelBox>
       )}
