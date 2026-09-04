@@ -522,7 +522,7 @@ export default function AssignmentBoard({
             <StatusToast key={feedback.id} tone={feedback.tone} message={feedback.message} />
           )}
 
-          <div className="-mx-4 -mb-4 border-t border-[#f5f5f5] bg-white px-4 py-3">
+          <div className="-mx-4 -mb-4 border-t border-neutral-100 bg-white px-4 py-3">
             <div className="flex flex-wrap items-center justify-end gap-3">
               <button
                 type="button"

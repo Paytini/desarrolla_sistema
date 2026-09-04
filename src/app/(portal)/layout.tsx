@@ -34,7 +34,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const companyName = company ?? branding?.name ?? undefined
 
   const content = (
-    <div className={cn("relative flex h-screen overflow-hidden bg-[#F8F9FC]", "portal-v4")}>
+    <div className={cn("relative flex h-screen overflow-hidden bg-portal-page-bg", "portal-v4")}>
       <Sidebar
         role={role}
         companySlug={branding?.slug}
@@ -43,7 +43,7 @@ export default async function PortalLayout({ children }: { children: React.React
         companyName={companyName}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center gap-3 bg-[#F8F9FC] px-4 min-[900px]:px-8">
+        <header className="flex h-16 shrink-0 items-center gap-3 bg-portal-page-bg px-4 min-[900px]:px-8">
           <div className="min-[900px]:hidden">
             <MobileNav role={role} name={name} companySlug={branding?.slug} />
           </div>
@@ -63,7 +63,7 @@ export default async function PortalLayout({ children }: { children: React.React
             />
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto bg-[#F8F9FC] px-8 py-7">
+        <main className="flex-1 overflow-y-auto bg-portal-page-bg px-8 py-7">
           <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
         </main>
       </div>

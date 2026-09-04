@@ -19,6 +19,9 @@
   --brand: var(--portal-blue);
   --brand-warm: var(--portal-blue-hover);
 
+  --portal-ink: #1a1a1a;
+  --portal-page-bg: #f8f9fc;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.068 0.018 18);
   --card: oklch(1 0 0);
@@ -73,6 +76,8 @@
   --color-portal-blue-hover: var(--portal-blue-hover);
   --color-portal-blue-soft: var(--portal-blue-soft);
   --color-portal-border: var(--portal-border);
+  --color-portal-ink: var(--portal-ink);
+  --color-portal-page-bg: var(--portal-page-bg);
   --font-sans: var(--font-inter), "Inter", system-ui, "Segoe UI", Arial, sans-serif;
   --font-heading: var(--font-inter), "Inter", sans-serif;
   --font-mono: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
