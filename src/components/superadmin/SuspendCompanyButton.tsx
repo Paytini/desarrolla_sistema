@@ -4,6 +4,7 @@ import { useState } from "react"
 import Button from "@mui/material/Button"
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { toggleCompanyStatusAction } from "@/app/(portal)/superadmin/companies/actions"
+import { fd, slate } from "@/lib/theme-tokens"
 
 interface SuspendCompanyButtonProps {
   companyId: string
@@ -24,11 +25,11 @@ export function SuspendCompanyButton({ companyId, active, name }: SuspendCompany
           height: 28,
           px: 1.25,
           fontSize: 12,
-          bgcolor: active ? "#0f172a" : "primary.main",
-          color: "#fff",
+          bgcolor: active ? slate[900] : "primary.main",
+          color: fd.background,
           boxShadow: "none",
           "&:hover": {
-            bgcolor: active ? "#1e293b" : "primary.dark",
+            bgcolor: active ? slate[800] : "primary.dark",
             boxShadow: "none",
           },
         }}

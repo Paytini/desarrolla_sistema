@@ -2,6 +2,7 @@ import { Button, Section, Text } from "@react-email/components"
 import { render } from "@react-email/render"
 import { EmailLayout } from "./components/EmailLayout"
 import { getPortalLoginUrl } from "./shared"
+import { fd, portalColors, slate } from "@/lib/theme-tokens"
 
 export async function buildCredentialsEmail({
   nombreHr,
@@ -83,20 +84,20 @@ export async function buildCredentialsEmail({
   return { subject, html, text }
 }
 
-const paragraphStyle = { fontSize: "14px", lineHeight: "22px", color: "#1a1a1a" }
+const paragraphStyle = { fontSize: "14px", lineHeight: "22px", color: portalColors.ink }
 
-const listStyle = { margin: "0 0 16px", paddingLeft: "20px", color: "#334155" }
+const listStyle = { margin: "0 0 16px", paddingLeft: "20px", color: slate[700] }
 const listItemStyle = { marginBottom: "4px", fontSize: "14px" }
 
 const credentialsRowStyle = { padding: "6px 0" }
-const credentialLabelStyle = { fontSize: "13px", color: "#64748b", margin: "0 0 2px" }
+const credentialLabelStyle = { fontSize: "13px", color: slate[500], margin: "0 0 2px" }
 const credentialValueStyle = { fontSize: "14px", fontWeight: 600, margin: 0 }
 
 const buttonSectionStyle = { textAlign: "center" as const, padding: "16px 0" }
 
 const buttonStyle = {
-  backgroundColor: "#3579F5",
-  color: "#ffffff",
+  backgroundColor: portalColors.blue,
+  color: fd.background,
   textDecoration: "none",
   padding: "10px 20px",
   borderRadius: "8px",
@@ -104,4 +105,4 @@ const buttonStyle = {
   fontSize: "14px",
 }
 
-const mutedTextStyle = { fontSize: "13px", color: "#64748b" }
+const mutedTextStyle = { fontSize: "13px", color: slate[500] }

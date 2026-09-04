@@ -1,6 +1,7 @@
 import { Body, Container, Head, Html, Img, Preview, Section, Text } from "@react-email/components"
 import type { ReactNode } from "react"
 import { getLogoUrl } from "../shared"
+import { fd, portalColors, slate } from "@/lib/theme-tokens"
 
 type EmailLayoutProps = {
   previewText: string
@@ -44,10 +45,10 @@ const bodyStyle = {
 
 const containerStyle = {
   margin: "0 auto",
-  backgroundColor: "#ffffff",
+  backgroundColor: fd.background,
   borderRadius: "12px",
   padding: "32px",
-  color: "#1a1a1a",
+  color: portalColors.ink,
 }
 
 const logoSectionStyle = {
@@ -63,13 +64,13 @@ const logoStyle = {
 
 const footerSectionStyle = {
   marginTop: "32px",
-  borderTop: "1px solid #e5e7eb",
+  borderTop: `1px solid ${portalColors.border}`,
   paddingTop: "16px",
 }
 
 const footerTextStyle = {
   textAlign: "center" as const,
   fontSize: "12px",
-  color: "#94a3b8",
+  color: slate[400],
   margin: 0,
 }

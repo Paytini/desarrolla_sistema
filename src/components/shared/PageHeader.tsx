@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { fd, gray } from "@/lib/theme-tokens"
 
 interface PageHeaderProps {
   title: string
@@ -30,7 +31,7 @@ export function PageHeader({
             fontWeight: 800,
             lineHeight: 1.2,
             letterSpacing: "-0.02em",
-            color: "#111827",
+            color: fd.foreground,
             margin: 0,
           }}
         >
@@ -38,7 +39,7 @@ export function PageHeader({
         </h1>
         {description && (
           <p
-            style={{ marginTop: "6px", fontSize: "0.875rem", color: "#6B7280", margin: "6px 0 0" }}
+            style={{ marginTop: "6px", fontSize: "0.875rem", color: gray[500], margin: "6px 0 0" }}
           >
             {description}
           </p>

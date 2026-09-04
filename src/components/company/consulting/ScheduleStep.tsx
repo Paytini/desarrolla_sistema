@@ -14,6 +14,7 @@ import {
   getMinSelectableDate,
   isDateSelectable,
 } from "@/lib/consulting/schedule"
+import { fd, gray } from "@/lib/theme-tokens"
 
 const WEEKDAY_LETTERS = ["L", "M", "M", "J", "V", "S", "D"]
 
@@ -180,7 +181,7 @@ export function ScheduleStep({
                   border: "none",
                   cursor: selectable ? "pointer" : "default",
                   bgcolor: selected ? "var(--portal-blue)" : "transparent",
-                  color: selected ? "#FFFFFF" : selectable ? "text.primary" : "#D1D5DB",
+                  color: selected ? fd.background : selectable ? "text.primary" : gray[300],
                   fontWeight: selected ? 700 : 500,
                   fontSize: 13,
                   "&:hover": selectable

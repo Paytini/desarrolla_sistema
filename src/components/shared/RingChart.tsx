@@ -1,11 +1,12 @@
 import { Box, CircularProgress, Typography } from "@mui/material"
+import { slate } from "@/lib/theme-tokens"
 
 export function RingChart({
   pct,
   size = 56,
   sw = 6,
   color,
-  trackColor = "#E2E8F0",
+  trackColor = slate[200],
   textColor,
 }: {
   pct: number

@@ -6,6 +6,7 @@ import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 
 import { PackageForm } from "@/components/superadmin/PackageForm"
+import { slate } from "@/lib/theme-tokens"
 import { getSession } from "@/lib/session"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { createPackageAction } from "../actions"
@@ -38,7 +39,7 @@ export default async function NewPackagePage({ searchParams }: PageProps) {
             alignItems: "center",
             gap: 6,
             fontSize: 13,
-            color: "#64748b",
+            color: slate[500],
             textDecoration: "none",
             marginBottom: 12,
           }}

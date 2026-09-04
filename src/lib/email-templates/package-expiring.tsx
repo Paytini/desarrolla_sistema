@@ -2,6 +2,7 @@ import { Button, Section, Text } from "@react-email/components"
 import { render } from "@react-email/render"
 import { EmailLayout } from "./components/EmailLayout"
 import { getPortalLoginUrl } from "./shared"
+import { amber, fd, portalColors } from "@/lib/theme-tokens"
 
 export async function buildPackageExpiringEmail({
   nombreHr,
@@ -47,13 +48,13 @@ export async function buildPackageExpiringEmail({
   return { subject, html, text }
 }
 
-const paragraphStyle = { fontSize: "14px", lineHeight: "22px", color: "#1a1a1a" }
-const highlightStyle = { color: "#d97706", fontWeight: 700 }
+const paragraphStyle = { fontSize: "14px", lineHeight: "22px", color: portalColors.ink }
+const highlightStyle = { color: amber[600], fontWeight: 700 }
 const buttonSectionStyle = { textAlign: "center" as const, padding: "20px 0 0" }
 
 const buttonStyle = {
-  backgroundColor: "#3579F5",
-  color: "#ffffff",
+  backgroundColor: portalColors.blue,
+  color: fd.background,
   textDecoration: "none",
   padding: "10px 20px",
   borderRadius: "8px",

@@ -19,6 +19,7 @@ export const portalColors = {
   navySoft: "#EFF4FB",
   iconMuted: "#858382",
   cardBorder: "#F0F0F0",
+  blueLight: "#6B9EF8",
 } as const
 
 export const sky = {

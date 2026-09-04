@@ -281,7 +281,7 @@ export const muiThemeV4 = createTheme(muiTheme, {
     primary: {
       main: portalColors.blue,
       dark: portalColors.blueHover,
-      light: "#6B9EF8",
+      light: portalColors.blueLight,
       contrastText: "#FFFFFF",
     },
     info: { main: portalColors.blue },
