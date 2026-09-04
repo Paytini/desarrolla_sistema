@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Suspense } from "react"
 import GlobalLoadingController from "@/components/layout/GlobalLoadingController"
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <GlobalLoadingController />
           </Suspense>
           {children}
+          <Analytics />
           <SpeedInsights />
         </MuiProviders>
       </body>
