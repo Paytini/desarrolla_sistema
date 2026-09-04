@@ -17,8 +17,6 @@ import {
 import { QuickActions } from "@/components/superadmin/QuickActions"
 import { SectionCard } from "@/components/shared/SectionCard"
 import KpiCard from "@/components/shared/KpiCard"
-import { OccupancyCard } from "@/components/superadmin/OccupancyCard"
-import { RenewalsTable } from "@/components/superadmin/RenewalsTable"
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -393,11 +391,6 @@ export default async function SuperadminDashboardPage() {
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 280px" } }}>
         <ActivityFeed items={recentEvents} />
         <QuickActions />
-      </Box>
-
-      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 300px" } }}>
-        <OccupancyCard occupancyPct={occupancyPct} companies={companies} />
-        <RenewalsTable renewals={renewals} />
       </Box>
     </Stack>
   )
