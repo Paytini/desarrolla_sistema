@@ -10,6 +10,7 @@ import Typography from "@mui/material/Typography"
 import ActionsPopover from "@/components/shared/ActionsPopover"
 import { NotificationRow, type NotificationItem } from "@/components/notifications/NotificationRow"
 import { groupNotificationsByDate } from "@/lib/notification-groups"
+import { fd, gray } from "@/lib/theme-tokens"
 
 const DROPDOWN_LIMIT = 8
 
@@ -74,13 +75,17 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
             border: "none",
             borderRadius: "50%",
             cursor: "pointer",
-            bgcolor: dark ? "rgba(255,255,255,0.1)" : "#ffffff",
+            bgcolor: dark ? "rgba(255,255,255,0.1)" : fd.background,
             boxShadow: dark ? "none" : "0 1px 3px rgba(15,23,42,0.1)",
             color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
             transition: "background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease",
             "&:hover": dark
               ? { bgcolor: "rgba(255,255,255,0.18)", color: "var(--sidebar-navy-text-strong)" }
-              : { bgcolor: "#ffffff", boxShadow: "0 2px 8px rgba(15,23,42,0.16)", color: "text.primary" },
+              : {
+                  bgcolor: fd.background,
+                  boxShadow: "0 2px 8px rgba(15,23,42,0.16)",
+                  color: "text.primary",
+                },
           }}
         >
           <Bell size={20} strokeWidth={1.75} />
@@ -95,13 +100,13 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
                 px: "3px",
                 borderRadius: "8px",
                 bgcolor: "primary.main",
-                color: "#FFFFFF",
+                color: fd.background,
                 fontSize: "9px",
                 fontWeight: 700,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                border: dark ? "2px solid var(--sidebar-navy)" : "2px solid #FFFFFF",
+                border: dark ? "2px solid var(--sidebar-navy)" : `2px solid ${fd.background}`,
               }}
             >
               {unreadCount > 9 ? "9+" : unreadCount}
@@ -168,7 +173,7 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
                   textAlign: "center",
                 }}
               >
-                <PartyPopper size={28} strokeWidth={1.5} color="#9CA3AF" />
+                <PartyPopper size={28} strokeWidth={1.5} color={gray[400]} />
                 <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "text.primary" }}>
                   Estás al día
                 </Typography>
@@ -203,11 +208,7 @@ export function NotificationBell({ dark = false }: { dark?: boolean }) {
 
           <Divider />
           <Box sx={{ flexShrink: 0, px: 1, py: 1 }}>
-            <Link
-              href="/notifications"
-              onClick={close}
-              style={{ textDecoration: "none" }}
-            >
+            <Link href="/notifications" onClick={close} style={{ textDecoration: "none" }}>
               <Box
                 sx={{
                   display: "flex",

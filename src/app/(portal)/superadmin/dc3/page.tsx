@@ -1,4 +1,5 @@
 import Dc3EditorList, { type CourseEntry } from "@/components/company/Dc3EditorList"
+import { slate } from "@/lib/theme-tokens"
 import { getSuperadminDc3Snapshot } from "@/lib/dashboard-cache"
 import { decodeHtmlEntities } from "@/lib/format"
 import { readSearchParam } from "@/lib/search-params"
@@ -45,7 +46,7 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
       {total === 0 ? (
         <Paper elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
           <Box sx={{ py: 6, textAlign: "center" }}>
-            <FileText size={32} style={{ color: "#cbd5e1", margin: "0 auto 12px" }} />
+            <FileText size={32} style={{ color: slate[300], margin: "0 auto 12px" }} />
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
               No se encontraron cursos publicados en el catálogo de WordPress/Tutor LMS.
             </Typography>

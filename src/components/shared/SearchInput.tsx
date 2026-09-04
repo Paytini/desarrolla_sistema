@@ -4,6 +4,7 @@ import { Search, X } from "lucide-react"
 import InputAdornment from "@mui/material/InputAdornment"
 import IconButton from "@mui/material/IconButton"
 import TextField from "@mui/material/TextField"
+import { gray } from "@/lib/theme-tokens"
 
 type SearchInputProps = {
   placeholder?: string
@@ -38,7 +39,7 @@ export function SearchInput({
         input: {
           startAdornment: (
             <InputAdornment position="start">
-              <Search size={14} style={{ color: "#9CA3AF" }} />
+              <Search size={14} style={{ color: gray[400] }} />
             </InputAdornment>
           ),
           endAdornment:
@@ -49,7 +50,7 @@ export function SearchInput({
                   edge="end"
                   onClick={() => onChange?.("")}
                   aria-label="Limpiar búsqueda"
-                  sx={{ color: "#9CA3AF", "&:hover": { color: "#374151" } }}
+                  sx={{ color: gray[400], "&:hover": { color: gray[700] } }}
                 >
                   <X size={13} />
                 </IconButton>

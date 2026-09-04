@@ -27,6 +27,7 @@ import {
   type NavItem,
   type Role,
 } from "@/components/layout/nav-config"
+import { fd, portalColors } from "@/lib/theme-tokens"
 
 function MobileNavLink({
   item,
@@ -160,7 +161,7 @@ export function MobileNav({
               display: "flex",
               alignItems: "center",
               textDecoration: "none",
-              background: "#FFFFFF",
+              background: fd.background,
               borderRadius: 8,
               padding: "6px 10px",
               width: "fit-content",
@@ -239,8 +240,8 @@ export function MobileNav({
               width: 32,
               height: 32,
               fontSize: 11,
-              background: "linear-gradient(135deg,var(--portal-blue),#6B9EF8)",
-              color: "#fff",
+              background: `linear-gradient(135deg,var(--portal-blue),${portalColors.blueLight})`,
+              color: fd.background,
               flexShrink: 0,
             }}
           >

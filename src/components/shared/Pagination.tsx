@@ -2,6 +2,7 @@ import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Typography from "@mui/material/Typography"
 import Link from "next/link"
+import { slate } from "@/lib/theme-tokens"
 
 const NAV_LINK_SX = {
   display: "inline-flex",
@@ -11,9 +12,9 @@ const NAV_LINK_SX = {
   paddingRight: 10,
   fontSize: 12,
   fontWeight: 500,
-  color: "#0f172a",
+  color: slate[900],
   textDecoration: "none",
-  border: "1px solid #e2e8f0",
+  border: `1px solid ${slate[200]}`,
 } as const
 
 export function Pagination({

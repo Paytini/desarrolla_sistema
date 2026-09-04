@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { Box, Paper, Typography } from "@mui/material"
+import { fd, gray } from "@/lib/theme-tokens"
 
 type SectionCardProps = {
   title: string
@@ -22,7 +23,7 @@ export function SectionCard({
       sx={{
         borderRadius: "8px",
         overflow: "hidden",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: fd.background,
       }}
     >
       <Box
@@ -33,7 +34,7 @@ export function SectionCard({
           gap: 2,
           px: 3,
           py: 2,
-          backgroundColor: "#F3F4F6",
+          backgroundColor: fd.muted,
           borderBottom: "1px solid var(--portal-border)",
         }}
       >
@@ -43,13 +44,13 @@ export function SectionCard({
               fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
               fontSize: "1rem",
               fontWeight: 700,
-              color: "#111827",
+              color: fd.foreground,
             }}
           >
             {title}
           </Typography>
           {description && (
-            <Typography sx={{ mt: 0.25, fontSize: "0.75rem", color: "#6B7280" }}>
+            <Typography sx={{ mt: 0.25, fontSize: "0.75rem", color: gray[500] }}>
               {description}
             </Typography>
           )}

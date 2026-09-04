@@ -10,6 +10,7 @@ import Chip from "@mui/material/Chip"
 import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
+import { green, portalColors, slate } from "@/lib/theme-tokens"
 
 type CompanyResult = { id: number; name: string; active: boolean }
 type EmployeeResult = {
@@ -133,7 +134,7 @@ function GroupHeader({
 }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.875, px: 2, pt: 1.5, pb: 0.75 }}>
-      <Icon size={11} strokeWidth={2.5} style={{ color: "#858382", flexShrink: 0 }} />
+      <Icon size={11} strokeWidth={2.5} style={{ color: portalColors.iconMuted, flexShrink: 0 }} />
       <Typography
         sx={{
           fontSize: "10px",
@@ -196,7 +197,7 @@ function ResultRow({
 function LetterAvatar({ letter, variant }: { letter: string; variant: "blue" | "slate" }) {
   const colors = {
     blue: { bgcolor: "rgba(53,121,245,0.1)", color: "var(--portal-blue)" },
-    slate: { bgcolor: "#f1f5f9", color: "#64748b" },
+    slate: { bgcolor: slate[100], color: slate[500] },
   }[variant]
 
   return (
@@ -235,8 +236,8 @@ function StatusChip({
         fontSize: "10px",
         fontWeight: 600,
         borderRadius: "10px",
-        bgcolor: active ? "#dcfce7" : "#f1f5f9",
-        color: active ? "#15803d" : "#64748b",
+        bgcolor: active ? green[100] : slate[100],
+        color: active ? green[700] : slate[500],
         flexShrink: 0,
         "& .MuiChip-label": { px: 1 },
       }}

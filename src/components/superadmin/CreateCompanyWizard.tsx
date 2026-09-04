@@ -8,6 +8,7 @@ import Button from "@mui/material/Button"
 import MenuItem from "@mui/material/MenuItem"
 import Step from "@mui/material/Step"
 import StepLabel from "@mui/material/StepLabel"
+import { gray } from "@/lib/theme-tokens"
 import Stepper from "@mui/material/Stepper"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
@@ -278,7 +279,7 @@ export function CreateCompanyWizard({ paquetes }: { paquetes: Package[] }) {
               </>
             ) : (
               <>
-                <Upload size={26} strokeWidth={1.5} color="#9CA3AF" />
+                <Upload size={26} strokeWidth={1.5} color={gray[400]} />
                 <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                   Arrastra tu logo aquí o haz clic para subir
                 </Typography>

@@ -1,5 +1,6 @@
 import Chip from "@mui/material/Chip"
 import Box from "@mui/material/Box"
+import { amber, blue, emerald, fd, red, slate } from "@/lib/theme-tokens"
 
 export type BadgeVariant = "green" | "amber" | "red" | "slate" | "blue"
 
@@ -10,11 +11,11 @@ type StatusBadgeProps = {
 }
 
 const variantColors: Record<BadgeVariant, { bg: string; color: string; dot: string }> = {
-  green: { bg: "#D1FAE5", color: "#065F46", dot: "#10B981" },
-  amber: { bg: "#FEF3C7", color: "#92400E", dot: "#F59E0B" },
-  red: { bg: "#FEE2E2", color: "#991B1B", dot: "#EF4444" },
-  slate: { bg: "#F1F5F9", color: "#475569", dot: "#94A3B8" },
-  blue: { bg: "#DBEAFE", color: "#1D4ED8", dot: "#3B82F6" },
+  green: { bg: emerald[100], color: emerald[800], dot: fd.secondary },
+  amber: { bg: amber[100], color: amber[800], dot: fd.accent },
+  red: { bg: red[100], color: red[800], dot: red[500] },
+  slate: { bg: slate[100], color: slate[600], dot: slate[400] },
+  blue: { bg: blue[100], color: blue[700], dot: fd.primary },
 }
 
 export default function StatusBadge({ variant, children, dot }: StatusBadgeProps) {
