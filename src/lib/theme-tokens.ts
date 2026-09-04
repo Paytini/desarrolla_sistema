@@ -78,16 +78,21 @@ export const amber = {
 
 export const green = {
   50: "#F0FDF4",
+  100: "#DCFCE7",
   200: "#BBF7D0",
   300: "#86EFAC",
   500: "#22C55E",
   600: "#16A34A",
   700: "#15803D",
+  900: "#14532D",
 } as const
 
 export const emerald = {
+  50: "#ECFDF5",
   100: "#D1FAE5",
   400: "#34D399",
+  600: "#059669",
+  700: "#047857",
   800: "#065F46",
 } as const
 

@@ -1,3 +1,5 @@
+import { amber, portalColors, red, slate } from "@/lib/theme-tokens"
+
 export function SeatDonut({
   used,
   total,
@@ -13,11 +15,11 @@ export function SeatDonut({
   const cx = size / 2
   const circ = 2 * Math.PI * r
   const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 90 ? "#dc2626" : pct >= 70 ? "#d97706" : "#1a4f8a"
+  const color = pct >= 90 ? red[600] : pct >= 70 ? amber[600] : portalColors.navy
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
-      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#f1f5f9" strokeWidth={sw} />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke={slate[100]} strokeWidth={sw} />
       {used > 0 && (
         <circle
           cx={cx}
@@ -36,7 +38,7 @@ export function SeatDonut({
         x={cx}
         y={cx + size * 0.056}
         textAnchor="middle"
-        fill="#0f172a"
+        fill={slate[900]}
         fontSize={size * 0.167}
         fontWeight="600"
       >

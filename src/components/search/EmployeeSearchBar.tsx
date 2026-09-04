@@ -10,6 +10,7 @@ import Chip from "@mui/material/Chip"
 import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
+import { amber, green, portalColors, slate } from "@/lib/theme-tokens"
 
 type CourseResult = { id: number; course_name: string; progress_pct: number; completed: boolean }
 type CertificateResult = { id: number; course_name: string; reference_number: string }
@@ -55,7 +56,11 @@ export default function EmployeeSearchBar() {
                           flexShrink: 0,
                         }}
                       >
-                        <BookOpen size={11} strokeWidth={2} style={{ color: "var(--portal-blue)" }} />
+                        <BookOpen
+                          size={11}
+                          strokeWidth={2}
+                          style={{ color: "var(--portal-blue)" }}
+                        />
                       </Avatar>
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                         {c.course_name}
@@ -79,11 +84,11 @@ export default function EmployeeSearchBar() {
                           width: 24,
                           height: 24,
                           borderRadius: "6px",
-                          bgcolor: "#dcfce7",
+                          bgcolor: green[100],
                           flexShrink: 0,
                         }}
                       >
-                        <Award size={11} strokeWidth={2} style={{ color: "#15803d" }} />
+                        <Award size={11} strokeWidth={2} style={{ color: green[700] }} />
                       </Avatar>
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                         {c.course_name}
@@ -121,7 +126,7 @@ function GroupHeader({
 }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.875, px: 2, pt: 1.5, pb: 0.75 }}>
-      <Icon size={11} strokeWidth={2.5} style={{ color: "#858382", flexShrink: 0 }} />
+      <Icon size={11} strokeWidth={2.5} style={{ color: portalColors.iconMuted, flexShrink: 0 }} />
       <Typography
         sx={{
           fontSize: "10px",
@@ -192,8 +197,8 @@ function ProgressChip({ course }: { course: CourseResult }) {
           fontSize: "10px",
           fontWeight: 600,
           borderRadius: "10px",
-          bgcolor: "#dcfce7",
-          color: "#15803d",
+          bgcolor: green[100],
+          color: green[700],
           flexShrink: 0,
           "& .MuiChip-label": { px: 1 },
         }}
@@ -210,8 +215,8 @@ function ProgressChip({ course }: { course: CourseResult }) {
           fontSize: "10px",
           fontWeight: 600,
           borderRadius: "10px",
-          bgcolor: "#fef3c7",
-          color: "#b45309",
+          bgcolor: amber[100],
+          color: amber[700],
           flexShrink: 0,
           "& .MuiChip-label": { px: 1 },
         }}
@@ -227,8 +232,8 @@ function ProgressChip({ course }: { course: CourseResult }) {
         fontSize: "10px",
         fontWeight: 600,
         borderRadius: "10px",
-        bgcolor: "#f1f5f9",
-        color: "#64748b",
+        bgcolor: slate[100],
+        color: slate[500],
         flexShrink: 0,
         "& .MuiChip-label": { px: 1 },
       }}

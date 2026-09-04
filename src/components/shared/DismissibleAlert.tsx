@@ -5,6 +5,7 @@ import type { SxProps, Theme } from "@mui/material"
 import { Alert, Collapse, IconButton } from "@mui/material"
 import { AlertCircle, CheckCircle2, X } from "lucide-react"
 import { useAutoDismiss } from "@/lib/use-auto-dismiss"
+import { green } from "@/lib/theme-tokens"
 
 type DismissibleAlertProps = {
   icon?: ReactNode
@@ -14,7 +15,12 @@ type DismissibleAlertProps = {
 }
 
 const SEVERITY_SX = {
-  success: { borderRadius: 2, border: "1px solid #bbf7d0", bgcolor: "#f0fdf4", color: "#14532d" },
+  success: {
+    borderRadius: 2,
+    border: `1px solid ${green[200]}`,
+    bgcolor: green[50],
+    color: green[900],
+  },
   error: { borderRadius: 2 },
 } as const
 

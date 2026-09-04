@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { Box, Chip, Paper, Typography } from "@mui/material"
+import { fd, gray } from "@/lib/theme-tokens"
 
 interface PanelBoxProps {
   title: string
@@ -27,7 +28,7 @@ export function PanelBox({
       sx={{
         borderRadius: "8px",
         overflow: "hidden",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: fd.background,
       }}
     >
       <Box
@@ -38,7 +39,7 @@ export function PanelBox({
           gap: 2,
           px: 2.5,
           py: 2,
-          backgroundColor: "#F3F4F6",
+          backgroundColor: fd.muted,
           borderBottom: "1px solid var(--portal-border)",
         }}
       >
@@ -49,7 +50,7 @@ export function PanelBox({
                 fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
                 fontSize: "1rem",
                 fontWeight: 700,
-                color: "#111827",
+                color: fd.foreground,
               }}
             >
               {title}
@@ -63,8 +64,8 @@ export function PanelBox({
                   fontSize: "11px",
                   fontVariantNumeric: "tabular-nums",
                   fontWeight: 700,
-                  backgroundColor: "#3B82F6",
-                  color: "#FFFFFF",
+                  backgroundColor: fd.primary,
+                  color: fd.background,
                   border: "none",
                   "& .MuiChip-label": { px: 1 },
                 }}
@@ -72,7 +73,7 @@ export function PanelBox({
             )}
           </Box>
           {description && (
-            <Typography sx={{ mt: 0.5, fontSize: "12px", color: "#6B7280" }}>
+            <Typography sx={{ mt: 0.5, fontSize: "12px", color: gray[500] }}>
               {description}
             </Typography>
           )}

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { getSession } from "@/lib/session"
+import { green, red } from "@/lib/theme-tokens"
 import { getTutorLearningWebhookDiagnostics } from "@/lib/webhook-monitor"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { CheckCircle2, Plug, XCircle } from "lucide-react"
@@ -78,9 +79,9 @@ export default async function SuperAdminIntegrationPage() {
           icon={<CheckCircle2 size={16} />}
           sx={{
             borderRadius: 2,
-            border: "1px solid #bbf7d0",
-            bgcolor: "#f0fdf4",
-            color: "#14532d",
+            border: `1px solid ${green[200]}`,
+            bgcolor: green[50],
+            color: green[900],
           }}
         >
           <strong>Bridge conectado correctamente</strong>
@@ -128,8 +129,8 @@ export default async function SuperAdminIntegrationPage() {
                   height: 36,
                   borderRadius: 2,
                   flexShrink: 0,
-                  bgcolor: ok ? "#f0fdf4" : "#fef2f2",
-                  color: ok ? "#16a34a" : "#ef4444",
+                  bgcolor: ok ? green[50] : red[50],
+                  color: ok ? green[600] : red[500],
                 }}
               >
                 {ok ? <CheckCircle2 size={16} /> : <XCircle size={16} />}

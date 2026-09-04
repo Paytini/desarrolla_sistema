@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { X } from "lucide-react"
 import { useAutoDismiss } from "@/lib/use-auto-dismiss"
+import { green } from "@/lib/theme-tokens"
 import Alert from "@mui/material/Alert"
 import AlertTitle from "@mui/material/AlertTitle"
 import Box from "@mui/material/Box"
@@ -30,10 +31,10 @@ function SuccessAlert({ message }: { message: string }) {
     <Alert
       severity="success"
       sx={{
-        border: "1px solid #bbf7d0",
-        bgcolor: "#f0fdf4",
-        color: "#15803d",
-        "& .MuiAlert-icon": { color: "#16a34a" },
+        border: `1px solid ${green[200]}`,
+        bgcolor: green[50],
+        color: green[700],
+        "& .MuiAlert-icon": { color: green[600] },
         borderRadius: "12px",
       }}
       action={
@@ -41,13 +42,13 @@ function SuccessAlert({ message }: { message: string }) {
           size="small"
           aria-label="Cerrar aviso"
           onClick={() => setOpen(false)}
-          sx={{ color: "#15803d", mt: -0.25 }}
+          sx={{ color: green[700], mt: -0.25 }}
         >
           <X size={14} />
         </IconButton>
       }
     >
-      <AlertTitle sx={{ color: "#15803d", fontWeight: 600 }}>Éxito</AlertTitle>
+      <AlertTitle sx={{ color: green[700], fontWeight: 600 }}>Éxito</AlertTitle>
       {message}
     </Alert>
   )

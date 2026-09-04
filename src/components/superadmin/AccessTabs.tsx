@@ -20,6 +20,7 @@ import { SearchInput } from "@/components/shared/SearchInput"
 import { Pagination } from "@/components/shared/Pagination"
 import { DataTable } from "@/components/shared/DataTable"
 import { getInitials } from "@/components/layout/nav-config"
+import { emerald, fd, slate } from "@/lib/theme-tokens"
 import {
   deleteEmployeeAsSuperAdminAction,
   toggleEmployeeStatusAsSuperAdminAction,
@@ -68,8 +69,8 @@ function StatusBadge({
         height: 22,
         fontSize: 11,
         fontWeight: 600,
-        bgcolor: active ? "#D1FAE5" : "#E2E8F0",
-        color: active ? "#047857" : "#475569",
+        bgcolor: active ? emerald[100] : slate[200],
+        color: active ? emerald[700] : slate[600],
       }}
     />
   )
@@ -203,7 +204,7 @@ export function AccessTabs({
     : hrUsers
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: "8px", backgroundColor: "#FFFFFF" }}>
+    <Paper elevation={0} sx={{ borderRadius: "8px", backgroundColor: fd.background }}>
       <Tabs
         value={tab}
         onChange={(_, value: "hr" | "employees") => handleTabChange(value)}

@@ -10,6 +10,7 @@ import IconButton from "@mui/material/IconButton"
 import InputBase from "@mui/material/InputBase"
 import Modal from "@mui/material/Modal"
 import Typography from "@mui/material/Typography"
+import { fd, gray } from "@/lib/theme-tokens"
 
 interface SearchPaletteProps<T> {
   searchUrl: (query: string) => string
@@ -151,7 +152,7 @@ export default function SearchPalette<T>({
           border: "1px solid",
           borderColor: dark ? "var(--sidebar-navy-border)" : "divider",
           borderRadius: "999px",
-          bgcolor: dark ? "rgba(255,255,255,0.06)" : "#ffffff",
+          bgcolor: dark ? "rgba(255,255,255,0.06)" : fd.background,
           cursor: "pointer",
           fontSize: "0.875rem",
           color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
@@ -244,12 +245,12 @@ export default function SearchPalette<T>({
                   strokeWidth={2}
                   style={{
                     flexShrink: 0,
-                    color: "#3B82F6",
+                    color: fd.primary,
                     animation: "spin 0.8s linear infinite",
                   }}
                 />
               ) : (
-                <Search size={17} strokeWidth={2} style={{ flexShrink: 0, color: "#9CA3AF" }} />
+                <Search size={17} strokeWidth={2} style={{ flexShrink: 0, color: gray[400] }} />
               )}
 
               <InputBase
