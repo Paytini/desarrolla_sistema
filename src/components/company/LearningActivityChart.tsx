@@ -31,7 +31,7 @@ function ActivityTooltip({ active, payload, label }: ActivityTooltipProps) {
 
   return (
     <div className="rounded-xl border border-portal-border bg-white px-4 py-3 shadow-lg">
-      <p className="text-sm font-semibold text-[#1a1a1a]">{label}</p>
+      <p className="text-sm font-semibold text-portal-ink">{label}</p>
       <p className="text-sm text-portal-blue">
         finalizaciones: <span className="font-semibold">{payload[0].value}</span>
       </p>

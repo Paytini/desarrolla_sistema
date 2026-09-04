@@ -1,8 +1,3 @@
-// Fuente canonica de los colores de marca en JS. Existe por separado de las
-// variables CSS de globals.css porque helpers como alpha() de MUI necesitan
-// un color real para calcular transparencias -- no aceptan var(--x). Si un
-// valor cambia aqui, actualiza tambien la variable correspondiente en
-// globals.css (--portal-blue, --portal-blue-hover, etc.).
 export const fd = {
   primary: "#3B82F6",
   secondary: "#10B981",
@@ -18,4 +13,6 @@ export const portalColors = {
   blueHover: "#2A61D6",
   blueSoft: "#EAF1FE",
   border: "#E5E7EB",
+  ink: "#1A1A1A",
+  pageBg: "#F8F9FC",
 } as const

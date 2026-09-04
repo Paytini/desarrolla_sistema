@@ -93,15 +93,15 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-portal-blue">
               <Icon size={16} />
             </div>
-            <span className="min-w-0 truncate font-medium text-[#1a1a1a]">
+            <span className="min-w-0 truncate font-medium text-portal-ink">
               {areaOption?.label ?? request.area}
             </span>
           </div>
         </td>
-        <td className="px-3 py-3 text-[#64748b]">
+        <td className="px-3 py-3 text-slate-500">
           {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
         </td>
-        <td className="max-w-xs px-3 py-3 text-[#64748b]">
+        <td className="max-w-xs px-3 py-3 text-slate-500">
           <span className="block truncate" title={request.context}>
             {request.context}
           </span>
@@ -155,10 +155,10 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
           <Icon size={18} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-[#1a1a1a]">
+          <p className="truncate text-sm font-semibold text-portal-ink">
             {areaOption?.label ?? request.area}
           </p>
-          <p className="truncate text-xs text-[#64748b]">
+          <p className="truncate text-xs text-slate-500">
             {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
           </p>
           <p className="truncate text-xs text-slate-400" title={request.context}>
@@ -197,9 +197,9 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
 
       <div className="space-y-5">
         <section className="rounded-lg bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-[#1a1a1a]">
+          <h2 className="mb-4 text-base font-semibold text-portal-ink">
             Próximas
-            <span className="ml-2 text-sm font-normal text-[#94a3b8]">{upcomingAll.length}</span>
+            <span className="ml-2 text-sm font-normal text-slate-400">{upcomingAll.length}</span>
           </h2>
           {upcomingAll.length === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
@@ -229,9 +229,9 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
         </section>
 
         <section className="rounded-lg bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-[#1a1a1a]">
+          <h2 className="mb-4 text-base font-semibold text-portal-ink">
             Historial
-            <span className="ml-2 text-sm font-normal text-[#94a3b8]">{historyAll.length}</span>
+            <span className="ml-2 text-sm font-normal text-slate-400">{historyAll.length}</span>
           </h2>
           {historyAll.length === 0 ? (
             <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
