@@ -1,17 +1,17 @@
 import { createTheme } from "@mui/material/styles"
 import type { Shadows } from "@mui/material/styles"
-import { portalColors } from "@/lib/theme-tokens"
+import { fd, portalColors } from "@/lib/theme-tokens"
 
 export const muiTheme = createTheme({
   palette: {
-    primary: { main: "#3B82F6", dark: "#2563EB", light: "#60A5FA", contrastText: "#FFFFFF" },
-    secondary: { main: "#10B981", dark: "#059669", light: "#34D399", contrastText: "#FFFFFF" },
+    primary: { main: fd.primary, dark: "#2563EB", light: "#60A5FA", contrastText: "#FFFFFF" },
+    secondary: { main: fd.secondary, dark: "#059669", light: "#34D399", contrastText: "#FFFFFF" },
     error: { main: "#EF4444" },
-    success: { main: "#10B981" },
-    warning: { main: "#F59E0B" },
-    info: { main: "#3B82F6" },
-    background: { default: "#F3F4F6", paper: "#FFFFFF" },
-    text: { primary: "#111827", secondary: "#6B7280" },
+    success: { main: fd.secondary },
+    warning: { main: fd.accent },
+    info: { main: fd.primary },
+    background: { default: fd.muted, paper: fd.background },
+    text: { primary: fd.foreground, secondary: "#6B7280" },
     divider: portalColors.border,
     action: { hover: "rgba(59,130,246,0.06)", selected: "rgba(59,130,246,0.10)" },
   },
@@ -70,7 +70,7 @@ export const muiTheme = createTheme({
   },
   components: {
     MuiCssBaseline: {
-      styleOverrides: { body: { backgroundColor: "#F3F4F6" } },
+      styleOverrides: { body: { backgroundColor: fd.muted } },
     },
     MuiButton: {
       styleOverrides: {
@@ -143,7 +143,7 @@ export const muiTheme = createTheme({
             "& fieldset": { borderColor: portalColors.border, borderWidth: "1px" },
             "&:hover fieldset": { borderColor: "#D1D5DB", borderWidth: "1px" },
             "&.Mui-focused fieldset": {
-              borderColor: "#3B82F6",
+              borderColor: fd.primary,
               borderWidth: "2px",
             },
           },
@@ -162,7 +162,7 @@ export const muiTheme = createTheme({
         root: {
           color: "#6B7280",
           fontWeight: 600,
-          "&.Mui-focused": { color: "#3B82F6" },
+          "&.Mui-focused": { color: fd.primary },
         },
       },
     },
@@ -170,7 +170,7 @@ export const muiTheme = createTheme({
       styleOverrides: {
         root: {
           color: "#6B7280",
-          "&.Mui-focused": { color: "#3B82F6" },
+          "&.Mui-focused": { color: fd.primary },
         },
       },
     },
@@ -182,7 +182,7 @@ export const muiTheme = createTheme({
           fontSize: "0.75rem",
           border: "none",
         },
-        colorDefault: { backgroundColor: "#F3F4F6" },
+        colorDefault: { backgroundColor: fd.muted },
       },
     },
     MuiAlert: {
@@ -204,7 +204,7 @@ export const muiTheme = createTheme({
             letterSpacing: "0.10em",
             textTransform: "uppercase",
             color: "#6B7280",
-            backgroundColor: "#F3F4F6",
+            backgroundColor: fd.muted,
           },
         },
       },
@@ -244,7 +244,7 @@ export const muiTheme = createTheme({
     },
     MuiTabs: {
       styleOverrides: {
-        indicator: { height: 3, borderRadius: "3px 3px 0 0", backgroundColor: "#3B82F6" },
+        indicator: { height: 3, borderRadius: "3px 3px 0 0", backgroundColor: fd.primary },
       },
     },
     MuiTab: {
@@ -253,7 +253,7 @@ export const muiTheme = createTheme({
           textTransform: "none",
           fontWeight: 600,
           fontSize: "0.875rem",
-          "&.Mui-selected": { color: "#3B82F6", fontWeight: 700 },
+          "&.Mui-selected": { color: fd.primary, fontWeight: 700 },
         },
       },
     },
