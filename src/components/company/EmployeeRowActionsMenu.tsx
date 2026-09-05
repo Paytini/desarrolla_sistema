@@ -5,6 +5,7 @@ import Box from "@mui/material/Box"
 import ActionsPopover from "@/components/shared/ActionsPopover"
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog"
 import { MoreVertical, Trash2, UserCheck, UserX } from "lucide-react"
+import { amber, emerald, gray } from "@/lib/theme-tokens"
 
 type EmployeeAction = (formData: FormData) => void | Promise<void>
 
@@ -130,9 +131,9 @@ function MenuRow({
   onClick: () => void
 }) {
   const toneColor: Record<string, string> = {
-    neutral: "#374151",
-    amber: "#92400E",
-    emerald: "#065F46",
+    neutral: gray[700],
+    amber: amber[800],
+    emerald: emerald[800],
     rose: "#BE123C",
   }
   const toneHover: Record<string, string> = {

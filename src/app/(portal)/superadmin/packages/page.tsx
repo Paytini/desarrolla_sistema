@@ -1,3 +1,4 @@
+import { fd, slate } from "@/lib/theme-tokens"
 import { PackageRow } from "@/components/superadmin/PackageRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -37,7 +38,7 @@ const SELECT_SX = {
   borderRadius: "8px",
   border: "1px solid",
   borderColor: "divider",
-  bgcolor: "#FFFFFF",
+  bgcolor: fd.background,
   px: 1,
   fontSize: 12,
   color: "text.primary",
@@ -51,7 +52,7 @@ const FILTER_SELECT_SX = {
   borderRadius: "8px",
   border: "1px solid",
   borderColor: "divider",
-  bgcolor: "#FFFFFF",
+  bgcolor: fd.background,
   px: 1.5,
   fontSize: "13px",
   color: "text.primary",
@@ -231,7 +232,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
               variant="outlined"
               size="small"
               sx={{
-                bgcolor: "#FFFFFF",
+                bgcolor: fd.background,
                 height: 40,
                 px: 1.5,
                 fontSize: 13,
@@ -252,7 +253,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                   paddingLeft: 8,
                   paddingRight: 8,
                   fontSize: 12,
-                  color: "#64748b",
+                  color: slate[500],
                   textDecoration: "none",
                 }}
               >
@@ -329,7 +330,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
             {companyQ && (
               <Link
                 href="/superadmin/packages#asignacion-por-empresa"
-                style={{ display: "inline-flex", alignItems: "center", color: "#64748b" }}
+                style={{ display: "inline-flex", alignItems: "center", color: slate[500] }}
                 aria-label="Limpiar búsqueda"
               >
                 <X size={14} />

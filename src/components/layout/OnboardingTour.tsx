@@ -15,6 +15,7 @@ import {
   GraduationCap,
   Users,
 } from "lucide-react"
+import { blue, fd, gray } from "@/lib/theme-tokens"
 
 type Step = {
   icon: React.ReactNode
@@ -116,7 +117,7 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
       }}
     >
       <DialogContent sx={{ p: 0 }}>
-        <Box sx={{ height: 4, bgcolor: "#3B82F6" }} />
+        <Box sx={{ height: 4, bgcolor: fd.primary }} />
 
         <Box sx={{ px: 3.5, pt: 3, pb: 3.5 }}>
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 2.5 }}>
@@ -129,8 +130,8 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: "12px",
-                bgcolor: "#EFF6FF",
-                color: "#3B82F6",
+                bgcolor: blue[50],
+                color: fd.primary,
               }}
             >
               {current.icon}
@@ -142,21 +143,26 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
-                  color: "#9CA3AF",
+                  color: gray[400],
                   mb: 0.5,
                 }}
               >
                 Paso {step + 1} de {steps.length}
               </Typography>
               <Typography
-                sx={{ fontSize: "1.0625rem", fontWeight: 700, color: "#111827", lineHeight: 1.3 }}
+                sx={{
+                  fontSize: "1.0625rem",
+                  fontWeight: 700,
+                  color: fd.foreground,
+                  lineHeight: 1.3,
+                }}
               >
                 {current.title}
               </Typography>
             </Box>
           </Box>
 
-          <Typography sx={{ fontSize: "0.875rem", color: "#4B5563", lineHeight: 1.7, mb: 3.5 }}>
+          <Typography sx={{ fontSize: "0.875rem", color: gray[600], lineHeight: 1.7, mb: 3.5 }}>
             {current.body}
           </Typography>
 
@@ -168,7 +174,7 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
                   height: 6,
                   width: i === step ? 20 : 6,
                   borderRadius: "999px",
-                  bgcolor: i === step ? "#3B82F6" : "var(--portal-border)",
+                  bgcolor: i === step ? fd.primary : "var(--portal-border)",
                   transition: "width 220ms ease, background-color 220ms ease",
                 }}
               />
@@ -181,11 +187,11 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
               onClick={dismiss}
               sx={{
                 fontSize: "0.75rem",
-                color: "#9CA3AF",
+                color: gray[400],
                 textTransform: "none",
                 px: 0,
                 minWidth: 0,
-                "&:hover": { color: "#6B7280", bgcolor: "transparent" },
+                "&:hover": { color: gray[500], bgcolor: "transparent" },
               }}
             >
               Saltar
@@ -202,10 +208,10 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
                     fontWeight: 600,
                     fontSize: "0.8125rem",
                     borderColor: "var(--portal-border)",
-                    color: "#374151",
+                    color: gray[700],
                     borderRadius: "8px",
                     px: 2,
-                    "&:hover": { borderColor: "#D1D5DB", bgcolor: "#F9FAFB" },
+                    "&:hover": { borderColor: gray[300], bgcolor: gray[50] },
                   }}
                 >
                   Anterior
@@ -220,10 +226,10 @@ export function OnboardingTour({ role, userId }: { role: "HR" | "EMPLOYEE"; user
                   textTransform: "none",
                   fontWeight: 700,
                   fontSize: "0.8125rem",
-                  bgcolor: "#3B82F6",
+                  bgcolor: fd.primary,
                   borderRadius: "8px",
                   px: 2.5,
-                  "&:hover": { bgcolor: "#2563EB" },
+                  "&:hover": { bgcolor: blue[600] },
                 }}
               >
                 {isLast ? "¡Entendido!" : "Siguiente →"}

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { amber, green, red, slate } from "@/lib/theme-tokens"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { SubmitButton } from "@/components/shared/SubmitButton"
 import { RefreshCw, CheckCircle2 } from "lucide-react"
@@ -48,10 +49,10 @@ function calculateRemainingDays(date: Date) {
 type SyncStatus = "OK" | "PARCIAL" | "ERROR" | "SUSPENDIDA"
 
 const SYNC_CHIP_STYLES: Record<SyncStatus, { bg: string; color: string; border: string }> = {
-  OK: { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
-  PARCIAL: { bg: "#fffbeb", color: "#b45309", border: "#fde68a" },
-  ERROR: { bg: "#fef2f2", color: "#dc2626", border: "#fecaca" },
-  SUSPENDIDA: { bg: "#f8fafc", color: "#64748b", border: "#e2e8f0" },
+  OK: { bg: green[50], color: green[700], border: green[200] },
+  PARCIAL: { bg: amber[50], color: amber[700], border: amber[200] },
+  ERROR: { bg: red[50], color: red[600], border: red[200] },
+  SUSPENDIDA: { bg: slate[50], color: slate[500], border: slate[200] },
 }
 
 export default async function SuperAdminReportsPage({ searchParams }: PageProps) {
@@ -234,15 +235,15 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
           sx={{
             overflow: "hidden",
             borderRadius: 2,
-            border: "1px solid #e2e8f0",
+            border: `1px solid ${slate[200]}`,
             bgcolor: "background.paper",
           }}
         >
-          <Box sx={{ borderBottom: "1px solid #f1f5f9", px: 3, py: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>
+          <Box sx={{ borderBottom: `1px solid ${slate[100]}`, px: 3, py: 2 }}>
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: slate[900] }}>
               Control de vencimientos
             </Typography>
-            <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
+            <Typography sx={{ fontSize: 12, color: slate[400] }}>
               Alertas por tramo para anticipar renovaciones comerciales.
             </Typography>
           </Box>
@@ -259,8 +260,8 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                   sx={{
                     borderRadius: 1.5,
                     border: "1px solid",
-                    borderColor: danger ? "#fecaca" : warn ? "#fde68a" : "#e2e8f0",
-                    bgcolor: danger ? "#fef2f2" : warn ? "#fffbeb" : "#f8fafc",
+                    borderColor: danger ? red[200] : warn ? amber[200] : slate[200],
+                    bgcolor: danger ? red[50] : warn ? amber[50] : slate[50],
                     p: 1.5,
                     textAlign: "center",
                   }}
@@ -270,7 +271,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                       fontSize: 20,
                       fontWeight: 600,
                       fontVariantNumeric: "tabular-nums",
-                      color: danger ? "#dc2626" : warn ? "#d97706" : "#475569",
+                      color: danger ? red[600] : warn ? amber[600] : slate[600],
                     }}
                   >
                     {value}
@@ -282,7 +283,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                       fontWeight: 700,
                       textTransform: "uppercase",
                       letterSpacing: "0.08em",
-                      color: "#94a3b8",
+                      color: slate[400],
                     }}
                   >
                     {label}
@@ -295,14 +296,14 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
               <Box
                 sx={{
                   borderRadius: 1.5,
-                  border: "1px dashed #e2e8f0",
-                  bgcolor: "#f8fafc",
+                  border: `1px dashed ${slate[200]}`,
+                  bgcolor: slate[50],
                   py: 4,
                   textAlign: "center",
                 }}
               >
-                <CheckCircle2 size={22} style={{ color: "#86efac", margin: "0 auto 8px" }} />
-                <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
+                <CheckCircle2 size={22} style={{ color: green[300], margin: "0 auto 8px" }} />
+                <Typography sx={{ fontSize: 13, color: slate[400] }}>
                   Sin vencimientos en los próximos 30 días.
                 </Typography>
               </Box>
@@ -344,13 +345,13 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                             fontSize: "10px",
                             fontWeight: 600,
                             ...(days < 0
-                              ? { borderColor: "#fecaca", bgcolor: "#fef2f2", color: "#dc2626" }
+                              ? { borderColor: red[200], bgcolor: red[50], color: red[600] }
                               : days <= 7
-                                ? { borderColor: "#fde68a", bgcolor: "#fffbeb", color: "#d97706" }
+                                ? { borderColor: amber[200], bgcolor: amber[50], color: amber[600] }
                                 : {
-                                    borderColor: "#e2e8f0",
-                                    bgcolor: "#f8fafc",
-                                    color: "#64748b",
+                                    borderColor: slate[200],
+                                    bgcolor: slate[50],
+                                    color: slate[500],
                                   }),
                           }}
                         >
@@ -370,13 +371,13 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
           sx={{
             overflow: "hidden",
             borderRadius: 2,
-            border: "1px solid #e2e8f0",
+            border: `1px solid ${slate[200]}`,
             bgcolor: "background.paper",
           }}
         >
           <Box
             sx={{
-              borderBottom: "1px solid #f1f5f9",
+              borderBottom: `1px solid ${slate[100]}`,
               px: 3,
               py: 2,
               display: "flex",
@@ -387,10 +388,10 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
             }}
           >
             <Box>
-              <Typography sx={{ fontSize: 14, fontWeight: 500, color: "#0f172a" }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: slate[900] }}>
                 Estado de sincronización WP/Tutor
               </Typography>
-              <Typography sx={{ fontSize: 12, color: "#94a3b8" }}>
+              <Typography sx={{ fontSize: 12, color: slate[400] }}>
                 Semáforo operativo por empresa con reintento directo.
               </Typography>
             </Box>
@@ -410,20 +411,26 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
           <Box sx={{ p: 2.5, display: "grid", gap: 2 }}>
             <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1 }}>
               {[
-                { label: "OK", value: syncOk, bg: "#f0fdf4", border: "#bbf7d0", color: "#16a34a" },
+                {
+                  label: "OK",
+                  value: syncOk,
+                  bg: green[50],
+                  border: green[200],
+                  color: green[600],
+                },
                 {
                   label: "Parcial",
                   value: syncPartial,
-                  bg: "#fffbeb",
-                  border: "#fde68a",
-                  color: "#d97706",
+                  bg: amber[50],
+                  border: amber[200],
+                  color: amber[600],
                 },
                 {
                   label: "Error",
                   value: syncError,
-                  bg: "#fef2f2",
-                  border: "#fecaca",
-                  color: "#dc2626",
+                  bg: red[50],
+                  border: red[200],
+                  color: red[600],
                 },
               ].map(({ label, value, bg, border, color }) => (
                 <Box
@@ -454,7 +461,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                       fontWeight: 700,
                       textTransform: "uppercase",
                       letterSpacing: "0.08em",
-                      color: "#94a3b8",
+                      color: slate[400],
                     }}
                   >
                     {label}
@@ -467,13 +474,13 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
               <Box
                 sx={{
                   borderRadius: 1.5,
-                  border: "1px dashed #e2e8f0",
-                  bgcolor: "#f8fafc",
+                  border: `1px dashed ${slate[200]}`,
+                  bgcolor: slate[50],
                   py: 4,
                   textAlign: "center",
                 }}
               >
-                <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
+                <Typography sx={{ fontSize: 13, color: slate[400] }}>
                   Sin resultados para ese filtro.
                 </Typography>
               </Box>
@@ -519,7 +526,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                           sx={{
                             fontSize: 13,
                             fontWeight: item.errorCourses > 0 ? 600 : 400,
-                            color: item.errorCourses > 0 ? "#dc2626" : "#94a3b8",
+                            color: item.errorCourses > 0 ? red[600] : slate[400],
                           }}
                         >
                           {item.errorCourses}
@@ -530,7 +537,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                           sx={{
                             fontSize: 13,
                             fontWeight: item.pendingCourses > 0 ? 600 : 400,
-                            color: item.pendingCourses > 0 ? "#d97706" : "#94a3b8",
+                            color: item.pendingCourses > 0 ? amber[600] : slate[400],
                           }}
                         >
                           {item.pendingCourses}
@@ -541,7 +548,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                           sx={{
                             fontSize: 13,
                             fontWeight: item.employeesWithoutWpUser > 0 ? 600 : 400,
-                            color: item.employeesWithoutWpUser > 0 ? "#334155" : "#94a3b8",
+                            color: item.employeesWithoutWpUser > 0 ? slate[700] : slate[400],
                           }}
                         >
                           {item.employeesWithoutWpUser}

@@ -98,19 +98,19 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
 
     return (
       <tr key={request.id} className="bg-white transition-colors hover:bg-gray-50">
-        <td className="rounded-l-lg px-3 py-3 text-[#1a1a1a]">{request.company.name}</td>
+        <td className="rounded-l-lg px-3 py-3 text-portal-ink">{request.company.name}</td>
         <td className="px-3 py-3">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-portal-blue">
               <Icon size={16} />
             </div>
-            <span className="min-w-0 truncate font-medium text-[#1a1a1a]">{areaLabel}</span>
+            <span className="min-w-0 truncate font-medium text-portal-ink">{areaLabel}</span>
           </div>
         </td>
-        <td className="px-3 py-3 text-[#64748b]">
+        <td className="px-3 py-3 text-slate-500">
           {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
         </td>
-        <td className="max-w-xs px-3 py-3 text-[#64748b]">
+        <td className="max-w-xs px-3 py-3 text-slate-500">
           <span className="block truncate" title={request.context}>
             {request.context}
           </span>
@@ -161,10 +161,10 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
           <Icon size={18} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-[#1a1a1a]">
+          <p className="truncate text-sm font-semibold text-portal-ink">
             {areaOption?.label ?? request.area} · {request.company.name}
           </p>
-          <p className="truncate text-xs text-[#64748b]">
+          <p className="truncate text-xs text-slate-500">
             {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)} ·{" "}
             {request.contact_phone} ·{" "}
             {CONSULTING_CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method}
@@ -204,9 +204,9 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
       />
 
       <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-[#1a1a1a]">
+        <h2 className="mb-4 text-base font-semibold text-portal-ink">
           Pendientes
-          <span className="ml-2 text-sm font-normal text-[#94a3b8]">{pendingAll.length}</span>
+          <span className="ml-2 text-sm font-normal text-slate-400">{pendingAll.length}</span>
         </h2>
         {pendingAll.length === 0 ? (
           <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">
@@ -237,9 +237,9 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
       </section>
 
       <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-[#1a1a1a]">
+        <h2 className="mb-4 text-base font-semibold text-portal-ink">
           Resueltas
-          <span className="ml-2 text-sm font-normal text-[#94a3b8]">{resolvedAll.length}</span>
+          <span className="ml-2 text-sm font-normal text-slate-400">{resolvedAll.length}</span>
         </h2>
         {resolvedAll.length === 0 ? (
           <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-slate-500">

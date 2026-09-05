@@ -1,6 +1,7 @@
 import { Heading, Section, Text } from "@react-email/components"
 import { render } from "@react-email/render"
 import { EmailLayout } from "./components/EmailLayout"
+import { gray, portalColors } from "@/lib/theme-tokens"
 
 export async function buildSupportRequestEmail({
   nombreUsuario,
@@ -64,14 +65,14 @@ export async function buildSupportRequestEmail({
 }
 
 const headingStyle = { fontSize: "18px", margin: "0 0 4px" }
-const reasonStyle = { color: "#6b7280", margin: "0 0 16px", fontSize: "14px" }
+const reasonStyle = { color: gray[500], margin: "0 0 16px", fontSize: "14px" }
 const rowsSectionStyle = { marginBottom: "16px" }
 const rowStyle = { padding: "4px 0" }
-const rowLabelStyle = { fontSize: "13px", color: "#6b7280", margin: "0 0 2px" }
+const rowLabelStyle = { fontSize: "13px", color: gray[500], margin: "0 0 2px" }
 const rowValueStyle = { fontSize: "14px", margin: 0 }
 
 const messageBoxStyle = {
-  backgroundColor: "#f8f9fc",
+  backgroundColor: portalColors.pageBg,
   borderRadius: "8px",
   padding: "16px",
 }

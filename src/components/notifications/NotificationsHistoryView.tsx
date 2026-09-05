@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography"
 
 import { NotificationRow, type NotificationItem } from "@/components/notifications/NotificationRow"
 import { groupNotificationsByDate } from "@/lib/notification-groups"
+import { fd, gray } from "@/lib/theme-tokens"
 
 type Filter = "all" | "unread" | "archived"
 
@@ -175,7 +176,7 @@ export function NotificationsHistoryView({
               borderColor: filter === tab.key ? "primary.main" : "divider",
               borderRadius: "999px",
               bgcolor: filter === tab.key ? "primary.main" : "background.paper",
-              color: filter === tab.key ? "#ffffff" : "text.secondary",
+              color: filter === tab.key ? fd.background : "text.secondary",
               fontSize: "0.8125rem",
               fontWeight: 600,
               fontFamily: "inherit",
@@ -199,7 +200,10 @@ export function NotificationsHistoryView({
       >
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-            <Loader2 size={22} style={{ animation: "spin 0.8s linear infinite", color: "#9CA3AF" }} />
+            <Loader2
+              size={22}
+              style={{ animation: "spin 0.8s linear infinite", color: gray[400] }}
+            />
           </Box>
         ) : items.length === 0 ? (
           <Box
@@ -214,9 +218,9 @@ export function NotificationsHistoryView({
             }}
           >
             {filter === "archived" ? (
-              <Archive size={32} strokeWidth={1.5} color="#9CA3AF" />
+              <Archive size={32} strokeWidth={1.5} color={gray[400]} />
             ) : (
-              <PartyPopper size={32} strokeWidth={1.5} color="#9CA3AF" />
+              <PartyPopper size={32} strokeWidth={1.5} color={gray[400]} />
             )}
             <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: "text.primary" }}>
               {emptyCopy[filter].title}

@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { fd, slate } from "@/lib/theme-tokens"
 
 export type LearningActivityPoint = {
   label: string
@@ -31,7 +32,7 @@ function ActivityTooltip({ active, payload, label }: ActivityTooltipProps) {
 
   return (
     <div className="rounded-xl border border-portal-border bg-white px-4 py-3 shadow-lg">
-      <p className="text-sm font-semibold text-[#1a1a1a]">{label}</p>
+      <p className="text-sm font-semibold text-portal-ink">{label}</p>
       <p className="text-sm text-portal-blue">
         finalizaciones: <span className="font-semibold">{payload[0].value}</span>
       </p>
@@ -55,16 +56,16 @@ export function LearningActivityChart({ data, height = 224 }: LearningActivityCh
             dataKey="label"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: "#94a3b8" }}
+            tick={{ fontSize: 12, fill: slate[400] }}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 12, fill: "#94a3b8" }}
+            tick={{ fontSize: 12, fill: slate[400] }}
             allowDecimals={false}
             width={28}
           />
-          <Tooltip content={<ActivityTooltip />} cursor={{ stroke: "#CBD5E1", strokeWidth: 1 }} />
+          <Tooltip content={<ActivityTooltip />} cursor={{ stroke: slate[300], strokeWidth: 1 }} />
           <Area
             type="monotone"
             dataKey="completions"
@@ -72,7 +73,7 @@ export function LearningActivityChart({ data, height = 224 }: LearningActivityCh
             strokeWidth={2}
             fill="url(#learningActivityFill)"
             dot={{ r: 3, fill: "var(--portal-blue)", strokeWidth: 0 }}
-            activeDot={{ r: 5, fill: "var(--portal-blue)", strokeWidth: 2, stroke: "#FFFFFF" }}
+            activeDot={{ r: 5, fill: "var(--portal-blue)", strokeWidth: 2, stroke: fd.background }}
           />
         </AreaChart>
       </ResponsiveContainer>

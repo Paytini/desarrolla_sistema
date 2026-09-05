@@ -46,7 +46,7 @@ export function ZipDownloadButton({ count, filteredCount, queryString }: ZipDown
         "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-200",
         isError
           ? "bg-red-50 text-red-600 hover:bg-red-100"
-          : "bg-gray-100 text-[#111827] hover:bg-gray-200 disabled:opacity-60 disabled:cursor-not-allowed",
+          : "bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:opacity-60 disabled:cursor-not-allowed",
       ].join(" ")}
     >
       {isLoading ? (

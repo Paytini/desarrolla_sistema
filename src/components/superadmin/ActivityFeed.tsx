@@ -1,5 +1,6 @@
 import { Box, Chip, Stack, Typography } from "@mui/material"
 import { formatDateTime } from "@/lib/format"
+import { amber, fd, green, portalColors, red, slate, violet } from "@/lib/theme-tokens"
 import { SectionCard } from "@/components/shared/SectionCard"
 
 export type ActivityItem = {
@@ -16,50 +17,55 @@ const ACTION_META: Record<
   string,
   { label: string; dotColor: string; bgColor: string; textColor: string }
 > = {
-  EMPRESA_CREADA: { label: "Alta", dotColor: "#16a34a", bgColor: "#f0fdf4", textColor: "#15803d" },
+  EMPRESA_CREADA: {
+    label: "Alta",
+    dotColor: green[600],
+    bgColor: green[50],
+    textColor: green[700],
+  },
   EMPRESA_SUSPENDIDA: {
     label: "Suspensión",
-    dotColor: "#dc2626",
-    bgColor: "#fef2f2",
-    textColor: "#dc2626",
+    dotColor: red[600],
+    bgColor: red[50],
+    textColor: red[600],
   },
   EMPRESA_ACTIVADA: {
     label: "Activación",
-    dotColor: "#16a34a",
-    bgColor: "#f0fdf4",
-    textColor: "#15803d",
+    dotColor: green[600],
+    bgColor: green[50],
+    textColor: green[700],
   },
   PAQUETE_ASIGNADO: {
     label: "Paquete",
-    dotColor: "#1a4f8a",
-    bgColor: "#eff4fb",
-    textColor: "#1a4f8a",
+    dotColor: portalColors.navy,
+    bgColor: portalColors.navySoft,
+    textColor: portalColors.navy,
   },
   CUPOS_ACTUALIZADOS: {
     label: "Cupos",
-    dotColor: "#1a4f8a",
-    bgColor: "#eff4fb",
-    textColor: "#1a4f8a",
+    dotColor: portalColors.navy,
+    bgColor: portalColors.navySoft,
+    textColor: portalColors.navy,
   },
   EMPLEADO_CREADO: {
     label: "Empleado",
-    dotColor: "#7c3aed",
-    bgColor: "#f5f3ff",
-    textColor: "#7c3aed",
+    dotColor: violet[600],
+    bgColor: violet[50],
+    textColor: violet[600],
   },
   EMPLEADO_SUSPENDIDO: {
     label: "Baja",
-    dotColor: "#b45309",
-    bgColor: "#fffbeb",
-    textColor: "#b45309",
+    dotColor: amber[700],
+    bgColor: amber[50],
+    textColor: amber[700],
   },
 }
 
 const DEFAULT_META = {
   label: "Evento",
-  dotColor: "#94a3b8",
-  bgColor: "#f8fafc",
-  textColor: "#64748b",
+  dotColor: slate[400],
+  bgColor: slate[50],
+  textColor: slate[500],
 }
 
 export function ActivityFeed({ items }: { items: ActivityItem[] }) {
@@ -81,7 +87,7 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
                 top: 16,
                 bottom: 16,
                 width: "1px",
-                bgcolor: "#f1f5f9",
+                bgcolor: slate[100],
               }}
             />
             <Stack spacing={0}>
@@ -103,7 +109,7 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
                         height: 18,
                         flexShrink: 0,
                         borderRadius: "50%",
-                        bgcolor: "#fff",
+                        bgcolor: fd.background,
                         border: `2px solid ${meta.dotColor}`,
                         display: "flex",
                         alignItems: "center",

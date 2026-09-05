@@ -1,4 +1,5 @@
 import { getSuperadminCompaniesListSnapshot } from "@/lib/dashboard-cache"
+import { fd, slate } from "@/lib/theme-tokens"
 import { readSearchParam } from "@/lib/search-params"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
@@ -103,7 +104,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
               borderRadius: "8px",
               border: "1px solid",
               borderColor: "divider",
-              bgcolor: "#FFFFFF",
+              bgcolor: fd.background,
               px: 1.5,
               fontSize: "13px",
               color: "text.primary",
@@ -121,7 +122,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
             variant="outlined"
             size="small"
             sx={{
-              bgcolor: "#FFFFFF",
+              bgcolor: fd.background,
               height: 40,
               px: 1.5,
               fontSize: 13,
@@ -142,7 +143,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
                 paddingLeft: 8,
                 paddingRight: 8,
                 fontSize: 12,
-                color: "#64748b",
+                color: slate[500],
                 textDecoration: "none",
               }}
             >

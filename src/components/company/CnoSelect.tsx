@@ -7,6 +7,7 @@ import ListSubheader from "@mui/material/ListSubheader"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 import { CNO_AREAS, CNO_CATALOG } from "@/lib/dc3/cno-catalog"
+import { slate } from "@/lib/theme-tokens"
 
 export type CnoEntry = (typeof CNO_CATALOG)[number]
 
@@ -40,7 +41,7 @@ export default function CnoSelect({
 
   return (
     <Box>
-      <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 400, color: "#334155" }}>
+      <Typography sx={{ mb: 1, fontSize: 14, fontWeight: 400, color: slate[700] }}>
         Ocupación
       </Typography>
 

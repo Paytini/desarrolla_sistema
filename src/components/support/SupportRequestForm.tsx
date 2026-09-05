@@ -17,7 +17,7 @@ export function SupportRequestForm({ userName }: { userName: string }) {
     return (
       <div className="flex flex-col items-center rounded-lg border border-portal-border bg-white p-8 text-center">
         <CheckCircle2 size={40} className="mb-3 text-emerald-600" />
-        <h2 className="text-base font-semibold text-[#1a1a1a]">¡Mensaje enviado, {userName}!</h2>
+        <h2 className="text-base font-semibold text-portal-ink">¡Mensaje enviado, {userName}!</h2>
         <p className="mt-1.5 max-w-sm text-sm text-slate-500">
           Nuestro equipo te responderá a tu correo en menos de 24 horas hábiles.
         </p>
@@ -27,7 +27,7 @@ export function SupportRequestForm({ userName }: { userName: string }) {
 
   return (
     <form action={formAction} className="rounded-lg border border-portal-border bg-white p-6">
-      <h2 className="text-base font-semibold text-[#1a1a1a]">Escríbenos</h2>
+      <h2 className="text-base font-semibold text-portal-ink">Escríbenos</h2>
       <p className="mt-1 text-sm text-slate-500">
         Cuéntanos qué necesitas y te responderemos a tu correo registrado.
       </p>

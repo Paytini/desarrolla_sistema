@@ -8,6 +8,7 @@ import Box from "@mui/material/Box"
 import Divider from "@mui/material/Divider"
 import Typography from "@mui/material/Typography"
 import ActionsPopover from "@/components/shared/ActionsPopover"
+import { fd } from "@/lib/theme-tokens"
 
 import { avatarColor, getInitials } from "@/components/layout/nav-config"
 
@@ -44,12 +45,12 @@ export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMe
             border: "none",
             borderRadius: "999px",
             cursor: "pointer",
-            bgcolor: dark ? "rgba(255,255,255,0.1)" : "#ffffff",
+            bgcolor: dark ? "rgba(255,255,255,0.1)" : fd.background,
             boxShadow: dark ? "none" : "0 1px 3px rgba(15,23,42,0.1)",
             transition: "background-color 0.15s ease, box-shadow 0.15s ease",
             "&:hover": dark
               ? { bgcolor: "rgba(255,255,255,0.18)" }
-              : { bgcolor: "#ffffff", boxShadow: "0 2px 8px rgba(15,23,42,0.16)" },
+              : { bgcolor: fd.background, boxShadow: "0 2px 8px rgba(15,23,42,0.16)" },
           }}
         >
           <Avatar

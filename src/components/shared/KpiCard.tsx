@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react"
 import { Paper, Box, Typography } from "@mui/material"
 import { RingChart } from "@/components/shared/RingChart"
-import { fd } from "@/lib/theme-tokens"
+import { fd, red } from "@/lib/theme-tokens"
 import { kpiColorMap, type KpiColorKey } from "@/lib/kpi-colors"
 import type { LucideIcon } from "lucide-react"
 
@@ -41,10 +41,10 @@ export default function KpiCard({
   // stand out instead of silently no-oping under that theme.
   const alertStyle = alert
     ? ({
-        "--kpi-border": "#EF4444",
+        "--kpi-border": red[500],
         "--kpi-icon-display": "flex",
         "--kpi-icon-bg": "rgba(239, 68, 68, 0.12)",
-        "--kpi-icon-color": "#EF4444",
+        "--kpi-icon-color": red[500],
       } as CSSProperties)
     : undefined
 

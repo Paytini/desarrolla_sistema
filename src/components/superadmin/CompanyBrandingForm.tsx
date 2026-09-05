@@ -8,6 +8,7 @@ import CircularProgress from "@mui/material/CircularProgress"
 import Typography from "@mui/material/Typography"
 import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { storageProxyUrl } from "@/lib/storage-proxy"
+import { gray } from "@/lib/theme-tokens"
 
 const LOGO_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"]
 const LOGO_MAX_SIZE_BYTES = 2 * 1024 * 1024
@@ -171,7 +172,7 @@ export function CompanyBrandingForm({
           </>
         ) : (
           <>
-            <Upload size={26} strokeWidth={1.5} color="#9CA3AF" />
+            <Upload size={26} strokeWidth={1.5} color={gray[400]} />
             <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
               Arrastra tu logo aquí o haz clic para subir
             </Typography>

@@ -126,9 +126,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
       <div className="space-y-5">
         <section className="rounded-lg bg-white p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-[#1a1a1a]">
+            <h2 className="text-base font-semibold text-portal-ink">
               Constancias emitidas
-              <span className="ml-2 text-sm font-normal text-[#94a3b8]">
+              <span className="ml-2 text-sm font-normal text-slate-400">
                 {issuedHasFilters
                   ? `${filteredCertificates.length} de ${certificates.length}`
                   : certificates.length}
@@ -179,14 +179,14 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               </select>
               <button
                 type="submit"
-                className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
+                className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
               >
                 Filtrar
               </button>
               {issuedHasFilters ? (
                 <a
                   href={clearIssuedUrl}
-                  className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
+                  className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-50"
                 >
                   Limpiar
                 </a>
@@ -207,23 +207,23 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
             rows={pagedCertificates.map((certificate) => (
               <tr key={certificate.id} className="bg-white transition-colors hover:bg-gray-50">
                 <td className="rounded-l-lg px-3 py-3">
-                  <span className="min-w-0 truncate font-medium text-[#1a1a1a]">
+                  <span className="min-w-0 truncate font-medium text-portal-ink">
                     {certificate.employeeName}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 text-[#64748b]">
+                <td className="whitespace-nowrap px-3 py-3 text-slate-500">
                   {certificate.department ?? "—"}
                 </td>
                 <td
-                  className="max-w-[240px] truncate px-3 py-3 text-[#1a1a1a]"
+                  className="max-w-[240px] truncate px-3 py-3 text-portal-ink"
                   title={certificate.course_name}
                 >
                   {certificate.course_name}
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-[#64748b]">
+                <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-slate-500">
                   {certificate.reference_number}
                 </td>
-                <td className="hidden whitespace-nowrap px-3 py-3 text-xs text-[#94a3b8] sm:table-cell">
+                <td className="hidden whitespace-nowrap px-3 py-3 text-xs text-slate-400 sm:table-cell">
                   {formatDateTime(certificate.issued_at)}
                 </td>
                 <td className="rounded-r-lg whitespace-nowrap px-3 py-3">
@@ -233,7 +233,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                         href={certificate.certificate_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="whitespace-nowrap rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-[#111827] transition hover:bg-gray-200"
+                        className="whitespace-nowrap rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-900 transition hover:bg-gray-200"
                       >
                         Ver Diploma
                       </a>
@@ -267,9 +267,9 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
 
         <section className="rounded-lg bg-white p-5">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-[#1a1a1a]">
+            <h2 className="text-base font-semibold text-portal-ink">
               Pendientes por aparecer
-              <span className="ml-2 text-sm font-normal text-[#94a3b8]">
+              <span className="ml-2 text-sm font-normal text-slate-400">
                 {pendingHasFilters
                   ? `${filteredPending.length} de ${pendingCertificates.length}`
                   : pendingCertificates.length}
@@ -304,14 +304,14 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               </select>
               <button
                 type="submit"
-                className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#374151] transition hover:bg-gray-50"
+                className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
               >
                 Filtrar
               </button>
               {pendingHasFilters ? (
                 <a
                   href={clearPendingUrl}
-                  className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-[#6B7280] transition hover:bg-gray-50"
+                  className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-50"
                 >
                   Limpiar
                 </a>

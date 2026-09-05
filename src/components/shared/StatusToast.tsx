@@ -4,6 +4,7 @@ import { useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Alert from "@mui/material/Alert"
 import Snackbar from "@mui/material/Snackbar"
+import { emerald, red } from "@/lib/theme-tokens"
 
 const FEEDBACK_PARAMS = ["success", "error", "created", "synced", "warnings", "skipped"]
 
@@ -43,9 +44,9 @@ export default function StatusToast({ tone, message }: StatusToastProps) {
         sx={{
           borderRadius: "12px",
           boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
-          bgcolor: tone === "success" ? "#ECFDF5" : "#FEF2F2",
-          color: tone === "success" ? "#065F46" : "#991B1B",
-          "& .MuiAlert-icon": { color: tone === "success" ? "#059669" : "#DC2626" },
+          bgcolor: tone === "success" ? emerald[50] : red[50],
+          color: tone === "success" ? emerald[800] : red[800],
+          "& .MuiAlert-icon": { color: tone === "success" ? emerald[600] : red[600] },
         }}
       >
         {message}

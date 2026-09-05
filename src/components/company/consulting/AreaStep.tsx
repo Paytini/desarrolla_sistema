@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography"
 import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { CONSULTING_AREAS, type ConsultingAreaId } from "@/lib/consulting/areas"
 import { kpiColorMap } from "@/lib/kpi-colors"
+import { fd } from "@/lib/theme-tokens"
 
 type AreaStepProps = {
   value: ConsultingAreaId | null
@@ -60,7 +61,7 @@ export function AreaStep({ value, onChange, onNext }: AreaStepProps) {
                   height: 40,
                   borderRadius: "50%",
                   bgcolor: bg,
-                  color: "#FFFFFF",
+                  color: fd.background,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

@@ -6,14 +6,21 @@
 :root {
   --surface: #ffffff;
   --surface-strong: #ffffff;
-  --brand: #3579f5;
-  --brand-warm: #2a61d6;
   --brand-ink: #000022;
 
+  /* Azul de marca de Desarrolla360 -- unica definicion real; el resto de las
+     variables de esta familia (--brand, --sidebar-navy*) la referencian en vez
+     de repetir el hex. Debe coincidir con portalColors.blue en theme-tokens.ts. */
   --portal-blue: #3579f5;
   --portal-blue-hover: #2a61d6;
   --portal-blue-soft: #eaf1fe;
   --portal-border: #e5e7eb;
+
+  --brand: var(--portal-blue);
+  --brand-warm: var(--portal-blue-hover);
+
+  --portal-ink: #1a1a1a;
+  --portal-page-bg: #f8f9fc;
 
   --background: oklch(1 0 0);
   --foreground: oklch(0.068 0.018 18);
@@ -48,12 +55,12 @@
   --sidebar-border: oklch(0.918 0.008 55);
   --sidebar-ring: oklch(0.685 0.178 44);
 
-  --sidebar-navy: #3579f5;
+  --sidebar-navy: var(--portal-blue);
   --sidebar-navy-border: rgba(255, 255, 255, 0.08);
   --sidebar-navy-text: rgba(255, 255, 255, 0.65);
   --sidebar-navy-text-strong: #ffffff;
   --sidebar-navy-active-bg: #ffffff;
-  --sidebar-navy-active-text: #3579f5;
+  --sidebar-navy-active-text: var(--portal-blue);
   --sidebar-navy-hover-bg: rgba(255, 255, 255, 0.08);
 }
 
@@ -69,6 +76,8 @@
   --color-portal-blue-hover: var(--portal-blue-hover);
   --color-portal-blue-soft: var(--portal-blue-soft);
   --color-portal-border: var(--portal-border);
+  --color-portal-ink: var(--portal-ink);
+  --color-portal-page-bg: var(--portal-page-bg);
   --font-sans: var(--font-inter), "Inter", system-ui, "Segoe UI", Arial, sans-serif;
   --font-heading: var(--font-inter), "Inter", sans-serif;
   --font-mono: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
@@ -142,9 +151,9 @@ body {
   --kpi-text: #161b23;
   --kpi-text-secondary: rgba(22, 27, 35, 0.6);
   --kpi-icon-bg: rgba(53, 121, 245, 0.1);
-  --kpi-icon-color: #3579f5;
+  --kpi-icon-color: var(--portal-blue);
   --kpi-icon-display: none;
-  --kpi-ring-arc: #3579f5;
+  --kpi-ring-arc: var(--portal-blue);
   --kpi-ring-track: rgba(53, 121, 245, 0.15);
   --kpi-border: transparent;
   --kpi-radius: 20px;

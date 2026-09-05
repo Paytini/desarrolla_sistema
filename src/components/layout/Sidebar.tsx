@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { LifeBuoy, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { fd } from "@/lib/theme-tokens"
 
 import Box from "@mui/material/Box"
 import List from "@mui/material/List"
@@ -66,7 +67,9 @@ function NavItemRow({
               transition: "background-color 0.15s ease, color 0.15s ease",
               "&:hover": {
                 bgcolor: active ? "var(--sidebar-navy-active-bg)" : "var(--sidebar-navy-hover-bg)",
-                color: active ? "var(--sidebar-navy-active-text)" : "var(--sidebar-navy-text-strong)",
+                color: active
+                  ? "var(--sidebar-navy-active-text)"
+                  : "var(--sidebar-navy-text-strong)",
               },
             }}
           >
@@ -213,7 +216,7 @@ export default function Sidebar({
               alignItems: "center",
               justifyContent: "center",
               bgcolor: avatarColor(companyName ?? "?"),
-              color: "#ffffff",
+              color: fd.background,
               fontSize: "0.875rem",
               fontWeight: 700,
             }}
@@ -267,7 +270,12 @@ export default function Sidebar({
               )}
               <List disablePadding>
                 {section.items.map((item) => (
-                  <NavItemRow key={item.href} item={item} pathname={pathname} collapsed={collapsed} />
+                  <NavItemRow
+                    key={item.href}
+                    item={item}
+                    pathname={pathname}
+                    collapsed={collapsed}
+                  />
                 ))}
               </List>
             </Box>
@@ -382,7 +390,9 @@ export default function Sidebar({
           ))}
       </Box>
 
-      <Box sx={{ px: 1, py: 0.5, flexShrink: 0, borderTop: "1px solid var(--sidebar-navy-border)" }}>
+      <Box
+        sx={{ px: 1, py: 0.5, flexShrink: 0, borderTop: "1px solid var(--sidebar-navy-border)" }}
+      >
         <Tooltip title={collapsed ? "Expandir" : ""} placement="right">
           <Box
             component="button"
@@ -412,7 +422,11 @@ export default function Sidebar({
               },
             }}
           >
-            {collapsed ? <PanelLeftOpen size={19} strokeWidth={1.8} /> : <PanelLeftClose size={19} strokeWidth={1.8} />}
+            {collapsed ? (
+              <PanelLeftOpen size={19} strokeWidth={1.8} />
+            ) : (
+              <PanelLeftClose size={19} strokeWidth={1.8} />
+            )}
             {!collapsed && <span>Colapsar</span>}
           </Box>
         </Tooltip>

@@ -22,6 +22,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
+import { fd, slate } from "@/lib/theme-tokens"
 
 export type ActivityPoint = { day: string; value: number }
 export type ActivitySeries = { name: string; color: string; data: ActivityPoint[] }
@@ -63,7 +64,13 @@ function ActivityTooltip({
       {payload.map((entry) => (
         <Typography
           key={entry.name}
-          sx={{ fontSize: "0.75rem", color: "text.secondary", display: "flex", gap: 0.75, alignItems: "center" }}
+          sx={{
+            fontSize: "0.75rem",
+            color: "text.secondary",
+            display: "flex",
+            gap: 0.75,
+            alignItems: "center",
+          }}
         >
           <Box
             component="span"
@@ -93,7 +100,14 @@ function ActivityChartBody({
         <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
           <defs>
             {series.map((s) => (
-              <linearGradient key={s.name} id={`activityFill-${s.name}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient
+                key={s.name}
+                id={`activityFill-${s.name}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
                 <stop offset="0%" stopColor={s.color} stopOpacity={0.28} />
                 <stop offset="100%" stopColor={s.color} stopOpacity={0} />
               </linearGradient>
@@ -104,17 +118,17 @@ function ActivityChartBody({
             dataKey="day"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 11, fill: slate[400] }}
             interval={showByCompany ? 2 : 1}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 11, fill: "#94a3b8" }}
+            tick={{ fontSize: 11, fill: slate[400] }}
             allowDecimals={false}
             width={28}
           />
-          <Tooltip content={<ActivityTooltip />} cursor={{ stroke: "#CBD5E1", strokeWidth: 1 }} />
+          <Tooltip content={<ActivityTooltip />} cursor={{ stroke: slate[300], strokeWidth: 1 }} />
           {series.map((s) => (
             <Area
               key={s.name}
@@ -124,7 +138,7 @@ function ActivityChartBody({
               strokeWidth={2}
               fill={`url(#activityFill-${s.name})`}
               dot={series.length === 1 ? { r: 3, fill: s.color, strokeWidth: 0 } : false}
-              activeDot={{ r: 5, fill: s.color, strokeWidth: 2, stroke: "#FFFFFF" }}
+              activeDot={{ r: 5, fill: s.color, strokeWidth: 2, stroke: fd.background }}
             />
           ))}
         </AreaChart>
@@ -144,7 +158,8 @@ export function LearningActivityChart({
   const [expanded, setExpanded] = useState(false)
 
   const series = useMemo<ActivitySeries[]>(
-    () => (showByCompany ? byCompany : [{ name: "Global", color: "var(--portal-blue)", data: global }]),
+    () =>
+      showByCompany ? byCompany : [{ name: "Global", color: "var(--portal-blue)", data: global }],
     [showByCompany, byCompany, global],
   )
 
@@ -183,7 +198,7 @@ export function LearningActivityChart({
           sx={{
             "& .MuiSwitch-track": { backgroundColor: "rgba(22,27,35,0.18)", opacity: 1 },
             "& .MuiSwitch-thumb": {
-              backgroundColor: "#FFFFFF",
+              backgroundColor: fd.background,
               boxShadow: "0 1px 2px rgba(22,27,35,0.35)",
             },
             "& .Mui-checked+.MuiSwitch-track": {
@@ -195,7 +210,11 @@ export function LearningActivityChart({
       }
       label={
         <Typography
-          sx={{ fontSize: "0.6875rem", fontWeight: 600, color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))" }}
+          sx={{
+            fontSize: "0.6875rem",
+            fontWeight: 600,
+            color: "var(--kpi-text-secondary, rgba(17,24,39,0.6))",
+          }}
         >
           Por empresa
         </Typography>
@@ -217,7 +236,9 @@ export function LearningActivityChart({
           "&:hover": { transform: "scale(1.02)" },
         }}
       >
-        <Box sx={{ px: "var(--kpi-px, 24px)", pt: "var(--kpi-pt, 24px)", pb: "var(--kpi-pb, 20px)" }}>
+        <Box
+          sx={{ px: "var(--kpi-px, 24px)", pt: "var(--kpi-pt, 24px)", pb: "var(--kpi-pb, 20px)" }}
+        >
           <Stack
             direction="row"
             sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.5, gap: 1 }}

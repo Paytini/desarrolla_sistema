@@ -2,6 +2,7 @@ import { Button, Link, Section, Text } from "@react-email/components"
 import { render } from "@react-email/render"
 import { EmailLayout } from "./components/EmailLayout"
 import { getPortalLoginUrl } from "./shared"
+import { fd, portalColors } from "@/lib/theme-tokens"
 
 export async function buildCertificateReadyEmail({
   employeeName,
@@ -54,17 +55,17 @@ export async function buildCertificateReadyEmail({
   return { subject, html, text }
 }
 
-const paragraphStyle = { fontSize: "14px", lineHeight: "22px", color: "#1a1a1a" }
+const paragraphStyle = { fontSize: "14px", lineHeight: "22px", color: portalColors.ink }
 
 const certificateRowStyle = {
   padding: "10px 0",
-  borderBottom: "1px solid #e5e7eb",
+  borderBottom: `1px solid ${portalColors.border}`,
 }
 
 const certificateNameStyle = { fontWeight: 600, fontSize: "14px", margin: "0 0 4px" }
 
 const certificateLinkStyle = {
-  color: "#3579F5",
+  color: portalColors.blue,
   textDecoration: "none",
   fontSize: "13px",
 }
@@ -72,8 +73,8 @@ const certificateLinkStyle = {
 const buttonSectionStyle = { textAlign: "center" as const, padding: "20px 0 0" }
 
 const buttonStyle = {
-  backgroundColor: "#3579F5",
-  color: "#ffffff",
+  backgroundColor: portalColors.blue,
+  color: fd.background,
   textDecoration: "none",
   padding: "10px 20px",
   borderRadius: "8px",

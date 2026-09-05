@@ -10,6 +10,7 @@ import Typography from "@mui/material/Typography"
 
 import SearchPalette from "./SearchPalette"
 import { companyPath } from "@/lib/company/routes"
+import { portalColors, slate } from "@/lib/theme-tokens"
 
 type EmployeeResult = {
   id: number
@@ -63,8 +64,8 @@ export default function HrSearchBar({ companySlug }: { companySlug: string }) {
                           fontSize: 11,
                           fontWeight: 700,
                           borderRadius: "6px",
-                          bgcolor: "#f1f5f9",
-                          color: "#64748b",
+                          bgcolor: slate[100],
+                          color: slate[500],
                           flexShrink: 0,
                         }}
                       >
@@ -117,7 +118,11 @@ export default function HrSearchBar({ companySlug }: { companySlug: string }) {
                           flexShrink: 0,
                         }}
                       >
-                        <BookOpen size={11} strokeWidth={2} style={{ color: "var(--portal-blue)" }} />
+                        <BookOpen
+                          size={11}
+                          strokeWidth={2}
+                          style={{ color: "var(--portal-blue)" }}
+                        />
                       </Avatar>
                       <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
                         {c.course_name}
@@ -155,7 +160,7 @@ function GroupHeader({
 }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 0.875, px: 2, pt: 1.5, pb: 0.75 }}>
-      <Icon size={11} strokeWidth={2.5} style={{ color: "#858382", flexShrink: 0 }} />
+      <Icon size={11} strokeWidth={2.5} style={{ color: portalColors.iconMuted, flexShrink: 0 }} />
       <Typography
         sx={{
           fontSize: "10px",

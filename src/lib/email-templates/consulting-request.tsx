@@ -2,6 +2,7 @@ import type { ConsultingContactMethod } from "@prisma/client"
 import { Heading, Section, Text } from "@react-email/components"
 import { render } from "@react-email/render"
 import { EmailLayout } from "./components/EmailLayout"
+import { slate } from "@/lib/theme-tokens"
 
 const CONTACT_METHOD_LABELS: Record<ConsultingContactMethod, string> = {
   CALL: "Llamada",
@@ -71,7 +72,7 @@ export async function buildConsultingRequestEmail({
 const headingStyle = { fontSize: "18px", margin: "0 0 16px" }
 const rowsSectionStyle = { marginBottom: "16px" }
 const rowStyle = { padding: "6px 0" }
-const rowLabelStyle = { fontSize: "13px", color: "#64748b", margin: "0 0 2px" }
+const rowLabelStyle = { fontSize: "13px", color: slate[500], margin: "0 0 2px" }
 const rowValueStyle = { fontSize: "14px", fontWeight: 600, margin: 0 }
-const contextLabelStyle = { fontSize: "13px", color: "#64748b", marginBottom: "4px" }
+const contextLabelStyle = { fontSize: "13px", color: slate[500], marginBottom: "4px" }
 const contextTextStyle = { whiteSpace: "pre-wrap" as const, lineHeight: "1.6", fontSize: "14px" }

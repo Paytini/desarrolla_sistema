@@ -5,6 +5,10 @@ Portal B2B para administrar empresas clientes, sus empleados y su avance en curs
 - **Producción:** https://empresas.desarrolla360.com
 - **Documentación técnica:** [Google Doc](https://docs.google.com/document/d/15FFbeow9qA0egQceBSOO3m3dXgoJnVEd3W8Rf7C33fA/edit?usp=drive_link) · [Diagrama en Excalidraw](https://excalidraw.com/#json=O0WQwOZZu5Y-I4MWcUmW-,Osa6Epzp7T0KP3kt3EvWkA)
 
+## Diagrama de arquitectura
+
+![Diagrama de componentes del Portal Empresarial](public/assets/Desarrolla_Empresas.svg)
+
 ## Qué resuelve
 
 El ecosistema se divide en dos frentes:

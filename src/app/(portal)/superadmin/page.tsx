@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { Box, Paper, Stack, Typography } from "@mui/material"
+import { emerald, slate, violet } from "@/lib/theme-tokens"
 import {
   getSuperadminCompaniesSnapshot,
   getSuperadminCourseActivitySnapshot,
@@ -17,8 +18,6 @@ import {
 import { QuickActions } from "@/components/superadmin/QuickActions"
 import { SectionCard } from "@/components/shared/SectionCard"
 import KpiCard from "@/components/shared/KpiCard"
-import { OccupancyCard } from "@/components/superadmin/OccupancyCard"
-import { RenewalsTable } from "@/components/superadmin/RenewalsTable"
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
@@ -42,7 +41,7 @@ function DonutChart({
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
-      <circle cx={cx} cy={cx} r={r} fill="none" stroke="#E2E8F0" strokeWidth={sw} />
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke={slate[200]} strokeWidth={sw} />
       {total > 0 &&
         (() => {
           const SWEEP_MS = 900
@@ -85,7 +84,7 @@ function DonutChart({
         x={cx}
         y={cx + numSize * 0.35}
         textAnchor="middle"
-        fill="#1E293B"
+        fill={slate[800]}
         fontSize={numSize}
         fontWeight="800"
         fontFamily="var(--font-outfit, Outfit), system-ui"
@@ -96,7 +95,7 @@ function DonutChart({
         x={cx}
         y={cx + numSize * 0.35 + subSize + 4}
         textAnchor="middle"
-        fill="#64748B"
+        fill={slate[500]}
         fontSize={subSize}
       >
         cursos total
@@ -313,17 +312,17 @@ export default async function SuperadminDashboardPage() {
                 size={200}
                 sw={22}
                 segments={[
-                  { value: completed, color: "#34D399", label: "Completados" },
-                  { value: inProgress, color: "#8B5CF6", label: "En progreso" },
-                  { value: notStarted, color: "#F1F5F9", label: "Sin iniciar" },
+                  { value: completed, color: emerald[400], label: "Completados" },
+                  { value: inProgress, color: violet[500], label: "En progreso" },
+                  { value: notStarted, color: slate[100], label: "Sin iniciar" },
                 ]}
               />
             </Box>
             <Stack spacing={3} sx={{ flex: 1, minWidth: 0 }}>
               {[
-                { label: "Completados", value: completed, color: "#34D399" },
-                { label: "En progreso", value: inProgress, color: "#8B5CF6" },
-                { label: "Sin iniciar", value: notStarted, color: "#CBD5E1" },
+                { label: "Completados", value: completed, color: emerald[400] },
+                { label: "En progreso", value: inProgress, color: violet[500] },
+                { label: "Sin iniciar", value: notStarted, color: slate[300] },
               ].map((s) => (
                 <Box key={s.label}>
                   <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 0.75 }}>
@@ -367,7 +366,7 @@ export default async function SuperadminDashboardPage() {
                     )}
                   </Stack>
                   <Box
-                    sx={{ height: 5, borderRadius: 999, bgcolor: "#F1F5F9", overflow: "hidden" }}
+                    sx={{ height: 5, borderRadius: 999, bgcolor: slate[100], overflow: "hidden" }}
                   >
                     <Box
                       sx={{
@@ -393,11 +392,6 @@ export default async function SuperadminDashboardPage() {
       <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 280px" } }}>
         <ActivityFeed items={recentEvents} />
         <QuickActions />
-      </Box>
-
-      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { lg: "1fr 300px" } }}>
-        <OccupancyCard occupancyPct={occupancyPct} companies={companies} />
-        <RenewalsTable renewals={renewals} />
       </Box>
     </Stack>
   )

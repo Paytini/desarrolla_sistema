@@ -15,6 +15,7 @@ import { ConfirmStep } from "./ConfirmStep"
 import { ContextStep } from "./ContextStep"
 import { ProgressDots } from "./ProgressDots"
 import { ScheduleStep } from "./ScheduleStep"
+import { fd, gray, green } from "@/lib/theme-tokens"
 
 const CONTACT_METHOD_LABELS: Record<string, string> = {
   CALL: "llamada",
@@ -58,7 +59,7 @@ export function ConsultingWizard({
           textAlign: "center",
         }}
       >
-        <Box sx={{ color: "#16a34a", mb: 2, display: "flex", justifyContent: "center" }}>
+        <Box sx={{ color: green[600], mb: 2, display: "flex", justifyContent: "center" }}>
           <CheckCircle2 size={48} />
         </Box>
         <Typography sx={{ fontSize: 24, fontWeight: 800, color: "text.primary", mb: 1.5 }}>
@@ -79,7 +80,7 @@ export function ConsultingWizard({
               py: 1.25,
               borderRadius: "10px",
               bgcolor: "var(--portal-blue)",
-              color: "#FFFFFF",
+              color: fd.background,
               fontWeight: 700,
               fontSize: 14,
             }}
@@ -106,14 +107,14 @@ export function ConsultingWizard({
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 4 }}>
         <Link
           href={dashboardHref}
-          style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}
+          style={{ fontSize: 13, color: gray[500], textDecoration: "none", fontWeight: 600 }}
         >
           ← Volver al inicio
         </Link>
         <ProgressDots steps={4} activeStep={step} />
         <Link
           href={dashboardHref}
-          style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", fontWeight: 600 }}
+          style={{ fontSize: 13, color: gray[500], textDecoration: "none", fontWeight: 600 }}
         >
           Cancelar
         </Link>

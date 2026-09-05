@@ -1,3 +1,4 @@
+import { amber, fd, portalColors, sky, slate } from "@/lib/theme-tokens"
 import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
 import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefresh"
@@ -39,9 +40,9 @@ export default async function EmployeeCertificatesPage() {
           severity="warning"
           sx={{
             borderRadius: 2,
-            border: "1px solid #fde68a",
-            bgcolor: "#fffbeb",
-            color: "#78350f",
+            border: `1px solid ${amber[200]}`,
+            bgcolor: amber[50],
+            color: amber[900],
           }}
         >
           No pudimos refrescar tus constancias. Mostramos el último dato guardado.
@@ -53,9 +54,9 @@ export default async function EmployeeCertificatesPage() {
           severity="info"
           sx={{
             borderRadius: 2,
-            border: "1px solid #bae6fd",
-            bgcolor: "#f0f9ff",
-            color: "#0c4a6e",
+            border: `1px solid ${sky[200]}`,
+            bgcolor: sky[50],
+            color: sky[900],
           }}
         >
           Verificando tus constancias más recientes. La vista se actualizará automáticamente.
@@ -67,7 +68,7 @@ export default async function EmployeeCertificatesPage() {
           elevation={0}
           sx={{
             borderRadius: 2.5,
-            border: "1px solid #f0f0f0",
+            border: `1px solid ${portalColors.cardBorder}`,
             bgcolor: "background.paper",
             p: 2.5,
           }}
@@ -82,10 +83,12 @@ export default async function EmployeeCertificatesPage() {
             }}
           >
             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-              <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
+              <Typography sx={{ fontSize: 15, fontWeight: 600, color: portalColors.ink }}>
                 Constancias disponibles
               </Typography>
-              <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>{certificates.length}</Typography>
+              <Typography sx={{ fontSize: 13, color: slate[400] }}>
+                {certificates.length}
+              </Typography>
             </Box>
             {certificates.length > 0 ? (
               <Button
@@ -96,11 +99,11 @@ export default async function EmployeeCertificatesPage() {
                 size="small"
                 sx={{
                   borderRadius: 2,
-                  border: "1px solid #f0f0f0",
+                  border: `1px solid ${portalColors.cardBorder}`,
                   fontSize: 11,
                   fontWeight: 600,
-                  color: "#1a1a1a",
-                  "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0" },
+                  color: portalColors.ink,
+                  "&:hover": { bgcolor: slate[50], borderColor: slate[200] },
                 }}
               >
                 Descargar ZIP
@@ -120,12 +123,12 @@ export default async function EmployeeCertificatesPage() {
                     alignItems: "center",
                     gap: 1.5,
                     borderRadius: 2,
-                    border: "1px solid #f0f0f0",
+                    border: `1px solid ${portalColors.cardBorder}`,
                     bgcolor: "background.paper",
                     px: 2,
                     py: 1.5,
                     transition: "background-color 0.12s ease",
-                    "&:hover": { bgcolor: "#f8fafc" },
+                    "&:hover": { bgcolor: slate[50] },
                   }}
                 >
                   <Box
@@ -150,7 +153,7 @@ export default async function EmployeeCertificatesPage() {
                       sx={{
                         fontSize: 13,
                         fontWeight: 600,
-                        color: "#1a1a1a",
+                        color: portalColors.ink,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -158,7 +161,7 @@ export default async function EmployeeCertificatesPage() {
                     >
                       {certificate.course_name}
                     </Typography>
-                    <Typography sx={{ fontSize: 11, color: "#64748b" }}>
+                    <Typography sx={{ fontSize: 11, color: slate[500] }}>
                       Folio:{" "}
                       <Box component="span" sx={{ fontFamily: "monospace" }}>
                         {certificate.reference_number}
@@ -178,11 +181,11 @@ export default async function EmployeeCertificatesPage() {
                         size="small"
                         sx={{
                           borderRadius: 2,
-                          border: "1px solid #f0f0f0",
+                          border: `1px solid ${portalColors.cardBorder}`,
                           fontSize: 11,
                           fontWeight: 600,
-                          color: "#1a1a1a",
-                          "&:hover": { bgcolor: "#f8fafc", borderColor: "#e2e8f0" },
+                          color: portalColors.ink,
+                          "&:hover": { bgcolor: slate[50], borderColor: slate[200] },
                         }}
                       >
                         Ver Diploma
@@ -201,7 +204,7 @@ export default async function EmployeeCertificatesPage() {
                         fontSize: 11,
                         fontWeight: 600,
                         bgcolor: "var(--portal-blue)",
-                        color: "#fff",
+                        color: fd.background,
                         "&:hover": { bgcolor: "var(--portal-blue-hover)" },
                       }}
                     >
@@ -219,21 +222,21 @@ export default async function EmployeeCertificatesPage() {
             elevation={0}
             sx={{
               borderRadius: 2.5,
-              border: "1px solid #f0f0f0",
+              border: `1px solid ${portalColors.cardBorder}`,
               bgcolor: "background.paper",
               p: 2.5,
             }}
           >
             <Box sx={{ mb: 2 }}>
               <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                <Typography sx={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a" }}>
+                <Typography sx={{ fontSize: 15, fontWeight: 600, color: portalColors.ink }}>
                   Pendientes por aparecer
                 </Typography>
-                <Typography sx={{ fontSize: 13, color: "#94a3b8" }}>
+                <Typography sx={{ fontSize: 13, color: slate[400] }}>
                   {pendingCertificates.length}
                 </Typography>
               </Box>
-              <Typography sx={{ mt: 0.5, fontSize: 11, color: "#94a3b8" }}>
+              <Typography sx={{ mt: 0.5, fontSize: 11, color: slate[400] }}>
                 Cursos que ya completaste, pero cuya constancia aún no ha sido generada o
                 sincronizada. No necesitas hacer nada: aparecerá aquí como disponible en cuanto se
                 procese.
@@ -248,7 +251,7 @@ export default async function EmployeeCertificatesPage() {
                     alignItems: "center",
                     gap: 1.5,
                     borderRadius: 2,
-                    border: "1px solid #fde68a",
+                    border: `1px solid ${amber[200]}`,
                     bgcolor: "rgba(254,251,235,0.5)",
                     px: 2,
                     py: 1.5,
@@ -259,7 +262,7 @@ export default async function EmployeeCertificatesPage() {
                       sx={{
                         fontSize: 13,
                         fontWeight: 600,
-                        color: "#451a03",
+                        color: amber[950],
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -268,7 +271,7 @@ export default async function EmployeeCertificatesPage() {
                       {course.course_name}
                     </Typography>
                     {course.completed_at ? (
-                      <Typography sx={{ fontSize: 11, color: "#b45309" }}>
+                      <Typography sx={{ fontSize: 11, color: amber[700] }}>
                         Completado: {formatDateTime(course.completed_at)}
                       </Typography>
                     ) : null}
@@ -277,12 +280,12 @@ export default async function EmployeeCertificatesPage() {
                     sx={{
                       flexShrink: 0,
                       borderRadius: "999px",
-                      bgcolor: "#fde68a",
+                      bgcolor: amber[200],
                       px: 1,
                       py: 0.25,
                       fontSize: "10px",
                       fontWeight: 600,
-                      color: "#78350f",
+                      color: amber[900],
                     }}
                   >
                     Pendiente

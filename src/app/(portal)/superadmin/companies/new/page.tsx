@@ -5,6 +5,7 @@ import Box from "@mui/material/Box"
 import Typography from "@mui/material/Typography"
 
 import { CreateCompanyWizard } from "@/components/superadmin/CreateCompanyWizard"
+import { slate } from "@/lib/theme-tokens"
 import { getSuperadminCompaniesSnapshot } from "@/lib/dashboard-cache"
 import { getSession } from "@/lib/session"
 
@@ -24,7 +25,7 @@ export default async function NewCompanyPage() {
             alignItems: "center",
             gap: 6,
             fontSize: 13,
-            color: "#64748b",
+            color: slate[500],
             textDecoration: "none",
             marginBottom: 12,
           }}
