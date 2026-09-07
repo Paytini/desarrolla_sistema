@@ -256,15 +256,15 @@ Debe imprimir `residuo namespace: 0`. Luego puedes cortar las terminales A y B.
 
 ### Diagnóstico rápido
 
-| Síntoma                                                                       | Causa                                                                                                                                         | Solución                                                                                                                   |
-| ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `ECONNREFUSED` en `localhost:3005`, el navegador se abre y cierra al instante | La app no está corriendo                                                                                                                      | Arranca la terminal B                                                                                                      |
-| `check-target` falla con `fetch failed`                                       | Igual que el anterior                                                                                                                         | Igual                                                                                                                      |
-| Login falla con `CredentialsSignin`                                           | Datos no sembrados, o Turnstile sin las claves de prueba                                                                                      | `npm run seed`, y revisa que `.env.app` tenga las claves `1x0000...` **y** que la app se compilara con ese archivo cargado |
-| `401` del mock del bridge                                                     | Terminal A caída o clave distinta                                                                                                             | Reinicia el mock; `LT_BRIDGE_KEY` debe coincidir con `WP_BRIDGE_PORTAL_KEY` de `.env.app`                                  |
-| El build falla con `Can't resolve 'sharp'`                                    | `sharp` se importa sin estar declarado; resuelve por las `optionalDependencies` de Next, así que falla solo si se instaló con `--no-optional` | `cd .. && npm install sharp`                                                                                               |
-| `residuo namespace` distinto de 0                                             | Algo quedó fuera de los patrones de borrado                                                                                                   | No lo ignores — revisa qué quedó antes de volver a sembrar                                                                 |
-| Muchos `ERR_SOCKET_TIMEOUT` en modo navegador                                 | Demasiados Chromium compitiendo con la app                                                                                                    | Baja `LT_BROWSER_VUS`, o usa `simulate:http` si lo que quieres es medir                                                    |
+| Síntoma                                                                          | Causa                                                                                                                                                 | Solución                                                                                                                              |
+| --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `ECONNREFUSED` en `localhost:3005`, el navegador se abre y cierra al instante | La app no está corriendo                                                                                                                             | Arranca la terminal B                                                                                                                  |
+| `check-target` falla con `fetch failed`                                       | Igual que el anterior                                                                                                                                 | Igual                                                                                                                                  |
+| Login falla con`CredentialsSignin`                                              | Datos no sembrados, o Turnstile sin las claves de prueba                                                                                              | `npm run seed`, y revisa que `.env.app` tenga las claves `1x0000...` **y** que la app se compilara con ese archivo cargado |
+| `401` del mock del bridge                                                       | Terminal A caída o clave distinta                                                                                                                    | Reinicia el mock;`LT_BRIDGE_KEY` debe coincidir con `WP_BRIDGE_PORTAL_KEY` de `.env.app`                                         |
+| El build falla con`Can't resolve 'sharp'`                                       | `sharp` se importa sin estar declarado; resuelve por las `optionalDependencies` de Next, así que falla solo si se instaló con `--no-optional` | `cd .. && npm install sharp`                                                                                                         |
+| `residuo namespace` distinto de 0                                               | Algo quedó fuera de los patrones de borrado                                                                                                          | No lo ignores — revisa qué quedó antes de volver a sembrar                                                                          |
+| Muchos`ERR_SOCKET_TIMEOUT` en modo navegador                                    | Demasiados Chromium compitiendo con la app                                                                                                            | Baja`LT_BROWSER_VUS`, o usa `simulate:http` si lo que quieres es medir                                                             |
 
 ---
 
@@ -278,43 +278,43 @@ Bloques que expone: conexión (`dbUrl`, `targetUrl`), mock del bridge (`bridgePo
 
 #### Variables de entorno
 
-| Variable                                    | Default                   | Para qué                                                    |
-| ------------------------------------------- | ------------------------- | ----------------------------------------------------------- |
-| `LT_DATABASE_URL`                           | `DATABASE_URL` del `.env` | Base de datos objetivo (usa otra para apuntar a un preview) |
-| `LT_TARGET_URL`                             | `http://localhost:3005`   | URL de la app. Los runners la inyectan como override        |
-| `LT_BRIDGE_PORT`                            | `4380`                    | Puerto del mock de WordPress                                |
-| `LT_BRIDGE_KEY`                             | `lt-mock-bridge-key`      | Clave compartida con el mock                                |
-| `LT_BRIDGE_LATENCY_MS`                      | `300`                     | Latencia simulada del bridge                                |
-| `LT_BRIDGE_COLD_MS` / `LT_BRIDGE_COLD_RATE` | `6000` / `0.05`           | Arranque en frío del WP real (medido: 6+ s)                 |
-| `LT_BRIDGE_ERROR_RATE`                      | `0`                       | Fracción de llamadas al bridge que fallan                   |
+| Variable                                        | Default                       | Para qué                                                   |
+| ----------------------------------------------- | ----------------------------- | ----------------------------------------------------------- |
+| `LT_DATABASE_URL`                             | `DATABASE_URL` del `.env` | Base de datos objetivo (usa otra para apuntar a un preview) |
+| `LT_TARGET_URL`                               | `http://localhost:3005`     | URL de la app. Los runners la inyectan como override        |
+| `LT_BRIDGE_PORT`                              | `4380`                      | Puerto del mock de WordPress                                |
+| `LT_BRIDGE_KEY`                               | `lt-mock-bridge-key`        | Clave compartida con el mock                                |
+| `LT_BRIDGE_LATENCY_MS`                        | `300`                       | Latencia simulada del bridge                                |
+| `LT_BRIDGE_COLD_MS` / `LT_BRIDGE_COLD_RATE` | `6000` / `0.05`           | Arranque en frío del WP real (medido: 6+ s)                |
+| `LT_BRIDGE_ERROR_RATE`                        | `0`                         | Fracción de llamadas al bridge que fallan                  |
 
 #### Datos sembrados
 
-| Variable                   | Default | Para qué              |
-| -------------------------- | ------- | --------------------- |
-| `LT_COMPANIES`             | `10`    | Empresas a crear      |
-| `LT_EMPLOYEES_PER_COMPANY` | `200`   | Empleados por empresa |
+| Variable                     | Default | Para qué             |
+| ---------------------------- | ------- | --------------------- |
+| `LT_COMPANIES`             | `10`  | Empresas a crear      |
+| `LT_EMPLOYEES_PER_COMPANY` | `200` | Empleados por empresa |
 
 #### Modo navegador
 
-| Variable                  | Default | Para qué                                                  |
-| ------------------------- | ------- | --------------------------------------------------------- |
-| `LT_BROWSER_VUS`          | `2`     | Navegadores concurrentes (avisa por encima de 5, tope 10) |
-| `LT_BROWSER_HEADED`       | `true`  | Ventana visible                                           |
-| `LT_BROWSER_SLOWMO_MS`    | `250`   | Ralentiza cada acción para poder seguirla                 |
-| `LT_BROWSER_DURATION_SEC` | `120`   | Duración                                                  |
-| `LT_BROWSER_PAGES`        | `4`     | Páginas por sesión                                        |
+| Variable                    | Default  | Para qué                                                 |
+| --------------------------- | -------- | --------------------------------------------------------- |
+| `LT_BROWSER_VUS`          | `2`    | Navegadores concurrentes (avisa por encima de 5, tope 10) |
+| `LT_BROWSER_HEADED`       | `true` | Ventana visible                                           |
+| `LT_BROWSER_SLOWMO_MS`    | `250`  | Ralentiza cada acción para poder seguirla                |
+| `LT_BROWSER_DURATION_SEC` | `120`  | Duración                                                 |
+| `LT_BROWSER_PAGES`        | `4`    | Páginas por sesión                                      |
 
 #### Modo HTTP
 
-| Variable                                   | Default      | Para qué                            |
-| ------------------------------------------ | ------------ | ----------------------------------- |
-| `LT_HTTP_ARRIVAL_RATE`                     | `3`          | Usuarios nuevos por segundo         |
-| `LT_HTTP_DURATION_SEC`                     | `180`        | Duración                            |
-| `LT_PAGES_PER_SESSION`                     | `12`         | Ciclos de navegación **por login**  |
-| `LT_THINK_MIN_SEC` / `LT_THINK_MAX_SEC`    | `8` / `25`   | Pausa aleatoria entre páginas       |
-| `LT_SPIKE_COUNT` / `LT_SPIKE_DURATION_SEC` | `200` / `10` | Avalancha: N usuarios en D segundos |
-| `LT_DB_SAMPLE_MS`                          | `2000`       | Intervalo de muestreo de `db:watch` |
+| Variable                                       | Default          | Para qué                                |
+| ---------------------------------------------- | ---------------- | ---------------------------------------- |
+| `LT_HTTP_ARRIVAL_RATE`                       | `3`            | Usuarios nuevos por segundo              |
+| `LT_HTTP_DURATION_SEC`                       | `180`          | Duración                                |
+| `LT_PAGES_PER_SESSION`                       | `12`           | Ciclos de navegación**por login** |
+| `LT_THINK_MIN_SEC` / `LT_THINK_MAX_SEC`    | `8` / `25`   | Pausa aleatoria entre páginas           |
+| `LT_SPIKE_COUNT` / `LT_SPIKE_DURATION_SEC` | `200` / `10` | Avalancha: N usuarios en D segundos      |
+| `LT_DB_SAMPLE_MS`                            | `2000`         | Intervalo de muestreo de`db:watch`     |
 
 ### `.env.app` (copiado de `.env.app.example`)
 
@@ -412,11 +412,11 @@ Existe por dos razones: golpear el WordPress real con miles de peticiones lo deg
 
 Simula latencia configurable:
 
-| Variable                                    | Default     | Qué simula                                                      |
-| ------------------------------------------- | ----------- | --------------------------------------------------------------- |
-| `LT_BRIDGE_LATENCY_MS`                      | 300         | Respuesta normal del bridge                                     |
+| Variable                                        | Default     | Qué simula                                                        |
+| ----------------------------------------------- | ----------- | ------------------------------------------------------------------ |
+| `LT_BRIDGE_LATENCY_MS`                        | 300         | Respuesta normal del bridge                                        |
 | `LT_BRIDGE_COLD_RATE` / `LT_BRIDGE_COLD_MS` | 0.05 / 6000 | 5% de llamadas en frío a 6 s — el arranque real de PHP que medí |
-| `LT_BRIDGE_ERROR_RATE`                      | 0           | Fracción de llamadas que devuelven 500                          |
+| `LT_BRIDGE_ERROR_RATE`                        | 0           | Fracción de llamadas que devuelven 500                            |
 
 Sube `LT_BRIDGE_ERROR_RATE` para probar cómo degrada la app cuando WordPress falla.
 
@@ -504,19 +504,19 @@ Es la única forma de ver el agotamiento de conexiones desde el servidor, en vez
 
 Los `.yml` de `artillery/` tienen el target **fijado a `localhost:3005`**. Es deliberado: evita apuntar a producción por accidente. Solo los runners pueden cambiarlo, y solo vía `LT_TARGET_URL`.
 
-| Archivo                           | Comando                | Qué mide                                              |
-| --------------------------------- | ---------------------- | ----------------------------------------------------- |
-| `01-login-storm.yml`              | —                      | Logins en ráfaga                                      |
-| `02-employee-navigation.yml`      | —                      | Navegación de empleado (Playwright)                   |
-| `03-rh-journey.yml`               | —                      | Recorrido de RH incluyendo import CSV                 |
-| `04-superadmin-dashboard.yml`     | —                      | Dashboards de superadmin                              |
-| `05-certificates.yml`             | —                      | Descarga de DC-3 y ZIP                                |
-| `06-peak-mixed.yml`               | —                      | Pico mixto con pesos por rol                          |
+| Archivo                             | Comando                  | Qué mide                                                    |
+| ----------------------------------- | ------------------------ | ------------------------------------------------------------ |
+| `01-login-storm.yml`              | —                       | Logins en ráfaga                                            |
+| `02-employee-navigation.yml`      | —                       | Navegación de empleado (Playwright)                         |
+| `03-rh-journey.yml`               | —                       | Recorrido de RH incluyendo import CSV                        |
+| `04-superadmin-dashboard.yml`     | —                       | Dashboards de superadmin                                     |
+| `05-certificates.yml`             | —                       | Descarga de DC-3 y ZIP                                       |
+| `06-peak-mixed.yml`               | —                       | Pico mixto con pesos por rol                                 |
 | `20-browser-visual.yml`           | `simulate:browser`     | **Observación**: login real por UI, navegador visible |
 | `21-http-user-session.yml`        | `simulate:http`        | **Capacidad**: login 1 vez + navegación en bucle      |
-| `30-mass-enrollment.yml`          | `simulate:enrollment`  | Enrolamiento masivo (hallazgo G-2)                    |
-| `31-zip-constancias.yml`          | `simulate:zip`         | ZIP de constancias (G-5)                              |
-| `32-cache-invalidation-storm.yml` | `simulate:cache-storm` | Polling vs caché de superadmin (G-4)                  |
+| `30-mass-enrollment.yml`          | `simulate:enrollment`  | Enrolamiento masivo (hallazgo G-2)                           |
+| `31-zip-constancias.yml`          | `simulate:zip`         | ZIP de constancias (G-5)                                     |
+| `32-cache-invalidation-storm.yml` | `simulate:cache-storm` | Polling vs caché de superadmin (G-4)                        |
 
 > Los escenarios `01`-`06` hacen login **en cada iteración**, lo que sobrepondera la operación más cara y acaba midiendo "cuántos logins por segundo aguanta". `21` corrige eso. Se conservan los originales para poder comparar contra la baseline; para medir capacidad usa `21`.
 
@@ -534,16 +534,16 @@ Los `.yml` de `artillery/` tienen el target **fijado a `localhost:3005`**. Es de
 
 Todo bajo `data/` y `reports/`, ambos ignorados por git.
 
-| Archivo                                  | Lo escribe     | Lo consume                      |
-| ---------------------------------------- | -------------- | ------------------------------- |
-| `data/catalog.json`                      | seeder 01      | seeders 02, 03                  |
-| `data/companies.json`                    | seeder 02      | seeder 03                       |
-| `data/payloads/rh-credentials.csv`       | seeder 02      | escenarios con rol RH           |
-| `data/payloads/employee-credentials.csv` | seeder 03      | escenarios con rol empleado     |
-| `data/payloads/certificates.csv`         | seeder 03      | escenario 05 (descarga de DC-3) |
-| `data/import/rh-import-*.csv`            | seeder 04      | recorrido de RH (import por UI) |
-| `reports/raw/*.json`                     | Artillery      | `summarize.js`                  |
-| `reports/db-watch-*.jsonl`               | `db-watch.js`  | análisis manual                 |
+| Archivo                                    | Lo escribe       | Lo consume                      |
+| ------------------------------------------ | ---------------- | ------------------------------- |
+| `data/catalog.json`                      | seeder 01        | seeders 02, 03                  |
+| `data/companies.json`                    | seeder 02        | seeder 03                       |
+| `data/payloads/rh-credentials.csv`       | seeder 02        | escenarios con rol RH           |
+| `data/payloads/employee-credentials.csv` | seeder 03        | escenarios con rol empleado     |
+| `data/payloads/certificates.csv`         | seeder 03        | escenario 05 (descarga de DC-3) |
+| `data/import/rh-import-*.csv`            | seeder 04        | recorrido de RH (import por UI) |
+| `reports/raw/*.json`                     | Artillery        | `summarize.js`                |
+| `reports/db-watch-*.jsonl`               | `db-watch.js`  | análisis manual                |
 | `reports/INFORME-LOADTEST-*.md`          | `summarize.js` | lectura humana                  |
 
 ---
@@ -552,13 +552,13 @@ Todo bajo `data/` y `reports/`, ambos ignorados por git.
 
 Los scripts escriben en la **base real**. Lo que los hace seguros es que todo lo sembrado lleva un marcador y el borrado solo actúa sobre esos marcadores:
 
-| Entidad              | Marcador                                                             |
-| -------------------- | -------------------------------------------------------------------- |
-| Empresas             | `slug` empieza con `lt-`                                             |
-| Usuarios y empleados | correo con `lt-empresa-NN` o `lt-import` **y** dominio `yopmail.com` |
-| Cursos               | `wp_course_id` entre 900101 y 900199                                 |
-| Paquetes             | `name` empieza con `LT `                                             |
-| Constancias          | `reference_number` empieza con `LT-D360-`                            |
+| Entidad              | Marcador                                                                        |
+| -------------------- | ------------------------------------------------------------------------------- |
+| Empresas             | `slug` empieza con `lt-`                                                    |
+| Usuarios y empleados | correo con`lt-empresa-NN` o `lt-import` **y** dominio `yopmail.com` |
+| Cursos               | `wp_course_id` entre 900101 y 900199                                          |
+| Paquetes             | `name` empieza con `LT `                                                    |
+| Constancias          | `reference_number` empieza con `LT-D360-`                                   |
 
 **El dominio por sí solo nunca es criterio de borrado.** Si el teardown borrara por `@yopmail.com`, se llevaría por delante cualquier usuario real que use esa bandeja desechable — algo perfectamente posible en un entorno de pruebas. Por eso cada patrón exige también el marcador estructural.
 

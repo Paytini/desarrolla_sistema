@@ -1,5 +1,10 @@
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
+// Sin esto, un Cloudflare que no responde deja la petición de login colgada
+// hasta que la mata el timeout de la función. La política sigue siendo
+// fail-closed: si no se puede verificar, no se entra.
+const VERIFY_TIMEOUT_MS = 5_000
+
 type TurnstileVerifyResponse = {
   success: boolean
   "error-codes"?: string[]
@@ -25,7 +30,7 @@ export async function verifyTurnstileToken(
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
-      signal: AbortSignal.timeout(5_000),
+      signal: AbortSignal.timeout(VERIFY_TIMEOUT_MS),
     })
     if (!res.ok) return false
 

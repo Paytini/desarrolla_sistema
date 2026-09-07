@@ -1,6 +1,8 @@
 # Informe de Hand-off — Portal Empresarial Desarrolla360
 
-Fecha: 2026-07-22 · Repo: `desarrolla-sistema-remote` · Rama principal: `main`
+Fecha: 2026-07-22 · **Actualizado: 2026-08-31** · Repo: `desarrolla-sistema-remote` · Rama principal: `main`
+
+> Este documento describe el sistema **como está hoy**, no como estaba cuando se escribió. Se actualiza cuando cambia la arquitectura. Para el estado de rendimiento y lo que queda abierto, ver [PENDIENTES-RENDIMIENTO.md](PENDIENTES-RENDIMIENTO.md).
 
 ## 1. Qué es este sistema
 
@@ -8,20 +10,22 @@ Portal B2B en Next.js que administra empresas clientes, sus empleados y el avanc
 
 Tres roles, cada uno con su dashboard:
 
-| Rol          | Ruta          | Qué hace                                                                            |
-| ------------ | ------------- | ----------------------------------------------------------------------------------- |
-| `SUPERADMIN` | `/superadmin` | Alta de empresas, paquetes, asignaciones, monitoreo de integración, DC-3, auditoría |
-| `RH`         | `/empresa`    | Alta/baja de empleados de su empresa, progreso, constancias, exportes CSV           |
-| `EMPLEADO`   | `/empleado`   | Sus cursos (con salto directo a Tutor LMS) y sus constancias                        |
+| Rol (enum `Role`) | Ruta               | Qué hace                                                                            |
+| ----------------- | ------------------ | ----------------------------------------------------------------------------------- |
+| `SUPERADMIN`      | `/superadmin`      | Alta de empresas, paquetes, asignaciones, monitoreo de integración, DC-3, auditoría |
+| `HR`              | `/company/{slug}`  | Alta/baja de empleados de su empresa, progreso, constancias, exportes CSV           |
+| `EMPLOYEE`        | `/employee`        | Sus cursos (con salto directo a Tutor LMS) y sus constancias                        |
+
+> El enum se renombró del español al inglés en agosto de 2026 (migraciones `20260724100000_rename_schema_to_english` y `20260820184347_rename_role_enum_values_to_english`). Si encuentras `RH` o `EMPLEADO` en algún sitio, es código o documentación sin actualizar.
 
 ## 2. Stack
 
 - **Next.js 16** (App Router, server actions, `proxy.ts` como middleware de roles)
 - **NextAuth v5** con credenciales (bcrypt) + captcha Cloudflare Turnstile, sesión JWT
 - **Prisma 7** con driver adapter `@prisma/adapter-pg` sobre `pg.Pool` (`lib/prisma.ts`)
-- **PostgreSQL en Supabase** (ver §3)
+- **PostgreSQL en Supabase** (ver sección 3)
 - **MUI v9 + Tailwind v4** para UI; `pdf-lib` para constancias DC-3; Vercel Blob para firmas
-- Deploy del portal en **Vercel**; el plugin WordPress se despliega aparte (ver §4)
+- Deploy del portal en **Vercel**; el plugin WordPress se despliega aparte (ver sección 4)
 
 ## 3. Base de datos: cuál es y qué se guarda
 
@@ -34,32 +38,49 @@ Tres roles, cada uno con su dashboard:
 
 El acceso es siempre vía Prisma; no hay SQL crudo relevante fuera de las migraciones en `prisma/migrations/`.
 
-### ¿Qué se guarda? (esquema en `prisma/schema.prisma`, tablas en español)
+### ¿Qué se guarda? (esquema en `prisma/schema.prisma`, tablas y columnas en inglés desde agosto de 2026)
 
 **Datos de los que el portal es dueño (fuente de verdad):**
 
-| Tabla                         | Contenido                                                                                                                    |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `usuarios`                    | Login del portal para los 3 roles: email, `password_hash` (bcrypt), rol, `empresa_id`, `wp_user_id` opcional                 |
-| `empresas`                    | Clientes: datos de contacto, RFC, **cupos** (`asientos_contratados` vs `asientos_usados`), activo/suspendida, notas internas |
-| `paquetes` / `paquete_cursos` | Catálogo de paquetes y qué cursos de Tutor LMS incluye cada uno (`wp_curso_id` + nombre/portada cacheados)                   |
-| `empresa_paquetes`            | Qué paquete contrató cada empresa, con fecha de inicio y vencimiento (vencida ⇒ login bloqueado)                             |
-| `empleados`                   | Padrón por empresa: nombre completo, email, CURP, puesto, clave CNO; `wp_user_id` cuando ya existe en WordPress              |
-| `notificaciones`              | Notificaciones in-app (hoy dirigidas al SuperAdmin, p. ej. constancias nuevas)                                               |
-| `auditoria_eventos`           | Bitácora append-only de acciones administrativas (quién, qué, sobre qué entidad, metadata JSON)                              |
-| `historial_cupos`             | Historial de cambios de cupo por empresa (antes/después, actor, empleados suspendidos)                                       |
-| `sesiones_portal`             | Tokens de sesión revocables desde el panel SuperAdmin                                                                        |
+| Tabla (modelo Prisma)              | Contenido                                                                                                          |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `users` (`User`)                   | Login del portal para los 3 roles: email, `password_hash` (bcrypt), `role`, `company_id`, `must_change_password`   |
+| `companies` (`Company`)            | Clientes: contacto, RFC, **cupos** (`contracted_seats` vs `used_seats`), `slug` para las URLs, logo, activa/suspendida |
+| `packages` / `package_courses`     | Catálogo de paquetes y qué cursos de Tutor LMS incluye cada uno (`wp_course_id` + nombre/portada cacheados)         |
+| `company_packages`                 | Qué paquete contrató cada empresa, con fecha de inicio y vencimiento (vencida ⇒ login bloqueado)                    |
+| `employees` (`Employee`)           | Padrón por empresa: nombre, email, CURP, puesto, clave CNO; `wp_user_id`, `sync_lock_until`                        |
+| `notifications`                    | Notificaciones in-app, con archivado                                                                                |
+| `consulting_requests`              | Solicitudes de consultoría (área, método de contacto, estado)                                                       |
+| `jobs` (`Job`)                     | Cola de trabajos en background — enrolamiento masivo, import CSV. Estado `PENDING → PROCESSING → DONE / ERROR`     |
+| `audit_events`                     | Bitácora append-only de acciones administrativas                                                                    |
+| `seat_history`                     | Historial de cambios de cupo por empresa                                                                            |
+| `portal_sessions`                  | Tokens de sesión revocables desde el panel SuperAdmin                                                               |
 
-**Datos espejo/caché de Tutor LMS** (el dueño real es WordPress; el portal guarda snapshots para no consultar WP en cada página, con `ultima_sincronizacion`):
+> **Aislamiento entre empresas:** `lib/prisma.ts` monta una extensión de Prisma ("tenant guard") que fuerza `company_id` en toda consulta a `Employee`, `CompanyPackage` y `ConsultingRequest` mientras hay una petición de HR activa (`lib/tenant-context.ts`). Es una red de seguridad por si alguna consulta se escribe sin el filtro a mano — no sustituye escribirlo, lo respalda.
 
-| Tabla                 | Contenido                                                                                                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `empleado_cursos`     | Progreso por empleado×curso: `progreso_pct`, `completado`, fechas, y la **máquina de estados de acceso** `acceso_estado` (`PENDING → ACTIVE / ERROR / REQUIRES_REVIEW`) con `acceso_error` |
-| `constancias`         | Certificados emitidos: folio propio del portal (`D360-AAAA-MMDD-empleadoId-cursoId`), URL del PDF generado por Tutor LMS                                                                   |
-| `curso_dc3_metadata`  | Ficha oficial DC-3 por curso: duración en horas, área temática (nombre+clave), agente capacitador y registro, instructor y URL de su firma. Fuente `MANUAL` o `WORDPRESS_BRIDGE`           |
-| `integracion_estados` | Store clave/valor JSON con el estado de diagnóstico del webhook (`lib/webhook-monitor.ts`)                                                                                                 |
+**Datos espejo/caché de Tutor LMS** (el dueño real es WordPress; el portal guarda snapshots para no consultar WP en cada página, con `last_synced_at`):
 
-Los PDFs no se guardan en la BDD: la constancia DC-3 se genera al vuelo con `pdf-lib` (`lib/dc3-pdf.ts`, plantillas en `public/templates`) y las firmas de instructor se suben a **Vercel Blob**.
+| Tabla                   | Contenido                                                                                                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `employee_courses`      | Progreso por empleado×curso: `progress_pct`, `completed`, fechas, y la **máquina de estados de acceso** `access_status` (`PENDING → ACTIVE / ERROR / REQUIRES_REVIEW`) con `access_error` |
+| `quiz_attempts`         | Intentos de examen que devuelve Tutor LMS: preguntas, puntos, resultado, fechas                                                                                                       |
+| `lesson_completions`    | Lecciones completadas por empleado y curso                                                                                                                                           |
+| `certificates`          | Certificados emitidos: folio propio (`D360-AAAA-MMDD-{folio}-{curso}`), URL del PDF de Tutor LMS y **`dc3_pdf_url`** (el DC-3 del portal, ya generado, en Vercel Blob)               |
+| `course_dc3_metadata`   | Ficha oficial DC-3 por curso: duración, área temática, agente capacitador, instructor y firma. Fuente `MANUAL` o `WORDPRESS_BRIDGE`                                                  |
+| `integration_states`    | Store clave/valor JSON con el estado de diagnóstico del webhook (`lib/webhook-monitor.ts`)                                                                                           |
+
+El DC-3 **se genera una sola vez** con `pdf-lib` (`lib/dc3-pdf.ts`, plantillas en `public/templates`) y se guarda en **Vercel Blob**; las descargas siguientes leen de ahí vía `dc3_pdf_url`. Las firmas de instructor también viven en Blob.
+
+### Trabajo en background
+
+Lo que antes corría dentro de la petición HTTP ahora se encola en la tabla `jobs` (`lib/jobs.ts`) y lo drena un cron. Los crons están declarados en `vercel.json`:
+
+| Ruta                                     | Frecuencia   | Para qué                                                    |
+| ---------------------------------------- | ------------ | ----------------------------------------------------------- |
+| `/api/cron/process-jobs`                 | cada minuto  | Enrolamiento masivo e import CSV, en chunks de 20           |
+| `/api/internal/sync/employee-learning`   | cada minuto  | Respaldo del webhook: trae avance de quien lleva rato sin sincronizar |
+| `/api/cron/check-expiring-packages`      | diario 13:00 | Avisa de paquetes por vencer                                |
+| `/api/cron/bridge-health`                | cada hora    | Comprueba que el bridge de WordPress responde               |
 
 ## 4. Conexión con TutorLMS / WordPress
 
@@ -85,7 +106,7 @@ WordPress empuja cambios académicos a `POST /api/internal/webhooks/tutor-learni
 
 `GET|POST /api/internal/sync/employee-learning?limit=50` con `Authorization: Bearer CRON_SECRET` (o `BACKGROUND_SYNC_SECRET`). Pensado para un cron externo (Vercel Cron u otro scheduler) cada 1–5 min. Además, las vistas del empleado refrescan en segundo plano (`lib/employee-learning.ts`, `after()` de Next) con throttle `EMPLOYEE_SYNC_INTERVAL_MS` (mínimo 15 s).
 
-Los tres caminos convergen en `syncEmployeeLearningFromBridgeSnapshot`: upsert de `empleado_cursos` y `constancias`, notificaciones y revalidación de caché por tags (`lib/cache-tags.ts`).
+Los tres caminos convergen en `syncEmployeeLearningFromBridgeSnapshot`: upsert de `employee_courses` y `certificates`, notificaciones y revalidación de caché por tags (`lib/cache-tags.ts`).
 
 ### 4.5 SSO portal → WordPress
 
@@ -93,9 +114,9 @@ Los tres caminos convergen en `syncEmployeeLearningFromBridgeSnapshot`: upsert d
 
 ### 4.6 Flujo completo de inscripción (lo que pasa al asignar un paquete)
 
-1. SuperAdmin asigna paquete a empresa; RH da de alta al empleado (valida cupo contra `asientos_contratados`).
+1. SuperAdmin asigna paquete a empresa; RH da de alta al empleado (valida cupo contra `contracted_seats`).
 2. Portal llama `employees/upsert` → el plugin crea/vincula el usuario WP y devuelve `wp_user_id` (se guarda en `empleados`).
-3. `lib/course-sync.ts` crea filas `empleado_cursos` en `PENDING`, llama `enrollments/batch` y luego `access/ensure` (con reintento vía API oficial de Tutor si hay error de permisos).
+3. `lib/course-sync.ts` crea filas `employee_courses` en `PENDING`, llama `enrollments/batch` y luego `access/ensure` (con reintento vía API oficial de Tutor si hay error de permisos).
 4. Verifica que los cursos sean visibles para el alumno (`students/{id}/courses`); si todo cuadra ⇒ `ACTIVE`, si no ⇒ `ERROR`/`REQUIRES_REVIEW` con el mensaje en `acceso_error`.
 5. El progreso posterior llega por webhook/poll y se refleja en dashboards; al completar, se registra la constancia con folio propio.
 
@@ -119,17 +140,17 @@ npm run prisma:generate
 npm run dev
 ```
 
-Seed de demo (`npx prisma db seed`): `admin@desarrolla360.com/admin123` (SUPERADMIN), `rh@empresa-demo.com/rh123456` (RH), empleado demo `empleado123`. **Cambiar en producción.**
+Seed de demo (`npx prisma db seed`): `admin@desarrolla360.com/admin123` (SUPERADMIN), `rh@empresa-demo.com/rh123456` (HR), empleado demo `empleado123`. **Cambiar en producción.**
 
 CI (`.github/workflows/ci.yml`): `npm ci` → `prisma generate` → `lint` → `tsc --noEmit` → `build`. **No hay suite de tests.**
 
 ## 7. Puntos de atención para quien recibe
 
 - **Plugin ≠ portal en deploy.** El PHP del bridge vive en el repo pero se sube a WordPress manualmente; un cambio de contrato (payloads, firmas) exige desplegar ambos lados coordinados.
-- **La caché académica puede quedar obsoleta** si el webhook falla en silencio: revisar `/superadmin/integracion` y `integracion_estados` (diagnóstico del webhook) antes de culpar a la BDD.
-- **`acceso_estado = ERROR / REQUIRES_REVIEW`** en `empleado_cursos` es la señal de que la inscripción en Tutor falló; el mensaje exacto queda en `acceso_error` y hay endpoint de diagnóstico por alumno (`/students/{id}/diagnostics`, filtrable por `?course_id=`).
+- **La caché académica puede quedar obsoleta** si el webhook falla en silencio: revisar `/superadmin/integracion` y `integration_states` (diagnóstico del webhook) antes de culpar a la BDD. **Primer sitio a mirar: `GET /api/health`** — si devuelve 503 con `missing: ["BRIDGE_WEBHOOK_SECRET"]`, el webhook está rechazando todo y el progreso solo llega por el cron de respaldo. Era el caso en producción el 2026-08-31.
+- **`access_status = ERROR / REQUIRES_REVIEW`** en `employee_courses` es la señal de que la inscripción en Tutor falló; el mensaje exacto queda en `access_error` y hay endpoint de diagnóstico por alumno (`/students/{id}/diagnostics`, filtrable por `?course_id=`).
 - **Permisos de Tutor LMS** son la fuente #1 de fricción histórica: por eso existen tres rutas de inscripción encadenadas (interna → service user → API oficial). Si aparecen errores "no tienes permisos", revisar Service User ID y credenciales Tutor en el plugin.
-- **Cupos:** `asientos_usados` se mantiene por código en las server actions; `historial_cupos` audita cada cambio. No tocar a mano en BDD.
-- **Login bloqueado por empresa:** suspensión o paquete vencido bloquean el login de RH/EMPLEADO (`lib/empresa-status.ts`); el usuario ve `/cuenta-suspendida`.
+- **Cupos:** `used_seats` se mantiene por código en las server actions; `seat_history` audita cada cambio. No tocar a mano en BDD.
+- **Login bloqueado por empresa:** suspensión o paquete vencido bloquean el login de HR/EMPLOYEE (`lib/company-status.ts`); el usuario ve `/cuenta-suspendida`.
 - **DC-3 incompleta:** si a un curso le falta metadata (duración, área temática, agente, instructor, firma), `lib/dc3.ts` lo reporta y la constancia no sale completa; se captura en `/superadmin/dc3`.
 - Documentación externa: doc técnico en Google Docs y diagrama Excalidraw (links en `README.md`).

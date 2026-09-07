@@ -1,4 +1,5 @@
 {
+  "name": "desarrolla360-portal",
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "next dev",

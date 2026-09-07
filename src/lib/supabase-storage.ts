@@ -20,8 +20,16 @@ function getClient() {
   return client
 }
 
+export const OBJECT_PATH = `/storage/v1/object/${STORAGE_BUCKET}/`
+
 function objectUrlPrefix() {
-  return `${(process.env.SUPABASE_URL as string).replace(/\/$/, "")}/storage/v1/object/${STORAGE_BUCKET}/`
+  const baseUrl = process.env.SUPABASE_URL
+
+  if (!baseUrl) {
+    throw new Error("Falta la variable SUPABASE_URL para construir la URL del archivo")
+  }
+
+  return `${baseUrl.replace(/\/$/, "")}${OBJECT_PATH}`
 }
 
 export async function uploadPrivateFile(path: string, data: Buffer, contentType: string) {
@@ -36,8 +44,10 @@ export async function uploadPrivateFile(path: string, data: Buffer, contentType:
   return objectUrlPrefix() + path
 }
 
-export function isSupabaseStorageUrl(url: string) {
-  return url.startsWith(objectUrlPrefix())
+// Solo servidor: compara contra el prefijo completo, con host incluido, porque de
+// esta funcion depende que /api/upload/signature-proxy no descargue rutas ajenas.
+export function isSupabaseStorageUrl(url: string | null | undefined) {
+  return typeof url === "string" && url.startsWith(objectUrlPrefix())
 }
 
 export async function downloadPrivateFile(path: string) {
@@ -51,5 +61,9 @@ export async function downloadPrivateFile(path: string) {
 }
 
 export function storagePathFromUrl(url: string) {
+  if (!isSupabaseStorageUrl(url)) {
+    throw new Error("La URL no pertenece al bucket privado de Supabase Storage")
+  }
+
   return url.slice(objectUrlPrefix().length)
 }

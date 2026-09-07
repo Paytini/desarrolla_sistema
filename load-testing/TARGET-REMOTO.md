@@ -8,12 +8,12 @@ Para medir capacidad de verdad hay que apuntar la suite a un **despliegue real e
 
 ## Preview o producción: qué cambia
 
-|                     | Preview                                   | `empresas.desarrolla360.com`                               |
-| ------------------- | ----------------------------------------- | ---------------------------------------------------------- |
+|                     | Preview                                   | `empresas.desarrolla360.com`                                     |
+| ------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
 | Base de datos       | Puedes usar una branch de Supabase aparte | **La base real** — aunque el portal esté en modo de prueba |
-| Turnstile           | Despliegas con las claves de prueba       | Depende de cómo esté configurado hoy                       |
-| Bridge WordPress    | Lo apuntas al mock                        | Apunta al WordPress real salvo que lo cambies              |
-| Impacto de un error | Ninguno                                   | Datos y servicio reales                                    |
+| Turnstile           | Despliegas con las claves de prueba       | Depende de cómo esté configurado hoy                             |
+| Bridge WordPress    | Lo apuntas al mock                        | Apunta al WordPress real salvo que lo cambies                      |
+| Impacto de un error | Ninguno                                   | Datos y servicio reales                                            |
 
 **Estado actual (2026-08-02):** `empresas.desarrolla360.com` está en modo de prueba, sin clientes reales usándolo. Eso hace que apuntarle una carga sea **posible**, no automáticamente inocuo. Antes de hacerlo, comprueba tres cosas:
 
