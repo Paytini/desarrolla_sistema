@@ -2329,7 +2329,7 @@ function d360_bridge_student_courses( WP_REST_Request $request ) {
 	if ( is_wp_error( $response ) ) {
 		$direct_courses = d360_bridge_get_direct_student_courses( $student_id );
 		if ( ! empty( $direct_courses ) ) {
-			$direct_courses = d360_bridge_enrich_student_courses( $student_id, $direct_courses );
+			$direct_courses = d360_bridge_enrich_student_courses_for_sync( $student_id, $direct_courses );
 
 			return rest_ensure_response(
 				array(
@@ -2353,7 +2353,7 @@ function d360_bridge_student_courses( WP_REST_Request $request ) {
 		}
 	}
 
-	$normalized_courses = d360_bridge_enrich_student_courses( $student_id, $normalized_courses );
+	$normalized_courses = d360_bridge_enrich_student_courses_for_sync( $student_id, $normalized_courses );
 
 	return rest_ensure_response(
 		array(
@@ -2394,13 +2394,13 @@ function d360_bridge_student_certificates( WP_REST_Request $request ) {
 		}
 
 		$response = array(
-			'courses' => d360_bridge_enrich_student_courses( $student_id, $direct_courses ),
+			'courses' => d360_bridge_enrich_student_courses_for_sync( $student_id, $direct_courses ),
 		);
 	}
 
 	$certificates = array();
 
-	foreach ( d360_bridge_enrich_student_courses( $student_id, d360_bridge_normalize_courses( $response ) ) as $course ) {
+	foreach ( d360_bridge_enrich_student_courses_for_sync( $student_id, d360_bridge_normalize_courses( $response ) ) as $course ) {
 		if ( empty( $course['completed'] ) ) {
 			continue;
 		}
@@ -2646,63 +2646,6 @@ function d360_bridge_ensure_student_access( WP_REST_Request $request ) {
 			'failed_course_ids'    => $failed,
 		)
 	);
-}
-
-function d360_bridge_enrich_student_courses( $student_id, $courses ) {
-	if ( ! is_array( $courses ) ) {
-		return array();
-	}
-
-	$enriched_courses = array();
-
-	foreach ( $courses as $course ) {
-		if ( ! is_array( $course ) ) {
-			continue;
-		}
-
-		$course_id = isset( $course['wp_course_id'] ) ? absint( $course['wp_course_id'] ) : 0;
-		if ( ! $course_id ) {
-			$enriched_courses[] = $course;
-			continue;
-		}
-
-		$progress_stats = d360_bridge_get_course_progress_stats( $student_id, $course_id );
-
-		if ( ! empty( $progress_stats ) ) {
-			$course['progress_pct'] = $progress_stats['progress_pct'];
-			$course['completed']    = $progress_stats['completed'];
-
-			if ( empty( $course['started_at'] ) && ! empty( $progress_stats['started_at'] ) ) {
-				$course['started_at'] = $progress_stats['started_at'];
-			}
-
-			if ( ! empty( $progress_stats['completed_at'] ) ) {
-				$course['completed_at'] = $progress_stats['completed_at'];
-			}
-
-			if ( ! isset( $course['raw'] ) || ! is_array( $course['raw'] ) ) {
-				$course['raw'] = array();
-			}
-
-			$course['raw']['d360_progress'] = $progress_stats;
-		}
-
-		if ( empty( $course['certificate_url'] ) && ! empty( $course['completed'] ) ) {
-			$course['certificate_url'] = d360_bridge_resolve_course_certificate_url( $student_id, $course_id );
-		}
-
-		if ( ! isset( $course['raw'] ) || ! is_array( $course['raw'] ) ) {
-			$course['raw'] = array();
-		}
-
-		$course['raw']['d360_certificate'] = d360_bridge_get_course_certificate_debug_data( $student_id, $course_id );
-		$course['quiz_attempts'] = d360_bridge_get_course_quiz_attempts( $student_id, $course_id );
-		$course['lesson_completions'] = d360_bridge_get_course_lesson_completions( $student_id, $course_id );
-
-		$enriched_courses[] = $course;
-	}
-
-	return $enriched_courses;
 }
 
 function d360_bridge_get_course_progress_stats( $student_id, $course_id ) {
