@@ -70,7 +70,24 @@ Tres flujos ya usan esta cola: `PACKAGE_ENROLLMENT_SYNC` (asignación de paquete
 
 **Conclusión de esta sección:** no falta una cola. Falta que la asignación de cursos la use, y falta completar cuatro piezas de la cola existente.
 
-### 3.1 Flujo actual
+### 3.1 Tablas de Supabase que participan
+
+Los diagramas de este documento nombran la tabla concreta en cada escritura. Estas son las que intervienen en el flujo de asignación:
+
+
+| Tabla                                 | Rol en este flujo                                                                                                                                                                                         | Quién escribe                               |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `employee_courses`                    | Una fila por par empleado y curso. Guarda`access_status` (`PENDING`, `ACTIVE`, `ERROR`, `REQUIRES_REVIEW`), `access_error`, `progress_pct` y `last_synced_at`. Es la fuente del avance que ve la interfaz | server action y worker                       |
+| `jobs`                                | La cola. Una fila por trabajo, con`payload`, `status`, `result` y `next_attempt_at`                                                                                                                       | server action al encolar, worker al procesar |
+| `notifications`                       | Aviso al empleado de que tiene curso nuevo, y aviso a RH o SuperAdmin si la sincronización falla                                                                                                         | server action, hoy una por empleado          |
+| `certificates`                        | Constancias emitidas. No la toca la asignación, la escribe el sync de aprendizaje                                                                                                                        | webhook y poll de aprendizaje                |
+| `quiz_attempts`, `lesson_completions` | Detalle académico espejo de Tutor LMS. Fuera de este flujo                                                                                                                                               | webhook y poll de aprendizaje                |
+| `audit_events`                        | Registro de auditoría, solo escritura                                                                                                                                                                    | worker al cerrar trabajos masivos            |
+| `seat_history`                        | Historial de cupos. No participa en la asignación de cursos                                                                                                                                              | alta y baja de empleados                     |
+
+La asignación de cursos escribe en tres: `employee_courses`, `jobs` y `notifications`.
+
+### 3.2 Flujo actual
 
 ```mermaid
 sequenceDiagram
@@ -84,10 +101,11 @@ sequenceDiagram
     RH->>SA: POST Guardar asignación<br/>7 empleados, 1 curso
     activate SA
 
-    SA->>PG: SELECT asignaciones actuales
+    SA->>PG: SELECT employee_courses<br/>WHERE wp_course_id AND company_id
     PG-->>SA: lista de empleados ya inscritos
 
-    SA->>PG: UPSERT 7 filas en estado PENDING
+    SA->>PG: DELETE employee_courses<br/>de los empleados desmarcados
+    SA->>PG: UPSERT employee_courses<br/>7 filas, access_status PENDING
     PG-->>SA: 200 OK
 
     rect rgb(252, 243, 227)
@@ -101,10 +119,11 @@ sequenceDiagram
         WP->>TU: consulta progreso y certificados
         TU-->>WP: datos del alumno
         WP-->>SA: 200 OK tras 11 a 14 segundos
-        SA->>PG: UPDATE estado ACTIVE o ERROR
+        SA->>PG: UPDATE employee_courses<br/>access_status ACTIVE, o ERROR con access_error
     end
     end
 
+    SA->>PG: INSERT notifications<br/>una por empleado, en serie
     SA-->>RH: 200 OK, recién ahora responde
     deactivate SA
 
@@ -161,8 +180,8 @@ sequenceDiagram
     RH->>SA: POST Guardar asignación<br/>7 empleados, 1 curso
     activate SA
 
-    SA->>PG: UPSERT 7 filas en estado PENDING
-    SA->>PG: INSERT job COURSE_ASSIGNMENT_SYNC
+    SA->>PG: UPSERT employee_courses<br/>7 filas, access_status PENDING
+    SA->>PG: INSERT jobs<br/>type COURSE_ASSIGNMENT_SYNC, dedupe_key
     PG-->>SA: job creado
 
     rect rgb(233, 246, 240)
@@ -174,29 +193,31 @@ sequenceDiagram
     deactivate SA
 
     activate WK
-    WK->>PG: SELECT FOR UPDATE SKIP LOCKED
-    PG-->>WK: job reclamado, estado PROCESSING
+    WK->>PG: SELECT jobs FOR UPDATE SKIP LOCKED
+    PG-->>WK: job reclamado, status PROCESSING
 
     rect rgb(238, 242, 253)
     Note over WK,WP: Lotes de 5 empleados, concurrencia 5
     loop por cada lote pendiente
         WK->>WP: POST /enrollments/company-batch
         WP-->>WK: resultados del lote completo
-        WK->>PG: UPDATE ACTIVE por empleado confirmado
-        WK->>PG: UPDATE payload, mueve ids a done o failed
+        WK->>PG: UPDATE employee_courses<br/>access_status ACTIVE por empleado
+        WK->>PG: UPDATE jobs<br/>payload y progress, mueve ids a done o failed
     end
     end
 
     alt todos confirmados
-        WK->>PG: UPDATE job status DONE
+        WK->>PG: UPDATE jobs status DONE
+        WK->>PG: INSERT notifications<br/>createMany, una sola escritura
     else quedan empleados fallidos
-        WK->>PG: UPDATE job status RETRY con backoff
+        WK->>PG: UPDATE employee_courses<br/>access_status ERROR con access_error
+        WK->>PG: UPDATE jobs status RETRY, attempts + 1
         Note over WK,PG: El reintento lleva solo los ids de failed,<br/>nunca reprocesa los que ya quedaron ACTIVE
     end
     deactivate WK
 
-    RH->>PG: la pantalla consulta el avance cuando quiere
-    PG-->>RH: 5 de 7 sincronizados
+    RH->>PG: SELECT employee_courses para ver el avance
+    PG-->>RH: 5 de 7 en ACTIVE
 ```
 
 ### 5.2 Estados del job
@@ -290,27 +311,31 @@ Las tres ejecutan el diseño de la sección 5. La diferencia real entre ellas es
 flowchart LR
     subgraph OA["Opción A · Tabla jobs endurecida"]
         direction TB
-        A1["Server Action"] --> A2[("Tabla jobs<br/>Supabase Postgres")]
+        A1["Server Action"] --> A2[("jobs<br/>Supabase Postgres")]
+        A1 --> A6[("employee_courses<br/>filas en PENDING")]
         A1 -. "after() de Next" .-> A3["Worker<br/>Vercel Function"]
         A4["Vercel Cron<br/>cada minuto"] --> A3
         A3 <--> A2
+        A3 --> A6
         A3 --> A5["WordPress<br/>Bridge D360"]
     end
 
     subgraph OB["Opción B · pgmq con pg_cron"]
         direction TB
-        B1["Server Action"] --> B2[("Cola pgmq<br/>Supabase")]
+        B1["Server Action"] --> B2[("Cola pgmq<br/>schema pgmq_public")]
+        B1 --> B6[("employee_courses<br/>filas en PENDING")]
         B3["pg_cron<br/>dentro de la base"] -- "pg_net http_post" --> B4["Worker<br/>Vercel Function"]
         B4 <--> B2
+        B4 --> B6
         B4 --> B5["WordPress<br/>Bridge D360"]
-        B4 --> B6[("Tabla de resultados")]
     end
 
     subgraph OC["Opción C · Vercel Queues"]
         direction TB
         C1["Server Action"] -- "send()" --> C2[["Topic gestionado<br/>por Vercel"]]
+        C1 --> C4[("employee_courses<br/>filas en PENDING")]
         C2 -- "invoca" --> C3["Consumer<br/>declarado en vercel.json"]
-        C3 --> C4[("Tabla de resultados")]
+        C3 --> C4
         C3 --> C5["WordPress<br/>Bridge D360"]
     end
 
@@ -419,13 +444,33 @@ Va al final por dependencia de despliegue, no por importancia: el plugin se sube
 
 ---
 
-## 9. Decisiones pendientes
+## 9. Decisiones tomadas
 
-Tres preguntas que cambian el plan y que requieren definición antes de empezar.
+Definidas el 7 de septiembre de 2026.
 
-1. **¿Se confirma la opción A, o se prefiere la B por cercanía con SQS?** Trabajar con el modelo mental que el equipo ya domina tiene valor real y es una razón legítima para elegir B.
-2. **¿El endpoint de inscripción del plugin es idempotente?** Los reintentos dependen de ello. Si volver a inscribir a un alumno ya inscrito produce error o duplicados, hay que corregirlo en el plugin antes de la fase 1.
-3. **¿Quién despliega el plugin de WordPress?** Define si la fase 4 puede adelantarse o queda al final de forma obligatoria.
+### 9.1 Se aprueba la opción A
+
+Se avanza con la tabla `jobs` endurecida. Las opciones B y C quedan documentadas en la sección 6 como referencia para una revisión futura.
+
+### 9.2 La inscripción sí es idempotente
+
+Esta pregunta quedó respondida leyendo el plugin, no hizo falta una prueba en el sitio.
+
+`d360_bridge_enroll_single_course` llama primero a `d360_bridge_sync_direct_course_access`, que hace tres cosas en orden:
+
+1. Busca la matrícula existente con `d360_bridge_find_enrollment_post_id`, que consulta el tipo de post `tutor_enrolled` filtrando por autor y curso, en cualquier estado.
+2. Solo crea la matrícula si no encontró ninguna, usando `tutor_utils()->do_enroll()`, la API oficial de Tutor.
+3. Si la matrícula ya está en estado `completed`, devuelve `already_completed` sin escribir nada.
+
+Repetir la llamada para un alumno ya inscrito no crea filas nuevas ni devuelve error. **Los reintentos del plan son seguros.**
+
+Queda una salvedad menor. La comprobación y la creación no están protegidas por un bloqueo, así que dos peticiones simultáneas para el mismo par de alumno y curso podrían crear dos matrículas. Con concurrencia sobre empleados distintos eso no ocurre. El caso que sí lo provocaría es el doble clic en "Guardar", y es precisamente lo que evita la `dedupe_key` de la sección 5.4.
+
+### 9.3 El despliegue del plugin es manual
+
+La fase 4 depende de una subida manual a WordPress. Se mantiene al final del plan por esa razón, y puede adelantarse coordinando la subida.
+
+El análisis completo del plugin, con las mejoras propuestas y las alternativas de mercado para sincronizar Tutor LMS, está en [ANALISIS-PLUGIN-TUTOR.md](ANALISIS-PLUGIN-TUTOR.md).
 
 ---
 
