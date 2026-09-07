@@ -786,13 +786,8 @@ function d360_bridge_resolve_employee_user( $params ) {
 	return $users[0];
 }
 
-function d360_bridge_delete_student_enrollments( $student_id ) {
-	$student_id = absint( $student_id );
-	if ( ! $student_id ) {
-		return 0;
-	}
-
-	$enrollment_ids = get_posts(
+function d360_bridge_get_student_enrollment_ids( $student_id ) {
+	return get_posts(
 		array(
 			'post_type'        => 'tutor_enrolled',
 			'post_status'      => 'any',
@@ -804,6 +799,15 @@ function d360_bridge_delete_student_enrollments( $student_id ) {
 			'suppress_filters' => false,
 		)
 	);
+}
+
+function d360_bridge_delete_student_enrollments( $student_id ) {
+	$student_id = absint( $student_id );
+	if ( ! $student_id ) {
+		return 0;
+	}
+
+	$enrollment_ids = d360_bridge_get_student_enrollment_ids( $student_id );
 
 	if ( empty( $enrollment_ids ) ) {
 		return 0;
@@ -3824,18 +3828,7 @@ function d360_bridge_get_direct_student_courses( $student_id ) {
 		return array();
 	}
 
-	$enrollment_ids = get_posts(
-		array(
-			'post_type'        => 'tutor_enrolled',
-			'post_status'      => 'any',
-			'author'           => $student_id,
-			'numberposts'      => -1,
-			'orderby'          => 'ID',
-			'order'            => 'DESC',
-			'fields'           => 'ids',
-			'suppress_filters' => false,
-		)
-	);
+	$enrollment_ids = d360_bridge_get_student_enrollment_ids( $student_id );
 
 	if ( empty( $enrollment_ids ) ) {
 		return array();
