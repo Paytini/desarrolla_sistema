@@ -2397,14 +2397,14 @@ function d360_bridge_student_certificates( WP_REST_Request $request ) {
 			return $response;
 		}
 
-		$response = array(
-			'courses' => d360_bridge_enrich_student_courses_for_sync( $student_id, $direct_courses ),
-		);
+		$enriched_courses = d360_bridge_enrich_student_courses_for_sync( $student_id, $direct_courses );
+	} else {
+		$enriched_courses = d360_bridge_enrich_student_courses_for_sync( $student_id, d360_bridge_normalize_courses( $response ) );
 	}
 
 	$certificates = array();
 
-	foreach ( d360_bridge_enrich_student_courses_for_sync( $student_id, d360_bridge_normalize_courses( $response ) ) as $course ) {
+	foreach ( $enriched_courses as $course ) {
 		if ( empty( $course['completed'] ) ) {
 			continue;
 		}
