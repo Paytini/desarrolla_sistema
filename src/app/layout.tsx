@@ -18,10 +18,6 @@ export const metadata: Metadata = {
   title: "Desarrolla360 Portal Empresarial",
   description:
     "Portal B2B para empresas, HR, empleados y monitoreo academico de paquetes corporativos.",
-  icons: {
-    icon: "/assets/logo_desarrolla_cropped.png",
-    apple: "/assets/logo_desarrolla_cropped.png",
-  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
