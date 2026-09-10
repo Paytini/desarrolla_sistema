@@ -5,7 +5,7 @@ import { NextResponse } from "next/server"
 export const maxDuration = 60
 
 type RouteContext = {
-  params: { courseId: string } | Promise<{ courseId: string }>
+  params: Promise<{ courseId: string }>
 }
 
 function parseCourseId(value: string) {
@@ -27,7 +27,7 @@ export async function GET(_request: Request, context: RouteContext) {
     )
   }
 
-  const params = await Promise.resolve(context.params)
+  const params = await context.params
   const courseId = parseCourseId(params.courseId)
 
   if (!courseId) {

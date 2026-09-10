@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Expand, Shrink } from "lucide-react"
 import Box from "@mui/material/Box"
 import Tooltip from "@mui/material/Tooltip"
 import { fd } from "@/lib/theme-tokens"
@@ -55,10 +56,7 @@ export function FullscreenToggle({ dark = false }: { dark?: boolean }) {
               },
         }}
       >
-        <i
-          className={isFullscreen ? "ri-fullscreen-exit-line" : "ri-fullscreen-line"}
-          style={{ fontSize: "1.3125rem", lineHeight: 1 }}
-        />
+        {isFullscreen ? <Shrink size={19} strokeWidth={2} /> : <Expand size={19} strokeWidth={2} />}
       </Box>
     </Tooltip>
   )

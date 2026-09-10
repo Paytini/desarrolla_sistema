@@ -2,6 +2,7 @@
 
 import { signOut } from "next-auth/react"
 import Link from "next/link"
+import { Bell, ChevronDown, LogOut } from "lucide-react"
 
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
@@ -80,12 +81,11 @@ export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMe
             {name}
           </Typography>
           <Box
-            component="i"
-            className="ri-arrow-down-s-line"
+            component={ChevronDown}
+            size={17}
+            strokeWidth={2.25}
             sx={{
-              fontSize: "1.0625rem",
               color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
-              lineHeight: 1,
               transition: "transform 0.2s ease",
               transform: open ? "rotate(180deg)" : "rotate(0deg)",
             }}
@@ -160,9 +160,9 @@ export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMe
               }}
             >
               <Box
-                component="i"
-                className="ri-notification-3-line"
-                sx={{ fontSize: "1.125rem", lineHeight: 1, color: "text.secondary" }}
+                component={Bell}
+                size={17}
+                sx={{ color: "text.secondary", flexShrink: 0 }}
               />
               Notificaciones
             </Box>
@@ -193,11 +193,7 @@ export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMe
               "&:hover": { bgcolor: "rgba(239,68,68,0.05)" },
             }}
           >
-            <Box
-              component="i"
-              className="ri-logout-box-r-line"
-              sx={{ fontSize: "1.125rem", lineHeight: 1 }}
-            />
+            <Box component={LogOut} size={17} sx={{ flexShrink: 0 }} />
             Cerrar sesión
           </Box>
         </>

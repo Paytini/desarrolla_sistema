@@ -39,7 +39,9 @@ function NavItemRow({
   const Icon = item.icon
 
   const LinkComponent = item.external ? "a" : Link
-  const linkProps = item.external ? {} : { prefetch: true }
+  // El link activo no se prefetchea: ya estás en esa ruta y solo genera un
+  // request duplicado a la página actual al montar el sidebar.
+  const linkProps = item.external ? {} : { prefetch: !active }
 
   if (collapsed) {
     return (
