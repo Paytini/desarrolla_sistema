@@ -40,7 +40,6 @@ export default async function PortalLayout({ children }: { children: React.React
         companySlug={branding?.slug}
         logoSrc={logoSrc}
         logoAlt={companyName ?? "Logo de la empresa"}
-        companyName={companyName}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 shrink-0 items-center gap-3 bg-portal-page-bg px-4 min-[900px]:px-8">

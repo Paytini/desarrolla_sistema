@@ -1,5 +1,6 @@
 import CsvEmployeeImportForm from "@/components/company/CsvEmployeeImportForm"
 import EmployeeListFilters from "@/components/company/EmployeeListFilters"
+import EmployeeProfileLink from "@/components/company/EmployeeProfileLink"
 import EmployeeRowActionsMenu from "@/components/company/EmployeeRowActionsMenu"
 import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModal"
 import ManualEmployeeForm from "@/components/company/ManualEmployeeForm"
@@ -8,9 +9,6 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import StatusToast from "@/components/shared/StatusToast"
-import Tooltip from "@mui/material/Tooltip"
-import { Eye } from "lucide-react"
-import Link from "next/link"
 import {
   normalizeEmployeeFilterStatus,
   normalizeEmployeeSearchQuery,
@@ -239,15 +237,11 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
                 </td>
                 <td className="rounded-r-lg py-3 pr-2 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Tooltip title="Ver perfil">
-                      <Link
-                        href={companyPath(company.slug, `/employees/${employee.id}`)}
-                        aria-label={`Ver perfil de ${employee.first_name} ${employee.last_name}`}
-                        className="inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
-                      >
-                        <Eye size={18} strokeWidth={2} />
-                      </Link>
-                    </Tooltip>
+                    <EmployeeProfileLink
+                      slug={company.slug}
+                      employeeId={employee.id}
+                      employeeName={`${employee.first_name} ${employee.last_name}`}
+                    />
                     <EmployeeRowActionsMenu
                       employeeId={employee.id}
                       employeeName={`${employee.first_name} ${employee.last_name}`.trim()}

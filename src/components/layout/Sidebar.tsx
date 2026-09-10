@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { LifeBuoy, PanelLeftClose, PanelLeftOpen } from "lucide-react"
-import { fd } from "@/lib/theme-tokens"
 
 import Box from "@mui/material/Box"
 import List from "@mui/material/List"
@@ -13,8 +12,6 @@ import Tooltip from "@mui/material/Tooltip"
 import Typography from "@mui/material/Typography"
 
 import {
-  avatarColor,
-  getInitials,
   isActive,
   navEmployee,
   navHr,
@@ -138,16 +135,18 @@ export default function Sidebar({
   companySlug,
   logoSrc,
   logoAlt,
-  companyName,
 }: {
   role: Role
   companySlug?: string
   logoSrc?: string | null
   logoAlt?: string
-  companyName?: string
 }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  // Si el logo no carga (Storage caido, archivo borrado, red) caemos al logo de
+  // Desarrolla360, no a una imagen rota. Se resetea solo al cambiar de src.
+  const [failedLogoSrc, setFailedLogoSrc] = useState<string | null>(null)
+  const showCompanyLogo = Boolean(logoSrc) && failedLogoSrc !== logoSrc
 
   return (
     <Box
@@ -177,11 +176,12 @@ export default function Sidebar({
           px: collapsed ? 1 : 2,
         }}
       >
-        {logoSrc ? (
+        {showCompanyLogo ? (
           // eslint-disable-next-line @next/next/no-img-element -- arbitrary tenant logo, size unknown ahead of time
           <img
-            src={logoSrc}
+            src={logoSrc as string}
             alt={logoAlt ?? "Logo de la empresa"}
+            onError={() => setFailedLogoSrc(logoSrc ?? null)}
             style={{
               maxHeight: 48,
               maxWidth: "100%",
@@ -190,7 +190,7 @@ export default function Sidebar({
               opacity: 0.95,
             }}
           />
-        ) : role === "SUPERADMIN" ? (
+        ) : (
           <Image
             src="/assets/logo_desarrolla_cropped.webp"
             alt="Desarrolla360"
@@ -205,24 +205,6 @@ export default function Sidebar({
               opacity: 0.95,
             }}
           />
-        ) : (
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              flexShrink: 0,
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              bgcolor: avatarColor(companyName ?? "?"),
-              color: fd.background,
-              fontSize: "0.875rem",
-              fontWeight: 700,
-            }}
-          >
-            {getInitials(companyName ?? "?")}
-          </Box>
         )}
       </Box>
 
