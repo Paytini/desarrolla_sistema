@@ -221,20 +221,25 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                 {company.name}
               </Typography>
               <Chip
-                label={company.active ? "Activa" : "Suspendida"}
-                size="small"
-                icon={
+                label={
                   <Box
                     component="span"
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      bgcolor: company.active ? green[500] : slate[300],
-                      ml: "6px !important",
-                    }}
-                  />
+                    sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}
+                  >
+                    <Box
+                      component="span"
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        bgcolor: company.active ? green[500] : slate[300],
+                        flexShrink: 0,
+                      }}
+                    />
+                    {company.active ? "Activa" : "Suspendida"}
+                  </Box>
                 }
+                size="small"
                 sx={{
                   height: 24,
                   fontSize: "11px",

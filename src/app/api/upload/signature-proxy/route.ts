@@ -31,7 +31,11 @@ export async function GET(request: NextRequest) {
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "image/png",
-      "Cache-Control": "private, max-age=3600",
+      // El nombre del archivo lleva un timestamp (logos/<id>/<Date.now()>.png), asi que
+      // cada URL es inmutable: el navegador la cachea "para siempre" y no se vuelve a
+      // pedir a Supabase Storage. Un logo nuevo genera una URL nueva. Sigue siendo
+      // `private` (no CDN compartido) para mantener el acceso autenticado por usuario.
+      "Cache-Control": "private, max-age=31536000, immutable",
     },
   })
 }

@@ -571,6 +571,45 @@ export async function bridgeGetStudentCourses(studentId: number, timeoutMs?: num
   })
 }
 
+type BridgeStudentEnrolledResponse = {
+  student_id: number
+  enrolled: Array<{
+    wp_course_id: number
+    active: boolean
+    status: string
+    enrolled_at: string | null
+  }>
+}
+
+export async function bridgeGetStudentEnrolledCourses(
+  studentId: number,
+  courseIds?: number[],
+  timeoutMs?: number,
+): Promise<BridgeStudentCoursesResponse> {
+  const query = courseIds && courseIds.length > 0 ? `?course_ids=${courseIds.join(",")}` : ""
+
+  const response = await bridgeRequest<BridgeStudentEnrolledResponse>(
+    `/students/${studentId}/enrolled${query}`,
+    { method: "GET", timeoutMs },
+  )
+
+  return {
+    student_id: response.student_id,
+    raw: { source: "enrolled" },
+    courses: response.enrolled
+      .filter((entry) => entry.active)
+      .map((entry) => ({
+        wp_course_id: entry.wp_course_id,
+        title: "",
+        progress_pct: 0,
+        completed: false,
+        started_at: entry.enrolled_at,
+        completed_at: null,
+        certificate_url: null,
+      })),
+  }
+}
+
 export async function bridgeGetStudentCertificates(studentId: number) {
   return bridgeRequest<BridgeStudentCertificatesResponse>(`/students/${studentId}/certificates`, {
     method: "GET",

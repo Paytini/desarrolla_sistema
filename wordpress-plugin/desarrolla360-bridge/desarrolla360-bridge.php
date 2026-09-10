@@ -544,6 +544,16 @@ function d360_bridge_register_rest_routes() {
 
 	register_rest_route(
 		'desarrolla360/v1',
+		'/students/(?P<student_id>\d+)/enrolled',
+		array(
+			'methods'             => WP_REST_Server::READABLE,
+			'callback'            => 'd360_bridge_student_enrolled',
+			'permission_callback' => 'd360_bridge_rest_permissions',
+		)
+	);
+
+	register_rest_route(
+		'desarrolla360/v1',
 		'/students/(?P<student_id>\d+)/access/ensure',
 		array(
 			'methods'             => WP_REST_Server::CREATABLE,
@@ -1093,12 +1103,10 @@ function d360_bridge_extract_course_thematic_area( $course_id, $category_names )
 		)
 	);
 
-	// Fallback: tomar el nombre de la primera categoria del curso.
 	if ( ! is_string( $name ) || '' === trim( $name ) ) {
 		$name = ! empty( $category_names ) ? $category_names[0] : '';
 	}
 
-	// Fallback para el codigo: buscarlo en el term meta de las taxonomias del curso.
 	if ( ! is_scalar( $code ) || '' === trim( (string) $code ) ) {
 		$taxonomy_candidates = array( 'course-category', 'course_category', 'tutor_course_category', 'category' );
 		foreach ( $taxonomy_candidates as $taxonomy ) {
@@ -1132,7 +1140,6 @@ function d360_bridge_extract_course_thematic_area( $course_id, $category_names )
 }
 
 function d360_bridge_extract_course_duration_hours( $course_id, $tutor_payload ) {
-	// Fuentes primarias: meta del post y payload de la API de Tutor LMS.
 	$duration_sources = array(
 		d360_bridge_get_first_post_meta_value(
 			$course_id,
@@ -1159,18 +1166,12 @@ function d360_bridge_extract_course_duration_hours( $course_id, $tutor_payload )
 		}
 	}
 
-	// Fallback: calcular la duracion sumando los videos de todas las lecciones del curso.
 	return d360_bridge_calculate_content_duration_hours( $course_id );
 }
 
-/**
- * Calcula la duracion total del curso sumando el playtime de los videos de sus lecciones.
- * Intenta primero con la API de topics de Tutor LMS y luego leyendo post meta directamente.
- */
 function d360_bridge_calculate_content_duration_hours( $course_id ) {
 	$total_seconds = 0;
 
-	// Metodo 1: API de topics de Tutor LMS (/tutor/v1/course-topic/{id}).
 	$topic_response = d360_bridge_dispatch_tutor_request( 'GET', sprintf( '/tutor/v1/course-topic/%d', $course_id ) );
 
 	if ( ! is_wp_error( $topic_response ) ) {
@@ -1189,7 +1190,7 @@ function d360_bridge_calculate_content_duration_hours( $course_id ) {
 				if ( isset( $content['video']['playtime'] ) && is_numeric( $content['video']['playtime'] ) ) {
 					$total_seconds += (float) $content['video']['playtime'];
 				}
-				// Algunos temas exponen duration directamente en segundos.
+
 				if ( isset( $content['video']['runtime']['seconds'] ) && is_numeric( $content['video']['runtime']['seconds'] ) ) {
 					$total_seconds += (float) $content['video']['runtime']['seconds'];
 				}
@@ -1201,8 +1202,6 @@ function d360_bridge_calculate_content_duration_hours( $course_id ) {
 		}
 	}
 
-	// Metodo 2: Leer _tutor_video post meta directamente de las lecciones del curso.
-	// Busca lecciones que sean hijos directos del curso.
 	$lesson_ids = get_posts( array(
 		'post_type'      => 'tutor_lesson',
 		'post_parent'    => $course_id,
@@ -1211,7 +1210,6 @@ function d360_bridge_calculate_content_duration_hours( $course_id ) {
 		'post_status'    => array( 'publish', 'private', 'draft' ),
 	) );
 
-	// Si no hay lecciones directas, busca dentro de los topics del curso.
 	if ( empty( $lesson_ids ) ) {
 		$topic_ids = get_posts( array(
 			'post_type'      => 'topics',
@@ -1238,7 +1236,7 @@ function d360_bridge_calculate_content_duration_hours( $course_id ) {
 		if ( ! is_array( $video_info ) ) {
 			continue;
 		}
-		// playtime puede estar en segundos como entero, o en runtime.seconds.
+
 		if ( isset( $video_info['playtime'] ) && is_numeric( $video_info['playtime'] ) && (float) $video_info['playtime'] > 0 ) {
 			$total_seconds += (float) $video_info['playtime'];
 		} elseif ( isset( $video_info['runtime']['seconds'] ) && is_numeric( $video_info['runtime']['seconds'] ) ) {
@@ -2322,6 +2320,63 @@ function d360_bridge_company_batch_enrollments( WP_REST_Request $request ) {
 	return rest_ensure_response( array( 'students' => $results ) );
 }
 
+function d360_bridge_student_enrolled( WP_REST_Request $request ) {
+	global $wpdb;
+
+	$student_id = absint( $request['student_id'] );
+	if ( ! $student_id ) {
+		return new WP_Error( 'd360_bridge_invalid_student', 'student_id invalido.', array( 'status' => 400 ) );
+	}
+
+	$course_ids = array_values(
+		array_filter(
+			array_map( 'absint', explode( ',', (string) $request->get_param( 'course_ids' ) ) )
+		)
+	);
+
+	$sql    = "SELECT post_parent AS wp_course_id, post_status, post_date_gmt
+	           FROM {$wpdb->posts}
+	           WHERE post_type = 'tutor_enrolled' AND post_author = %d";
+	$params = array( $student_id );
+
+	if ( ! empty( $course_ids ) ) {
+		$placeholders = implode( ',', array_fill( 0, count( $course_ids ), '%d' ) );
+		$sql         .= " AND post_parent IN ({$placeholders})"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$params       = array_merge( $params, $course_ids );
+	}
+
+	$sql .= ' ORDER BY ID DESC';
+
+	$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ), ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+
+	$seen     = array();
+	$enrolled = array();
+
+	foreach ( (array) $rows as $row ) {
+		$course_id = (int) $row['wp_course_id'];
+		if ( ! $course_id || isset( $seen[ $course_id ] ) ) {
+			continue;
+		}
+		$seen[ $course_id ] = true;
+
+		$status = (string) $row['post_status'];
+
+		$enrolled[] = array(
+			'wp_course_id' => $course_id,
+			'active'       => in_array( $status, array( 'completed', 'publish' ), true ),
+			'status'       => $status,
+			'enrolled_at'  => d360_bridge_mysql_gmt_to_iso( $row['post_date_gmt'] ),
+		);
+	}
+
+	return rest_ensure_response(
+		array(
+			'student_id' => $student_id,
+			'enrolled'   => $enrolled,
+		)
+	);
+}
+
 function d360_bridge_student_courses( WP_REST_Request $request ) {
 	$student_id = absint( $request['student_id'] );
 
@@ -2341,6 +2396,19 @@ function d360_bridge_student_courses( WP_REST_Request $request ) {
 					'courses'    => $direct_courses,
 					'raw'        => array(
 						'source' => 'direct_enrollment_fallback',
+					),
+				)
+			);
+		}
+
+		if ( (int) $response->get_error_data( 'status' ) >= 500 ) {
+			return rest_ensure_response(
+				array(
+					'student_id' => $student_id,
+					'courses'    => array(),
+					'raw'        => array(
+						'source' => 'upstream_error',
+						'error'  => $response->get_error_message(),
 					),
 				)
 			);
@@ -2394,6 +2462,15 @@ function d360_bridge_student_certificates( WP_REST_Request $request ) {
 	if ( is_wp_error( $response ) ) {
 		$direct_courses = d360_bridge_get_direct_student_courses( $student_id );
 		if ( empty( $direct_courses ) ) {
+			if ( (int) $response->get_error_data( 'status' ) >= 500 ) {
+				return rest_ensure_response(
+					array(
+						'student_id'   => $student_id,
+						'certificates' => array(),
+					)
+				);
+			}
+
 			return $response;
 		}
 
@@ -2653,6 +2730,8 @@ function d360_bridge_ensure_student_access( WP_REST_Request $request ) {
 }
 
 function d360_bridge_get_course_progress_stats( $student_id, $course_id ) {
+	global $wpdb;
+
 	$student_id = absint( $student_id );
 	$course_id  = absint( $course_id );
 
@@ -2663,17 +2742,6 @@ function d360_bridge_get_course_progress_stats( $student_id, $course_id ) {
 	$tutor_utils = tutor_utils();
 	if ( ! is_object( $tutor_utils ) ) {
 		return array();
-	}
-
-	$original_user_id = get_current_user_id();
-	$original_post    = isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null;
-	$course_post      = get_post( $course_id );
-
-	wp_set_current_user( $student_id );
-
-	if ( $course_post instanceof WP_Post ) {
-		$GLOBALS['post'] = $course_post;
-		setup_postdata( $course_post );
 	}
 
 	$progress_pct     = 0;
@@ -2714,27 +2782,30 @@ function d360_bridge_get_course_progress_stats( $student_id, $course_id ) {
 		);
 	}
 
-	if ( method_exists( $tutor_utils, 'get_course_contents_by_id' ) ) {
-		$course_contents = d360_bridge_call_tutor_utils_method( $tutor_utils, 'get_course_contents_by_id', array( $course_id ) );
+	$content_counts = $wpdb->get_results(
+		$wpdb->prepare(
+			"SELECT content.post_type AS post_type, COUNT(*) AS total
+			 FROM {$wpdb->posts} topic
+			 INNER JOIN {$wpdb->posts} content ON content.post_parent = topic.ID
+			 WHERE topic.post_parent = %d
+			   AND topic.post_type = 'topics'
+			   AND content.post_status = 'publish'
+			 GROUP BY content.post_type",
+			$course_id
+		),
+		ARRAY_A
+	);
 
-		if ( is_array( $course_contents ) || $course_contents instanceof Traversable ) {
-			foreach ( $course_contents as $content ) {
-				if ( ! $content instanceof WP_Post ) {
-					continue;
-				}
+	foreach ( (array) $content_counts as $content_row ) {
+		$count = isset( $content_row['total'] ) ? (int) $content_row['total'] : 0;
+		$type  = isset( $content_row['post_type'] ) ? $content_row['post_type'] : '';
 
-				if ( 'tutor_quiz' === $content->post_type ) {
-					++$quiz_total;
-					continue;
-				}
-
-				if ( 'tutor_assignments' === $content->post_type ) {
-					++$assignment_total;
-					continue;
-				}
-
-				++$content_lessons;
-			}
+		if ( 'tutor_quiz' === $type ) {
+			$quiz_total += $count;
+		} elseif ( 'tutor_assignments' === $type ) {
+			$assignment_total += $count;
+		} else {
+			$content_lessons += $count;
 		}
 	}
 
@@ -2761,18 +2832,6 @@ function d360_bridge_get_course_progress_stats( $student_id, $course_id ) {
 	if ( $progress_pct >= 100 ) {
 		$completed_at = d360_bridge_find_course_completion_date( $student_id, $course_id );
 	}
-
-	if ( $course_post instanceof WP_Post ) {
-		wp_reset_postdata();
-	}
-
-	if ( $original_post instanceof WP_Post ) {
-		$GLOBALS['post'] = $original_post;
-	} else {
-		unset( $GLOBALS['post'] );
-	}
-
-	wp_set_current_user( $original_user_id );
 
 	return array(
 		'progress_pct'       => max( 0, min( 100, $progress_pct ) ),
@@ -2879,51 +2938,15 @@ function d360_bridge_find_course_certificate_hash( $student_id, $course_id ) {
 		return null;
 	}
 
-	$tables = $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $wpdb->prefix ) . '%' ) );
-	if ( empty( $tables ) ) {
-		return null;
-	}
-
-	$hash_columns = array( 'cert_hash', 'certificate_hash', 'verification_id', 'hash', 'certificate_code', 'unique_id' );
-	$user_columns = array( 'completed_user_id', 'user_id', 'student_id', 'author', 'completed_by' );
-	$course_columns = array( 'course_id', 'post_id', 'completed_course_id', 'item_id' );
-	$date_columns = array( 'completion_date', 'completed_at', 'created_at', 'date_created', 'ID' );
-
-	foreach ( $tables as $table_name ) {
-		$columns = $wpdb->get_results( "SHOW COLUMNS FROM `{$table_name}`", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		if ( empty( $columns ) ) {
-			continue;
-		}
-
-		$column_names = array_map(
-			static function( $column ) {
-				return isset( $column['Field'] ) ? (string) $column['Field'] : '';
-			},
-			$columns
-		);
-
-		$hash_column = d360_bridge_find_first_matching_column( $column_names, $hash_columns );
-		$user_column = d360_bridge_find_first_matching_column( $column_names, $user_columns );
-		$course_column = d360_bridge_find_first_matching_column( $column_names, $course_columns );
-
-		if ( ! $hash_column || ! $user_column || ! $course_column ) {
-			continue;
-		}
-
-		$order_column = d360_bridge_find_first_matching_column( $column_names, $date_columns );
-		$sql = "SELECT `{$hash_column}` FROM `{$table_name}` WHERE `{$user_column}` = %d AND `{$course_column}` = %d"; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		if ( $order_column ) {
-			$sql .= " ORDER BY `{$order_column}` DESC"; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	$source = d360_bridge_locate_certificate_hash_table();
+	if ( $source && ! empty( $source['course_col'] ) ) {
+		$sql = "SELECT `{$source['hash_col']}` FROM `{$source['table']}` WHERE `{$source['user_col']}` = %d AND `{$source['course_col']}` = %d";
+		if ( ! empty( $source['order_col'] ) ) {
+			$sql .= " ORDER BY `{$source['order_col']}` DESC";
 		}
 		$sql .= ' LIMIT 1';
 
-		$cert_hash = $wpdb->get_var(
-			$wpdb->prepare(
-				$sql,
-				$student_id,
-				$course_id
-			)
-		);
+		$cert_hash = $wpdb->get_var( $wpdb->prepare( $sql, $student_id, $course_id ) );
 
 		if ( is_string( $cert_hash ) && '' !== trim( $cert_hash ) ) {
 			return trim( $cert_hash );
@@ -3008,79 +3031,25 @@ function d360_bridge_find_course_completion_date( $student_id, $course_id ) {
 		return null;
 	}
 
-	$tables = $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $wpdb->prefix ) . '%' ) );
-	if ( empty( $tables ) ) {
-		return null;
-	}
+	$completion_gmt = $wpdb->get_var(
+		$wpdb->prepare(
+			"SELECT comment_date_gmt
+			 FROM {$wpdb->comments}
+			 WHERE comment_type = 'course_completed'
+			   AND comment_post_ID = %d
+			   AND user_id = %d
+			   AND comment_date_gmt IS NOT NULL
+			   AND comment_date_gmt <> '0000-00-00 00:00:00'
+			 ORDER BY comment_date_gmt DESC
+			 LIMIT 1",
+			$course_id,
+			$student_id
+		)
+	);
 
-	$user_columns   = array( 'completed_user_id', 'user_id', 'student_id', 'author', 'completed_by' );
-	$course_columns = array( 'course_id', 'post_id', 'completed_course_id', 'item_id' );
-	$date_columns   = array( 'completion_date', 'completed_at', 'date_completed', 'issued_at', 'created_at', 'date_created' );
-
-	foreach ( $tables as $table_name ) {
-		$columns = $wpdb->get_results( "SHOW COLUMNS FROM `{$table_name}`", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		if ( empty( $columns ) ) {
-			continue;
-		}
-
-		$column_names = array_map(
-			static function( $column ) {
-				return isset( $column['Field'] ) ? (string) $column['Field'] : '';
-			},
-			$columns
-		);
-
-		$user_column   = d360_bridge_find_first_matching_column( $column_names, $user_columns );
-		$course_column = d360_bridge_find_first_matching_column( $column_names, $course_columns );
-		$date_column   = d360_bridge_find_first_matching_column( $column_names, $date_columns );
-
-		if ( ! $user_column || ! $course_column || ! $date_column ) {
-			continue;
-		}
-
-		$sql = "SELECT `{$date_column}` FROM `{$table_name}` WHERE `{$user_column}` = %d AND `{$course_column}` = %d AND `{$date_column}` IS NOT NULL AND `{$date_column}` != '' ORDER BY `{$date_column}` DESC LIMIT 1"; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-
-		$completion_date = $wpdb->get_var(
-			$wpdb->prepare(
-				$sql,
-				$student_id,
-				$course_id
-			)
-		);
-
-		$normalized = d360_bridge_normalize_datetime_to_iso( $completion_date );
-		if ( $normalized ) {
-			return $normalized;
-		}
-	}
-
-	$candidate_hashes = d360_bridge_find_candidate_certificate_hashes_by_user( $student_id );
-	foreach ( $candidate_hashes as $candidate_hash ) {
-		$completion_data = apply_filters( 'tutor_certificate_completion_data', $candidate_hash );
-
-		if ( ! is_object( $completion_data ) || ! property_exists( $completion_data, 'course_id' ) ) {
-			continue;
-		}
-
-		if ( (int) $completion_data->course_id !== $course_id ) {
-			continue;
-		}
-
-		$completed_user_id = property_exists( $completion_data, 'completed_user_id' ) ? (int) $completion_data->completed_user_id : 0;
-		if ( $completed_user_id && $completed_user_id !== $student_id ) {
-			continue;
-		}
-
-		foreach ( array( 'completion_date', 'completed_at', 'date_completed', 'issued_at', 'created_at', 'date_created' ) as $property_name ) {
-			if ( ! property_exists( $completion_data, $property_name ) ) {
-				continue;
-			}
-
-			$normalized = d360_bridge_normalize_datetime_to_iso( $completion_data->{$property_name} );
-			if ( $normalized ) {
-				return $normalized;
-			}
-		}
+	$normalized = d360_bridge_mysql_gmt_to_iso( $completion_gmt );
+	if ( $normalized ) {
+		return $normalized;
 	}
 
 	$latest_completed_content_date = d360_bridge_find_latest_completed_content_date( $student_id, $course_id );
@@ -3107,10 +3076,10 @@ function d360_bridge_find_latest_completed_content_date( $student_id, $course_id
 	}
 
 	$placeholders = implode( ',', array_fill( 0, count( $content_ids ), '%d' ) );
-	$sql          = "SELECT comment_date_gmt FROM {$wpdb->comments} WHERE user_id = %d AND comment_post_ID IN ({$placeholders}) AND comment_date_gmt IS NOT NULL AND comment_date_gmt != '0000-00-00 00:00:00' ORDER BY comment_date_gmt DESC LIMIT 1"; // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$sql          = "SELECT comment_date_gmt FROM {$wpdb->comments} WHERE user_id = %d AND comment_post_ID IN ({$placeholders}) AND comment_date_gmt IS NOT NULL AND comment_date_gmt != '0000-00-00 00:00:00' ORDER BY comment_date_gmt DESC LIMIT 1";
 	$params       = array_merge( array( $student_id ), $content_ids );
 	$prepared     = call_user_func_array( array( $wpdb, 'prepare' ), array_merge( array( $sql ), $params ) );
-	$latest_date  = $wpdb->get_var( $prepared ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+	$latest_date  = $wpdb->get_var( $prepared );
 	$normalized   = d360_bridge_mysql_gmt_to_iso( $latest_date );
 
 	return $normalized ? $normalized : null;
@@ -3181,60 +3150,24 @@ function d360_bridge_find_candidate_certificate_hashes_by_user( $student_id ) {
 		return array();
 	}
 
-	$tables = $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $wpdb->prefix ) . '%' ) );
-	if ( empty( $tables ) ) {
+	$source = d360_bridge_locate_certificate_hash_table();
+	if ( ! $source ) {
 		return array();
 	}
 
 	$hash_candidates = array();
-	$hash_columns = array( 'cert_hash', 'certificate_hash', 'verification_id', 'hash', 'certificate_code', 'unique_id' );
-	$user_columns = array( 'completed_user_id', 'user_id', 'student_id', 'author', 'completed_by' );
-	$date_columns = array( 'completion_date', 'completed_at', 'created_at', 'date_created', 'ID' );
 
-	foreach ( $tables as $table_name ) {
-		$columns = $wpdb->get_results( "SHOW COLUMNS FROM `{$table_name}`", ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		if ( empty( $columns ) ) {
-			continue;
-		}
+	$sql = "SELECT `{$source['hash_col']}` FROM `{$source['table']}` WHERE `{$source['user_col']}` = %d";
+	if ( ! empty( $source['order_col'] ) ) {
+		$sql .= " ORDER BY `{$source['order_col']}` DESC";
+	}
+	$sql .= ' LIMIT 25';
 
-		$column_names = array_map(
-			static function( $column ) {
-				return isset( $column['Field'] ) ? (string) $column['Field'] : '';
-			},
-			$columns
-		);
+	$results = $wpdb->get_col( $wpdb->prepare( $sql, $student_id ) );
 
-		$hash_column = d360_bridge_find_first_matching_column( $column_names, $hash_columns );
-		$user_column = d360_bridge_find_first_matching_column( $column_names, $user_columns );
-
-		if ( ! $hash_column || ! $user_column ) {
-			continue;
-		}
-
-		$order_column = d360_bridge_find_first_matching_column( $column_names, $date_columns );
-		$sql = "SELECT `{$hash_column}` FROM `{$table_name}` WHERE `{$user_column}` = %d"; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		if ( $order_column ) {
-			$sql .= " ORDER BY `{$order_column}` DESC"; // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		}
-		$sql .= ' LIMIT 25';
-
-		$results = $wpdb->get_col(
-			$wpdb->prepare(
-				$sql,
-				$student_id
-			)
-		);
-
-		if ( empty( $results ) ) {
-			continue;
-		}
-
-		foreach ( $results as $result ) {
-			$result = is_string( $result ) ? trim( $result ) : '';
-			if ( '' === $result ) {
-				continue;
-			}
-
+	foreach ( (array) $results as $result ) {
+		$result = is_string( $result ) ? trim( $result ) : '';
+		if ( '' !== $result ) {
 			$hash_candidates[ $result ] = true;
 		}
 	}
@@ -3250,6 +3183,64 @@ function d360_bridge_find_first_matching_column( $column_names, $candidates ) {
 	}
 
 	return null;
+}
+
+function d360_bridge_locate_certificate_hash_table() {
+	global $wpdb;
+	static $resolved = null;
+
+	if ( null !== $resolved ) {
+		return $resolved ? $resolved : null;
+	}
+
+	$cached = get_transient( 'd360_bridge_cert_hash_table' );
+	if ( false !== $cached ) {
+		$resolved = is_array( $cached ) ? $cached : array();
+		return $resolved ? $resolved : null;
+	}
+
+	$hash_columns   = array( 'cert_hash', 'certificate_hash', 'verification_id', 'hash', 'certificate_code', 'unique_id' );
+	$user_columns   = array( 'completed_user_id', 'user_id', 'student_id', 'author', 'completed_by' );
+	$course_columns = array( 'course_id', 'post_id', 'completed_course_id', 'item_id' );
+	$date_columns   = array( 'completion_date', 'completed_at', 'created_at', 'date_created', 'ID' );
+
+	$found  = array();
+	$tables = $wpdb->get_col( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $wpdb->prefix ) . '%' ) );
+
+	foreach ( (array) $tables as $table_name ) {
+		$columns = $wpdb->get_results( "SHOW COLUMNS FROM `{$table_name}`", ARRAY_A );
+		if ( empty( $columns ) ) {
+			continue;
+		}
+
+		$column_names = array_map(
+			static function( $column ) {
+				return isset( $column['Field'] ) ? (string) $column['Field'] : '';
+			},
+			$columns
+		);
+
+		$hash_col = d360_bridge_find_first_matching_column( $column_names, $hash_columns );
+		$user_col = d360_bridge_find_first_matching_column( $column_names, $user_columns );
+
+		if ( ! $hash_col || ! $user_col ) {
+			continue;
+		}
+
+		$found = array(
+			'table'      => $table_name,
+			'hash_col'   => $hash_col,
+			'user_col'   => $user_col,
+			'course_col' => d360_bridge_find_first_matching_column( $column_names, $course_columns ),
+			'order_col'  => d360_bridge_find_first_matching_column( $column_names, $date_columns ),
+		);
+		break;
+	}
+
+	set_transient( 'd360_bridge_cert_hash_table', $found, 12 * HOUR_IN_SECONDS );
+	$resolved = $found;
+
+	return $resolved ? $resolved : null;
 }
 
 function d360_bridge_find_certificate_attachment_id( $student_id, $course_id ) {
@@ -4120,6 +4111,79 @@ function d360_bridge_get_tracked_student_ids( $after_user_id, $limit ) {
 	return array_map( 'absint', is_array( $results ) ? $results : array() );
 }
 
+function d360_bridge_tutor_table_exists( $suffix ) {
+	global $wpdb;
+	static $cache = array();
+
+	if ( ! array_key_exists( $suffix, $cache ) ) {
+		$table            = $wpdb->prefix . $suffix;
+		$cache[ $suffix ] = ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) === $table );
+	}
+
+	return $cache[ $suffix ];
+}
+
+function d360_bridge_student_learning_fingerprint( $student_id ) {
+	global $wpdb;
+
+	$student_id = absint( $student_id );
+	if ( ! $student_id ) {
+		return '';
+	}
+
+	$parts = array();
+
+	$enroll = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT COUNT(*) AS c, COALESCE(MAX(post_modified_gmt), '') AS m
+			 FROM {$wpdb->posts}
+			 WHERE post_type = 'tutor_enrolled' AND post_author = %d",
+			$student_id
+		),
+		ARRAY_A
+	);
+	$parts[] = 'e:' . ( $enroll ? (int) $enroll['c'] . ':' . $enroll['m'] : '' );
+
+	$completed = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT COUNT(*) AS c, COALESCE(MAX(comment_date_gmt), '') AS m
+			 FROM {$wpdb->comments}
+			 WHERE user_id = %d AND comment_type = 'course_completed'",
+			$student_id
+		),
+		ARRAY_A
+	);
+	$parts[] = 'c:' . ( $completed ? (int) $completed['c'] . ':' . $completed['m'] : '' );
+
+	$lessons = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT COUNT(*) AS c, COALESCE(MAX(CAST(meta_value AS UNSIGNED)), 0) AS m
+			 FROM {$wpdb->usermeta}
+			 WHERE user_id = %d AND meta_key LIKE %s",
+			$student_id,
+			$wpdb->esc_like( '_tutor_completed_lesson_id_' ) . '%'
+		),
+		ARRAY_A
+	);
+	$parts[] = 'l:' . ( $lessons ? (int) $lessons['c'] . ':' . (int) $lessons['m'] : '' );
+
+	if ( d360_bridge_tutor_table_exists( 'tutor_quiz_attempts' ) ) {
+		$quiz_table = $wpdb->prefix . 'tutor_quiz_attempts';
+		$quizzes    = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT COUNT(*) AS c, COALESCE(MAX(attempt_ended_at), '') AS e, COALESCE(MAX(attempt_id), 0) AS i
+				 FROM {$quiz_table}
+				 WHERE user_id = %d",
+				$student_id
+			),
+			ARRAY_A
+		);
+		$parts[] = 'q:' . ( $quizzes ? (int) $quizzes['c'] . ':' . $quizzes['e'] . ':' . (int) $quizzes['i'] : '' );
+	}
+
+	return md5( implode( '|', $parts ) );
+}
+
 function d360_bridge_send_learning_webhook_batch( $events, $event_type, $occurred_at ) {
 	$webhook_url    = d360_bridge_get_portal_webhook_url();
 	$webhook_secret = d360_bridge_get_portal_webhook_secret();
@@ -4203,13 +4267,25 @@ function d360_bridge_process_learning_webhook_tick() {
 
 	$events        = array();
 	$source_hashes = array();
+	$fingerprints  = array();
 
 	foreach ( $user_ids as $user_id ) {
+		update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
+
+		$fingerprint      = d360_bridge_student_learning_fingerprint( $user_id );
+		$last_fingerprint = (string) get_user_meta( $user_id, 'd360_learning_fingerprint', true );
+		$last_hash        = (string) get_user_meta( $user_id, 'd360_learning_snapshot_hash', true );
+		$last_full_build  = (int) get_user_meta( $user_id, 'd360_learning_fingerprint_at', true );
+		$max_fp_age       = (int) apply_filters( 'd360_bridge_learning_fingerprint_max_age', 12 * HOUR_IN_SECONDS );
+		$force_full       = ( time() - $last_full_build ) > $max_fp_age;
+
+		if ( '' !== $fingerprint && $fingerprint === $last_fingerprint && '' !== $last_hash && ! $force_full ) {
+			continue;
+		}
+
 		$employee_id = (string) get_user_meta( $user_id, 'd360_employee_id', true );
 		$company_id  = (string) get_user_meta( $user_id, 'd360_company_id', true );
 		$snapshot    = d360_bridge_build_student_learning_snapshot( $user_id );
-
-		update_option( D360_BRIDGE_WEBHOOK_CURSOR_OPTION, $user_id, false );
 
 		if ( empty( $snapshot['courses'] ) && empty( $snapshot['certificates'] ) ) {
 			continue;
@@ -4220,9 +4296,12 @@ function d360_bridge_process_learning_webhook_tick() {
 			'certificates' => isset( $snapshot['certificates'] ) ? $snapshot['certificates'] : array(),
 		);
 		$source_hash = hash( 'sha256', wp_json_encode( $hash_payload ) );
-		$last_hash   = (string) get_user_meta( $user_id, 'd360_learning_snapshot_hash', true );
 
 		if ( $source_hash === $last_hash ) {
+			if ( '' !== $fingerprint ) {
+				update_user_meta( $user_id, 'd360_learning_fingerprint', $fingerprint );
+				update_user_meta( $user_id, 'd360_learning_fingerprint_at', time() );
+			}
 			continue;
 		}
 
@@ -4235,6 +4314,7 @@ function d360_bridge_process_learning_webhook_tick() {
 			'certificates'       => $snapshot['certificates'],
 		);
 		$source_hashes[ $user_id ] = $source_hash;
+		$fingerprints[ $user_id ]  = $fingerprint;
 	}
 
 	if ( empty( $events ) ) {
@@ -4275,11 +4355,54 @@ function d360_bridge_process_learning_webhook_tick() {
 		if ( isset( $source_hashes[ $user_id ] ) ) {
 			update_user_meta( $user_id, 'd360_learning_snapshot_hash', $source_hashes[ $user_id ] );
 			update_user_meta( $user_id, 'd360_learning_snapshot_sent_at', gmdate( 'c' ) );
+
+			if ( ! empty( $fingerprints[ $user_id ] ) ) {
+				update_user_meta( $user_id, 'd360_learning_fingerprint', $fingerprints[ $user_id ] );
+				update_user_meta( $user_id, 'd360_learning_fingerprint_at', time() );
+			}
 		}
 	}
 }
 
 function d360_bridge_dispatch_tutor_request( $method, $route, $params = array() ) {
+	$method               = strtoupper( $method );
+	$has_http_credentials = '' !== d360_bridge_get_tutor_api_key() && '' !== d360_bridge_get_tutor_api_secret();
+	$is_tutor_v1          = 0 === strpos( $route, '/tutor/v1/' );
+
+	if ( $has_http_credentials && $is_tutor_v1 && 'GET' === $method ) {
+		$cache_ttl = (int) apply_filters( 'd360_bridge_tutor_get_cache_ttl', 90, $route );
+		$cache_key = '';
+
+		if ( $cache_ttl > 0 ) {
+			$cache_key = 'd360_tg_' . md5( $route . '|' . wp_json_encode( $params ) );
+			$cached    = get_transient( $cache_key );
+			if ( false !== $cached ) {
+				return $cached;
+			}
+		}
+
+		$result = d360_bridge_dispatch_tutor_http_request( $method, $route, $params );
+
+		if ( '' !== $cache_key && ! is_wp_error( $result ) ) {
+			set_transient( $cache_key, $result, $cache_ttl );
+		}
+
+		return $result;
+	}
+
+	$result = d360_bridge_dispatch_tutor_request_internal( $method, $route, $params );
+
+	if ( $has_http_credentials && $is_tutor_v1 && is_wp_error( $result ) && d360_bridge_is_permission_error( $result ) ) {
+		$http_result = d360_bridge_dispatch_tutor_http_request( $method, $route, $params );
+		if ( ! is_wp_error( $http_result ) ) {
+			return $http_result;
+		}
+	}
+
+	return $result;
+}
+
+function d360_bridge_dispatch_tutor_request_internal( $method, $route, $params = array() ) {
 	$service_user_id = d360_bridge_get_service_user_id();
 
 	if ( ! $service_user_id ) {
@@ -4299,6 +4422,7 @@ function d360_bridge_dispatch_tutor_request( $method, $route, $params = array() 
 		);
 	}
 
+	$previous_user_id = get_current_user_id();
 	wp_set_current_user( $service_user_id );
 
 	$request = new WP_REST_Request( strtoupper( $method ), $route );
@@ -4312,6 +4436,8 @@ function d360_bridge_dispatch_tutor_request( $method, $route, $params = array() 
 	}
 
 	$response = rest_do_request( $request );
+
+	wp_set_current_user( $previous_user_id );
 
 	if ( is_wp_error( $response ) ) {
 		return $response;
@@ -4492,7 +4618,6 @@ function d360_bridge_find_student_enrollment( $student_id, $course_id, $payload 
 
 	return null;
 }
-
 
 function d360_bridge_extract_course_id( $item ) {
 	$value = d360_bridge_extract_first_value( $item, array( 'course_id', 'ID', 'id' ) );

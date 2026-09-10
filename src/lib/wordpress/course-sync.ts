@@ -7,7 +7,7 @@ import {
   assertStudentHasCourses,
   bridgeCompanyBatchEnrollAndEnsureAccess,
   bridgeEnrollCourses,
-  bridgeGetStudentCourses,
+  bridgeGetStudentEnrolledCourses,
   isWordPressBridgeConfigured,
   type BridgeCompanyBatchStudentResult,
   type BridgeStudentCourse,
@@ -158,25 +158,25 @@ export async function setCourseAssignment(
         const enrollment = await bridgeEnrollCourses(employee.wp_user_id, [courseId])
         assertEnrollmentSucceeded(enrollment, [courseId])
 
-        const studentCourses = await bridgeGetStudentCourses(employee.wp_user_id)
+        const studentCourses = await bridgeGetStudentEnrolledCourses(employee.wp_user_id, [
+          courseId,
+        ])
         const match = studentCourses.courses.find(
           (course) => hasValidWpCourseId(course) && course.wp_course_id === courseId,
         )
 
         if (match) {
+          // El avance/nombre reales los trae la sincronizacion periodica; aqui solo
+          // confirmamos la matricula y marcamos ACTIVE.
           await prisma.employeeCourse.update({
             where: {
               employee_id_wp_course_id: { employee_id: employee.id, wp_course_id: courseId },
             },
             data: {
-              course_name: decodeHtmlEntities(match.title),
-              progress_pct: match.progress_pct,
-              completed: match.completed,
               access_status: "ACTIVE",
               access_error: null,
               last_access_attempt: syncedAt,
               course_start_date: parseBridgeDate(match.started_at),
-              completed_at: parseBridgeDate(match.completed_at),
               last_synced_at: syncedAt,
             },
           })
@@ -225,15 +225,13 @@ function buildStudentCourseUpsertOperation(
       },
     },
     update: {
-      course_name: decodeHtmlEntities(course.title),
-      progress_pct: course.progress_pct,
-      completed: course.completed,
+      // Solo estado de acceso: nombre/avance/finalizacion los actualiza la
+      // sincronizacion periodica desde Tutor LMS.
       access_status: "ACTIVE",
       access_source: deliveryMode,
       access_error: null,
       last_access_attempt: syncedAt,
       course_start_date: startedAt,
-      completed_at: completedAt,
       last_synced_at: syncedAt,
     },
     create: {
@@ -260,8 +258,9 @@ async function verifyAndUpsertEmployeeEnrollment(
   deliveryMode: string,
 ): Promise<PackageEnrollmentSyncResult> {
   try {
-    const studentCourses = await bridgeGetStudentCourses(
+    const studentCourses = await bridgeGetStudentEnrolledCourses(
       employee.wp_user_id,
+      courseIds,
       BATCH_VERIFY_STUDENT_COURSES_TIMEOUT_MS,
     )
     assertStudentHasCourses(studentCourses, courseIds)

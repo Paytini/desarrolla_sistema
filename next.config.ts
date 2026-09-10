@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import withBundleAnalyzer from "@next/bundle-analyzer"
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -16,4 +17,5 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+// Solo se activa con ANALYZE=true (p. ej. `npm run analyze`); en build normal es un no-op.
+export default withBundleAnalyzer({ enabled: process.env.ANALYZE === "true" })(nextConfig)
