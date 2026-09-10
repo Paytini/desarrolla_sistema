@@ -14,6 +14,7 @@ import {
 import { requireHrSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { requireCompanySlug } from "@/lib/company/branding"
+import { validateEmployeeEdit } from "@/lib/company/employees"
 import { companyPath } from "@/lib/company/routes"
 import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
@@ -732,6 +733,132 @@ export async function importEmployeesCsvAction(formData: FormData) {
       `?success=csv_imported&created=${created}&queued=${queuedSync ? 1 : 0}&skipped=${skipped}`,
     ),
   )
+}
+
+export async function updateEmployeeAction(
+  formData: FormData,
+): Promise<{ ok: boolean; error?: string }> {
+  const session = await requireHrSession()
+  const actor = getAuditActorFromSession(session)
+  const companyId = session.user.empresa_id as string
+  const slug = await requireCompanySlug(companyId)
+
+  const employeeId = getString(formData, "empleado_id")
+  if (!employeeId || !isUuid(employeeId)) {
+    return { ok: false, error: "Empleado no válido." }
+  }
+
+  const nombre = getString(formData, "nombre")
+  const apellido = getString(formData, "apellido")
+  const apellidoMaterno = getString(formData, "apellido_materno")
+  const curp = getString(formData, "curp").toUpperCase()
+  const departamento = getString(formData, "departamento")
+  const puesto = getString(formData, "puesto")
+  const ocupacionClave = getString(formData, "ocupacion_especifica_clave")
+  const ocupacionNombre = getString(formData, "ocupacion_especifica")
+
+  const validation = validateEmployeeEdit({ nombre, apellido, curp })
+  if (!validation.ok) {
+    return { ok: false, error: validation.error }
+  }
+
+  const existing = await prisma.employee.findFirst({
+    where: { id: employeeId, company_id: companyId },
+    select: {
+      id: true,
+      email: true,
+      wp_user_id: true,
+      first_name: true,
+      last_name: true,
+      second_last_name: true,
+      curp: true,
+      department: true,
+      position: true,
+      occupation_code: true,
+      occupation_name: true,
+      company: { select: { name: true } },
+    },
+  })
+
+  if (!existing) {
+    return { ok: false, error: "No se encontró el empleado." }
+  }
+
+  const nextData = {
+    first_name: nombre,
+    last_name: apellido,
+    second_last_name: apellidoMaterno || null,
+    curp: curp || null,
+    department: departamento || null,
+    position: puesto || null,
+    occupation_code: ocupacionClave || null,
+    occupation_name: ocupacionNombre || null,
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.employee.update({ where: { id: employeeId }, data: nextData })
+    await tx.user.updateMany({
+      where: { email: existing.email },
+      data: { name: `${nombre} ${apellido}`.trim() },
+    })
+  })
+
+  if (existing.wp_user_id && isWordPressBridgeConfigured()) {
+    try {
+      await bridgeUpsertEmployee({
+        employeeId: existing.id,
+        companyId,
+        companyName: existing.company.name,
+        email: existing.email,
+        firstName: nombre,
+        lastName: apellido,
+        department: departamento || null,
+        position: puesto || null,
+      })
+    } catch (error) {
+      console.error("[updateEmployeeAction] bridgeUpsertEmployee falló", error)
+    }
+  }
+
+  await createAuditEvent({
+    actor,
+    accion: "EMPLEADO_ACTUALIZADO",
+    entityType: "EMPLEADO",
+    entityId: employeeId,
+    companyId,
+    resumen: `${actor.nombre} actualizó la información de ${nombre} ${apellido}.`,
+    metadata: {
+      antes: {
+        nombre: existing.first_name,
+        apellido: existing.last_name,
+        apellido_materno: existing.second_last_name,
+        curp: existing.curp,
+        departamento: existing.department,
+        puesto: existing.position,
+        ocupacion_especifica_clave: existing.occupation_code,
+        ocupacion_especifica: existing.occupation_name,
+      },
+      despues: {
+        nombre,
+        apellido,
+        apellido_materno: apellidoMaterno || null,
+        curp: curp || null,
+        departamento: departamento || null,
+        puesto: puesto || null,
+        ocupacion_especifica_clave: ocupacionClave || null,
+        ocupacion_especifica: ocupacionNombre || null,
+      },
+    },
+  })
+
+  revalidatePath(companyPath(slug, `/employees/${employeeId}`))
+  revalidatePath(employeesPath(slug))
+  revalidatePath(companyPath(slug, "/progress"))
+  revalidatePath("/superadmin/reports")
+  revalidateTag(companyCacheRootTag(companyId), "max")
+  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+
+  return { ok: true }
 }
 
 export async function toggleEmployeeStatusAction(formData: FormData) {

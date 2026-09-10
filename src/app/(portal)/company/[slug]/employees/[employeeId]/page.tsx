@@ -1,4 +1,5 @@
-import { FileQuestion } from "lucide-react"
+import { Download, FileQuestion } from "lucide-react"
+import EmployeeEditModal from "@/components/company/EmployeeEditModal"
 import { BackButton } from "@/components/shared/BackButton"
 import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -87,7 +88,7 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
     return bTime - aTime
   })
 
-  const employeeName = `${employee.first_name} ${employee.last_name}`.trim()
+  const employeeName = `${employee.first_name} ${employee.last_name} ${employee.second_last_name ?? ""}`.trim()
 
   return (
     <div className="space-y-6">
@@ -104,7 +105,23 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
       />
 
       <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">Información del empleado</h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-slate-950">Información del empleado</h2>
+          <EmployeeEditModal
+            employee={{
+              id: employee.id,
+              first_name: employee.first_name,
+              last_name: employee.last_name,
+              second_last_name: employee.second_last_name,
+              email: employee.email,
+              curp: employee.curp,
+              department: employee.department,
+              position: employee.position,
+              occupation_code: employee.occupation_code,
+              occupation_name: employee.occupation_name,
+            }}
+          />
+        </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <InfoField label="Correo" value={employee.email} />
           <InfoField label="Puesto" value={employee.position ?? "—"} />
@@ -182,7 +199,7 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               { label: "Resultado" },
               { label: "Puntaje" },
               { label: "Preguntas", className: "hidden md:table-cell" },
-              { label: "Tiempo", className: "hidden md:table-cell" },
+              { label: "Tiempo Hecho", className: "hidden md:table-cell" },
               { label: "Fecha" },
             ]}
             rows={latestQuizAttempts.map((attempt) => {
@@ -258,9 +275,11 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
                 </div>
                 <a
                   href={`/api/certificates/${cert.id}/dc3`}
-                  className="shrink-0 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-white"
+                  aria-label={`Descargar constancia de ${cert.course_name}`}
+                  title="Descargar constancia"
+                  className="grid size-10 shrink-0 place-items-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-white hover:text-portal-blue"
                 >
-                  Descargar
+                  <Download size={16} strokeWidth={2} />
                 </a>
               </div>
             ))}

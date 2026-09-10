@@ -13,9 +13,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "avatar.iran.liara.run",
       },
+      {
+        protocol: "https",
+        hostname: "**.desarrolla360.com",
+        pathname: "/wp-content/uploads/**",
+      },
     ],
   },
 }
-
-// Solo se activa con ANALYZE=true (p. ej. `npm run analyze`); en build normal es un no-op.
 export default withBundleAnalyzer({ enabled: process.env.ANALYZE === "true" })(nextConfig)

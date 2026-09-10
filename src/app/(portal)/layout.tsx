@@ -13,7 +13,6 @@ import SuperadminSearchBar from "@/components/search/SuperadminSearchBar"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { storageProxyUrl } from "@/lib/storage-proxy"
 import { getCompanyBranding } from "@/lib/company/branding"
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +29,7 @@ export default async function PortalLayout({ children }: { children: React.React
       ? await getCompanyBranding(session.user.empresa_id)
       : null
 
-  const logoSrc = branding?.logo_url ? storageProxyUrl(branding.logo_url) : null
+  const logoSrc = branding?.logo_url ?? null
   const companyName = company ?? branding?.name ?? undefined
 
   const content = (

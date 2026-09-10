@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import Image from "next/image"
 import Link from "next/link"
 import { LifeBuoy, PanelLeftClose, PanelLeftOpen } from "lucide-react"
+import { CompanyLogo } from "@/components/shared/image/CompanyLogo"
 
 import Box from "@mui/material/Box"
 import List from "@mui/material/List"
@@ -20,7 +20,7 @@ import {
   type Role,
 } from "@/components/layout/nav-config"
 
-const SIDEBAR_W = 288
+const SIDEBAR_W = 256
 const SIDEBAR_W_COLLAPSED = 88
 
 const SIDEBAR_FONT =
@@ -39,8 +39,6 @@ function NavItemRow({
   const Icon = item.icon
 
   const LinkComponent = item.external ? "a" : Link
-  // El link activo no se prefetchea: ya estás en esa ruta y solo genera un
-  // request duplicado a la página actual al montar el sidebar.
   const linkProps = item.external ? {} : { prefetch: !active }
 
   if (collapsed) {
@@ -145,10 +143,6 @@ export default function Sidebar({
 }) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
-  // Si el logo no carga (Storage caido, archivo borrado, red) caemos al logo de
-  // Desarrolla360, no a una imagen rota. Se resetea solo al cambiar de src.
-  const [failedLogoSrc, setFailedLogoSrc] = useState<string | null>(null)
-  const showCompanyLogo = Boolean(logoSrc) && failedLogoSrc !== logoSrc
 
   return (
     <Box
@@ -174,40 +168,16 @@ export default function Sidebar({
           flexShrink: 0,
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-start",
+          justifyContent: "center",
           px: collapsed ? 1 : 2,
         }}
       >
-        {showCompanyLogo ? (
-          // eslint-disable-next-line @next/next/no-img-element -- arbitrary tenant logo, size unknown ahead of time
-          <img
-            src={logoSrc as string}
-            alt={logoAlt ?? "Logo de la empresa"}
-            onError={() => setFailedLogoSrc(logoSrc ?? null)}
-            style={{
-              maxHeight: 48,
-              maxWidth: "100%",
-              objectFit: "contain",
-              filter: "brightness(0) invert(1)",
-              opacity: 0.95,
-            }}
-          />
-        ) : (
-          <Image
-            src="/assets/logo_desarrolla_cropped.webp"
-            alt="Desarrolla360"
-            width={220}
-            height={66}
-            priority
-            style={{
-              height: 52,
-              width: "auto",
-              objectFit: "contain",
-              filter: "brightness(0) invert(1)",
-              opacity: 0.95,
-            }}
-          />
-        )}
+        <CompanyLogo
+          src={logoSrc}
+          alt={logoAlt ?? "Logo de la empresa"}
+          onNavy
+          className={collapsed ? "max-w-[52px]" : undefined}
+        />
       </Box>
 
       <Box

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { BookOpen, Check, ChevronLeft, ChevronRight, Minus, Search, X } from "lucide-react"
+import { CourseCover } from "@/components/shared/image/CourseCover"
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { DataTable } from "@/components/shared/DataTable"
 import ProgressBar from "@/components/shared/ProgressBar"
@@ -306,24 +307,25 @@ export default function AssignmentBoard({
                       : "border-[#efefef] hover:border-portal-blue/30"
                   }`}
                 >
-                  <div className="relative h-36 w-full shrink-0">
-                    {course.cover_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={course.cover_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
+                  <CourseCover
+                    src={course.cover_url}
+                    className="relative h-36 w-full shrink-0"
+                    sizes="288px"
+                    fallback={
                       <div
                         className="flex h-full w-full items-center justify-center"
                         style={{ background: color.bg, color: color.text }}
                       >
                         <BookOpen size={40} />
                       </div>
-                    )}
+                    }
+                  >
                     {isSelected && (
                       <span className="absolute right-2.5 top-2.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-portal-blue text-white shadow">
                         <Check size={13} strokeWidth={3} />
                       </span>
                     )}
-                  </div>
+                  </CourseCover>
 
                   <div className="flex flex-col gap-2.5 p-4">
                     <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-slate-800">

@@ -5,7 +5,8 @@ import { DepartmentProgressChart } from "@/components/company/DepartmentProgress
 import { LearningActivityChart } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
-import { AlertTriangle, BookOpen, TrendingDown, TrendingUp } from "lucide-react"
+import { AlertTriangle, TrendingDown, TrendingUp } from "lucide-react"
+import { CourseCover } from "@/components/shared/image/CourseCover"
 import { companyPath } from "@/lib/company/routes"
 import { getHrProgressSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
@@ -102,16 +103,11 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                   href={companyPath(companySlug, `/progress/${course.courseId}`)}
                   className="flex flex-col overflow-hidden rounded-2xl border border-[#efefef] bg-white transition hover:border-portal-blue/30 hover:shadow-md"
                 >
-                  <div className="relative h-36 w-full shrink-0">
-                    {thumb ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={thumb} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-portal-blue-soft text-portal-blue">
-                        <BookOpen size={40} />
-                      </div>
-                    )}
-                  </div>
+                  <CourseCover
+                    src={thumb}
+                    className="relative h-36 w-full shrink-0"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                  />
                   <div className="flex flex-col gap-2.5 p-4">
                     <div className="flex items-start justify-between gap-2">
                       <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-slate-800">

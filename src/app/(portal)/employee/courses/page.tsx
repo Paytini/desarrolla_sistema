@@ -16,6 +16,7 @@ import {
 import { getWordPressCourseCatalog } from "@/lib/wordpress/course-catalog"
 import { Award, ClipboardList } from "lucide-react"
 import { redirect } from "next/navigation"
+import { CourseCover } from "@/components/shared/image/CourseCover"
 import Alert from "@mui/material/Alert"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
@@ -202,13 +203,12 @@ export default async function EmployeeCourses() {
                 }}
               >
                 {thumbnail ? (
-                  <Box sx={{ position: "relative" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={thumbnail}
-                      alt={course.course_name}
-                      style={{ height: 144, width: "100%", objectFit: "cover", display: "block" }}
-                    />
+                  <CourseCover
+                    src={thumbnail}
+                    alt={course.course_name}
+                    className="relative h-36 w-full"
+                    sizes="(max-width: 600px) 100vw, (max-width: 1536px) 50vw, 33vw"
+                  >
                     {duracionLabel && (
                       <Box
                         sx={{
@@ -227,7 +227,7 @@ export default async function EmployeeCourses() {
                         {duracionLabel}
                       </Box>
                     )}
-                  </Box>
+                  </CourseCover>
                 ) : (
                   <Box
                     sx={{

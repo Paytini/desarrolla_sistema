@@ -1,16 +1,17 @@
-import { BookOpen, Send } from "lucide-react"
+import { Send } from "lucide-react"
+import { CourseCover } from "@/components/shared/image/CourseCover"
 import { BackButton } from "@/components/shared/BackButton"
 import { CourseEmployeeTable } from "@/components/company/CourseEmployeeTable"
 import { InfoField } from "@/components/shared/InfoField"
 import { PageHeader } from "@/components/shared/PageHeader"
-import StatusToast from "@/components/shared/StatusToast"
-import { SubmitButton } from "@/components/shared/SubmitButton"
+//import StatusToast from "@/components/shared/StatusToast"
+//import { SubmitButton } from "@/components/shared/SubmitButton"
 import { companyPath } from "@/lib/company/routes"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
-import { readSearchParam } from "@/lib/search-params"
+//import { readSearchParam } from "@/lib/search-params"
 import { redirect } from "next/navigation"
-import { sendCourseReminderAction } from "../actions"
+//import { sendCourseReminderAction } from "../actions"
 
 type PageProps = {
   params: Promise<{ slug: string; courseId: string }>
@@ -22,7 +23,7 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
   if (!session || session.user.role !== "HR" || !session.user.empresa_id) redirect("/login")
 
   const { slug, courseId: courseIdRaw } = await params
-  const query = await searchParams
+ // const query = await searchParams
   const companyId = session.user.empresa_id
   const courseId = Number.parseInt(courseIdRaw, 10)
 
@@ -100,51 +101,48 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
     },
   }))
 
-  const reminderSent = readSearchParam(query, "recordatorio") === "ok"
-  const reminderCount = readSearchParam(query, "count")
+  // const reminderSent = readSearchParam(query, "recordatorio") === "ok"
+  // const reminderCount = readSearchParam(query, "count")
 
   return (
     <div className="space-y-6">
       <BackButton href={companyPath(slug, "/progress")} label="Progreso" />
 
-      {reminderSent ? (
+      {/* {reminderSent ? (
         <StatusToast
           tone="success"
           message={`Recordatorio enviado a ${reminderCount ?? 0} colaborador${reminderCount === "1" ? "" : "es"}.`}
         />
-      ) : null}
+      ) : null} */}
 
       <PageHeader
         title={courseName}
-        action={
-          pending > 0 ? (
-            <form action={sendCourseReminderAction}>
-              <input type="hidden" name="curso_id" value={courseId} />
-              <input type="hidden" name="curso_nombre" value={courseName} />
-              <SubmitButton
-                variant="outlined"
-                startIcon={<Send size={14} />}
-                sx={{ whiteSpace: "nowrap" }}
-              >
-                Enviar recordatorio ({pending})
-              </SubmitButton>
-            </form>
-          ) : undefined
-        }
+        // action={
+        //   pending > 0 ? (
+        //     <form action={sendCourseReminderAction}>
+        //       <input type="hidden" name="curso_id" value={courseId} />
+        //       <input type="hidden" name="curso_nombre" value={courseName} />
+        //       <SubmitButton
+        //         variant="outlined"
+        //         startIcon={<Send size={14} />}
+        //         sx={{ whiteSpace: "nowrap" }}
+        //       >
+        //         Enviar recordatorio ({pending})
+        //       </SubmitButton>
+        //     </form>
+        //   ) : undefined
+        // }
       />
 
       <section className="rounded-lg bg-white p-6">
         <div className="grid items-start gap-6 md:grid-cols-[280px_1fr]">
-          <div className="overflow-hidden rounded-lg">
-            {coverUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={coverUrl} alt={courseName} className="block w-full object-contain" />
-            ) : (
-              <div className="flex h-48 items-center justify-center bg-portal-blue-soft text-portal-blue md:min-h-[220px]">
-                <BookOpen size={48} />
-              </div>
-            )}
-          </div>
+          <CourseCover
+            src={coverUrl}
+            alt={courseName}
+            className="relative aspect-video w-full rounded-lg bg-portal-blue-soft"
+            sizes="(max-width: 768px) 100vw, 280px"
+            fit="contain"
+          />
 
           <div className="flex flex-col justify-center gap-5">
             <div>

@@ -24,48 +24,6 @@ const brandingSuccessMessages: Record<string, string> = {
   marca_actualizada: "Logo actualizado correctamente.",
 }
 
-function DonutChart({ pct, size = 160 }: { pct: number; size?: number }) {
-  const sw = 14
-  const r = (size - sw) / 2
-  const cx = size / 2
-  const cy = size / 2
-  const circ = 2 * Math.PI * r
-  const offset = circ - (Math.min(pct, 100) / 100) * circ
-  const color = pct >= 75 ? portalColors.navy : pct >= 40 ? amber[600] : red[600]
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke={slate[100]} strokeWidth={sw} />
-      {pct > 0 && (
-        <circle
-          cx={cx}
-          cy={cy}
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth={sw}
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          transform={`rotate(-90 ${cx} ${cy})`}
-        />
-      )}
-      <text
-        x={cx}
-        y={cy - 7}
-        textAnchor="middle"
-        fill={slate[900]}
-        fontSize={size * 0.17}
-        fontWeight="600"
-      >
-        {pct === 0 ? "—" : `${pct}%`}
-      </text>
-      <text x={cx} y={cy + 13} textAnchor="middle" fill={slate[400]} fontSize={size * 0.08}>
-        avance gbl.
-      </text>
-    </svg>
-  )
-}
-
 function getInitials(firstName: string, lastName: string) {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase()
 }
@@ -120,10 +78,6 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
 
   const activeEmployees = company.employees.filter((e) => e.active)
   const allCourses = company.employees.flatMap((e) => e.courses)
-  const allCertificates = company.employees.flatMap((e) => e.certificates)
-  const avgProgress = allCourses.length
-    ? Math.round(allCourses.reduce((s, c) => s + c.progress_pct, 0) / allCourses.length)
-    : 0
 
   const activePackage = company.packages.find((p) => p.active) ?? company.packages[0] ?? null
   const packageCourses = activePackage?.package?.courses ?? []
@@ -220,37 +174,6 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
               <Typography sx={{ fontSize: 24, fontWeight: 600, color: slate[900] }}>
                 {company.name}
               </Typography>
-              <Chip
-                label={
-                  <Box
-                    component="span"
-                    sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}
-                  >
-                    <Box
-                      component="span"
-                      sx={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        bgcolor: company.active ? green[500] : slate[300],
-                        flexShrink: 0,
-                      }}
-                    />
-                    {company.active ? "Activa" : "Suspendida"}
-                  </Box>
-                }
-                size="small"
-                sx={{
-                  height: 24,
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  border: "1px solid",
-                  borderColor: company.active ? green[200] : slate[200],
-                  bgcolor: company.active ? green[50] : slate[50],
-                  color: company.active ? green[600] : slate[500],
-                  "& .MuiChip-label": { px: 1 },
-                }}
-              />
             </Box>
             <Box
               sx={{
@@ -300,66 +223,6 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
       <Box
         sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "180px 1fr 180px" } }}
       >
-        <PanelBox title="Avance">
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 2,
-              px: 2,
-              pb: 2,
-            }}
-          >
-            <DonutChart pct={avgProgress} size={150} />
-            <Box
-              sx={{
-                width: "100%",
-                display: "grid",
-                gap: 1,
-                pt: 1,
-                textAlign: "center",
-                borderTop: `1px solid ${slate[100]}`,
-              }}
-            >
-              <Box>
-                <Typography
-                  sx={{
-                    fontSize: 22,
-                    fontWeight: 600,
-                    fontVariantNumeric: "tabular-nums",
-                    color: slate[900],
-                  }}
-                >
-                  {activeEmployees.length}
-                  <Box
-                    component="span"
-                    sx={{ ml: 0.5, fontSize: 13, fontWeight: 400, color: slate[400] }}
-                  >
-                    / {company.contracted_seats}
-                  </Box>
-                </Typography>
-                <Typography sx={{ fontSize: 11, color: slate[400] }}>empleados activos</Typography>
-              </Box>
-              <Box>
-                <Typography
-                  sx={{
-                    fontSize: 22,
-                    fontWeight: 600,
-                    fontVariantNumeric: "tabular-nums",
-                    color: slate[900],
-                  }}
-                >
-                  {allCertificates.length}
-                </Typography>
-                <Typography sx={{ fontSize: 11, color: slate[400] }}>
-                  constancias emitidas
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </PanelBox>
-
         {courseStats.length > 0 && (
           <PanelBox
             title="Avance por curso"

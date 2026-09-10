@@ -9,13 +9,11 @@ import { DataTable } from "@/components/shared/DataTable"
 import ProgressBar from "@/components/shared/ProgressBar"
 import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company/routes"
-import { formatDateTime } from "@/lib/format"
 
 export type CourseEmployeeRow = {
   id: string
   progressPct: number
   completed: boolean
-  lastSyncedAt: Date
   quizScorePct: number | null
   employee: {
     id: string
@@ -105,7 +103,6 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
             { label: "Avance" },
             { label: "Estado" },
             { label: "Resultado del examen final" },
-            { label: "Última sincronización" },
             { label: "" },
           ]}
           rows={filteredRows.map((row) => {
@@ -144,9 +141,6 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
                   ) : (
                     <span className="text-slate-400">—</span>
                   )}
-                </td>
-                <td className="px-4 py-3 text-sm text-slate-500">
-                  {formatDateTime(row.lastSyncedAt)}
                 </td>
                 <td className="rounded-r-lg py-3 pr-4 text-right">
                   <Tooltip title="Ver perfil">

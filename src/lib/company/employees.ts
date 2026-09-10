@@ -55,3 +55,22 @@ export function matchesEmployeeFilters(
 
   return fields.some((field) => field.toLowerCase().includes(query))
 }
+
+export type EmployeeEditValidation = { ok: true } | { ok: false; error: string }
+
+export function validateEmployeeEdit(input: {
+  nombre: string
+  apellido: string
+  curp: string
+}): EmployeeEditValidation {
+  if (!input.nombre.trim()) {
+    return { ok: false, error: "El nombre es obligatorio." }
+  }
+  if (!input.apellido.trim()) {
+    return { ok: false, error: "El apellido es obligatorio." }
+  }
+  if (input.curp.trim() && input.curp.trim().length !== 18) {
+    return { ok: false, error: "La CURP debe tener 18 caracteres." }
+  }
+  return { ok: true }
+}
