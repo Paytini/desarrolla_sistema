@@ -12,6 +12,7 @@ export type PortalCourseRecord = {
   course_start_date: Date | null
   completed_at: Date | null
   last_synced_at: Date
+  access_expires_at: Date | null
 }
 
 export type PortalCertificateRecord = {

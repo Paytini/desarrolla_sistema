@@ -16,6 +16,7 @@ import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { requireCompanySlug } from "@/lib/company/branding"
 import { validateEmployeeEdit } from "@/lib/company/employees"
 import { companyPath } from "@/lib/company/routes"
+import { parseAccessDeadlineInput } from "@/lib/course-access"
 import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
@@ -857,6 +858,58 @@ export async function updateEmployeeAction(
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+
+  return { ok: true }
+}
+
+export async function updateCourseAccessDeadlineAction(
+  employeeId: string,
+  wpCourseId: number,
+  accessExpiresAt: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const session = await requireHrSession()
+  const actor = getAuditActorFromSession(session)
+  const companyId = session.user.empresa_id as string
+  const slug = await requireCompanySlug(companyId)
+
+  if (!isUuid(employeeId)) {
+    return { ok: false, error: "Empleado no válido." }
+  }
+
+  const deadline = parseAccessDeadlineInput(accessExpiresAt)
+  if (!deadline.ok) {
+    return { ok: false, error: deadline.error }
+  }
+
+  const course = await prisma.employeeCourse.findFirst({
+    where: { wp_course_id: wpCourseId, employee_id: employeeId, employee: { company_id: companyId } },
+    select: { id: true, course_name: true, access_expires_at: true },
+  })
+
+  if (!course) {
+    return { ok: false, error: "No se encontró el curso asignado a este empleado." }
+  }
+
+  await prisma.employeeCourse.update({
+    where: { id: course.id },
+    data: { access_expires_at: deadline.date },
+  })
+
+  await createAuditEvent({
+    actor,
+    accion: "CURSO_FECHA_LIMITE_ACTUALIZADA",
+    entityType: "EMPLEADO_CURSO",
+    entityId: course.id,
+    companyId,
+    resumen: `${actor.nombre} actualizó la fecha límite de acceso al curso "${course.course_name}".`,
+    metadata: {
+      antes: course.access_expires_at?.toISOString() ?? null,
+      despues: deadline.date?.toISOString() ?? null,
+    },
+  })
+
+  revalidatePath(companyPath(slug, `/employees/${employeeId}`))
+  revalidateTag(companyCacheRootTag(companyId), "max")
 
   return { ok: true }
 }

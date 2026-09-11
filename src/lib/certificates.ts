@@ -57,11 +57,19 @@ export function buildIssuedCertificates(employees: CompanyEmployee[]): IssuedCer
   )
 }
 
-export function buildPendingCertificates(employees: CompanyEmployee[]): PendingCertificate[] {
+export function buildPendingCertificates(
+  employees: CompanyEmployee[],
+  excludedCourseIds: Set<number> = new Set(),
+): PendingCertificate[] {
   return employees.flatMap((employee) => {
     const existingCourseIds = new Set(employee.certificates.map((c) => c.wp_course_id))
     return employee.courses
-      .filter((course) => course.completed && !existingCourseIds.has(course.wp_course_id))
+      .filter(
+        (course) =>
+          course.completed &&
+          !existingCourseIds.has(course.wp_course_id) &&
+          !excludedCourseIds.has(course.wp_course_id),
+      )
       .map((course) => ({
         id: `${employee.id}-${course.wp_course_id}`,
         employeeName: `${employee.first_name} ${employee.last_name}`.trim(),

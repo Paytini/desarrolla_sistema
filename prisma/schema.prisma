@@ -206,6 +206,7 @@ model CourseDc3Metadata {
   training_agent_registration String?
   instructor_name             String?
   instructor_signature_url    String?
+  grants_dc3                  Boolean   @default(true)
   source                      String    @default("MANUAL") // MANUAL | WORDPRESS_BRIDGE
   last_synced_at              DateTime?
   created_at                  DateTime  @default(now())
@@ -323,6 +324,7 @@ model EmployeeCourse {
   course_start_date   DateTime?
   completed_at        DateTime?
   last_synced_at      DateTime  @default(now())
+  access_expires_at   DateTime?
 
   employee Employee @relation(fields: [employee_id], references: [id])
 
@@ -331,6 +333,7 @@ model EmployeeCourse {
   @@index([last_synced_at])
   @@index([access_status])
   @@index([completed])
+  @@index([access_expires_at])
   @@map("employee_courses")
 }
 

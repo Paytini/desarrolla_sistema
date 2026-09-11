@@ -45,8 +45,9 @@ export async function saveDc3MetadataAction(
     (formData.get("agente_capacitador_registro") as string)?.trim() || null
   const instructorName = (formData.get("instructor_nombre") as string)?.trim() || null
   const signatureUrl = (formData.get("firma_url") as string)?.trim() || null
+  const grantsDc3 = formData.get("otorga_dc3") === "on"
 
-  if (!signatureUrl) {
+  if (grantsDc3 && !signatureUrl) {
     return { ok: false, error: "La firma del instructor es obligatoria" }
   }
 
@@ -55,25 +56,27 @@ export async function saveDc3MetadataAction(
     create: {
       wp_course_id: wpCourseId,
       course_name: courseName,
-      duration_hours: durationHours,
-      subject_area_name: thematicAreaName,
-      subject_area_code: thematicAreaCode,
-      training_agent_name: trainingAgentName,
-      training_agent_registration: trainingAgentRegistry,
-      instructor_name: instructorName,
-      instructor_signature_url: signatureUrl,
+      duration_hours: grantsDc3 ? durationHours : null,
+      subject_area_name: grantsDc3 ? thematicAreaName : null,
+      subject_area_code: grantsDc3 ? thematicAreaCode : null,
+      training_agent_name: grantsDc3 ? trainingAgentName : null,
+      training_agent_registration: grantsDc3 ? trainingAgentRegistry : null,
+      instructor_name: grantsDc3 ? instructorName : null,
+      instructor_signature_url: grantsDc3 ? signatureUrl : null,
+      grants_dc3: grantsDc3,
       source: "MANUAL",
       last_synced_at: new Date(),
     },
     update: {
       course_name: courseName,
-      duration_hours: durationHours,
-      subject_area_name: thematicAreaName,
-      subject_area_code: thematicAreaCode,
-      training_agent_name: trainingAgentName,
-      training_agent_registration: trainingAgentRegistry,
-      instructor_name: instructorName,
-      instructor_signature_url: signatureUrl,
+      duration_hours: grantsDc3 ? durationHours : null,
+      subject_area_name: grantsDc3 ? thematicAreaName : null,
+      subject_area_code: grantsDc3 ? thematicAreaCode : null,
+      training_agent_name: grantsDc3 ? trainingAgentName : null,
+      training_agent_registration: grantsDc3 ? trainingAgentRegistry : null,
+      instructor_name: grantsDc3 ? instructorName : null,
+      instructor_signature_url: grantsDc3 ? signatureUrl : null,
+      grants_dc3: grantsDc3,
       source: "MANUAL",
       last_synced_at: new Date(),
     },
@@ -154,6 +157,7 @@ export async function syncDc3MetadataAction(
           details.instructor_signature_url,
           existingMetadata?.instructor_signature_url,
         ) as string | null,
+        grants_dc3: existingMetadata?.grants_dc3 ?? true,
         source: "WORDPRESS_BRIDGE",
         last_synced_at: new Date(),
       },
@@ -167,6 +171,7 @@ export async function syncDc3MetadataAction(
         training_agent_registration: details.training_agent_registry || null,
         instructor_name: details.instructor_name || null,
         instructor_signature_url: details.instructor_signature_url || null,
+        grants_dc3: true,
         source: "WORDPRESS_BRIDGE",
         last_synced_at: new Date(),
       },

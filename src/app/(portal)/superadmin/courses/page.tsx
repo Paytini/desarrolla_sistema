@@ -16,7 +16,7 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function SuperadminDc3Page({ searchParams }: PageProps) {
+export default async function SuperadminCoursesPage({ searchParams }: PageProps) {
   const session = await getSession()
   if (!session || session.user.role !== "SUPERADMIN") redirect("/login")
 
@@ -39,8 +39,8 @@ export default async function SuperadminDc3Page({ searchParams }: PageProps) {
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
       <PageHeader
-        title="Editor DC-3"
-        description="Configura la metadata oficial STPS por curso para emitir constancias DC-3 correctas."
+        title="Cursos"
+        description="Configura la información oficial por curso para emitir constancias"
       />
 
       {total === 0 ? (

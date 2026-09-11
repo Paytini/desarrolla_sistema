@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { hasValidCronSecret } from "@/lib/cron-auth"
-import { checkAndNotifyExpiringPackages } from "@/lib/notifications"
+import {
+  checkAndNotifyExpiringCourseAccess,
+  checkAndNotifyExpiringPackages,
+} from "@/lib/notifications"
 
 export const maxDuration = 60
 
@@ -10,6 +13,7 @@ export async function GET(request: Request) {
   }
 
   await checkAndNotifyExpiringPackages()
+  await checkAndNotifyExpiringCourseAccess()
 
   return NextResponse.json({ ok: true })
 }

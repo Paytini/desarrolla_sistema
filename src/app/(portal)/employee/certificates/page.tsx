@@ -5,6 +5,7 @@ import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefre
 import { getEmployeeLearningData } from "@/lib/employee-learning"
 import { formatDateTime } from "@/lib/format"
 import type { PortalCertificateRecord, PortalCourseRecord } from "@/lib/learning-types"
+import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import Alert from "@mui/material/Alert"
@@ -25,6 +26,12 @@ export default async function EmployeeCertificatesPage() {
 
   const certificates = (employee.certificates ?? []) as PortalCertificateRecord[]
   const pendingCertificates = (learningData?.pendingCertificates ?? []) as PortalCourseRecord[]
+
+  const nonDc3Courses = await prisma.courseDc3Metadata.findMany({
+    where: { grants_dc3: false },
+    select: { wp_course_id: true },
+  })
+  const excludedCourseIds = new Set(nonDc3Courses.map((c) => c.wp_course_id))
 
   return (
     <Box sx={{ display: "grid", gap: 3 }}>
@@ -191,25 +198,27 @@ export default async function EmployeeCertificatesPage() {
                         Ver Diploma
                       </Button>
                     ) : null}
-                    <Button
-                      component="a"
-                      href={`/api/certificates/${certificate.id}/dc3`}
-                      target="_blank"
-                      rel="noreferrer"
-                      variant="contained"
-                      size="small"
-                      disableElevation
-                      sx={{
-                        borderRadius: 2,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        bgcolor: "var(--portal-blue)",
-                        color: fd.background,
-                        "&:hover": { bgcolor: "var(--portal-blue-hover)" },
-                      }}
-                    >
-                      Descargar DC-3
-                    </Button>
+                    {!excludedCourseIds.has(certificate.wp_course_id) ? (
+                      <Button
+                        component="a"
+                        href={`/api/certificates/${certificate.id}/dc3`}
+                        target="_blank"
+                        rel="noreferrer"
+                        variant="contained"
+                        size="small"
+                        disableElevation
+                        sx={{
+                          borderRadius: 2,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          bgcolor: "var(--portal-blue)",
+                          color: fd.background,
+                          "&:hover": { bgcolor: "var(--portal-blue-hover)" },
+                        }}
+                      >
+                        Descargar DC-3
+                      </Button>
+                    ) : null}
                   </Box>
                 </Box>
               ))}

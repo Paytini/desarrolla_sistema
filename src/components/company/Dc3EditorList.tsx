@@ -36,6 +36,7 @@ type CourseMetadata = {
   training_agent_registration: string | null
   instructor_name: string | null
   instructor_signature_url: string | null
+  grants_dc3: boolean
   source: string
   last_synced_at: Date | null
 }
@@ -49,9 +50,10 @@ export type CourseEntry = {
 type SaveAction = (formData: FormData) => Promise<{ ok: boolean; error?: string }>
 type SyncAction = (formData: FormData) => Promise<{ ok: boolean; error?: string }>
 
-type Status = "complete" | "incomplete" | "empty"
+type Status = "complete" | "incomplete" | "empty" | "not_applicable"
 
 function getStatus(m: CourseMetadata | null): Status {
+  if (m?.grants_dc3 === false) return "not_applicable"
   if (!m) return "empty"
   const ok =
     !!m.course_name &&
@@ -98,6 +100,13 @@ const STATUS_CONFIG: Record<
     bg: slate[50],
     color: slate[500],
     border: slate[200],
+    dot: slate[400],
+  },
+  not_applicable: {
+    label: "No otorga DC-3",
+    bg: slate[100],
+    color: slate[600],
+    border: slate[300],
     dot: slate[400],
   },
 }
@@ -161,6 +170,7 @@ function CourseEditorCard({
   const [isPending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [grantsDc3, setGrantsDc3] = useState(course.metadata?.grants_dc3 ?? true)
   const [signatureUrl, setSignatureUrl] = useState(course.metadata?.instructor_signature_url ?? "")
   const [uploadingSignature, setUploadingSignature] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -211,7 +221,7 @@ function CourseEditorCard({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSaveError(null)
-    if (!signatureUrl) {
+    if (grantsDc3 && !signatureUrl) {
       setSaveError("La firma del instructor es obligatoria")
       return
     }
@@ -322,7 +332,7 @@ function CourseEditorCard({
               }}
             />
           )}
-          {status !== "empty" && (
+          {status !== "empty" && status !== "not_applicable" && (
             <Typography
               sx={{
                 fontSize: "12px",
@@ -449,6 +459,28 @@ function CourseEditorCard({
 
             <SectionLabel>Datos del curso</SectionLabel>
 
+            <Box
+              component="label"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                cursor: "pointer",
+                userSelect: "none",
+              }}
+            >
+              <input
+                type="checkbox"
+                name="otorga_dc3"
+                checked={grantsDc3}
+                onChange={(e) => setGrantsDc3(e.target.checked)}
+                style={{ width: 16, height: 16 }}
+              />
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary" }}>
+                Este curso otorga DC-3
+              </Typography>
+            </Box>
+
             <Field label="Nombre del curso" required>
               <TextField
                 name="nombre_curso"
@@ -459,86 +491,88 @@ function CourseEditorCard({
               />
             </Field>
 
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "100px 1fr 120px" },
-                gap: 1.5,
-              }}
-            >
-              <Field label="Duración (hrs)" required>
-                <TextField
-                  name="duracion_horas"
-                  type="number"
-                  defaultValue={m?.duration_hours ?? ""}
-                  placeholder="8"
-                  size="small"
-                  fullWidth
-                  slotProps={{ htmlInput: { min: 0, step: 0.5 } }}
-                />
-              </Field>
-              <Field label="Área temática" required>
-                <TextField
-                  name="area_tematica_nombre"
-                  defaultValue={m?.subject_area_name ?? ""}
-                  placeholder="Seguridad e Higiene en el Trabajo"
-                  size="small"
-                  fullWidth
-                />
-              </Field>
-              <Field label="Clave área">
-                <TextField
-                  name="area_tematica_clave"
-                  defaultValue={m?.subject_area_code ?? ""}
-                  placeholder="SH-01"
-                  size="small"
-                  fullWidth
-                />
-              </Field>
-            </Box>
+            {grantsDc3 && (
+              <>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "100px 1fr 120px" },
+                    gap: 1.5,
+                  }}
+                >
+                  <Field label="Duración (hrs)" required>
+                    <TextField
+                      name="duracion_horas"
+                      type="number"
+                      defaultValue={m?.duration_hours ?? ""}
+                      placeholder="8"
+                      size="small"
+                      fullWidth
+                      slotProps={{ htmlInput: { min: 0, step: 0.5 } }}
+                    />
+                  </Field>
+                  <Field label="Área temática" required>
+                    <TextField
+                      name="area_tematica_nombre"
+                      defaultValue={m?.subject_area_name ?? ""}
+                      placeholder="Seguridad e Higiene en el Trabajo"
+                      size="small"
+                      fullWidth
+                    />
+                  </Field>
+                  <Field label="Clave área">
+                    <TextField
+                      name="area_tematica_clave"
+                      defaultValue={m?.subject_area_code ?? ""}
+                      placeholder="SH-01"
+                      size="small"
+                      fullWidth
+                    />
+                  </Field>
+                </Box>
 
-            <SectionLabel>Agente capacitador</SectionLabel>
+                <SectionLabel>Agente capacitador</SectionLabel>
 
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "1fr 200px" },
-                gap: 1.5,
-              }}
-            >
-              <Field label="Agente capacitador" required>
-                <TextField
-                  name="agente_capacitador_nombre"
-                  defaultValue={m?.training_agent_name ?? ""}
-                  placeholder="Desarrolla360 SA de CV"
-                  size="small"
-                  fullWidth
-                />
-              </Field>
-              <Field label="Registro STPS">
-                <TextField
-                  name="agente_capacitador_registro"
-                  defaultValue={m?.training_agent_registration ?? ""}
-                  placeholder="CAP-000-00000"
-                  size="small"
-                  fullWidth
-                />
-              </Field>
-            </Box>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 200px" },
+                    gap: 1.5,
+                  }}
+                >
+                  <Field label="Agente capacitador" required>
+                    <TextField
+                      name="agente_capacitador_nombre"
+                      defaultValue={m?.training_agent_name ?? ""}
+                      placeholder="Desarrolla360 SA de CV"
+                      size="small"
+                      fullWidth
+                    />
+                  </Field>
+                  <Field label="Registro STPS">
+                    <TextField
+                      name="agente_capacitador_registro"
+                      defaultValue={m?.training_agent_registration ?? ""}
+                      placeholder="CAP-000-00000"
+                      size="small"
+                      fullWidth
+                    />
+                  </Field>
+                </Box>
 
-            <SectionLabel>Instructor</SectionLabel>
+                <SectionLabel>Instructor</SectionLabel>
 
-            <Field label="Nombre del instructor" required>
-              <TextField
-                name="instructor_nombre"
-                defaultValue={m?.instructor_name ?? ""}
-                placeholder="Lic. Juan García"
-                size="small"
-                fullWidth
-              />
-            </Field>
+                <Field label="Nombre del instructor" required>
+                  <TextField
+                    name="instructor_nombre"
+                    defaultValue={m?.instructor_name ?? ""}
+                    placeholder="Lic. Juan García"
+                    size="small"
+                    fullWidth
+                  />
+                </Field>
 
-            <Field label="Firma del instructor" required>
+                <Field label="Firma del instructor" required>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -718,6 +752,8 @@ function CourseEditorCard({
                 </Box>
               )}
             </Field>
+              </>
+            )}
 
             <Box
               sx={{
@@ -735,12 +771,16 @@ function CourseEditorCard({
                   <AlertCircle size={13} strokeWidth={2} style={{ color: red[600] }} />
                   <Typography sx={{ fontSize: 12, color: "error.main" }}>{saveError}</Typography>
                 </Box>
-              ) : (
+              ) : grantsDc3 ? (
                 <Typography sx={{ fontSize: 12, color: "text.disabled" }}>
                   <Box component="span" sx={{ color: "error.main" }}>
                     *
                   </Box>{" "}
                   Campos requeridos para emitir el DC-3
+                </Typography>
+              ) : (
+                <Typography sx={{ fontSize: 12, color: "text.disabled" }}>
+                  Este curso no emitirá constancia DC-3.
                 </Typography>
               )}
               <Button
@@ -776,6 +816,7 @@ const FILTERS: { value: FilterValue; label: string }[] = [
   { value: "complete", label: "Completos" },
   { value: "incomplete", label: "Incompletos" },
   { value: "empty", label: "Sin datos" },
+  { value: "not_applicable", label: "No otorga DC-3" },
 ]
 
 export default function Dc3EditorList({
@@ -798,6 +839,7 @@ export default function Dc3EditorList({
     complete: courses.filter((c) => getStatus(c.metadata) === "complete").length,
     incomplete: courses.filter((c) => getStatus(c.metadata) === "incomplete").length,
     empty: courses.filter((c) => getStatus(c.metadata) === "empty").length,
+    not_applicable: courses.filter((c) => getStatus(c.metadata) === "not_applicable").length,
   }
 
   const statusFiltered =

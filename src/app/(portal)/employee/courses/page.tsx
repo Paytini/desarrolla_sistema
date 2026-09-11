@@ -4,7 +4,8 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import EmployeeLearningRefresh from "@/components/employee/EmployeeLearningRefresh"
 import { getEmployeeLearningData } from "@/lib/employee-learning"
-import { formatDateTime } from "@/lib/format"
+import { isCourseAccessExpired } from "@/lib/course-access"
+import { formatDate, formatDateTime } from "@/lib/format"
 import type { PortalCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/session"
@@ -14,7 +15,7 @@ import {
   isWordPressBridgeConfigured,
 } from "@/lib/wordpress/bridge"
 import { getWordPressCourseCatalog } from "@/lib/wordpress/course-catalog"
-import { Award, ClipboardList } from "lucide-react"
+import { Award, CalendarClock, ClipboardList, Lock } from "lucide-react"
 import { redirect } from "next/navigation"
 import { CourseCover } from "@/components/shared/image/CourseCover"
 import Alert from "@mui/material/Alert"
@@ -102,7 +103,7 @@ export default async function EmployeeCourses() {
       const wpIds = courses.map((c) => c.wp_course_id)
       const [dc3MetaRecords, pkgCourses] = await Promise.all([
         prisma.courseDc3Metadata.findMany({
-          where: { wp_course_id: { in: wpIds } },
+          where: { wp_course_id: { in: wpIds }, grants_dc3: true },
           select: { wp_course_id: true, duration_hours: true },
         }),
         prisma.packageCourse.findMany({
@@ -182,6 +183,7 @@ export default async function EmployeeCourses() {
             const dc3Meta = dc3MetaMap.get(course.wp_course_id)
             const pkgMeta = pkgCourseMap.get(course.wp_course_id)
             const hasError = course.access_status === "ERROR"
+            const expired = isCourseAccessExpired(course)
             const inProgress = !course.completed && course.progress_pct > 0
             const barColor = course.progress_pct > 0 ? "var(--portal-blue)" : slate[400]
             const duracionLabel = dc3Meta?.duration_hours
@@ -294,9 +296,17 @@ export default async function EmployeeCourses() {
                       {course.course_name}
                     </Typography>
                     <StatusBadge
-                      variant={course.completed ? "green" : inProgress ? "amber" : "slate"}
+                      variant={
+                        expired ? "red" : course.completed ? "green" : inProgress ? "amber" : "slate"
+                      }
                     >
-                      {course.completed ? "Completado" : inProgress ? "En progreso" : "Sin iniciar"}
+                      {expired
+                        ? "Acceso vencido"
+                        : course.completed
+                          ? "Completado"
+                          : inProgress
+                            ? "En progreso"
+                            : "Sin iniciar"}
                     </StatusBadge>
                   </Box>
 
@@ -331,7 +341,7 @@ export default async function EmployeeCourses() {
                           <ClipboardList size={12} /> {pkgMeta.lesson_count} lecciones
                         </Typography>
                       )}
-                      {hasDc3 && (
+                      {/* {hasDc3 && (
                         <Typography
                           sx={{
                             display: "flex",
@@ -344,7 +354,7 @@ export default async function EmployeeCourses() {
                         >
                           <Award size={12} /> DC-3
                         </Typography>
-                      )}
+                      )} */}
                     </Box>
                   )}
 
@@ -380,7 +390,29 @@ export default async function EmployeeCourses() {
                     />
                   </Box>
 
-                  {hasError && course.access_error ? (
+                  {!expired && course.access_expires_at ? (
+                    <Typography
+                      sx={{
+                        mb: 1.5,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        fontSize: 11,
+                        color: slate[500],
+                      }}
+                    >
+                      <CalendarClock size={12} /> Fecha límite: {formatDate(course.access_expires_at)}
+                    </Typography>
+                  ) : null}
+
+                  {expired ? (
+                    <Box sx={{ mb: 1.5, borderRadius: 2, bgcolor: "#fff1f2", px: 1.5, py: 1 }}>
+                      <Typography sx={{ fontSize: 11, color: "#881337" }}>
+                        Tu acceso venció el {formatDate(course.access_expires_at!)}. Contacta a RH
+                        para renovarlo.
+                      </Typography>
+                    </Box>
+                  ) : hasError && course.access_error ? (
                     <Box sx={{ mb: 1.5, borderRadius: 2, bgcolor: "#fff1f2", px: 1.5, py: 1 }}>
                       <Typography sx={{ fontSize: 11, color: "#881337" }}>
                         {course.access_error}
@@ -395,7 +427,25 @@ export default async function EmployeeCourses() {
                   ) : null}
 
                   <Box sx={{ mt: "auto" }}>
-                    {launchUrl ? (
+                    {expired ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 0.75,
+                          borderRadius: 2.5,
+                          py: 1.25,
+                          bgcolor: slate[100],
+                          color: slate[400],
+                        }}
+                      >
+                        <Lock size={14} strokeWidth={2} />
+                        <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
+                          Acceso vencido
+                        </Typography>
+                      </Box>
+                    ) : launchUrl ? (
                       <Button
                         component="a"
                         href={launchUrl}

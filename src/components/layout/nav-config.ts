@@ -37,7 +37,7 @@ export const navSuperAdminSections: NavSection[] = [
     heading: "Operaciones",
     items: [
       { label: "Paquetes", href: "/superadmin/packages", icon: Package },
-      { label: "Editor DC-3", href: "/superadmin/dc3", icon: FileText },
+      { label: "Cursos", href: "/superadmin/courses", icon: FileText },
       { label: "Reportes", href: "/superadmin/reports", icon: BarChart3 },
       { label: "Accesos", href: "/superadmin/access", icon: Users },
       { label: "Consultorías", href: "/superadmin/consulting", icon: CalendarClock },

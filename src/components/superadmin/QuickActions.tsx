@@ -33,7 +33,7 @@ const ACTIONS: { label: string; description: string; href: string; Icon: LucideI
     href: "/superadmin/reports",
     Icon: BarChart3,
   },
-  { label: "Editor DC-3", description: "Metadatos STPS", href: "/superadmin/dc3", Icon: FileText },
+  { label: "Cursos", description: "Metadatos STPS", href: "/superadmin/courses", Icon: FileText },
   { label: "Accesos", description: "Usuarios del portal", href: "/superadmin/access", Icon: Users },
   {
     label: "Bridge WP",

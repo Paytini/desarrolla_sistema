@@ -12,6 +12,7 @@ function buildMetadata(overrides: Partial<Dc3MetadataView> = {}): Dc3MetadataVie
     training_agent_registration: "AC-001",
     instructor_name: "Ana Perez",
     instructor_signature_url: "https://example.com/firma.png",
+    grants_dc3: true,
     source: "MANUAL",
     last_synced_at: null,
     ...overrides,
@@ -43,5 +44,12 @@ describe("getDc3MissingFields", () => {
   it("treats duration_hours of 0 as missing", () => {
     const missing = getDc3MissingFields(buildMetadata({ duration_hours: 0 }))
     expect(missing).toContain("duración")
+  })
+
+  it("returns no missing fields when the course doesn't grant DC-3, regardless of other fields", () => {
+    const missing = getDc3MissingFields(
+      buildMetadata({ grants_dc3: false, duration_hours: null, instructor_signature_url: null }),
+    )
+    expect(missing).toEqual([])
   })
 })

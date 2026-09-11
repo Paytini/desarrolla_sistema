@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError } from "@/lib/dc3/pdf"
+import { getOrCreateDc3PdfBytes, Dc3MissingFieldsError, Dc3NotGrantedError } from "@/lib/dc3/pdf"
 import { isUuid } from "@/lib/uuid"
 
 export const runtime = "nodejs"
@@ -56,6 +56,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     })
   } catch (err) {
+    if (err instanceof Dc3NotGrantedError) {
+      return NextResponse.json({ error: err.message }, { status: 422 })
+    }
     if (err instanceof Dc3MissingFieldsError) {
       return NextResponse.json(
         {

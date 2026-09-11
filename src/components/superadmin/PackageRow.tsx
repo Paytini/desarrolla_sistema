@@ -172,7 +172,7 @@ export function PackageRow({
                               : `${missingCount} pendiente${missingCount !== 1 ? "s" : ""}`}
                           </span>
                           <Link
-                            href={`/superadmin/dc3?open=${course.wp_course_id}`}
+                            href={`/superadmin/courses?open=${course.wp_course_id}`}
                             className="flex text-slate-300 hover:text-slate-500"
                           >
                             <ExternalLink size={12} />

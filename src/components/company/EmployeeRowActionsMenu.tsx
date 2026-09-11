@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useTransition, type ReactNode } from "react"
-import Box from "@mui/material/Box"
-import ActionsPopover from "@/components/shared/ActionsPopover"
+import { useState, useTransition } from "react"
+import ActionsMenu, { ActionsMenuDivider, ActionsMenuItem } from "@/components/shared/ActionsMenu"
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog"
-import { MoreVertical, Trash2, UserCheck, UserX } from "lucide-react"
-import { amber, emerald, gray } from "@/lib/theme-tokens"
+import { Eye, Trash2, UserCheck, UserX } from "lucide-react"
+import { companyPath } from "@/lib/company/routes"
 
 type EmployeeAction = (formData: FormData) => void | Promise<void>
 
 type EmployeeRowActionsMenuProps = {
+  slug: string
   employeeId: string
   employeeName: string
   employeeActive: boolean
@@ -26,6 +26,7 @@ function buildFormData(employeeId: string, returnTo: string) {
 }
 
 export default function EmployeeRowActionsMenu({
+  slug,
   employeeId,
   employeeName,
   employeeActive,
@@ -44,41 +45,16 @@ export default function EmployeeRowActionsMenu({
 
   return (
     <>
-      <ActionsPopover
-        transitionTimeout={140}
-        paperSx={{ mt: 0.5, width: 208, py: 0.5 }}
-        trigger={({ open, toggle, setAnchorEl }) => (
-          <Box
-            ref={setAnchorEl}
-            component="button"
-            type="button"
-            onClick={toggle}
-            aria-haspopup="true"
-            aria-expanded={open}
-            aria-label={`Acciones para ${employeeName}`}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 40,
-              height: 40,
-              flexShrink: 0,
-              border: "none",
-              background: "none",
-              borderRadius: "10px",
-              color: "text.secondary",
-              cursor: "pointer",
-              transition: "background 0.15s ease",
-              "&:hover": { bgcolor: "action.hover" },
-            }}
-          >
-            <MoreVertical size={18} strokeWidth={2} />
-          </Box>
-        )}
-      >
+      <ActionsMenu ariaLabel={`Acciones para ${employeeName}`}>
         {({ close }) => (
           <>
-            <MenuRow
+            <ActionsMenuItem
+              icon={<Eye size={15} strokeWidth={2} />}
+              label="Ver perfil"
+              href={companyPath(slug, `/employees/${employeeId}`)}
+              onClick={close}
+            />
+            <ActionsMenuItem
               icon={
                 employeeActive ? (
                   <UserX size={15} strokeWidth={2} />
@@ -93,8 +69,7 @@ export default function EmployeeRowActionsMenu({
                 runAction(toggleEmployeeStatusAction)
               }}
             />
-            <Box sx={{ my: 0.5, borderTop: "1px solid", borderColor: "divider" }} />
-            <MenuRow
+            <ActionsMenuItem
               icon={<Trash2 size={15} strokeWidth={2} />}
               label="Eliminar"
               tone="rose"
@@ -105,7 +80,7 @@ export default function EmployeeRowActionsMenu({
             />
           </>
         )}
-      </ActionsPopover>
+      </ActionsMenu>
 
       <DeleteConfirmDialog
         open={deleteOpen}
@@ -116,59 +91,5 @@ export default function EmployeeRowActionsMenu({
         hiddenFields={{ empleado_id: employeeId, return_to: returnTo }}
       />
     </>
-  )
-}
-
-function MenuRow({
-  icon,
-  label,
-  tone = "neutral",
-  onClick,
-}: {
-  icon: ReactNode
-  label: string
-  tone?: "neutral" | "amber" | "emerald" | "rose"
-  onClick: () => void
-}) {
-  const toneColor: Record<string, string> = {
-    neutral: gray[700],
-    amber: amber[800],
-    emerald: emerald[800],
-    rose: "#BE123C",
-  }
-  const toneHover: Record<string, string> = {
-    neutral: "rgba(55,65,81,0.06)",
-    amber: "rgba(245,158,11,0.08)",
-    emerald: "rgba(16,185,129,0.08)",
-    rose: "rgba(225,29,72,0.08)",
-  }
-
-  return (
-    <Box
-      component="button"
-      type="button"
-      onClick={onClick}
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1.25,
-        width: "100%",
-        px: 2,
-        py: 1.25,
-        border: "none",
-        background: "none",
-        cursor: "pointer",
-        textAlign: "left",
-        color: toneColor[tone],
-        fontSize: "0.8125rem",
-        fontWeight: 500,
-        fontFamily: "inherit",
-        transition: "background 0.15s ease",
-        "&:hover": { bgcolor: toneHover[tone] },
-      }}
-    >
-      {icon}
-      {label}
-    </Box>
   )
 }

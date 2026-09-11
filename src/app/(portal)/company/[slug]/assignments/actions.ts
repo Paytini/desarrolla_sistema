@@ -7,6 +7,7 @@ import { requireCompanySlug } from "@/lib/company/branding"
 import { companyPath } from "@/lib/company/routes"
 import { setCourseAssignment } from "@/lib/wordpress/course-sync"
 import { notifyCompanyHr, notifySuperadmins, notifyUsuarioByEmail } from "@/lib/notifications"
+import { parseAccessDeadlineInput } from "@/lib/course-access"
 import type { PortalPackageCourseRecord } from "@/lib/learning-types"
 import { prisma } from "@/lib/prisma"
 
@@ -22,6 +23,7 @@ function parseEmployeeIds(values: string[]) {
 export async function setCourseAssignmentsAction(
   courseId: number,
   employeeIds: string[],
+  accessExpiresAt?: string,
 ): Promise<CourseAssignmentResult> {
   const session = await requireHrSession()
   const companyId = session.user.empresa_id as string
@@ -30,6 +32,11 @@ export async function setCourseAssignmentsAction(
 
   if (!Number.isInteger(courseId) || courseId <= 0) {
     return { ok: false, message: "Curso inválido." }
+  }
+
+  const deadline = accessExpiresAt ? parseAccessDeadlineInput(accessExpiresAt) : null
+  if (deadline && !deadline.ok) {
+    return { ok: false, message: deadline.error }
   }
 
   const company = await prisma.company.findUnique({
@@ -70,6 +77,13 @@ export async function setCourseAssignmentsAction(
     validEmployeeIds,
     activePackage.package.delivery_mode,
   )
+
+  if (deadline?.ok && validEmployeeIds.length > 0) {
+    await prisma.employeeCourse.updateMany({
+      where: { wp_course_id: courseId, employee_id: { in: validEmployeeIds } },
+      data: { access_expires_at: deadline.date },
+    })
+  }
 
   for (const employee of addedEmployees) {
     await notifyUsuarioByEmail(employee.email, {

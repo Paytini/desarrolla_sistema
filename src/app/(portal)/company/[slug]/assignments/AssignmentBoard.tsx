@@ -83,6 +83,7 @@ export default function AssignmentBoard({
     const query = params.toString()
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
   }, [courseSearch, employeeSearch, department, position, pathname, router])
+  const [accessExpiresAt, setAccessExpiresAt] = useState("")
   const [feedback, setFeedback] = useState<{
     id: number
     tone: "success" | "error"
@@ -154,6 +155,7 @@ export default function AssignmentBoard({
 
   function selectCourse(courseId: number) {
     setSelectedCourseId(courseId)
+    setAccessExpiresAt("")
     setFeedback(null)
   }
 
@@ -189,9 +191,14 @@ export default function AssignmentBoard({
     if (selectedCourseId == null) return
     const employeeIds = [...workingSet]
     startTransition(async () => {
-      const result = await setCourseAssignmentsAction(selectedCourseId, employeeIds)
+      const result = await setCourseAssignmentsAction(
+        selectedCourseId,
+        employeeIds,
+        accessExpiresAt || undefined,
+      )
       if (result.ok) {
         setSavedAssignments((prev) => ({ ...prev, [selectedCourseId]: new Set(employeeIds) }))
+        setAccessExpiresAt("")
       }
       setFeedback({
         id: Date.now(),
@@ -525,7 +532,21 @@ export default function AssignmentBoard({
           )}
 
           <div className="-mx-4 -mb-4 border-t border-neutral-100 bg-white px-4 py-3">
-            <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <span className="font-medium">
+                  Fecha límite de acceso <span className="text-slate-400">(opcional)</span>
+                </span>
+                <input
+                  type="date"
+                  value={accessExpiresAt}
+                  onChange={(e) => setAccessExpiresAt(e.target.value)}
+                  min={new Date().toISOString().slice(0, 10)}
+                  aria-label="Fecha límite de acceso para los colaboradores seleccionados"
+                  className="rounded-lg border border-portal-border px-3 py-2 text-sm outline-none transition focus:border-portal-blue"
+                />
+              </label>
+
               <button
                 type="button"
                 onClick={handleSave}
@@ -535,6 +556,12 @@ export default function AssignmentBoard({
                 {isPending ? "Guardando..." : "Guardar asignación"}
               </button>
             </div>
+            {accessExpiresAt ? (
+              <p className="mt-2 text-xs text-slate-500">
+                Esta fecha aplicará a los {workingSet.size} colaborador
+                {workingSet.size !== 1 ? "es" : ""} seleccionados al guardar.
+              </p>
+            ) : null}
           </div>
 
           <ConfirmDialog

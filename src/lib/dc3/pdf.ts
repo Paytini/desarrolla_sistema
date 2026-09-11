@@ -39,8 +39,6 @@ const POS = {
   instructorName: { x: 90, y: 216, size: 7 },
   logoImage: { x: 32, y: 735, w: 140, h: 42 },
   logoMask: { x: 0, y: 715, w: 612, h: 78 },
-  folio: { x: 430, y: 60, size: 8 },
-  issuedDate: { x: 430, y: 50, size: 8 },
 } as const
 
 const TEXT_COLOR = rgb(0.04, 0.18, 0.62)
@@ -51,6 +49,13 @@ export class Dc3MissingFieldsError extends Error {
     super(`Faltan campos obligatorios para emitir DC-3: ${fields.join(", ")}`)
     this.name = "Dc3MissingFieldsError"
     this.fields = fields
+  }
+}
+
+export class Dc3NotGrantedError extends Error {
+  constructor() {
+    super("Este curso está marcado como que no otorga DC-3.")
+    this.name = "Dc3NotGrantedError"
   }
 }
 
@@ -86,6 +91,10 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
       },
     }),
   ])
+
+  if (metadata?.grants_dc3 === false) {
+    throw new Dc3NotGrantedError()
+  }
 
   const missing: string[] = []
   if (!employee.first_name || !employee.last_name) missing.push("Nombre completo del trabajador")
@@ -205,14 +214,6 @@ export async function generateDc3Pdf({ certificateId }: Dc3GenerateInput): Promi
       POS.instructorName.size,
     )
   }
-
-  draw(`FOLIO: ${certificate.reference_number}`, POS.folio.x, POS.folio.y, POS.folio.size)
-  draw(
-    `EMISION: ${certificate.issued_at.toISOString().slice(0, 10)}`,
-    POS.issuedDate.x,
-    POS.issuedDate.y,
-    POS.issuedDate.size,
-  )
 
   while (pdf.getPageCount() > 1) {
     pdf.removePage(pdf.getPageCount() - 1)

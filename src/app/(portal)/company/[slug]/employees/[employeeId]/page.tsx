@@ -1,4 +1,5 @@
 import { Download, FileQuestion } from "lucide-react"
+import CourseAccessDeadlineEditor from "@/components/company/CourseAccessDeadlineEditor"
 import EmployeeEditModal from "@/components/company/EmployeeEditModal"
 import { BackButton } from "@/components/shared/BackButton"
 import EmptyState from "@/components/shared/EmptyState"
@@ -8,6 +9,7 @@ import ProgressBar from "@/components/shared/ProgressBar"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { StatusLabel } from "@/components/shared/StatusLabel"
 import { companyPath } from "@/lib/company/routes"
+import { isCourseAccessExpired } from "@/lib/course-access"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { QUIZ_RESULT_LABEL, QUIZ_RESULT_VARIANT } from "@/lib/quiz-result"
@@ -142,36 +144,49 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
           <EmptyState message="Este empleado aún no tiene cursos asignados." />
         ) : (
           <div className="space-y-2">
-            {employee.courses.map((course) => (
-              <div key={course.id} className="rounded-lg bg-gray-50 p-4">
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-950">{course.course_name}</p>
-                  <StatusLabel
-                    status={course.access_status}
-                    variantMap={ACCESS_STATUS_VARIANT}
-                    labelMap={ACCESS_STATUS_LABEL}
-                  />
+            {employee.courses.map((course) => {
+              const expired = isCourseAccessExpired(course)
+              return (
+                <div key={course.id} className="rounded-lg bg-gray-50 p-4">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-950">{course.course_name}</p>
+                    <div className="flex items-center gap-2">
+                      <CourseAccessDeadlineEditor
+                        employeeId={employee.id}
+                        wpCourseId={course.wp_course_id}
+                        currentDeadline={course.access_expires_at}
+                        expired={expired}
+                      />
+                      {expired ? null : (
+                        <StatusLabel
+                          status={course.access_status}
+                          variantMap={ACCESS_STATUS_VARIANT}
+                          labelMap={ACCESS_STATUS_LABEL}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <ProgressBar
+                      value={course.progress_pct}
+                      className="flex-1 border border-slate-300"
+                    />
+                    <span className="w-10 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-700">
+                      {course.progress_pct}%
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
+                    <span>
+                      Inicio: {course.course_start_date ? formatDate(course.course_start_date) : "—"}
+                    </span>
+                    <span>
+                      Finalización: {course.completed_at ? formatDate(course.completed_at) : "—"}
+                    </span>
+                    <span>Última sincronización: {formatDateTime(course.last_synced_at)}</span>
+                  </div>
                 </div>
-                <div className="mb-2 flex items-center gap-2">
-                  <ProgressBar
-                    value={course.progress_pct}
-                    className="flex-1 border border-slate-300"
-                  />
-                  <span className="w-10 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-700">
-                    {course.progress_pct}%
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
-                  <span>
-                    Inicio: {course.course_start_date ? formatDate(course.course_start_date) : "—"}
-                  </span>
-                  <span>
-                    Finalización: {course.completed_at ? formatDate(course.completed_at) : "—"}
-                  </span>
-                  <span>Última sincronización: {formatDateTime(course.last_synced_at)}</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>

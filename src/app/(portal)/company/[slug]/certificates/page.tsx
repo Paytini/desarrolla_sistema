@@ -1,3 +1,4 @@
+import CertificateActionsMenu from "@/components/company/CertificateActionsMenu"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { ZipDownloadButton } from "@/components/company/ZipDownloadButton"
 import { SearchInput } from "@/components/shared/SearchInput"
@@ -18,6 +19,7 @@ import {
   type PendingCertificate,
 } from "@/lib/certificates"
 import { paginate } from "@/lib/pagination"
+import { prisma } from "@/lib/prisma"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -56,8 +58,17 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
   const pendingDept = readSearchParam(params, "pdept") ?? ""
   const pendingPage = Math.max(1, Number(readSearchParam(params, "ppage") ?? "1"))
 
+  const nonDc3Courses = await prisma.courseDc3Metadata.findMany({
+    where: { grants_dc3: false },
+    select: { wp_course_id: true },
+  })
+  const excludedCourseIds = new Set(nonDc3Courses.map((c) => c.wp_course_id))
+
   const certificates: IssuedCertificate[] = buildIssuedCertificates(employees)
-  const pendingCertificates: PendingCertificate[] = buildPendingCertificates(employees)
+  const pendingCertificates: PendingCertificate[] = buildPendingCertificates(
+    employees,
+    excludedCourseIds,
+  )
 
   const departments = getDistinctDepartments(employees)
   const courseNames = getDistinctCourseNames(certificates)
@@ -128,11 +139,6 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-semibold text-portal-ink">
               Constancias emitidas
-              <span className="ml-2 text-sm font-normal text-slate-400">
-                {issuedHasFilters
-                  ? `${filteredCertificates.length} de ${certificates.length}`
-                  : certificates.length}
-              </span>
             </h2>
             {certificates.length > 0 ? (
               <ZipDownloadButton
@@ -200,7 +206,6 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
               { label: "Empleado" },
               { label: "Departamento" },
               { label: "Curso" },
-              { label: "Folio" },
               { label: "Emitido", className: "hidden sm:table-cell" },
               { label: "Acciones" },
             ]}
@@ -215,38 +220,24 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
                   {certificate.department ?? "—"}
                 </td>
                 <td
-                  className="max-w-[240px] truncate px-3 py-3 text-portal-ink"
+                  className="max-w-[480px] truncate px-3 py-3 text-portal-ink"
                   title={certificate.course_name}
                 >
                   {certificate.course_name}
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 font-mono text-xs text-slate-500">
-                  {certificate.reference_number}
-                </td>
                 <td className="hidden whitespace-nowrap px-3 py-3 text-xs text-slate-400 sm:table-cell">
                   {formatDateTime(certificate.issued_at)}
                 </td>
-                <td className="rounded-r-lg whitespace-nowrap px-3 py-3">
-                  <div className="flex gap-2">
-                    {certificate.certificate_url ? (
-                      <a
-                        href={certificate.certificate_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="whitespace-nowrap rounded-md bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-900 transition hover:bg-gray-200"
-                      >
-                        Ver Diploma
-                      </a>
-                    ) : null}
-                    <a
-                      href={`/api/certificates/${certificate.id}/dc3`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="whitespace-nowrap rounded-xl bg-portal-blue px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-portal-blue-hover"
-                    >
-                      DC-3
-                    </a>
-                  </div>
+                <td className="rounded-r-lg whitespace-nowrap px-7 py-3">
+                  <CertificateActionsMenu
+                    courseName={certificate.course_name}
+                    certificateUrl={certificate.certificate_url}
+                    dc3Url={
+                      excludedCourseIds.has(certificate.wp_course_id)
+                        ? null
+                        : `/api/certificates/${certificate.id}/dc3`
+                    }
+                  />
                 </td>
               </tr>
             ))}

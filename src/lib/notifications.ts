@@ -171,6 +171,68 @@ export async function checkAndNotifyExpiringPackages() {
   }
 }
 
+const COURSE_ACCESS_WARNING_DAYS = 3
+
+export async function checkAndNotifyExpiringCourseAccess() {
+  const now = new Date()
+  const warningThreshold = new Date(
+    now.getTime() + COURSE_ACCESS_WARNING_DAYS * 24 * 60 * 60 * 1000,
+  )
+
+  const assignments = await prisma.employeeCourse.findMany({
+    where: {
+      completed: false,
+      access_expires_at: { not: null, lte: warningThreshold },
+    },
+    select: {
+      id: true,
+      course_name: true,
+      access_expires_at: true,
+      employee: {
+        select: { first_name: true, last_name: true, company_id: true },
+      },
+    },
+  })
+
+  for (const assignment of assignments) {
+    const expiresAt = assignment.access_expires_at!
+    const isExpired = expiresAt.getTime() < now.getTime()
+    const tipo = isExpired ? "CURSO_ACCESO_VENCIDO" : "CURSO_ACCESO_POR_VENCER"
+
+    const alreadyNotified = await prisma.notification.findFirst({
+      where: { type: tipo, entity_id: assignment.id },
+      select: { id: true },
+    })
+    if (alreadyNotified) continue
+
+    const employeeName = `${assignment.employee.first_name} ${assignment.employee.last_name}`.trim()
+
+    if (isExpired) {
+      await notifyCompanyHr(assignment.employee.company_id, {
+        tipo,
+        titulo: "Acceso a curso vencido",
+        mensaje: `El plazo de acceso de ${employeeName} al curso "${assignment.course_name}" venció.`,
+        entidadTipo: "EMPLEADO_CURSO",
+        entidadId: assignment.id,
+      })
+    } else {
+      const days = Math.max(
+        0,
+        Math.ceil((expiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
+      )
+      const daysLabel = `${days} día${days === 1 ? "" : "s"}`
+
+      await notifyCompanyHr(assignment.employee.company_id, {
+        tipo,
+        titulo: "Acceso a curso por vencer",
+        mensaje: `El plazo de acceso de ${employeeName} al curso "${assignment.course_name}" vence en ${daysLabel}.`,
+        entidadTipo: "EMPLEADO_CURSO",
+        entidadId: assignment.id,
+      })
+    }
+  }
+}
+
 export async function getNotificationHistory(
   userId: string,
   options: { cursor?: string; limit?: number; unreadOnly?: boolean; archived?: boolean } = {},
