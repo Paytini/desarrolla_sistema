@@ -207,7 +207,7 @@ function LoginForm() {
         <div className="login-ql-inner">
           <div className="login-ql-top">
             <Image
-              src="/assets/letras_blancas_empresas.webp"
+              src="/assets/logo/letras_blancas_empresas.webp"
               alt="Desarrolla360"
               width={240}
               height={66}
@@ -260,7 +260,7 @@ function LoginForm() {
         <div className="login-card">
           <div className="login-card-logo">
             <Image
-              src="/assets/logo_desarrolla_cropped.webp"
+              src="/assets/logo/logo_desarrolla_cropped.webp"
               alt="Desarrolla360"
               width={220}
               height={66}

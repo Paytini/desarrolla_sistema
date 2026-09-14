@@ -169,7 +169,7 @@ export function MobileNav({
             onClick={() => setOpen(false)}
           >
             <Image
-              src="/assets/logo_desarrolla_cropped.webp"
+              src="/assets/logo/logo_desarrolla_cropped.webp"
               alt="Desarrolla360"
               width={88}
               height={26}

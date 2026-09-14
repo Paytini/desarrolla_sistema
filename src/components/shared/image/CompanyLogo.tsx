@@ -4,7 +4,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { storageProxyUrl } from "@/lib/storage-proxy"
 
-const BRAND_LOGO = "/assets/logo_desarrolla_cropped.webp"
+const BRAND_LOGO = "/assets/logo/logo_desarrolla_cropped.webp"
 
 type CompanyLogoProps = {
   src?: string | null

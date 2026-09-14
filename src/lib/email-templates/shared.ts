@@ -9,5 +9,5 @@ export function getPortalLoginUrl() {
 
 export function getLogoUrl() {
   const baseUrl = getPortalBaseUrl()
-  return `${baseUrl}/assets/logo_desarrolla_cropped.png`
+  return `${baseUrl}/assets/logo/logo_desarrolla_cropped.png`
 }

@@ -326,7 +326,7 @@ async function drawLogoDesarrolla(
   page: ReturnType<PDFDocument["getPages"]>[number],
 ) {
   try {
-    const rawBytes = await fetchImageBytes("/assets/logo_desarrolla_cropped.png")
+    const rawBytes = await fetchImageBytes("/assets/logo/logo_desarrolla_cropped.png")
     const image = await pdf.embedPng(await processImage(rawBytes))
     const { x: mx, y: my, w: mw, h: mh } = POS.logoMask
     page.drawRectangle({ x: mx, y: my, width: mw, height: mh, color: rgb(1, 1, 1) })
