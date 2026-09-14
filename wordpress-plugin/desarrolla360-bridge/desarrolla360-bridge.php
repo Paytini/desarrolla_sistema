@@ -4535,6 +4535,10 @@ function d360_bridge_normalize_courses( $payload ) {
 
 	if ( isset( $payload['courses'] ) && is_array( $payload['courses'] ) ) {
 		$items = $payload['courses'];
+	} elseif ( isset( $payload['data']['enrolled_courses'] ) && is_array( $payload['data']['enrolled_courses'] ) ) {
+		$items = $payload['data']['enrolled_courses'];
+	} elseif ( isset( $payload['data']['active_courses'] ) && is_array( $payload['data']['active_courses'] ) ) {
+		$items = $payload['data']['active_courses'];
 	} elseif ( isset( $payload['data'] ) && is_array( $payload['data'] ) ) {
 		$items = $payload['data'];
 	} elseif ( is_array( $payload ) ) {
@@ -4638,6 +4642,7 @@ function d360_bridge_extract_progress( $item ) {
 	$value = d360_bridge_extract_first_value(
 		$item,
 		array(
+			'course_completed_percentage',
 			'course_completed_percent',
 			'completed_percent',
 			'progress_pct',
