@@ -5,6 +5,7 @@ import { Suspense, useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { TurnstileWidget } from "@/components/login/TurnstileWidget"
+import Divider from "@mui/material/Divider"
 
 function EyeIcon({ open }: { open: boolean }) {
   if (open) {
@@ -145,7 +146,7 @@ function LoginForm() {
   const [activeIdx, setActiveIdx] = useState(0)
   const [quoteVisible, setQuoteVisible] = useState(true)
   const [turnstileToken, setTurnstileToken] = useState("")
-  const [widgetKey, setWidgetKey] = useState(0)
+  const [turnstileResetSignal, setTurnstileResetSignal] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -184,7 +185,7 @@ function LoginForm() {
       setError(BLOCKED_MESSAGES[result.code ?? ""] ?? "Correo o contraseña incorrectos")
       setLoading(false)
       setTurnstileToken("")
-      setWidgetKey((k) => k + 1)
+      setTurnstileResetSignal((n) => n + 1)
       return
     }
 
@@ -278,6 +279,13 @@ function LoginForm() {
             <p className="login-form-subtitle">Ingresa tus credenciales para acceder a tu panel</p>
           </header>
 
+          {error ? (
+              <div className="login-error-box" role="alert">
+                <AlertIcon />
+                <span>{error}</span>
+              </div>
+            ) : null}
+
           <form onSubmit={handleSubmit} className="login-form-body">
             <div className="login-field-group">
               <label className="login-field-label" htmlFor="lp-email">
@@ -324,18 +332,11 @@ function LoginForm() {
 
             <div className="login-turnstile">
               <TurnstileWidget
-                key={widgetKey}
                 onVerify={setTurnstileToken}
                 onExpire={() => setTurnstileToken("")}
+                resetSignal={turnstileResetSignal}
               />
             </div>
-
-            {error ? (
-              <div className="login-error-box" role="alert">
-                <AlertIcon />
-                <span>{error}</span>
-              </div>
-            ) : null}
 
             <button
               type="submit"
