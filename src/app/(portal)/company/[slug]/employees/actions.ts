@@ -192,7 +192,7 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
         data: {
           email,
           password_hash: passwordHash,
-          must_change_password: true,
+          must_change_password: false,
           name: `${input.nombre} ${input.apellido}`.trim(),
           role: "EMPLOYEE",
           company_id: input.companyId,
@@ -602,7 +602,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
                 return {
                   email: employee.email,
                   password_hash: credentials.passwordHash,
-                  must_change_password: true,
+                  must_change_password: false,
                   name: `${employee.nombre} ${employee.apellido}`.trim(),
                   role: "EMPLOYEE" as const,
                   company_id: companyId,
