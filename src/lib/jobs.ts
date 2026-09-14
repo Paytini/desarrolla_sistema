@@ -9,6 +9,7 @@ import { sendEmail } from "@/lib/ses"
 const JOB_CHUNK_SIZE = 20
 const JOB_CONCURRENCY = 5
 const JOBS_PER_CRON_TICK = 25
+const JOB_TICK_CONCURRENCY = 4
 
 function getJobPayloadCipherKey() {
   const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
@@ -384,47 +385,50 @@ export async function processPendingJobs(limit: number = JOBS_PER_CRON_TICK) {
     select: { id: true },
   })
 
-  let processed = 0
-  let errored = 0
-  let skipped = 0
-
-  for (const candidate of candidates) {
-    const claim = await prisma.job.updateMany({
-      where: { id: candidate.id, status: "PENDING" },
-      data: { status: "PROCESSING", started_at: new Date() },
-    })
-
-    if (claim.count === 0) {
-      skipped += 1
-      continue
-    }
-
-    const job = await prisma.job.findUniqueOrThrow({ where: { id: candidate.id } })
-
-    try {
-      if (job.type === "PACKAGE_ENROLLMENT_SYNC") {
-        await processPackageEnrollmentSyncJob(job.id, job.payload as PackageEnrollmentSyncPayload)
-      } else if (job.type === "CSV_EMPLOYEE_BRIDGE_SYNC") {
-        await processCsvEmployeeBridgeSyncJob(job.id, job.payload as CsvEmployeeBridgeSyncPayload)
-      } else if (job.type === "EMAIL_SEND") {
-        await processEmailSendJob(job.id, job.payload as EmailSendPayload)
-      } else {
-        throw new Error(`Tipo de job desconocido: ${job.type}`)
-      }
-      processed += 1
-    } catch (error) {
-      errored += 1
-      const message =
-        error instanceof Error
-          ? error.message.slice(0, 500)
-          : "Error desconocido procesando el job."
-
-      await prisma.job.update({
-        where: { id: job.id },
-        data: { status: "ERROR", error: message, completed_at: new Date() },
+  const outcomes = await mapWithConcurrency(
+    candidates,
+    JOB_TICK_CONCURRENCY,
+    async (candidate): Promise<"processed" | "errored" | "skipped"> => {
+      const claim = await prisma.job.updateMany({
+        where: { id: candidate.id, status: "PENDING" },
+        data: { status: "PROCESSING", started_at: new Date() },
       })
-    }
-  }
+
+      if (claim.count === 0) {
+        return "skipped"
+      }
+
+      const job = await prisma.job.findUniqueOrThrow({ where: { id: candidate.id } })
+
+      try {
+        if (job.type === "PACKAGE_ENROLLMENT_SYNC") {
+          await processPackageEnrollmentSyncJob(job.id, job.payload as PackageEnrollmentSyncPayload)
+        } else if (job.type === "CSV_EMPLOYEE_BRIDGE_SYNC") {
+          await processCsvEmployeeBridgeSyncJob(job.id, job.payload as CsvEmployeeBridgeSyncPayload)
+        } else if (job.type === "EMAIL_SEND") {
+          await processEmailSendJob(job.id, job.payload as EmailSendPayload)
+        } else {
+          throw new Error(`Tipo de job desconocido: ${job.type}`)
+        }
+        return "processed"
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message.slice(0, 500)
+            : "Error desconocido procesando el job."
+
+        await prisma.job.update({
+          where: { id: job.id },
+          data: { status: "ERROR", error: message, completed_at: new Date() },
+        })
+        return "errored"
+      }
+    },
+  )
+
+  const processed = outcomes.filter((outcome) => outcome === "processed").length
+  const errored = outcomes.filter((outcome) => outcome === "errored").length
+  const skipped = outcomes.filter((outcome) => outcome === "skipped").length
 
   return { processed, errored, skipped, total: candidates.length }
 }

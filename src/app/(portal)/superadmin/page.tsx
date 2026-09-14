@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import dynamic from "next/dynamic"
 import { Box, Paper, Stack, Typography } from "@mui/material"
 import { emerald, slate, violet } from "@/lib/theme-tokens"
 import {
@@ -10,14 +11,14 @@ import { getSession } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { ActivityFeed } from "@/components/superadmin/ActivityFeed"
 import { DashboardGreeting } from "@/components/superadmin/DashboardGreeting"
-import {
-  LearningActivityChart,
-  type ActivityPoint,
-  type ActivitySeries,
-} from "@/components/superadmin/LearningActivityChart"
+import type { ActivityPoint, ActivitySeries } from "@/components/superadmin/LearningActivityChart"
 import { QuickActions } from "@/components/superadmin/QuickActions"
 import { SectionCard } from "@/components/shared/SectionCard"
 import KpiCard from "@/components/shared/KpiCard"
+
+const LearningActivityChart = dynamic(() =>
+  import("@/components/superadmin/LearningActivityChart").then((mod) => mod.LearningActivityChart),
+)
 
 const DAY_MS = 1000 * 60 * 60 * 24
 

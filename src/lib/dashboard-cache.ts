@@ -8,6 +8,7 @@ import {
   SUPERADMIN_REPORTS_TAG,
   companyAssignmentsTag,
   companyCacheRootTag,
+  companyEmployeesTag,
 } from "@/lib/cache-tags"
 import { prisma } from "@/lib/prisma"
 import { getWordPressCourseCatalog } from "@/lib/wordpress/course-catalog"
@@ -302,10 +303,6 @@ const getSuperadminPackagesSnapshotCached = unstable_cache(
             },
             take: 1,
           },
-          employees: {
-            where: { active: true },
-            select: { id: true, wp_user_id: true },
-          },
         },
       }),
     ])
@@ -313,17 +310,42 @@ const getSuperadminPackagesSnapshotCached = unstable_cache(
     const courseIds = [
       ...new Set(packages.flatMap((pkg) => pkg.courses.map((course) => course.wp_course_id))),
     ]
-    const dc3Metadata =
+    const companyIds = companies.map((company) => company.id)
+
+    const [dc3Metadata, totalEmployeeCounts, syncableEmployeeCounts] = await Promise.all([
       courseIds.length > 0
-        ? await prisma.courseDc3Metadata.findMany({
+        ? prisma.courseDc3Metadata.findMany({
             where: { wp_course_id: { in: courseIds } },
           })
-        : []
+        : Promise.resolve([]),
+      prisma.employee.groupBy({
+        by: ["company_id"],
+        where: { company_id: { in: companyIds }, active: true },
+        _count: { _all: true },
+      }),
+      prisma.employee.groupBy({
+        by: ["company_id"],
+        where: { company_id: { in: companyIds }, active: true, wp_user_id: { not: null } },
+        _count: { _all: true },
+      }),
+    ])
     const dc3MetadataByCourseId = Object.fromEntries(
       dc3Metadata.map((metadata) => [String(metadata.wp_course_id), metadata]),
     )
+    const totalEmployeesByCompany = new Map(
+      totalEmployeeCounts.map((row) => [row.company_id, row._count._all]),
+    )
+    const syncableEmployeesByCompany = new Map(
+      syncableEmployeeCounts.map((row) => [row.company_id, row._count._all]),
+    )
 
-    return { paquetes: packages, empresas: companies, dc3MetadataByCourseId }
+    const companiesWithEmployeeCounts = companies.map((company) => ({
+      ...company,
+      employeeCount: totalEmployeesByCompany.get(company.id) ?? 0,
+      syncableEmployeeCount: syncableEmployeesByCompany.get(company.id) ?? 0,
+    }))
+
+    return { paquetes: packages, empresas: companiesWithEmployeeCounts, dc3MetadataByCourseId }
   },
   ["dashboard-snapshot", "superadmin", "paquetes"],
   {
@@ -753,7 +775,10 @@ export async function getHrEmployeesSnapshot(
       }
     },
     ["dashboard-snapshot", "empresa", "empleados", String(companyId), status, query, String(page)],
-    { revalidate: 30, tags: [companyCacheRootTag(companyId)] },
+    {
+      revalidate: 30,
+      tags: [companyCacheRootTag(companyId), companyEmployeesTag(companyId)],
+    },
   )
 
   return snapshot()

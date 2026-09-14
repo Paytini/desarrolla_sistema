@@ -12,7 +12,7 @@ import {
   type AuditActor,
 } from "@/lib/auditing"
 import { requireHrSession } from "@/lib/auth-guards"
-import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_REPORTS_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { requireCompanySlug } from "@/lib/company/branding"
 import { validateEmployeeEdit } from "@/lib/company/employees"
 import { companyPath } from "@/lib/company/routes"
@@ -444,7 +444,7 @@ export async function createEmployeeAction(formData: FormData) {
   revalidatePath("/employee/courses")
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(SUPERADMIN_REPORTS_TAG, "max")
 
   if (!result.ok) {
     redirect(employeesPath(slug, `?error=${result.code}`))
@@ -708,7 +708,7 @@ export async function importEmployeesCsvAction(formData: FormData) {
   revalidatePath(companyPath(slug, "/certificates"))
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(SUPERADMIN_REPORTS_TAG, "max")
 
   const GENERATED_PASSWORDS_COOKIE_LIMIT = 35
 
@@ -857,7 +857,7 @@ export async function updateEmployeeAction(
   revalidatePath(companyPath(slug, "/progress"))
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(SUPERADMIN_REPORTS_TAG, "max")
 
   return { ok: true }
 }
@@ -942,7 +942,7 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
   revalidatePath(employeesPath(slug))
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(SUPERADMIN_REPORTS_TAG, "max")
   redirect(
     withStatus(returnTo, "success", employee.active ? "empleado_suspendido" : "empleado_activado"),
   )
@@ -983,7 +983,7 @@ export async function deleteEmployeeAction(formData: FormData) {
   revalidatePath("/superadmin/access")
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(SUPERADMIN_REPORTS_TAG, "max")
   redirect(withStatus(returnTo, "success", "empleado_eliminado"))
 }
 
@@ -1014,7 +1014,7 @@ export async function triggerCompanyLearningSyncAction() {
   revalidatePath("/employee/certificates")
   revalidatePath("/superadmin/reports")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(SUPERADMIN_REPORTS_TAG, "max")
 
   redirect(
     employeesPath(

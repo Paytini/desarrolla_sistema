@@ -352,7 +352,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
             ]}
             rows={pagedCompanies.map((company) => {
               const activePackage = company.packages[0]?.package
-              const syncable = company.employees.filter((e) => e.wp_user_id).length
+              const syncable = company.syncableEmployeeCount
 
               return (
                 <tr key={company.id} className="bg-white transition-colors hover:bg-gray-50">
@@ -410,7 +410,7 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                     </Box>
                   </td>
                   <td className="hidden px-4 py-3 text-xs text-slate-500 sm:table-cell">
-                    {company.employees.length} empleados · {syncable} con WP ID
+                    {company.employeeCount} empleados · {syncable} con WP ID
                   </td>
                   <td className="rounded-r-lg px-4 py-3 text-right">
                     <form action={syncPackageToCompanyEmployeesAction}>

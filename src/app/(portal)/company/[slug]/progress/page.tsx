@@ -1,8 +1,6 @@
 import EmptyState from "@/components/shared/EmptyState"
 import { ExpandableChartCard } from "@/components/shared/ExpandableChartCard"
 import { CourseDepartmentFilter } from "@/components/company/CourseDepartmentFilter"
-import { DepartmentProgressChart } from "@/components/company/DepartmentProgressChart"
-import { LearningActivityChart } from "@/components/company/LearningActivityChart"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
 import { AlertTriangle, TrendingDown, TrendingUp } from "lucide-react"
@@ -12,7 +10,15 @@ import { getHrProgressSnapshot } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { redirect } from "next/navigation"
+
+const DepartmentProgressChart = dynamic(() =>
+  import("@/components/company/DepartmentProgressChart").then((mod) => mod.DepartmentProgressChart),
+)
+const LearningActivityChart = dynamic(() =>
+  import("@/components/company/LearningActivityChart").then((mod) => mod.LearningActivityChart),
+)
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>

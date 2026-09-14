@@ -6,8 +6,8 @@ import { NextResponse } from "next/server"
 export const maxDuration = 300
 
 async function runSync(request: Request) {
-  const session = await auth()
   const hasSecret = hasValidCronSecret(request)
+  const session = hasSecret ? null : await auth()
 
   if (!hasSecret && session?.user.role !== "SUPERADMIN") {
     return NextResponse.json(

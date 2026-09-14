@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from "next/cache"
 import { requireHrSession } from "@/lib/auth-guards"
-import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
+import { SUPERADMIN_REPORTS_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { requireCompanySlug } from "@/lib/company/branding"
 import { companyPath } from "@/lib/company/routes"
 import { setCourseAssignment } from "@/lib/wordpress/course-sync"
@@ -115,7 +115,7 @@ export async function setCourseAssignmentsAction(
   revalidatePath(companyPath(slug, "/progress"))
   revalidatePath("/employee/courses")
   revalidateTag(companyCacheRootTag(companyId), "max")
-  revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
+  revalidateTag(SUPERADMIN_REPORTS_TAG, "max")
 
   if (bridgeErrors.length > 0) {
     return {

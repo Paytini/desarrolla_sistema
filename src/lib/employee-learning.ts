@@ -1,3 +1,4 @@
+import { mapWithConcurrency } from "@/lib/concurrency"
 import { decodeHtmlEntities } from "@/lib/format"
 import { notifyEmployeeNewCertificates } from "@/lib/notifications"
 import { prisma } from "@/lib/prisma"
@@ -21,6 +22,7 @@ function getEmployeeSyncIntervalMs() {
 
 const EMPLOYEE_SYNC_INTERVAL_MS = getEmployeeSyncIntervalMs()
 const SYNC_LOCK_DURATION_MS = 120_000
+const EMPLOYEE_SYNC_BATCH_CONCURRENCY = 8
 const backgroundBatchSyncsInFlight = new Set<string>()
 
 async function claimEmployeeSyncLock(employeeId: string) {
@@ -258,13 +260,29 @@ async function upsertEmployeeCertificatesFromBridge(
     existingCertificates.map((certificate) => [certificate.wp_course_id, certificate]),
   )
 
+  const validCertificates = certificates.filter(hasWpCourseId)
+  const newCount = validCertificates.filter(
+    (certificate) => !certificateByCourseId.has(certificate.wp_course_id),
+  ).length
+
+  const folioSequences =
+    newCount > 0
+      ? (
+          await prisma.$queryRaw<{ nextval: bigint }[]>`
+            SELECT nextval('certificates_folio_sequence_seq') AS nextval
+            FROM generate_series(1, ${newCount})
+          `
+        ).map((row) => Number(row.nextval))
+      : []
+  let nextFolioIndex = 0
+
   const newCertificatesToNotify: { courseName: string; certificateUrl: string }[] = []
 
   const operations: Array<
     ReturnType<typeof prisma.certificate.update> | ReturnType<typeof prisma.certificate.create>
   > = []
 
-  for (const certificate of certificates.filter(hasWpCourseId)) {
+  for (const certificate of validCertificates) {
     const existingCertificate = certificateByCourseId.get(certificate.wp_course_id)
     const certificateUrl = certificate.certificate_url?.trim() || null
     const issuedAt =
@@ -289,10 +307,8 @@ async function upsertEmployeeCertificatesFromBridge(
       newCertificatesToNotify.push({ courseName, certificateUrl })
     }
 
-    const [{ nextval }] = await prisma.$queryRaw<
-      { nextval: bigint }[]
-    >`SELECT nextval('certificates_folio_sequence_seq') AS nextval`
-    const folioSequence = Number(nextval)
+    const folioSequence = folioSequences[nextFolioIndex]
+    nextFolioIndex += 1
 
     operations.push(
       prisma.certificate.create({
@@ -629,39 +645,42 @@ async function syncEmployeeLearningBatchInternal(options?: {
     .filter((employee) => (options?.companyId ? employee.company_id === options.companyId : true))
     .slice(0, limit)
 
-  const results: Array<{
+  type SyncResult = {
     employeeId: string
     status: "synced" | "failed" | "skipped"
     message?: string
-  }> = []
-
-  for (const employee of selectedEmployees) {
-    const lockUntil = await claimEmployeeSyncLock(employee.id)
-    if (!lockUntil) {
-      results.push({
-        employeeId: employee.id,
-        status: "skipped",
-        message: "Sincronización en curso",
-      })
-      continue
-    }
-
-    try {
-      await syncEmployeeLearningRecord(employee.id)
-      results.push({
-        employeeId: employee.id,
-        status: "synced",
-      })
-    } catch (error) {
-      results.push({
-        employeeId: employee.id,
-        status: "failed",
-        message: error instanceof Error ? error.message.slice(0, 240) : "Unknown sync error",
-      })
-    } finally {
-      await releaseEmployeeSyncLock(employee.id, lockUntil)
-    }
   }
+
+  const results = await mapWithConcurrency<(typeof selectedEmployees)[number], SyncResult>(
+    selectedEmployees,
+    EMPLOYEE_SYNC_BATCH_CONCURRENCY,
+    async (employee) => {
+      const lockUntil = await claimEmployeeSyncLock(employee.id)
+      if (!lockUntil) {
+        return {
+          employeeId: employee.id,
+          status: "skipped",
+          message: "Sincronización en curso",
+        }
+      }
+
+      try {
+        await syncEmployeeLearningRecord(employee.id)
+        return {
+          employeeId: employee.id,
+          status: "synced",
+        }
+      } catch (error) {
+        return {
+          employeeId: employee.id,
+          status: "failed",
+          message: error instanceof Error ? error.message.slice(0, 240) : "Unknown sync error",
+        }
+      } finally {
+        await releaseEmployeeSyncLock(employee.id, lockUntil)
+      }
+    },
+  )
 
   return {
     scanned: activeEmployees.length,

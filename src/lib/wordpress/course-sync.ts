@@ -151,46 +151,55 @@ export async function setCourseAssignment(
   const bridgeErrors: Array<{ employeeId: string; message: string }> = []
 
   if (isWordPressBridgeConfigured()) {
-    for (const employee of addedEmployees) {
-      if (!employee.wp_user_id) continue
+    const results = await mapWithConcurrency(
+      addedEmployees,
+      BATCH_VERIFY_CONCURRENCY,
+      async (employee): Promise<{ employeeId: string; message: string } | null> => {
+        if (!employee.wp_user_id) return null
 
-      try {
-        const enrollment = await bridgeEnrollCourses(employee.wp_user_id, [courseId])
-        assertEnrollmentSucceeded(enrollment, [courseId])
+        try {
+          const enrollment = await bridgeEnrollCourses(employee.wp_user_id, [courseId])
+          assertEnrollmentSucceeded(enrollment, [courseId])
 
-        const studentCourses = await bridgeGetStudentEnrolledCourses(employee.wp_user_id, [
-          courseId,
-        ])
-        const match = studentCourses.courses.find(
-          (course) => hasValidWpCourseId(course) && course.wp_course_id === courseId,
-        )
+          const studentCourses = await bridgeGetStudentEnrolledCourses(employee.wp_user_id, [
+            courseId,
+          ])
+          const match = studentCourses.courses.find(
+            (course) => hasValidWpCourseId(course) && course.wp_course_id === courseId,
+          )
 
-        if (match) {
-          // El avance/nombre reales los trae la sincronizacion periodica; aqui solo
-          // confirmamos la matricula y marcamos ACTIVE.
-          await prisma.employeeCourse.update({
-            where: {
-              employee_id_wp_course_id: { employee_id: employee.id, wp_course_id: courseId },
-            },
-            data: {
-              access_status: "ACTIVE",
-              access_error: null,
-              last_access_attempt: syncedAt,
-              course_start_date: parseBridgeDate(match.started_at),
-              last_synced_at: syncedAt,
-            },
-          })
+          if (match) {
+            // El avance/nombre reales los trae la sincronizacion periodica; aqui solo
+            // confirmamos la matricula y marcamos ACTIVE.
+            await prisma.employeeCourse.update({
+              where: {
+                employee_id_wp_course_id: { employee_id: employee.id, wp_course_id: courseId },
+              },
+              data: {
+                access_status: "ACTIVE",
+                access_error: null,
+                last_access_attempt: syncedAt,
+                course_start_date: parseBridgeDate(match.started_at),
+                last_synced_at: syncedAt,
+              },
+            })
+          }
+          return null
+        } catch (error) {
+          const message =
+            error instanceof Error
+              ? error.message.slice(0, 500)
+              : "No fue posible confirmar el acceso académico en Tutor LMS."
+
+          await markEmployeeCourseAccessError(employee.id, [courseId], accessSource, message)
+          return { employeeId: employee.id, message }
         }
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message.slice(0, 500)
-            : "No fue posible confirmar el acceso académico en Tutor LMS."
+      },
+    )
 
-        await markEmployeeCourseAccessError(employee.id, [courseId], accessSource, message)
-        bridgeErrors.push({ employeeId: employee.id, message })
-      }
-    }
+    bridgeErrors.push(
+      ...results.filter((result): result is { employeeId: string; message: string } => result !== null),
+    )
   }
 
   return {
