@@ -84,36 +84,31 @@ const QUOTES = [
     text: "La capacitación es el puente entre el talento que ya tienes y los resultados que todavía no has alcanzado.",
     author: "Peter Drucker",
     role: "Padre de la administración moderna",
-    image:
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=960&q=75",
+    image: "/assets/login/quote-1.webp",
   },
   {
     text: "Invertir en el conocimiento de tu equipo es la única inversión que ninguna crisis puede quitarte.",
     author: "Benjamin Franklin",
     role: "Empresario y estadista",
-    image:
-      "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=960&q=75",
+    image: "/assets/login/quote-2.webp",
   },
   {
     text: "Los equipos que aprenden juntos son los que construyen empresas que perduran.",
     author: "Peter Senge",
     role: "La Quinta Disciplina",
-    image:
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=960&q=75",
+    image: "/assets/login/quote-3.webp",
   },
   {
     text: "La diferencia entre una empresa ordinaria y una extraordinaria está en el desarrollo de su gente.",
     author: "Jack Welch",
     role: "Ex CEO de General Electric",
-    image:
-      "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=960&q=75",
+    image: "/assets/login/quote-4.webp",
   },
   {
     text: "El cumplimiento normativo no es una carga: es la base sobre la que se construye una empresa confiable.",
     author: "Desarrolla360",
     role: "Portal Empresarial",
-    image:
-      "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=960&q=75",
+    image: "/assets/login/quote-5.webp",
   },
 ]
 
@@ -212,10 +207,10 @@ function LoginForm() {
         <div className="login-ql-inner">
           <div className="login-ql-top">
             <Image
-              src="/assets/logo_desarrolla_cropped.webp"
+              src="/assets/letras_blancas_empresas.webp"
               alt="Desarrolla360"
               width={240}
-              height={72}
+              height={66}
               className="h-12 w-auto object-contain"
               priority
             />
@@ -322,7 +317,6 @@ function LoginForm() {
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
                   className="login-pw-toggle"
-                  tabIndex={-1}
                   aria-label={showPw ? "Ocultar contraseña" : "Ver contraseña"}
                 >
                   <EyeIcon open={showPw} />

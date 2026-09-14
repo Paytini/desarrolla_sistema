@@ -344,7 +344,6 @@ body {
 }
 
 .login-ql-top img {
-  filter: brightness(0) invert(1);
   opacity: 0.95;
 }
 
@@ -352,7 +351,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   max-width: 30rem;
   padding-block: 2.5rem;
   min-height: 0;
@@ -472,6 +471,7 @@ body {
 
 .login-form-head {
   margin-bottom: 2rem;
+  text-align: center;
 }
 
 .login-form-title {
