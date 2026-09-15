@@ -1,6 +1,7 @@
 import { amber, green, portalColors, red, slate } from "@/lib/theme-tokens"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
+import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButton"
 import { CompanyBrandingForm } from "@/components/superadmin/CompanyBrandingForm"
 import { updateCompanyBrandingAction } from "../actions"
 import { formatDate, formatDateTime } from "@/lib/format"
@@ -15,6 +16,7 @@ import { notFound, redirect } from "next/navigation"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
 import { DataTable } from "@/components/shared/DataTable"
+import StatusBadge from "@/components/shared/StatusBadge"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
 import Divider from "@mui/material/Divider"
@@ -174,6 +176,9 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
               <Typography sx={{ fontSize: 24, fontWeight: 600, color: slate[900] }}>
                 {company.name}
               </Typography>
+              <StatusBadge variant={company.active ? "green" : "slate"} dot>
+                {company.active ? "Activa" : "Suspendida"}
+              </StatusBadge>
             </Box>
             <Box
               sx={{
@@ -215,14 +220,18 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
               )}
             </Box>
           </Box>
+
+          <SuspendCompanyButton
+            companyId={company.id}
+            active={company.active}
+            name={company.name}
+          />
         </Box>
       </Box>
 
       <Divider sx={{ borderColor: slate[100] }} />
 
-      <Box
-        sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "180px 1fr 180px" } }}
-      >
+      <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", xl: "1fr 320px" } }}>
         {courseStats.length > 0 && (
           <PanelBox
             title="Avance por curso"
