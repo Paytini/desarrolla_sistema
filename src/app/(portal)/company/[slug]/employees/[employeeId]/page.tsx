@@ -2,6 +2,7 @@ import { Download, FileQuestion } from "lucide-react"
 import CourseAccessDeadlineEditor from "@/components/company/CourseAccessDeadlineEditor"
 import EmployeeEditModal from "@/components/company/EmployeeEditModal"
 import { BackButton } from "@/components/shared/BackButton"
+import CollapsibleSection from "@/components/shared/CollapsibleSection"
 import EmptyState from "@/components/shared/EmptyState"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { DataTable } from "@/components/shared/DataTable"
@@ -106,9 +107,9 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
         }
       />
 
-      <section className="rounded-lg bg-white p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-base font-semibold text-slate-950">Información del empleado</h2>
+      <CollapsibleSection
+        title="Información del empleado"
+        action={
           <EmployeeEditModal
             employee={{
               id: employee.id,
@@ -123,7 +124,8 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               occupation_name: employee.occupation_name,
             }}
           />
-        </div>
+        }
+      >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <InfoField label="Correo" value={employee.email} />
           <InfoField label="Puesto" value={employee.position ?? "—"} />
@@ -132,14 +134,9 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
           <InfoField label="Ocupación (CNO)" value={employee.occupation_name ?? "—"} />
           <InfoField label="Fecha de alta" value={formatDate(employee.created_at)} />
         </div>
-      </section>
+      </CollapsibleSection>
 
-      <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Progreso por curso
-          <span className="ml-2 text-sm font-normal text-slate-400">{totalCourses}</span>
-        </h2>
-
+      <CollapsibleSection title="Progreso por curso" count={totalCourses}>
         {totalCourses === 0 ? (
           <EmptyState message="Este empleado aún no tiene cursos asignados." />
         ) : (
@@ -187,14 +184,9 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
             })}
           </div>
         )}
-      </section>
+      </CollapsibleSection>
 
-      <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Fecha límite de acceso
-          <span className="ml-2 text-sm font-normal text-slate-400">{totalCourses}</span>
-        </h2>
-
+      <CollapsibleSection title="Fecha límite de acceso" count={totalCourses}>
         {totalCourses === 0 ? (
           <EmptyState message="Este empleado aún no tiene cursos asignados." />
         ) : (
@@ -215,16 +207,9 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
             ))}
           </div>
         )}
-      </section>
+      </CollapsibleSection>
 
-      <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Resultados del examen final
-          {/* <span className="ml-2 text-sm font-normal text-slate-400">
-            {latestQuizAttempts.length}
-          </span> */}
-        </h2>
-
+      <CollapsibleSection title="Resultados del examen final">
         {latestQuizAttempts.length === 0 ? (
           <EmptyState
             icon={<FileQuestion size={28} className="text-slate-300" />}
@@ -287,16 +272,9 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
             })}
           />
         )}
-      </section>
+      </CollapsibleSection>
 
-      <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-slate-950">
-          Constancias
-          <span className="ml-2 text-sm font-normal text-slate-400">
-            {employee.certificates.length}
-          </span>
-        </h2>
-
+      <CollapsibleSection title="Constancias" count={employee.certificates.length}>
         {employee.certificates.length === 0 ? (
           <EmptyState message="Aún no se han emitido constancias para este empleado." />
         ) : (
@@ -326,7 +304,7 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
             ))}
           </div>
         )}
-      </section>
+      </CollapsibleSection>
     </div>
   )
 }
