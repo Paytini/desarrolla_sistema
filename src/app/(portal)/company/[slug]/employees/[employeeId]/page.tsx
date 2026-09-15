@@ -151,13 +151,11 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-950">{course.course_name}</p>
                     <div className="flex items-center gap-2">
-                      <CourseAccessDeadlineEditor
-                        employeeId={employee.id}
-                        wpCourseId={course.wp_course_id}
-                        currentDeadline={course.access_expires_at}
-                        expired={expired}
-                      />
-                      {expired ? null : (
+                      {expired ? (
+                        <StatusBadge variant="red" dot>
+                          Vencido
+                        </StatusBadge>
+                      ) : (
                         <StatusLabel
                           status={course.access_status}
                           variantMap={ACCESS_STATUS_VARIANT}
@@ -187,6 +185,34 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
                 </div>
               )
             })}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-lg bg-white p-5">
+        <h2 className="mb-4 text-base font-semibold text-slate-950">
+          Fecha límite de acceso
+          <span className="ml-2 text-sm font-normal text-slate-400">{totalCourses}</span>
+        </h2>
+
+        {totalCourses === 0 ? (
+          <EmptyState message="Este empleado aún no tiene cursos asignados." />
+        ) : (
+          <div className="space-y-2">
+            {employee.courses.map((course) => (
+              <div
+                key={course.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-gray-50 p-4"
+              >
+                <p className="text-sm font-semibold text-slate-950">{course.course_name}</p>
+                <CourseAccessDeadlineEditor
+                  employeeId={employee.id}
+                  wpCourseId={course.wp_course_id}
+                  currentDeadline={course.access_expires_at}
+                  expired={isCourseAccessExpired(course)}
+                />
+              </div>
+            ))}
           </div>
         )}
       </section>
