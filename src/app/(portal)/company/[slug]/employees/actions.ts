@@ -21,6 +21,7 @@ import { withoutCompanyContext } from "@/lib/tenant-context"
 import { parseCsvText } from "@/lib/csv"
 import { scheduleCompanyEmployeeLearningBatch } from "@/lib/employee-learning"
 import { enqueueCsvEmployeeBridgeSyncJob } from "@/lib/jobs"
+import { notifySuperadmins } from "@/lib/notifications"
 import { generateRandomPassword, hashPassword } from "@/lib/onboarding"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
@@ -282,7 +283,21 @@ async function createEmployeeForCompany(input: EmployeeProvisioningInput) {
         employeeId: createdEmployee.id,
         hasActivePackage,
       }
-    } catch {
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message.slice(0, 500) : "Error desconocido del bridge."
+
+      console.error("[createEmployeeForCompany] bridgeUpsertEmployee falló", {
+        employeeId: createdEmployee.id,
+        message,
+      })
+
+      await notifySuperadmins({
+        tipo: "SYNC_FALLIDO",
+        titulo: "Sincronización fallida",
+        mensaje: `Falló la sincronización con WordPress al crear al empleado ${input.nombre} ${input.apellido} en ${companyContext.name}. ${message}`,
+      })
+
       return {
         ok: true as const,
         code: "empleado_creado_bridge_error",
@@ -935,7 +950,16 @@ export async function toggleEmployeeStatusAction(formData: FormData) {
       actor,
       source: "HR",
     })
-  } catch {
+  } catch (error) {
+    if (!(error instanceof Error) || error.message !== "Empleado no encontrado") {
+      const message = error instanceof Error ? error.message.slice(0, 500) : "Error desconocido."
+      console.error("[toggleEmployeeStatusAction] falló", { employeeId, message })
+      await notifySuperadmins({
+        tipo: "SYNC_FALLIDO",
+        titulo: "Error al suspender/reactivar empleado",
+        mensaje: `Falló la operación para el empleado ${employeeId} en la empresa ${companyId}. ${message}`,
+      })
+    }
     redirect(withStatus(returnTo, "error", "empleado"))
   }
 
@@ -969,10 +993,18 @@ export async function deleteEmployeeAction(formData: FormData) {
       source: "HR",
     })
   } catch (error) {
-    const errorCode =
-      error instanceof Error && error.message === "Empleado no encontrado"
-        ? "empleado"
-        : "bridge_delete"
+    const notFound = error instanceof Error && error.message === "Empleado no encontrado"
+    const errorCode = notFound ? "empleado" : "bridge_delete"
+
+    if (!notFound) {
+      const message = error instanceof Error ? error.message.slice(0, 500) : "Error desconocido."
+      console.error("[deleteEmployeeAction] falló", { employeeId, message })
+      await notifySuperadmins({
+        tipo: "SYNC_FALLIDO",
+        titulo: "Error al eliminar empleado",
+        mensaje: `Falló la eliminación del empleado ${employeeId} en la empresa ${companyId}. ${message}`,
+      })
+    }
 
     redirect(withStatus(returnTo, "error", errorCode))
   }

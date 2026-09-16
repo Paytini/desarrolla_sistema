@@ -18,7 +18,7 @@ import EyebrowLabel from "@/components/shared/EyebrowLabel"
 import { deletePackageAction } from "@/app/(portal)/superadmin/packages/actions"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3/fields"
 import type { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
-import { decodeHtmlEntities, formatDate } from "@/lib/format"
+import { decodeHtmlEntities } from "@/lib/format"
 
 export type Package = Awaited<ReturnType<typeof getSuperadminPackagesSnapshot>>["paquetes"][number]
 export type Dc3MetadataByCourseId = Awaited<
@@ -69,16 +69,16 @@ export function PackageRow({
         </td>
         <td className="hidden px-4 py-3 md:table-cell">
           <span
-            className={`inline-flex h-[22px] max-w-[220px] items-center gap-1 truncate rounded-full px-2 text-[11px] ${
+            className={`inline-flex h-[22px] items-center gap-1 rounded-full px-2 text-[11px] ${
               companyNames.length > 0
                 ? "bg-portal-blue-soft text-portal-blue"
                 : "bg-slate-100 text-slate-400"
             }`}
           >
             <Building2 size={11} />
-            <span className="truncate">
-              {companyNames.length > 0 ? companyNames.join(", ") : "Sin asignar"}
-            </span>
+            {companyNames.length > 0
+              ? `${companyNames.length} empresa${companyNames.length !== 1 ? "s" : ""}`
+              : "Sin asignar"}
           </span>
         </td>
         <td className="px-4 py-3">
@@ -98,9 +98,6 @@ export function PackageRow({
           ) : (
             <span className="text-[11px] text-slate-400">Sin cursos</span>
           )}
-        </td>
-        <td className="hidden px-4 py-3 text-xs text-slate-500 lg:table-cell">
-          {formatDate(pkg.created_at)}
         </td>
         <td className="rounded-r-lg py-3 pr-2 text-right" onClick={(e) => e.stopPropagation()}>
           <div className="inline-flex items-center gap-0.5">
@@ -123,12 +120,19 @@ export function PackageRow({
 
       {open && (
         <tr>
-          <td className="p-0" colSpan={7}>
+          <td className="p-0" colSpan={6}>
             <div className="rounded-lg bg-slate-50 px-4 py-3">
               {pkg.operational_notes && (
                 <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
                   {pkg.operational_notes}
                 </div>
+              )}
+
+              {companyNames.length > 0 && (
+                <p className="mb-3 text-xs text-slate-600">
+                  <span className="font-semibold text-slate-500">Asignado a:</span>{" "}
+                  {companyNames.join(", ")}
+                </p>
               )}
 
               <EyebrowLabel sx={{ mb: 0.75 }}>Cursos y estado DC-3</EyebrowLabel>
@@ -183,13 +187,6 @@ export function PackageRow({
                   })}
                 </div>
               )}
-
-              <p className="mt-2.5 text-[11px] text-slate-400">
-                {pkg.delivery_mode === "PRIVATE_BUNDLE_REFERENCE"
-                  ? "Bundle privado"
-                  : "Matrícula directa"}
-                {pkg.wp_bundle_id ? ` · WP #${pkg.wp_bundle_id}` : ""}
-              </p>
             </div>
           </td>
         </tr>

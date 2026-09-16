@@ -43,15 +43,9 @@ const errorMessages: Record<string, string> = {
   cupos: "La empresa ya alcanzo el limite de empleados contratados.",
   empresa: "No se encontro la empresa asociada a tu cuenta.",
   empleado: "No se encontro el empleado solicitado.",
-  bridge_sync:
-    "El empleado se creo en el portal, pero no fue posible activar su acceso a los cursos. Intenta de nuevo en unos minutos.",
-  asignacion_manual:
-    "El empleado se creo, pero aun no tiene cursos asignados. Asignalo desde HR > Asignaciones segun su area.",
   csv_file: "Selecciona un archivo CSV valido para importar empleados.",
   csv_empty: "El archivo CSV no contiene filas suficientes para importar empleados.",
   csv_limit: "El archivo CSV excede el limite permitido de 200 filas por carga.",
-  bridge_delete:
-    "No fue posible eliminar el acceso del empleado a los cursos. El registro del portal se mantuvo intacto para evitar inconsistencias.",
 }
 
 type PageProps = {
@@ -65,10 +59,12 @@ function getSuccessMessage(
   if (!success) return null
   if (success === "csv_imported") {
     const created = readSearchParam(params, "created") ?? "0"
-    const queued = readSearchParam(params, "queued") === "1"
     const skipped = readSearchParam(params, "skipped") ?? "0"
-    const syncNote = queued ? "El acceso a cursos se esta activando en segundo plano." : ""
-    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado ya puede iniciar sesion con la contrasena capturada o generada. ${syncNote}`.trim()
+    const courseNote =
+      Number(created) > 0
+        ? " Aun no tienen cursos asignados. Asignalos desde HR > Asignaciones."
+        : ""
+    return `Importacion completada. Creados: ${created}. Omitidos: ${skipped}. Cada empleado ya puede iniciar sesion con la contrasena capturada o generada.${courseNote}`
   }
   return successMessages[success] ?? success
 }
@@ -161,7 +157,12 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
           ) : null}
         </div>
       ) : null}
-      {error ? <StatusToast tone="error" message={errorMessages[error] ?? error} /> : null}
+      {error ? (
+        <StatusToast
+          tone="error"
+          message={errorMessages[error] ?? "Ocurrió un problema. Contacta a soporte si persiste."}
+        />
+      ) : null}
 
       <section className="rounded-lg bg-white p-5">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

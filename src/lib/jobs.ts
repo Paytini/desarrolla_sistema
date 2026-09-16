@@ -4,6 +4,7 @@ import { mapWithConcurrency } from "@/lib/concurrency"
 import { syncEmployeeChunkPackageEnrollment } from "@/lib/wordpress/course-sync"
 import { bridgeUpsertEmployee } from "@/lib/wordpress/bridge"
 import { createAuditEvent, getAuditActorFromSession } from "@/lib/auditing"
+import { notifySuperadmins } from "@/lib/notifications"
 import { sendEmail } from "@/lib/ses"
 
 const JOB_CHUNK_SIZE = 20
@@ -346,7 +347,27 @@ async function processPackageEnrollmentSyncJob(
 
   const newProcessedIds = [...processedIds, ...chunkIds]
   const isDone = newProcessedIds.length >= payload.employeeIds.length
-  const erroredCount = results.filter((result) => result.error).length
+  const erroredResults = results.filter((result) => result.error)
+  const erroredCount = erroredResults.length
+
+  if (erroredCount > 0) {
+    const details = erroredResults
+      .slice(0, 3)
+      .map((result) => `Empleado ${result.employeeId}: ${result.error}`)
+      .join(" | ")
+
+    console.error("[processPackageEnrollmentSyncJob] errores de sincronización", {
+      jobId,
+      companyId: payload.companyId,
+      erroredCount,
+    })
+
+    await notifySuperadmins({
+      tipo: "SYNC_FALLIDO",
+      titulo: "Sincronización fallida",
+      mensaje: `Falló la sincronización de paquete con WordPress para ${erroredCount} empleado(s) en ${company.name}. ${details}`,
+    })
+  }
 
   await prisma.job.update({
     where: { id: jobId },

@@ -173,7 +173,7 @@ export default async function EmployeeCourses() {
             gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", xl: "1fr 1fr 1fr" },
           }}
         >
-          {courses.map((course) => {
+          {courses.map((course, index) => {
             const courseUrl = getCourseUrl(course.wp_course_id, courseUrlById, fallbackUrlById)
             const launchUrl = buildWordPressCourseLaunchUrl({
               wpUserId: employee.wp_user_id,
@@ -210,6 +210,7 @@ export default async function EmployeeCourses() {
                     alt={course.course_name}
                     className="relative h-36 w-full"
                     sizes="(max-width: 600px) 100vw, (max-width: 1536px) 50vw, 33vw"
+                    priority={index < 3}
                   >
                     {duracionLabel && (
                       <Box
@@ -412,10 +413,10 @@ export default async function EmployeeCourses() {
                         para renovarlo.
                       </Typography>
                     </Box>
-                  ) : hasError && course.access_error ? (
+                  ) : hasError ? (
                     <Box sx={{ mb: 1.5, borderRadius: 2, bgcolor: "#fff1f2", px: 1.5, py: 1 }}>
                       <Typography sx={{ fontSize: 11, color: "#881337" }}>
-                        {course.access_error}
+                        No pudimos confirmar tu acceso a este curso. Contacta a RH.
                       </Typography>
                     </Box>
                   ) : null}

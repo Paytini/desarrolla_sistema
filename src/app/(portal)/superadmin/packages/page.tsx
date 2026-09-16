@@ -1,4 +1,5 @@
 import { fd, slate } from "@/lib/theme-tokens"
+import { AssignPackagePopover } from "@/components/superadmin/AssignPackagePopover"
 import { PackageRow } from "@/components/superadmin/PackageRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -31,20 +32,6 @@ const errorMessages: Record<string, string> = {
   paquete_asignado: "No puedes eliminar un paquete activo en una empresa.",
   asignacion: "No fue posible asignar el paquete.",
   sync: "No fue posible sincronizar. Revisa que exista paquete activo y empleados con WP user ID.",
-}
-
-const SELECT_SX = {
-  height: 32,
-  borderRadius: "8px",
-  border: "1px solid",
-  borderColor: "divider",
-  bgcolor: fd.background,
-  px: 1,
-  fontSize: 12,
-  color: "text.primary",
-  outline: "none",
-  cursor: "pointer",
-  "&:focus": { borderColor: "primary.main" },
 }
 
 const FILTER_SELECT_SX = {
@@ -279,7 +266,6 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
               { label: "Cursos", className: "hidden sm:table-cell" },
               { label: "Empresas", className: "hidden md:table-cell" },
               { label: "DC-3" },
-              { label: "Alta", className: "hidden lg:table-cell" },
               { label: <span className="sr-only">Acciones</span> },
             ]}
             rows={pagedPackages.map(({ pkg, dc3Complete, dc3Total, dc3AllOk, companyNames }) => (
@@ -369,45 +355,12 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <Box
-                      component="form"
+                    <AssignPackagePopover
+                      companyId={company.id}
+                      currentPackageId={company.packages[0]?.package_id}
+                      packages={packages}
                       action={assignPackageToCompanyAction}
-                      sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
-                    >
-                      <input type="hidden" name="empresa_id" value={company.id} />
-                      <Box
-                        component="select"
-                        name="paquete_id"
-                        required
-                        aria-label="Paquete"
-                        defaultValue={company.packages[0]?.package_id ?? ""}
-                        sx={SELECT_SX}
-                      >
-                        <option value="" disabled>
-                          Selecciona un paquete
-                        </option>
-                        {packages.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </Box>
-                      <Box
-                        component="input"
-                        type="date"
-                        name="fecha_vencimiento"
-                        aria-label="Fecha de vencimiento"
-                        sx={SELECT_SX}
-                      />
-                      <SubmitButton
-                        size="small"
-                        variant="contained"
-                        disableElevation
-                        sx={{ height: 32, px: 2.5, fontSize: "0.8125rem", borderRadius: "8px" }}
-                      >
-                        Asignar
-                      </SubmitButton>
-                    </Box>
+                    />
                   </td>
                   <td className="hidden px-4 py-3 text-xs text-slate-500 sm:table-cell">
                     {company.employeeCount} empleados · {syncable} con WP ID

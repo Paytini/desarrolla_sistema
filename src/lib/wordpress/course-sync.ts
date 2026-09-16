@@ -7,6 +7,7 @@ import {
   assertStudentHasCourses,
   bridgeCompanyBatchEnrollAndEnsureAccess,
   bridgeEnrollCourses,
+  bridgeEnsureStudentAccess,
   bridgeGetStudentEnrolledCourses,
   isWordPressBridgeConfigured,
   type BridgeCompanyBatchStudentResult,
@@ -160,6 +161,11 @@ export async function setCourseAssignment(
         try {
           const enrollment = await bridgeEnrollCourses(employee.wp_user_id, [courseId])
           assertEnrollmentSucceeded(enrollment, [courseId])
+
+          const accessConfirmation = await bridgeEnsureStudentAccess(employee.wp_user_id, [
+            courseId,
+          ])
+          assertAccessConfirmationSucceeded(accessConfirmation, [courseId])
 
           const studentCourses = await bridgeGetStudentEnrolledCourses(employee.wp_user_id, [
             courseId,
