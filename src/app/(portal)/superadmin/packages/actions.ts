@@ -7,7 +7,7 @@ import { requireSuperAdminSession } from "@/lib/auth-guards"
 import { SUPERADMIN_GLOBAL_TAG, companyCacheRootTag } from "@/lib/cache-tags"
 import { getCompanyBranding } from "@/lib/company/branding"
 import { companyPath } from "@/lib/company/routes"
-import { enqueuePackageEnrollmentSyncJob } from "@/lib/wordpress/course-sync"
+import { computePackageSyncImpact, enqueuePackageEnrollmentSyncJob } from "@/lib/wordpress/course-sync"
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { isUuid } from "@/lib/uuid"
@@ -516,6 +516,16 @@ export async function assignPackageToCompanyAction(formData: FormData) {
   revalidateTag(SUPERADMIN_GLOBAL_TAG, "max")
   revalidateTag(companyCacheRootTag(companyId), "max")
   redirect("/superadmin/packages?success=paquete_asignado")
+}
+
+export async function getPackageSyncImpactAction(companyId: string) {
+  await requireSuperAdminSession()
+
+  if (!companyId || !isUuid(companyId)) {
+    throw new Error("Empresa invalida")
+  }
+
+  return computePackageSyncImpact(companyId)
 }
 
 export async function syncPackageToCompanyEmployeesAction(formData: FormData) {

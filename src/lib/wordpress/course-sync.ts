@@ -1,6 +1,7 @@
 import { decodeHtmlEntities } from "@/lib/format"
 import { prisma } from "@/lib/prisma"
 import { mapWithConcurrency } from "@/lib/concurrency"
+import { notifySuperadmins } from "@/lib/notifications"
 import {
   assertAccessConfirmationSucceeded,
   assertEnrollmentSucceeded,
@@ -9,6 +10,7 @@ import {
   bridgeEnrollCourses,
   bridgeEnsureStudentAccess,
   bridgeGetStudentEnrolledCourses,
+  bridgeRevokeCourseAccess,
   isWordPressBridgeConfigured,
   type BridgeCompanyBatchStudentResult,
   type BridgeStudentCourse,
@@ -76,10 +78,44 @@ function buildPackageCourseUpsertOperation(
 
 export async function replaceEmployeePackageCourses(
   employeeId: string,
+  wpUserId: number | null,
   packageCourses: PackageCourseInput[],
 ) {
   const selectedCourseIds = packageCourses.map((course) => course.wp_course_id)
   const syncedAt = new Date()
+
+  const coursesToRemove = await prisma.employeeCourse.findMany({
+    where: {
+      employee_id: employeeId,
+      ...(selectedCourseIds.length > 0 ? { wp_course_id: { notIn: selectedCourseIds } } : {}),
+    },
+    select: { wp_course_id: true },
+  })
+
+  if (wpUserId && coursesToRemove.length > 0 && isWordPressBridgeConfigured()) {
+    try {
+      const revocation = await bridgeRevokeCourseAccess(
+        wpUserId,
+        coursesToRemove.map((course) => course.wp_course_id),
+      )
+      if (revocation.failed_course_ids.length > 0) {
+        throw new Error(
+          revocation.failed_course_ids.map((item) => `Curso ${item.course_id}: ${item.message}`).join(" | "),
+        )
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message.slice(0, 500)
+          : "No fue posible revocar el acceso en Tutor LMS."
+
+      await notifySuperadmins({
+        tipo: "REVOCACION_FALLIDA",
+        titulo: "No se pudo revocar acceso a curso",
+        mensaje: `No se pudo revocar en Tutor LMS el acceso del empleado ${employeeId} a ${coursesToRemove.length} curso(s) removido(s) del paquete: ${message}`,
+      })
+    }
+  }
 
   const deleteOperation =
     selectedCourseIds.length > 0
@@ -105,6 +141,84 @@ export async function replaceEmployeePackageCourses(
   ]
 
   await prisma.$transaction(operations)
+}
+
+export type PackageSyncImpact = {
+  packageName: string
+  employeesLosingAccess: number
+  coursesLost: number
+  coursesAtRisk: number
+  employeesGainingAccess: number
+  coursesGained: number
+}
+
+export async function computePackageSyncImpact(companyId: string): Promise<PackageSyncImpact> {
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    include: {
+      packages: {
+        where: { active: true },
+        orderBy: { created_at: "desc" },
+        include: { package: { include: { courses: true } } },
+        take: 1,
+      },
+      employees: {
+        where: { active: true },
+        select: {
+          courses: { select: { wp_course_id: true, progress_pct: true, completed: true } },
+        },
+      },
+    },
+  })
+
+  const activePackage = company?.packages[0]?.package
+  if (!company || !activePackage) {
+    return {
+      packageName: activePackage?.name ?? "",
+      employeesLosingAccess: 0,
+      coursesLost: 0,
+      coursesAtRisk: 0,
+      employeesGainingAccess: 0,
+      coursesGained: 0,
+    }
+  }
+
+  const packageCourseIds = new Set(activePackage.courses.map((course) => course.wp_course_id))
+
+  let employeesLosingAccess = 0
+  let coursesLost = 0
+  let coursesAtRisk = 0
+  let employeesGainingAccess = 0
+  let coursesGained = 0
+
+  for (const employee of company.employees) {
+    const currentCourseIds = new Set(employee.courses.map((course) => course.wp_course_id))
+
+    const losing =
+      packageCourseIds.size > 0
+        ? employee.courses.filter((course) => !packageCourseIds.has(course.wp_course_id))
+        : employee.courses
+    if (losing.length > 0) {
+      employeesLosingAccess += 1
+      coursesLost += losing.length
+      coursesAtRisk += losing.filter((course) => course.completed || course.progress_pct > 0).length
+    }
+
+    const gaining = [...packageCourseIds].filter((courseId) => !currentCourseIds.has(courseId))
+    if (gaining.length > 0) {
+      employeesGainingAccess += 1
+      coursesGained += gaining.length
+    }
+  }
+
+  return {
+    packageName: activePackage.name,
+    employeesLosingAccess,
+    coursesLost,
+    coursesAtRisk,
+    employeesGainingAccess,
+    coursesGained,
+  }
 }
 
 export async function setCourseAssignment(
@@ -326,7 +440,7 @@ export async function syncEmployeeChunkPackageEnrollment(
   await Promise.all(
     employees.map(async (employee) => {
       try {
-        await replaceEmployeePackageCourses(employee.id, packageCourses)
+        await replaceEmployeePackageCourses(employee.id, employee.wp_user_id, packageCourses)
         readyEmployees.push(employee)
       } catch (error) {
         const message =

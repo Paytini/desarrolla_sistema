@@ -476,6 +476,25 @@ export async function bridgeEnrollCourses(userId: number, courseIds: number[]) {
   })
 }
 
+export type BridgeRevocationResponse = {
+  user_id: number
+  revoked_course_ids: number[]
+  failed_course_ids: Array<{
+    course_id: number
+    message: string
+  }>
+}
+
+export async function bridgeRevokeCourseAccess(userId: number, courseIds: number[]) {
+  return bridgeRequest<BridgeRevocationResponse>("/enrollments/revoke", {
+    method: "POST",
+    body: JSON.stringify({
+      user_id: userId,
+      course_ids: courseIds,
+    }),
+  })
+}
+
 export async function bridgeCompanyBatchEnrollAndEnsureAccess(
   students: BridgeCompanyBatchStudentInput[],
 ) {

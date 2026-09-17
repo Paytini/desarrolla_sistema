@@ -494,6 +494,16 @@ function d360_bridge_register_rest_routes() {
 
 	register_rest_route(
 		'desarrolla360/v1',
+		'/enrollments/revoke',
+		array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => 'd360_bridge_batch_revoke_enrollments',
+			'permission_callback' => 'd360_bridge_rest_permissions',
+		)
+	);
+
+	register_rest_route(
+		'desarrolla360/v1',
 		'/enrollments/company-batch',
 		array(
 			'methods'             => WP_REST_Server::CREATABLE,
@@ -2221,6 +2231,70 @@ function d360_bridge_batch_enrollments( WP_REST_Request $request ) {
 			'user_id'            => $user_id,
 			'enrolled_course_ids' => $enrolled,
 			'failed_course_ids'   => $failed,
+		)
+	);
+}
+
+function d360_bridge_revoke_single_course( $user_id, $course_id ) {
+	$enrollment_id = d360_bridge_find_enrollment_post_id( $user_id, $course_id );
+
+	if ( ! $enrollment_id ) {
+		return true;
+	}
+
+	$deleted = wp_delete_post( $enrollment_id, true );
+
+	if ( ! $deleted ) {
+		return new WP_Error(
+			'd360_bridge_revoke_failed',
+			'WordPress no pudo eliminar la matricula del curso.',
+			array( 'status' => 500 )
+		);
+	}
+
+	return true;
+}
+
+function d360_bridge_batch_revoke_enrollments( WP_REST_Request $request ) {
+	$params     = $request->get_json_params();
+	$params     = is_array( $params ) ? $params : array();
+	$user_id    = isset( $params['user_id'] ) ? absint( $params['user_id'] ) : 0;
+	$course_ids = isset( $params['course_ids'] ) && is_array( $params['course_ids'] ) ? $params['course_ids'] : array();
+
+	if ( ! $user_id || empty( $course_ids ) ) {
+		return new WP_Error(
+			'd360_bridge_invalid_revocation',
+			'user_id y course_ids son obligatorios.',
+			array( 'status' => 400 )
+		);
+	}
+
+	$revoked = array();
+	$failed  = array();
+
+	foreach ( $course_ids as $course_id ) {
+		$course_id = absint( $course_id );
+		if ( ! $course_id ) {
+			continue;
+		}
+
+		$result = d360_bridge_revoke_single_course( $user_id, $course_id );
+		if ( is_wp_error( $result ) ) {
+			$failed[] = array(
+				'course_id' => $course_id,
+				'message'   => $result->get_error_message(),
+			);
+			continue;
+		}
+
+		$revoked[] = $course_id;
+	}
+
+	return rest_ensure_response(
+		array(
+			'user_id'            => $user_id,
+			'revoked_course_ids' => $revoked,
+			'failed_course_ids'  => $failed,
 		)
 	);
 }

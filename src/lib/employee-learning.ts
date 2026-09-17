@@ -126,43 +126,46 @@ function mergeBridgeCertificates(
 
 async function upsertEmployeeCoursesFromBridge(employeeId: string, courses: BridgeStudentCourse[]) {
   const now = new Date()
-  const upsertOperations = courses.filter(hasWpCourseId).map((course) => {
-    const startedAt = parseBridgeDate(course.started_at)
-    const completedAt = parseBridgeDate(course.completed_at)
+  const reportedCourseIds = courses.filter(hasWpCourseId).map((course) => course.wp_course_id)
+  if (reportedCourseIds.length === 0) {
+    return
+  }
 
-    return prisma.employeeCourse.upsert({
-      where: {
-        employee_id_wp_course_id: {
-          employee_id: employeeId,
-          wp_course_id: course.wp_course_id,
-        },
-      },
-      update: {
-        course_name: decodeHtmlEntities(course.title),
-        progress_pct: course.progress_pct,
-        completed: course.completed,
-        access_status: "ACTIVE",
-        access_error: null,
-        course_start_date: startedAt,
-        completed_at: completedAt,
-        last_synced_at: now,
-      },
-      create: {
-        employee_id: employeeId,
-        wp_course_id: course.wp_course_id,
-        course_name: decodeHtmlEntities(course.title),
-        progress_pct: course.progress_pct,
-        completed: course.completed,
-        access_status: "ACTIVE",
-        course_start_date: startedAt,
-        completed_at: completedAt,
-        last_synced_at: now,
-      },
-    })
+  const existingCourses = await prisma.employeeCourse.findMany({
+    where: { employee_id: employeeId, wp_course_id: { in: reportedCourseIds } },
+    select: { wp_course_id: true },
   })
+  const existingCourseIds = new Set(existingCourses.map((course) => course.wp_course_id))
 
-  if (upsertOperations.length > 0) {
-    await prisma.$transaction(upsertOperations)
+  const updateOperations = courses
+    .filter(hasWpCourseId)
+    .filter((course) => existingCourseIds.has(course.wp_course_id))
+    .map((course) => {
+      const startedAt = parseBridgeDate(course.started_at)
+      const completedAt = parseBridgeDate(course.completed_at)
+
+      return prisma.employeeCourse.update({
+        where: {
+          employee_id_wp_course_id: {
+            employee_id: employeeId,
+            wp_course_id: course.wp_course_id,
+          },
+        },
+        data: {
+          course_name: decodeHtmlEntities(course.title),
+          progress_pct: course.progress_pct,
+          completed: course.completed,
+          access_status: "ACTIVE",
+          access_error: null,
+          course_start_date: startedAt,
+          completed_at: completedAt,
+          last_synced_at: now,
+        },
+      })
+    })
+
+  if (updateOperations.length > 0) {
+    await prisma.$transaction(updateOperations)
   }
 }
 

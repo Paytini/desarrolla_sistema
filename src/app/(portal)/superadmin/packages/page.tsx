@@ -9,11 +9,15 @@ import { getSuperadminPackagesSnapshot } from "@/lib/dashboard-cache"
 import { getDc3MissingFields, type Dc3MetadataView } from "@/lib/dc3/fields"
 import { readDecodedSearchParam, readSearchParam } from "@/lib/search-params"
 import { paginate } from "@/lib/pagination"
-import { Package, Plus, RotateCw, X } from "lucide-react"
+import { Package, Plus, X } from "lucide-react"
 import Link from "next/link"
-import { assignPackageToCompanyAction, syncPackageToCompanyEmployeesAction } from "./actions"
+import {
+  assignPackageToCompanyAction,
+  getPackageSyncImpactAction,
+  syncPackageToCompanyEmployeesAction,
+} from "./actions"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
-import { SubmitButton } from "@/components/shared/SubmitButton"
+import { SyncPackageButton } from "@/components/superadmin/SyncPackageButton"
 import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
@@ -366,23 +370,11 @@ export default async function SuperAdminPackagesPage({ searchParams }: PageProps
                     {company.employeeCount} empleados · {syncable} con WP ID
                   </td>
                   <td className="rounded-r-lg px-4 py-3 text-right">
-                    <form action={syncPackageToCompanyEmployeesAction}>
-                      <input type="hidden" name="empresa_id" value={company.id} />
-                      <SubmitButton
-                        variant="outlined"
-                        size="small"
-                        startIcon={<RotateCw size={11} />}
-                        sx={{
-                          height: 32,
-                          fontSize: 12,
-                          borderColor: "divider",
-                          color: "text.secondary",
-                          "&:hover": { borderColor: "text.secondary" },
-                        }}
-                      >
-                        Sincronizar
-                      </SubmitButton>
-                    </form>
+                    <SyncPackageButton
+                      companyId={company.id}
+                      action={syncPackageToCompanyEmployeesAction}
+                      getImpact={getPackageSyncImpactAction}
+                    />
                   </td>
                 </tr>
               )
