@@ -45,13 +45,6 @@ export default function LoadingOverlay({ message = "Cargando...", detail }: Load
             overflow: "hidden",
           }}
         >
-          <Image
-            src="/assets/fav_icon_desarrolla_v2.jpeg"
-            alt="Brand Icon"
-            width={48}
-            height={48}
-            style={{ objectFit: "cover" }}
-          />
         </Box>
       </Box>
 
