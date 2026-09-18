@@ -9,8 +9,20 @@ export default function OfflineBanner() {
   )
 
   useEffect(() => {
-    const handleOffline = () => setOffline(true)
-    const handleOnline = () => setOffline(false)
+    const handleOffline = () => {
+      console.warn("[OfflineBanner] offline event fired", {
+        at: new Date().toISOString(),
+        navigatorOnLine: navigator.onLine,
+      })
+      setOffline(true)
+    }
+    const handleOnline = () => {
+      console.warn("[OfflineBanner] online event fired", {
+        at: new Date().toISOString(),
+        navigatorOnLine: navigator.onLine,
+      })
+      setOffline(false)
+    }
 
     window.addEventListener("offline", handleOffline)
     window.addEventListener("online", handleOnline)
