@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Suspense } from "react"
 import GlobalLoadingController from "@/components/layout/GlobalLoadingController"
+import OfflineBanner from "@/components/layout/OfflineBanner"
 import { MuiProviders } from "@/components/providers/MuiProviders"
 import "./globals.css"
 import { cn } from "@/lib/utils"
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={cn("h-full antialiased", inter.variable, "font-sans")}>
       <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]">
         <MuiProviders>
+          <OfflineBanner />
           <Suspense fallback={null}>
             <GlobalLoadingController />
           </Suspense>
