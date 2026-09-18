@@ -289,7 +289,7 @@ export default function AssignmentBoard({
           </div>
         ) : (
           <div ref={scrollerRef} className="flex gap-3 overflow-x-auto pb-1 scroll-smooth">
-            {filteredCourses.map((course) => {
+            {filteredCourses.map((course, courseIndex) => {
               const originalIndex = courses.findIndex((c) => c.wp_course_id === course.wp_course_id)
               const colorKey = COLOR_ROTATION[originalIndex % COLOR_ROTATION.length]
               const color = kpiColorMap[colorKey]
@@ -318,6 +318,7 @@ export default function AssignmentBoard({
                     src={course.cover_url}
                     className="relative h-36 w-full shrink-0"
                     sizes="288px"
+                    priority={courseIndex < 3}
                     fallback={
                       <div
                         className="flex h-full w-full items-center justify-center"

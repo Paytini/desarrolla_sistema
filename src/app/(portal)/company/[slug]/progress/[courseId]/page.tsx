@@ -142,6 +142,7 @@ export default async function CourseProgressPage({ params, searchParams }: PageP
             className="relative aspect-video w-full rounded-lg bg-portal-blue-soft"
             sizes="(max-width: 768px) 100vw, 280px"
             fit="contain"
+            priority
           />
 
           <div className="flex flex-col justify-center gap-5">

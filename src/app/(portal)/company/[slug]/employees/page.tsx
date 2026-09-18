@@ -1,8 +1,10 @@
-import CsvEmployeeImportForm from "@/components/company/CsvEmployeeImportForm"
+import dynamic from "next/dynamic"
 import EmployeeListFilters from "@/components/company/EmployeeListFilters"
 import EmployeeRowActionsMenu from "@/components/company/EmployeeRowActionsMenu"
 import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModal"
-import ManualEmployeeForm from "@/components/company/ManualEmployeeForm"
+
+const CsvEmployeeImportForm = dynamic(() => import("@/components/company/CsvEmployeeImportForm"))
+const ManualEmployeeForm = dynamic(() => import("@/components/company/ManualEmployeeForm"))
 import { DataTable } from "@/components/shared/DataTable"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
