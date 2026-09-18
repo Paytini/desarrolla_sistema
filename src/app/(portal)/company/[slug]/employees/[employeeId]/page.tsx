@@ -1,6 +1,6 @@
 import { Download, FileQuestion } from "lucide-react"
+import dynamic from "next/dynamic"
 import CourseAccessDeadlineEditor from "@/components/company/CourseAccessDeadlineEditor"
-import EmployeeEditModal from "@/components/company/EmployeeEditModal"
 import { BackButton } from "@/components/shared/BackButton"
 import CollapsibleSection from "@/components/shared/CollapsibleSection"
 import EmptyState from "@/components/shared/EmptyState"
@@ -16,6 +16,8 @@ import { prisma } from "@/lib/prisma"
 import { QUIZ_RESULT_LABEL, QUIZ_RESULT_VARIANT } from "@/lib/quiz-result"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
+
+const EmployeeEditModal = dynamic(() => import("@/components/company/EmployeeEditModal"))
 
 type PageProps = {
   params: Promise<{ slug: string; employeeId: string }>

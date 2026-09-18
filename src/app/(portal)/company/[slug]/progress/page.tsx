@@ -101,7 +101,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {courseSummaries.map((course) => {
+            {courseSummaries.map((course, index) => {
               const thumb = thumbnailMap.get(course.courseId)
               return (
                 <Link
@@ -113,6 +113,7 @@ export default async function CompanyProgressPage({ searchParams }: PageProps) {
                     src={thumb}
                     className="relative h-36 w-full shrink-0"
                     sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                    priority={index < 3}
                   />
                   <div className="flex flex-col gap-2.5 p-4">
                     <div className="flex items-start justify-between gap-2">
