@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Box, Paper, Typography } from "@mui/material"
+import { Box, Paper, Typography, type SxProps, type Theme } from "@mui/material"
 import { fd, slate } from "@/lib/theme-tokens"
 
 interface PanelBoxProps {
@@ -10,6 +10,7 @@ interface PanelBoxProps {
   children: ReactNode
   noPadding?: boolean
   id?: string
+  titleSx?: SxProps<Theme>
 }
 
 export function PanelBox({
@@ -20,6 +21,7 @@ export function PanelBox({
   children,
   noPadding,
   id,
+  titleSx,
 }: PanelBoxProps) {
   return (
     <Paper
@@ -42,7 +44,12 @@ export function PanelBox({
         }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography sx={{ fontSize: "1rem", fontWeight: 600, color: slate[900] }}>
+          <Typography
+            sx={[
+              { fontSize: "1rem", fontWeight: 600, color: slate[900] },
+              ...(titleSx ? (Array.isArray(titleSx) ? titleSx : [titleSx]) : []),
+            ]}
+          >
             {title}
             {count !== undefined && (
               <Box

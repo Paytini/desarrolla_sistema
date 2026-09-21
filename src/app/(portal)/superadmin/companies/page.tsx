@@ -126,6 +126,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
 
       <PanelBox
         title="Empresas registradas"
+        titleSx={{ fontSize: "1.25rem" }}
         noPadding
         action={
           <Box
