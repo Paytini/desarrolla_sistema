@@ -1,51 +1,30 @@
 "use client"
 
-import Link from "next/link"
 import { signOut } from "next-auth/react"
-import { ChevronDown, KeyRound, LogOut } from "lucide-react"
+import { ChevronDown, LogOut } from "lucide-react"
 
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
 import Divider from "@mui/material/Divider"
 import Typography from "@mui/material/Typography"
 import ActionsPopover from "@/components/shared/ActionsPopover"
-import StatusBadge from "@/components/shared/StatusBadge"
 import { fd } from "@/lib/theme-tokens"
 
 import { avatarColor, getInitials } from "@/components/layout/nav-config"
-import { getShortName } from "@/lib/format"
-
-type PortalRole = "SUPERADMIN" | "HR" | "EMPLOYEE"
 
 interface TopbarUserMenuProps {
   name: string
-  email: string
-  role: PortalRole
-  companyName?: string
   dark?: boolean
 }
 
-const ROLE_LABEL: Record<PortalRole, string> = {
-  SUPERADMIN: "Superadmin",
-  HR: "Recursos Humanos",
-  EMPLOYEE: "Empleado",
-}
-
-export function TopbarUserMenu({
-  name,
-  email,
-  role,
-  companyName,
-  dark = false,
-}: TopbarUserMenuProps) {
+export function TopbarUserMenu({ name, dark = false }: TopbarUserMenuProps) {
   const color = avatarColor(name)
   const initials = getInitials(name)
-  const shortName = getShortName(name)
 
   return (
     <ActionsPopover
       transitionTimeout={160}
-      paperSx={{ width: 280 }}
+      paperSx={{ width: 240, borderRadius: 0 }}
       trigger={({ open, toggle, setAnchorEl }) => (
         <Box
           ref={setAnchorEl}
@@ -97,7 +76,7 @@ export function TopbarUserMenu({
               textOverflow: "ellipsis",
             }}
           >
-            {shortName}
+            {name}
           </Typography>
           <Box
             component={ChevronDown}
@@ -114,101 +93,32 @@ export function TopbarUserMenu({
     >
       {() => (
         <>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, px: 2.5, pt: 2.5, pb: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1,
+              px: 3,
+              pt: 3,
+              pb: 2.5,
+            }}
+          >
             <Avatar
               sx={{
-                width: 48,
-                height: 48,
+                width: 64,
+                height: 64,
                 bgcolor: color,
-                fontSize: "1.0625rem",
+                fontSize: "1.5rem",
                 fontWeight: 700,
-                flexShrink: 0,
                 boxShadow: `0 4px 14px ${color}55`,
               }}
             >
               {initials}
             </Avatar>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography
-                sx={{
-                  fontSize: "0.9375rem",
-                  fontWeight: 600,
-                  color: "text.primary",
-                  lineHeight: 1.3,
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {shortName}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "0.75rem",
-                  color: "text.secondary",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {email}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, px: 2.5, pb: 2 }}>
-            <StatusBadge variant="blue">{ROLE_LABEL[role]}</StatusBadge>
-            {companyName && (
-              <Typography
-                sx={{
-                  fontSize: "0.75rem",
-                  color: "text.secondary",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {companyName}
-              </Typography>
-            )}
           </Box>
 
           <Divider />
-
-          {role === "EMPLOYEE" && (
-            <>
-              <Link
-                href="/employee/change-password"
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    width: "100%",
-                    px: 3,
-                    py: 1.5,
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    color: "text.primary",
-                    fontSize: "0.875rem",
-                    fontFamily: "inherit",
-                    fontWeight: 500,
-                    transition: "background 0.15s ease",
-                    "&:hover": { bgcolor: "action.hover" },
-                  }}
-                >
-                  <Box component={KeyRound} size={17} sx={{ color: "text.secondary", flexShrink: 0 }} />
-                  Cambiar contraseña
-                </Box>
-              </Link>
-
-              <Divider />
-            </>
-          )}
 
           <Box
             component="button"
