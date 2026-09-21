@@ -82,26 +82,36 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
     }
   }
 
-  function renderUpcomingRow(request: ConsultingRequest) {
+  function renderUpcomingRow(request: ConsultingRequest, index: number) {
     const areaOption = getConsultingArea(request.area)
     const Icon = areaOption?.icon ?? CalendarClock
 
     return (
-      <tr key={request.id} className="bg-white transition-colors hover:bg-gray-50">
-        <td className="rounded-l-lg px-3 py-3">
+      <tr
+        key={request.id}
+        className={
+          index % 2 === 0
+            ? "bg-white transition-colors hover:bg-slate-100"
+            : "bg-slate-50 transition-colors hover:bg-slate-100"
+        }
+      >
+        <td className="rounded-l-lg px-3 py-3 text-sm text-slate-400">
+          {String(index + 1).padStart(2, "0")}
+        </td>
+        <td className="px-3 py-3">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-portal-blue">
               <Icon size={16} />
             </div>
-            <span className="min-w-0 truncate font-medium text-portal-ink">
+            <span className="min-w-0 truncate text-base font-medium text-portal-ink">
               {areaOption?.label ?? request.area}
             </span>
           </div>
         </td>
-        <td className="px-3 py-3 text-slate-500">
+        <td className="px-3 py-3 text-sm text-slate-500">
           {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
         </td>
-        <td className="max-w-xs px-3 py-3 text-slate-500">
+        <td className="max-w-xs px-3 py-3 text-sm text-slate-500">
           <span className="block truncate" title={request.context}>
             {request.context}
           </span>
@@ -197,7 +207,7 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
 
       <div className="space-y-5">
         <section className="rounded-lg bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-portal-ink">
+          <h2 className="mb-4 text-xl font-semibold text-portal-ink">
             Próximas
             <span className="ml-2 text-sm font-normal text-slate-400">{upcomingAll.length}</span>
           </h2>
@@ -209,27 +219,30 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
             <>
               <DataTable
                 ariaLabel="Consultorías próximas"
+                headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
                 columns={[
+                  { label: "SL" },
                   { label: "Área" },
                   { label: "Fecha y hora" },
                   { label: "Contexto" },
                   { label: "Estado" },
                   { label: "Acciones" },
                 ]}
-                rows={upcoming.items.map(renderUpcomingRow)}
+                rows={upcoming.items.map((request, index) => renderUpcomingRow(request, index))}
               />
               <Pagination
                 currentPage={upcoming.currentPage}
                 totalPages={upcoming.totalPages}
                 totalResults={upcoming.totalResults}
                 buildPageUrl={buildPageUrl("proximas_page")}
+                variant="numbered"
               />
             </>
           )}
         </section>
 
         <section className="rounded-lg bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-portal-ink">
+          <h2 className="mb-4 text-xl font-semibold text-portal-ink">
             Historial
             <span className="ml-2 text-sm font-normal text-slate-400">{historyAll.length}</span>
           </h2>
@@ -245,6 +258,7 @@ export default async function CompanyConsultingDashboardPage({ searchParams }: P
                 totalPages={history.totalPages}
                 totalResults={history.totalResults}
                 buildPageUrl={buildPageUrl("historial_page")}
+                variant="numbered"
               />
             </>
           )}

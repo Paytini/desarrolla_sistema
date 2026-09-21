@@ -32,6 +32,7 @@ export function PackageRow({
   dc3AllOk,
   companyNames,
   dc3MetadataByCourseId,
+  index,
 }: {
   pkg: Package
   dc3Complete: number
@@ -39,6 +40,7 @@ export function PackageRow({
   dc3AllOk: boolean
   companyNames: string[]
   dc3MetadataByCourseId: Dc3MetadataByCourseId
+  index: number
 }) {
   const [open, setOpen] = useState(false)
 
@@ -46,7 +48,11 @@ export function PackageRow({
     <>
       <tr
         onClick={() => setOpen((v) => !v)}
-        className="cursor-pointer bg-white transition-colors hover:bg-gray-50"
+        className={
+          index % 2 === 0
+            ? "cursor-pointer bg-white transition-colors hover:bg-slate-100"
+            : "cursor-pointer bg-slate-50 transition-colors hover:bg-slate-100"
+        }
       >
         <td className="w-8 rounded-l-lg py-3 pl-2">
           <span className="inline-flex size-6 items-center justify-center text-slate-400">
@@ -54,7 +60,7 @@ export function PackageRow({
           </span>
         </td>
         <td className="px-4 py-3">
-          <p className="text-sm font-semibold text-slate-950">{pkg.name}</p>
+          <p className="text-base font-semibold text-slate-950">{pkg.name}</p>
           {pkg.description && (
             <p className="mt-0.5 max-w-[360px] truncate text-[11.5px] text-slate-500">
               {pkg.description}

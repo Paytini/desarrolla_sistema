@@ -89,7 +89,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
     }
   }
 
-  function renderPendingRow(request: RequestWithCompany) {
+  function renderPendingRow(request: RequestWithCompany, index: number) {
     const areaOption = getConsultingArea(request.area)
     const Icon = areaOption?.icon ?? CalendarClock
     const areaLabel = areaOption?.label ?? request.area
@@ -97,8 +97,20 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
       CONSULTING_CONTACT_METHOD_LABELS[request.contact_method] ?? request.contact_method
 
     return (
-      <tr key={request.id} className="bg-white transition-colors hover:bg-gray-50">
-        <td className="rounded-l-lg px-3 py-3 text-portal-ink">{request.company.name}</td>
+      <tr
+        key={request.id}
+        className={
+          index % 2 === 0
+            ? "bg-white transition-colors hover:bg-slate-100"
+            : "bg-slate-50 transition-colors hover:bg-slate-100"
+        }
+      >
+        <td className="rounded-l-lg px-3 py-3 text-sm text-slate-400">
+          {String(index + 1).padStart(2, "0")}
+        </td>
+        <td className="px-3 py-3 text-base font-medium text-portal-ink">
+          {request.company.name}
+        </td>
         <td className="px-3 py-3">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-portal-blue-soft text-portal-blue">
@@ -107,10 +119,10 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
             <span className="min-w-0 truncate font-medium text-portal-ink">{areaLabel}</span>
           </div>
         </td>
-        <td className="px-3 py-3 text-slate-500">
+        <td className="px-3 py-3 text-sm text-slate-500">
           {formatConsultingDateTime(toDateKey(request.preferred_date), request.preferred_time)}
         </td>
-        <td className="max-w-xs px-3 py-3 text-slate-500">
+        <td className="max-w-xs px-3 py-3 text-sm text-slate-500">
           <span className="block truncate" title={request.context}>
             {request.context}
           </span>
@@ -204,7 +216,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
       />
 
       <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-portal-ink">
+        <h2 className="mb-4 text-xl font-semibold text-portal-ink">
           Pendientes
           <span className="ml-2 text-sm font-normal text-slate-400">{pendingAll.length}</span>
         </h2>
@@ -216,7 +228,9 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
           <>
             <DataTable
               ariaLabel="Solicitudes pendientes"
+              headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
               columns={[
+                { label: "SL" },
                 { label: "Empresa" },
                 { label: "Área" },
                 { label: "Fecha y hora" },
@@ -224,20 +238,21 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
                 { label: "Estado" },
                 { label: "Acciones" },
               ]}
-              rows={pending.items.map(renderPendingRow)}
+              rows={pending.items.map((request, index) => renderPendingRow(request, index))}
             />
             <Pagination
               currentPage={pending.currentPage}
               totalPages={pending.totalPages}
               totalResults={pending.totalResults}
               buildPageUrl={buildPageUrl("pendientes_page")}
+              variant="numbered"
             />
           </>
         )}
       </section>
 
       <section className="rounded-lg bg-white p-5">
-        <h2 className="mb-4 text-base font-semibold text-portal-ink">
+        <h2 className="mb-4 text-xl font-semibold text-portal-ink">
           Resueltas
           <span className="ml-2 text-sm font-normal text-slate-400">{resolvedAll.length}</span>
         </h2>
@@ -253,6 +268,7 @@ export default async function SuperAdminConsultingPage({ searchParams }: PagePro
               totalPages={resolved.totalPages}
               totalResults={resolved.totalResults}
               buildPageUrl={buildPageUrl("resueltas_page")}
+              variant="numbered"
             />
           </>
         )}

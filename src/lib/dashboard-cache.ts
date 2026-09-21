@@ -732,11 +732,27 @@ export async function getHrProgressSnapshot(companyId: string, department: strin
 
 export const HR_EMPLOYEES_PAGE_SIZE = 5
 
+const HR_EMPLOYEES_SORT_FIELDS = [
+  "first_name",
+  "email",
+  "department",
+  "position",
+  "active",
+  "created_at",
+] as const
+export type HrEmployeesSortField = (typeof HR_EMPLOYEES_SORT_FIELDS)[number]
+
+export function isHrEmployeesSortField(value: string): value is HrEmployeesSortField {
+  return (HR_EMPLOYEES_SORT_FIELDS as readonly string[]).includes(value)
+}
+
 export async function getHrEmployeesSnapshot(
   companyId: string,
   query: string,
   status: string,
   page: number,
+  sortBy: HrEmployeesSortField = "created_at",
+  sortDir: "asc" | "desc" = "desc",
 ) {
   const snapshot = unstable_cache(
     async () => {
@@ -775,7 +791,7 @@ export async function getHrEmployeesSnapshot(
 
       const pagedEmployees = await prisma.employee.findMany({
         where: employeeWhere,
-        orderBy: { created_at: "desc" },
+        orderBy: { [sortBy]: sortDir },
         skip: (currentPage - 1) * HR_EMPLOYEES_PAGE_SIZE,
         take: HR_EMPLOYEES_PAGE_SIZE,
         include: {
@@ -792,7 +808,17 @@ export async function getHrEmployeesSnapshot(
         pagedEmployees,
       }
     },
-    ["dashboard-snapshot", "empresa", "empleados", String(companyId), status, query, String(page)],
+    [
+      "dashboard-snapshot",
+      "empresa",
+      "empleados",
+      String(companyId),
+      status,
+      query,
+      String(page),
+      sortBy,
+      sortDir,
+    ],
     {
       revalidate: 30,
       tags: [companyCacheRootTag(companyId), companyEmployeesTag(companyId)],

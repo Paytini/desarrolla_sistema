@@ -4,17 +4,18 @@ import {
   type CompaniesSortField,
 } from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
-import { CompaniesListFilters } from "@/components/superadmin/CompaniesListFilters"
+import { ListFilters } from "@/components/shared/ListFilters"
+import { SortableColumnHeader } from "@/components/shared/SortableColumnHeader"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { DataTable } from "@/components/shared/DataTable"
-import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Plus } from "lucide-react"
-import Link from "next/link"
+import { Building2, Plus } from "lucide-react"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
+import Link from "next/link"
 
 const successMessages: Record<string, string> = {
   empresa_creada: "Empresa creada correctamente con su usuario HR inicial.",
@@ -30,24 +31,6 @@ const errorMessages: Record<string, string> = {
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>
-}
-
-function SortableHeader({
-  href,
-  label,
-  direction,
-}: {
-  href: string
-  label: string
-  direction: "asc" | "desc" | null
-}) {
-  const Icon = direction === "asc" ? ArrowUp : direction === "desc" ? ArrowDown : ArrowUpDown
-  return (
-    <Link href={href} className="inline-flex items-center gap-1 hover:text-slate-700">
-      {label}
-      <Icon size={12} className={direction ? "text-slate-700" : "text-slate-400"} />
-    </Link>
-  )
 }
 
 export default async function CompaniesPage({ searchParams }: PageProps) {
@@ -128,12 +111,27 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         titleSx={{ fontSize: "1.25rem" }}
         noPadding
         action={
-          <CompaniesListFilters
-            basePath="/superadmin/companies"
+          <ListFilters
+            searchPlaceholder="Buscar empresa o RFC…"
             initialQuery={q}
-            initialStatus={statusFilter}
-            sort={sortBy !== "created_at" ? sortBy : undefined}
-            dir={sortDir !== "desc" ? sortDir : undefined}
+            selects={[
+              {
+                name: "status",
+                defaultValue: "all",
+                initialValue: statusFilter,
+                ariaLabel: "Filtrar por estado",
+                options: [
+                  { value: "all", label: "Todos" },
+                  { value: "activa", label: "Activas" },
+                  { value: "suspendida", label: "Suspendidas" },
+                ],
+              },
+            ]}
+            extraQuery={
+              sortBy !== "created_at" || sortDir !== "desc"
+                ? `sort=${sortBy}&dir=${sortDir}`
+                : undefined
+            }
           />
         }
       >
@@ -145,7 +143,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
               { label: "SL" },
               {
                 label: (
-                  <SortableHeader
+                  <SortableColumnHeader
                     href={sortUrl("name")}
                     label="Empresa"
                     direction={sortDirection("name")}
@@ -156,7 +154,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
               { label: "Plan", className: "hidden md:table-cell" },
               {
                 label: (
-                  <SortableHeader
+                  <SortableColumnHeader
                     href={sortUrl("contracted_seats")}
                     label="Cupos"
                     direction={sortDirection("contracted_seats")}
@@ -165,7 +163,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
               },
               {
                 label: (
-                  <SortableHeader
+                  <SortableColumnHeader
                     href={sortUrl("created_at")}
                     label="Alta"
                     direction={sortDirection("created_at")}
@@ -175,7 +173,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
               },
               {
                 label: (
-                  <SortableHeader
+                  <SortableColumnHeader
                     href={sortUrl("active")}
                     label="Estado"
                     direction={sortDirection("active")}
