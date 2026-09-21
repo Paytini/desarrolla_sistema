@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
-import { Box, Chip, Paper, Typography } from "@mui/material"
-import { fd, gray } from "@/lib/theme-tokens"
+import { Box, Paper, Typography } from "@mui/material"
+import { fd, slate } from "@/lib/theme-tokens"
 
 interface PanelBoxProps {
   title: string
@@ -39,41 +39,22 @@ export function PanelBox({
           gap: 2,
           px: 2.5,
           py: 2,
-          backgroundColor: fd.muted,
-          borderBottom: "1px solid var(--portal-border)",
         }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography
-              sx={{
-                fontFamily: 'var(--font-outfit, "Outfit"), system-ui, sans-serif',
-                fontSize: "1rem",
-                fontWeight: 700,
-                color: fd.foreground,
-              }}
-            >
-              {title}
-            </Typography>
+          <Typography sx={{ fontSize: "1rem", fontWeight: 600, color: slate[900] }}>
+            {title}
             {count !== undefined && (
-              <Chip
-                label={count}
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: "11px",
-                  fontVariantNumeric: "tabular-nums",
-                  fontWeight: 700,
-                  backgroundColor: fd.primary,
-                  color: fd.background,
-                  border: "none",
-                  "& .MuiChip-label": { px: 1 },
-                }}
-              />
+              <Box
+                component="span"
+                sx={{ ml: 1, fontSize: "0.875rem", fontWeight: 400, color: slate[400] }}
+              >
+                {count}
+              </Box>
             )}
-          </Box>
+          </Typography>
           {description && (
-            <Typography sx={{ mt: 0.5, fontSize: "12px", color: gray[500] }}>
+            <Typography sx={{ mt: 0.5, fontSize: "12px", color: slate[500] }}>
               {description}
             </Typography>
           )}

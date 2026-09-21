@@ -235,11 +235,10 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
           sx={{
             overflow: "hidden",
             borderRadius: 2,
-            border: `1px solid ${slate[200]}`,
             bgcolor: "background.paper",
           }}
         >
-          <Box sx={{ borderBottom: `1px solid ${slate[100]}`, px: 3, py: 2 }}>
+          <Box sx={{ px: 3, py: 2 }}>
             <Typography sx={{ fontSize: 14, fontWeight: 500, color: slate[900] }}>
               Control de vencimientos
             </Typography>
@@ -371,13 +370,11 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
           sx={{
             overflow: "hidden",
             borderRadius: 2,
-            border: `1px solid ${slate[200]}`,
             bgcolor: "background.paper",
           }}
         >
           <Box
             sx={{
-              borderBottom: `1px solid ${slate[100]}`,
               px: 3,
               py: 2,
               display: "flex",

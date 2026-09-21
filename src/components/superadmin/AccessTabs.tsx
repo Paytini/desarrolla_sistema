@@ -143,8 +143,7 @@ function SectionHeader({ title, description }: { title: string; description: str
       <Typography variant="h2" sx={{ fontSize: 16, fontWeight: 600 }}>
         {title}
       </Typography>
-      <Box sx={{ mt: 1.5, mb: 1, height: 2, width: 24, bgcolor: "primary.main" }} />
-      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>{description}</Typography>
+      <Typography sx={{ mt: 0.5, fontSize: 12, color: "text.secondary" }}>{description}</Typography>
     </Box>
   )
 }
