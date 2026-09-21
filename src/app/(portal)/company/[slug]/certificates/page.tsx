@@ -1,7 +1,7 @@
 import CertificateActionsMenu from "@/components/company/CertificateActionsMenu"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { ZipDownloadButton } from "@/components/company/ZipDownloadButton"
-import { SearchInput } from "@/components/shared/SearchInput"
+import { ListFilters } from "@/components/shared/ListFilters"
 import { Pagination } from "@/components/shared/Pagination"
 import EmptyState from "@/components/shared/EmptyState"
 import { DataTable } from "@/components/shared/DataTable"
@@ -116,9 +116,6 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
     return str ? `?${str}` : "?"
   }
 
-  const clearIssuedUrl = pendingPageUrl(pendingPage)
-  const clearPendingUrl = issuedPageUrl(issuedPage)
-
   const zipQueryString = issuedHasFilters
     ? `?${new URLSearchParams({
         ...(issuedQuery ? { q: issuedQuery } : {}),
@@ -137,9 +134,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
       <div className="space-y-5">
         <section className="rounded-lg bg-white p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-portal-ink">
-              Constancias emitidas
-            </h2>
+            <h2 className="text-xl font-semibold text-portal-ink">Constancias emitidas</h2>
             {certificates.length > 0 ? (
               <ZipDownloadButton
                 count={certificates.length}
@@ -150,77 +145,70 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
           </div>
 
           {certificates.length > 0 ? (
-            <form className="mb-4 flex flex-wrap items-center gap-2">
-              <SearchInput
-                name="q"
-                defaultValue={issuedQuery}
-                placeholder="Buscar empleado o curso..."
-                width={220}
+            <div className="mb-4">
+              <ListFilters
+                searchPlaceholder="Buscar empleado o curso..."
+                initialQuery={issuedQuery}
+                extraQuery={pendingPageUrl(pendingPage)}
+                selects={[
+                  {
+                    name: "dept",
+                    defaultValue: "",
+                    initialValue: issuedDept,
+                    ariaLabel: "Filtrar por departamento",
+                    options: [
+                      { value: "", label: "Todos los departamentos" },
+                      ...departments.map((d) => ({ value: d, label: d })),
+                    ],
+                  },
+                  {
+                    name: "course",
+                    defaultValue: "",
+                    initialValue: issuedCourse,
+                    ariaLabel: "Filtrar por curso",
+                    options: [
+                      { value: "", label: "Todos los cursos" },
+                      ...courseNames.map((c) => ({ value: c, label: c })),
+                    ],
+                  },
+                ]}
               />
-              <select
-                name="dept"
-                defaultValue={issuedDept}
-                aria-label="Filtrar por departamento"
-                className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
-              >
-                <option value="">Todos los departamentos</option>
-                {departments.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-              <select
-                name="course"
-                defaultValue={issuedCourse}
-                aria-label="Filtrar por curso"
-                className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
-              >
-                <option value="">Todos los cursos</option>
-                {courseNames.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-              >
-                Filtrar
-              </button>
-              {issuedHasFilters ? (
-                <a
-                  href={clearIssuedUrl}
-                  className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-50"
-                >
-                  Limpiar
-                </a>
-              ) : null}
-            </form>
+            </div>
           ) : null}
 
           <DataTable
             ariaLabel="Constancias emitidas"
+            headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
             columns={[
+              { label: "SL" },
               { label: "Empleado" },
               { label: "Departamento" },
               { label: "Curso" },
               { label: "Emitido", className: "hidden sm:table-cell" },
               { label: "Acciones" },
             ]}
-            rows={pagedCertificates.map((certificate) => (
-              <tr key={certificate.id} className="bg-white transition-colors hover:bg-gray-50">
-                <td className="rounded-l-lg px-3 py-3">
-                  <span className="min-w-0 truncate font-medium text-portal-ink">
+            rows={pagedCertificates.map((certificate, index) => (
+              <tr
+                key={certificate.id}
+                className={
+                  index % 2 === 0
+                    ? "bg-white transition-colors hover:bg-slate-100"
+                    : "bg-slate-50 transition-colors hover:bg-slate-100"
+                }
+              >
+                <td className="rounded-l-lg px-3 py-3 text-sm text-slate-400">
+                  {String(index + 1).padStart(2, "0")}
+                </td>
+                <td className="px-3 py-3">
+                  <span className="min-w-0 truncate text-base font-medium text-portal-ink">
                     {certificate.employeeName}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 text-slate-500">
+                <td className="whitespace-nowrap px-3 py-3 text-sm text-slate-500">
                   {certificate.department ?? "—"}
                 </td>
                 <td
-                  className="max-w-[480px] truncate px-3 py-3 text-portal-ink"
+                  className="max-w-[480px] truncate px-3 py-3 text-sm text-portal-ink"
                   title={certificate.course_name}
                 >
                   {certificate.course_name}
@@ -253,12 +241,13 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
             totalPages={issuedTotalPages}
             totalResults={filteredCertificates.length}
             buildPageUrl={issuedPageUrl}
+            variant="numbered"
           />
         </section>
 
         <section className="rounded-lg bg-white p-5">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-portal-ink">
+            <h2 className="text-xl font-semibold text-portal-ink">
               Pendientes por aparecer
               <span className="ml-2 text-sm font-normal text-slate-400">
                 {pendingHasFilters
@@ -273,41 +262,26 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
           </p>
 
           {pendingCertificates.length > 0 ? (
-            <form className="mb-4 flex flex-wrap items-center gap-2">
-              <SearchInput
-                name="pq"
-                defaultValue={pendingQuery}
-                placeholder="Buscar empleado o curso..."
-                width={220}
+            <div className="mb-4">
+              <ListFilters
+                searchParamName="pq"
+                searchPlaceholder="Buscar empleado o curso..."
+                initialQuery={pendingQuery}
+                extraQuery={issuedPageUrl(issuedPage)}
+                selects={[
+                  {
+                    name: "pdept",
+                    defaultValue: "",
+                    initialValue: pendingDept,
+                    ariaLabel: "Filtrar por departamento",
+                    options: [
+                      { value: "", label: "Todos los departamentos" },
+                      ...departments.map((d) => ({ value: d, label: d })),
+                    ],
+                  },
+                ]}
               />
-              <select
-                name="pdept"
-                defaultValue={pendingDept}
-                aria-label="Filtrar por departamento"
-                className="rounded-lg border border-portal-border px-3 py-2 text-sm text-slate-600 outline-none"
-              >
-                <option value="">Todos los departamentos</option>
-                {departments.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-              >
-                Filtrar
-              </button>
-              {pendingHasFilters ? (
-                <a
-                  href={clearPendingUrl}
-                  className="rounded-lg border border-portal-border bg-white px-4 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-50"
-                >
-                  Limpiar
-                </a>
-              ) : null}
-            </form>
+            </div>
           ) : null}
 
           {pendingCertificates.length === 0 ? (
@@ -343,6 +317,7 @@ export default async function CompanyCertificatesPage({ searchParams }: PageProp
             totalPages={pendingTotalPages}
             totalResults={filteredPending.length}
             buildPageUrl={pendingPageUrl}
+            variant="numbered"
           />
         </section>
       </div>

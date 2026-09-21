@@ -1,8 +1,7 @@
 "use client"
 
 import { signOut } from "next-auth/react"
-import Link from "next/link"
-import { Bell, ChevronDown, LogOut } from "lucide-react"
+import { LogOut } from "lucide-react"
 
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
@@ -11,22 +10,22 @@ import Typography from "@mui/material/Typography"
 import ActionsPopover from "@/components/shared/ActionsPopover"
 import { fd } from "@/lib/theme-tokens"
 
-import { avatarColor, getInitials } from "@/components/layout/nav-config"
+import { avatarColor, getInitials, roleLabel, type Role } from "@/components/layout/nav-config"
 
 interface TopbarUserMenuProps {
   name: string
-  companyName?: string
+  role: Role
   dark?: boolean
 }
 
-export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMenuProps) {
+export function TopbarUserMenu({ name, role, dark = false }: TopbarUserMenuProps) {
   const color = avatarColor(name)
   const initials = getInitials(name)
 
   return (
     <ActionsPopover
       transitionTimeout={160}
-      paperSx={{ width: 240, borderRadius: 0 }}
+      paperSx={{ width: 240 }}
       trigger={({ open, toggle, setAnchorEl }) => (
         <Box
           ref={setAnchorEl}
@@ -39,12 +38,11 @@ export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMe
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1.25,
+            justifyContent: "center",
+            width: 44,
             height: 44,
-            pl: 0.5,
-            pr: 1.5,
             border: "none",
-            borderRadius: "999px",
+            borderRadius: "50%",
             cursor: "pointer",
             bgcolor: dark ? "rgba(255,255,255,0.1)" : fd.background,
             boxShadow: dark ? "none" : "0 1px 3px rgba(15,23,42,0.1)",
@@ -66,30 +64,6 @@ export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMe
           >
             {initials}
           </Avatar>
-          <Typography
-            sx={{
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              color: dark ? "var(--sidebar-navy-text-strong)" : "text.primary",
-              lineHeight: 1,
-              whiteSpace: "nowrap",
-              maxWidth: 140,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {name}
-          </Typography>
-          <Box
-            component={ChevronDown}
-            size={17}
-            strokeWidth={2.25}
-            sx={{
-              color: dark ? "var(--sidebar-navy-text)" : "text.secondary",
-              transition: "transform 0.2s ease",
-              transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            }}
-          />
         </Box>
       )}
     >
@@ -129,44 +103,10 @@ export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMe
             >
               {name}
             </Typography>
-            {companyName && (
-              <Typography sx={{ fontSize: "0.75rem", color: "text.secondary", mt: "-2px" }}>
-                {companyName}
-              </Typography>
-            )}
+            <Typography sx={{ fontSize: "0.75rem", color: "text.secondary", mt: "-2px" }}>
+              {roleLabel[role]}
+            </Typography>
           </Box>
-
-          <Divider />
-
-          <Link href="/notifications" style={{ textDecoration: "none", color: "inherit" }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                width: "100%",
-                px: 3,
-                py: 1.5,
-                border: "none",
-                background: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                color: "text.primary",
-                fontSize: "0.875rem",
-                fontFamily: "inherit",
-                fontWeight: 500,
-                transition: "background 0.15s ease",
-                "&:hover": { bgcolor: "action.hover" },
-              }}
-            >
-              <Box
-                component={Bell}
-                size={17}
-                sx={{ color: "text.secondary", flexShrink: 0 }}
-              />
-              Notificaciones
-            </Box>
-          </Link>
 
           <Divider />
 

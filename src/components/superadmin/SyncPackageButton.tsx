@@ -7,6 +7,8 @@ import Dialog from "@mui/material/Dialog"
 import DialogActions from "@mui/material/DialogActions"
 import DialogContent from "@mui/material/DialogContent"
 import DialogTitle from "@mui/material/DialogTitle"
+import IconButton from "@mui/material/IconButton"
+import Tooltip from "@mui/material/Tooltip"
 import Typography from "@mui/material/Typography"
 import { Loader2, RotateCw } from "lucide-react"
 import type { PackageSyncImpact } from "@/lib/wordpress/course-sync"
@@ -47,29 +49,27 @@ export function SyncPackageButton({ companyId, action, getImpact }: SyncPackageB
       <form ref={formRef} action={action}>
         <input type="hidden" name="empresa_id" value={companyId} />
       </form>
-      <Button
-        type="button"
-        variant="outlined"
-        size="small"
-        onClick={handleOpen}
-        disabled={loadingImpact}
-        startIcon={
-          loadingImpact ? (
-            <Loader2 size={11} strokeWidth={2} style={{ animation: "spin 0.8s linear infinite" }} />
+      <Tooltip title="Sincronizar">
+        <IconButton
+          type="button"
+          onClick={handleOpen}
+          disabled={loadingImpact}
+          aria-label="Sincronizar paquete con la empresa"
+          size="small"
+          sx={{
+            width: 32,
+            height: 32,
+            color: "text.secondary",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          {loadingImpact ? (
+            <Loader2 size={14} strokeWidth={2} style={{ animation: "spin 0.8s linear infinite" }} />
           ) : (
-            <RotateCw size={11} />
-          )
-        }
-        sx={{
-          height: 32,
-          fontSize: 12,
-          borderColor: "divider",
-          color: "text.secondary",
-          "&:hover": { borderColor: "text.secondary" },
-        }}
-      >
-        Sincronizar
-      </Button>
+            <RotateCw size={14} strokeWidth={2} />
+          )}
+        </IconButton>
+      </Tooltip>
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Confirmar sincronizacion{impact?.packageName ? `: ${impact.packageName}` : ""}</DialogTitle>

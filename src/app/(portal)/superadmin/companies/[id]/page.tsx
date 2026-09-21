@@ -455,6 +455,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
         <PanelBox
           id="detalle-empleados"
           title="Detalle de empleados"
+          titleSx={{ fontSize: "1.25rem" }}
           count={activeEmployees.length}
           description={
             company.employees.length - activeEmployees.length > 0
@@ -466,7 +467,9 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
           <div className="px-2">
             <DataTable
               ariaLabel="Detalle de empleados"
+              headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
               columns={[
+                { label: "SL" },
                 { label: "Empleado" },
                 { label: "Progreso" },
                 { label: "Cursos" },
@@ -474,16 +477,21 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                 { label: "WP sync" },
                 { label: "Última sync" },
               ]}
-              rows={pagedEmployeeDetails.map((e) => (
+              rows={pagedEmployeeDetails.map((e, index) => (
                 <tr
                   key={e.id}
                   className={
                     e.hasError
                       ? "bg-red-50/40 transition-colors hover:bg-slate-50/50"
-                      : "bg-white transition-colors hover:bg-gray-50"
+                      : index % 2 === 0
+                        ? "bg-white transition-colors hover:bg-slate-100"
+                        : "bg-slate-50 transition-colors hover:bg-slate-100"
                   }
                 >
-                  <td className="rounded-l-lg px-4 py-3">
+                  <td className="rounded-l-lg px-4 py-3 text-sm text-slate-400">
+                    {String(index + 1).padStart(2, "0")}
+                  </td>
+                  <td className="px-4 py-3">
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
                       <Box
                         sx={{
@@ -504,10 +512,10 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
                         {getInitials(e.first_name, e.last_name)}
                       </Box>
                       <Box>
-                        <Typography sx={{ fontSize: 13, fontWeight: 500, color: slate[900] }}>
+                        <Typography sx={{ fontSize: 15, fontWeight: 500, color: slate[900] }}>
                           {e.first_name} {e.last_name}
                         </Typography>
-                        <Typography sx={{ fontSize: 11, color: slate[400] }}>{e.email}</Typography>
+                        <Typography sx={{ fontSize: 12, color: slate[400] }}>{e.email}</Typography>
                       </Box>
                     </Box>
                   </td>
@@ -627,6 +635,7 @@ export default async function CompanyDetailPage({ params, searchParams }: PagePr
             totalPages={detailTotalPages}
             totalResults={detailTotalResults}
             buildPageUrl={detailPageUrl}
+            variant="numbered"
           />
         </PanelBox>
       </Box>

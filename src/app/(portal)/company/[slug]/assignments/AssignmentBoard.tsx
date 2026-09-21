@@ -228,7 +228,7 @@ export default function AssignmentBoard({
             >
               1
             </span>
-            <h2 className="text-base font-semibold text-slate-950">Elige el curso</h2>
+            <h2 className="text-xl font-semibold text-slate-950">Elige el curso</h2>
             <span className="text-sm font-normal text-slate-400">
               {filteredCourses.length} de {courses.length}
             </span>
@@ -369,7 +369,7 @@ export default function AssignmentBoard({
                 2
               </span>
               <div>
-                <h2 className="text-base font-semibold text-slate-950">
+                <h2 className="text-xl font-semibold text-slate-950">
                   Asignar &laquo;{selectedCourse.course_name}&raquo;
                 </h2>
               </div>
@@ -451,6 +451,7 @@ export default function AssignmentBoard({
               key={employeeFilterKey}
               ariaLabel="Colaboradores"
               pageSize={EMPLOYEES_PAGE_SIZE}
+              headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
               columns={[
                 {
                   label: (
@@ -513,7 +514,7 @@ export default function AssignmentBoard({
                         />
                       </div>
                     </td>
-                    <td className="truncate px-4 py-3 text-sm font-semibold text-slate-900">
+                    <td className="truncate px-4 py-3 text-base font-medium text-slate-900">
                       {employee.name}
                     </td>
                     <td className="truncate px-4 py-3 text-sm text-slate-500">

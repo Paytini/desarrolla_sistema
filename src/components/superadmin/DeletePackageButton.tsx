@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import Button from "@mui/material/Button"
+import { Trash2 } from "lucide-react"
 import Chip from "@mui/material/Chip"
+import IconButton from "@mui/material/IconButton"
+import Tooltip from "@mui/material/Tooltip"
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog"
 
 type DeletePackageButtonProps = {
@@ -38,24 +40,21 @@ export default function DeletePackageButton({
 
   return (
     <>
-      <Button
-        variant="outlined"
-        size="small"
-        onClick={() => setOpen(true)}
-        sx={{
-          height: 28,
-          px: 1.25,
-          fontSize: 12,
-          borderColor: "rgba(239,68,68,0.3)",
-          color: "error.main",
-          "&:hover": {
-            bgcolor: "rgba(239,68,68,0.06)",
-            borderColor: "error.main",
-          },
-        }}
-      >
-        Eliminar paquete
-      </Button>
+      <Tooltip title="Eliminar paquete">
+        <IconButton
+          onClick={() => setOpen(true)}
+          aria-label={`Eliminar ${packageName}`}
+          size="small"
+          sx={{
+            width: 32,
+            height: 32,
+            color: "error.main",
+            "&:hover": { bgcolor: "rgba(239,68,68,0.08)" },
+          }}
+        >
+          <Trash2 size={14} strokeWidth={2} />
+        </IconButton>
+      </Tooltip>
 
       <DeleteConfirmDialog
         open={open}

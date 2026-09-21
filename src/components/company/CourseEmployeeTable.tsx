@@ -60,7 +60,7 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
   return (
     <section className="rounded-lg bg-white p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-slate-950">
+        <h2 className="text-xl font-semibold text-slate-950">
           Progreso por empleado
           <span className="ml-2 text-sm font-normal text-slate-400">{rows.length}</span>
         </h2>
@@ -96,7 +96,9 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
         <DataTable
           ariaLabel="Progreso por empleado"
           pageSize={TABLE_PAGE_SIZE}
+          headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
           columns={[
+            { label: "SL" },
             { label: "Empleado" },
             { label: "Departamento" },
             { label: "Puesto" },
@@ -105,12 +107,22 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
             { label: "Resultado del examen final" },
             { label: "" },
           ]}
-          rows={filteredRows.map((row) => {
+          rows={filteredRows.map((row, index) => {
             const status = rowStatus(row)
             return (
-              <tr key={row.id} className="bg-gray-50">
-                <td className="min-w-0 rounded-l-lg py-3 pl-4">
-                  <p className="truncate text-sm font-semibold text-slate-950">
+              <tr
+                key={row.id}
+                className={
+                  index % 2 === 0
+                    ? "bg-white transition-colors hover:bg-slate-100"
+                    : "bg-slate-50 transition-colors hover:bg-slate-100"
+                }
+              >
+                <td className="rounded-l-lg py-3 pl-4 text-sm text-slate-400">
+                  {String(index + 1).padStart(2, "0")}
+                </td>
+                <td className="min-w-0 py-3">
+                  <p className="truncate text-base font-medium text-slate-950">
                     {row.employee.firstName} {row.employee.lastName}
                   </p>
                 </td>
@@ -147,7 +159,7 @@ export function CourseEmployeeTable({ rows, slug }: { rows: CourseEmployeeRow[];
                     <Link
                       href={companyPath(slug, `/employees/${row.employee.id}`)}
                       aria-label={`Ver perfil de ${row.employee.firstName} ${row.employee.lastName}`}
-                      className="inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
+                      className="inline-flex size-10 shrink-0 items-center justify-center rounded-[10px] text-blue-500 transition hover:bg-blue-50"
                     >
                       <Eye size={18} strokeWidth={2} />
                     </Link>

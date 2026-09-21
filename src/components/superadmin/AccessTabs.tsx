@@ -17,6 +17,7 @@ import { alpha } from "@mui/material/styles"
 import { Pause, Play, Trash2, Users, UserX } from "lucide-react"
 import { ConfirmIconButton } from "@/components/shared/ConfirmIconButton"
 import { SearchInput } from "@/components/shared/SearchInput"
+import { ListFilters } from "@/components/shared/ListFilters"
 import { Pagination } from "@/components/shared/Pagination"
 import { DataTable } from "@/components/shared/DataTable"
 import { getInitials } from "@/components/layout/nav-config"
@@ -100,8 +101,8 @@ function RowIdentity({
         {getInitials(avatarLabel)}
       </Avatar>
       <Box>
-        <Typography sx={{ fontSize: 13, fontWeight: 500 }}>{name}</Typography>
-        <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.25 }}>{email}</Typography>
+        <Typography sx={{ fontSize: 15, fontWeight: 500 }}>{name}</Typography>
+        <Typography sx={{ fontSize: 12, color: "text.secondary", mt: 0.25 }}>{email}</Typography>
       </Box>
     </Stack>
   )
@@ -140,11 +141,10 @@ function SeatsRing({ used, total }: { used: number | null; total: number | null 
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
     <Box>
-      <Typography variant="h2" sx={{ fontSize: 16, fontWeight: 600 }}>
+      <Typography variant="h2" sx={{ fontSize: 20, fontWeight: 600 }}>
         {title}
       </Typography>
-      <Box sx={{ mt: 1.5, mb: 1, height: 2, width: 24, bgcolor: "primary.main" }} />
-      <Typography sx={{ fontSize: 12, color: "text.secondary" }}>{description}</Typography>
+      <Typography sx={{ mt: 0.5, fontSize: 13, color: "text.secondary" }}>{description}</Typography>
     </Box>
   )
 }
@@ -238,7 +238,9 @@ export function AccessTabs({
           </Box>
           <DataTable
             ariaLabel="Empresas"
+            headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
             columns={[
+              { label: "SL" },
               { label: "Nombre" },
               { label: "Empresa" },
               { label: "Estado" },
@@ -247,13 +249,23 @@ export function AccessTabs({
               { label: "Alta" },
               { label: "Acción", className: "text-right" },
             ]}
-            rows={filteredHr.map((user) => (
-              <tr key={user.id} className="bg-white transition-colors hover:bg-gray-50">
-                <td className="rounded-l-lg px-4 py-3">
+            rows={filteredHr.map((user, index) => (
+              <tr
+                key={user.id}
+                className={
+                  index % 2 === 0
+                    ? "bg-white transition-colors hover:bg-slate-100"
+                    : "bg-slate-50 transition-colors hover:bg-slate-100"
+                }
+              >
+                <td className="rounded-l-lg px-4 py-3 text-sm text-slate-400">
+                  {String(index + 1).padStart(2, "0")}
+                </td>
+                <td className="px-4 py-3">
                   <RowIdentity name={user.name} email={user.email} avatarLabel={user.name} />
                 </td>
                 <td className="px-4 py-3">
-                  <Typography sx={{ fontSize: 13 }}>{user.companyName}</Typography>
+                  <Typography sx={{ fontSize: 15 }}>{user.companyName}</Typography>
                 </td>
                 <td className="px-4 py-3">
                   <StatusBadge
@@ -263,7 +275,7 @@ export function AccessTabs({
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
                     {user.lastAccess}
                   </Typography>
                 </td>
@@ -271,7 +283,7 @@ export function AccessTabs({
                   <SeatsRing used={user.usedSeats} total={user.contractedSeats} />
                 </td>
                 <td className="px-4 py-3">
-                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
                     {user.createdAt}
                   </Typography>
                 </td>
@@ -321,24 +333,17 @@ export function AccessTabs({
               title="Empleados del portal"
               description="Elimina accesos cuando sea necesario liberar una cuenta."
             />
-            <Box
-              component="form"
-              method="GET"
-              action="/superadmin/access"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <input type="hidden" name="tab" value="employees" />
-              <SearchInput
-                name="q"
-                defaultValue={employeeSearch}
-                placeholder="Buscar por nombre, email o empresa…"
-                width={280}
-              />
-            </Box>
+            <ListFilters
+              searchPlaceholder="Buscar por nombre, email o empresa…"
+              initialQuery={employeeSearch}
+              extraQuery="tab=employees"
+            />
           </Box>
           <DataTable
             ariaLabel="Empleados del portal"
+            headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
             columns={[
+              { label: "SL" },
               { label: "Empleado" },
               { label: "Empresa" },
               { label: "Estado" },
@@ -348,9 +353,19 @@ export function AccessTabs({
               { label: "Alta" },
               { label: "Acción", className: "text-right" },
             ]}
-            rows={employees.map((employee) => (
-              <tr key={employee.id} className="bg-white transition-colors hover:bg-gray-50">
-                <td className="rounded-l-lg px-4 py-3">
+            rows={employees.map((employee, index) => (
+              <tr
+                key={employee.id}
+                className={
+                  index % 2 === 0
+                    ? "bg-white transition-colors hover:bg-slate-100"
+                    : "bg-slate-50 transition-colors hover:bg-slate-100"
+                }
+              >
+                <td className="rounded-l-lg px-4 py-3 text-sm text-slate-400">
+                  {String(index + 1).padStart(2, "0")}
+                </td>
+                <td className="px-4 py-3">
                   <RowIdentity
                     name={`${employee.name} ${employee.lastName}`}
                     email={employee.email}
@@ -358,7 +373,7 @@ export function AccessTabs({
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <Typography sx={{ fontSize: 13 }}>{employee.companyName}</Typography>
+                  <Typography sx={{ fontSize: 15 }}>{employee.companyName}</Typography>
                 </td>
                 <td className="px-4 py-3">
                   <StatusBadge
@@ -369,7 +384,7 @@ export function AccessTabs({
                 </td>
                 <td className="px-4 py-3">
                   {employee.portalActive === null ? (
-                    <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                    <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
                       Sin cuenta
                     </Typography>
                   ) : (
@@ -382,18 +397,18 @@ export function AccessTabs({
                 </td>
                 <td className="px-4 py-3">
                   <Typography
-                    sx={{ fontSize: 12, color: "text.secondary", fontFamily: "monospace" }}
+                    sx={{ fontSize: 13, color: "text.secondary", fontFamily: "monospace" }}
                   >
                     {employee.wpUserId ?? "—"}
                   </Typography>
                 </td>
                 <td className="px-4 py-3">
-                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
                     {employee.portalLastAccess}
                   </Typography>
                 </td>
                 <td className="px-4 py-3">
-                  <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
+                  <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
                     {employee.createdAt}
                   </Typography>
                 </td>
@@ -447,6 +462,7 @@ export function AccessTabs({
           totalPages={employeePagination.totalPages}
           totalResults={employeePagination.totalResults}
           buildPageUrl={buildEmployeePageUrl}
+          variant="numbered"
         />
       )}
     </Paper>

@@ -1,13 +1,14 @@
 import dynamic from "next/dynamic"
-import EmployeeListFilters from "@/components/company/EmployeeListFilters"
 import EmployeeRowActionsMenu from "@/components/company/EmployeeRowActionsMenu"
 import EmployeeOnboardingModal from "@/components/company/EmployeeOnboardingModal"
 
 const CsvEmployeeImportForm = dynamic(() => import("@/components/company/CsvEmployeeImportForm"))
 const ManualEmployeeForm = dynamic(() => import("@/components/company/ManualEmployeeForm"))
 import { DataTable } from "@/components/shared/DataTable"
+import { ListFilters } from "@/components/shared/ListFilters"
 import { PageHeader } from "@/components/shared/PageHeader"
 import ProgressBar from "@/components/shared/ProgressBar"
+import { SortableColumnHeader } from "@/components/shared/SortableColumnHeader"
 import StatusBadge from "@/components/shared/StatusBadge"
 import StatusToast from "@/components/shared/StatusToast"
 import {
@@ -15,7 +16,11 @@ import {
   normalizeEmployeeSearchQuery,
 } from "@/lib/company/employees"
 import { cookies } from "next/headers"
-import { getHrEmployeesSnapshot } from "@/lib/dashboard-cache"
+import {
+  getHrEmployeesSnapshot,
+  isHrEmployeesSortField,
+  type HrEmployeesSortField,
+} from "@/lib/dashboard-cache"
 import { readSearchParam } from "@/lib/search-params"
 import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
@@ -71,12 +76,21 @@ function getSuccessMessage(
   return successMessages[success] ?? success
 }
 
-function buildEmployeeListPath(slug: string, query: string, status: string, page: number = 1) {
+function buildEmployeeListPath(
+  slug: string,
+  query: string,
+  status: string,
+  page: number = 1,
+  sortBy: HrEmployeesSortField = "created_at",
+  sortDir: "asc" | "desc" = "desc",
+) {
   const basePath = companyPath(slug, "/employees")
   const searchParams = new URLSearchParams()
   if (query) searchParams.set("q", query)
   if (status !== "all") searchParams.set("status", status)
   if (page > 1) searchParams.set("page", String(page))
+  if (sortBy !== "created_at") searchParams.set("sort", sortBy)
+  if (sortDir !== "desc") searchParams.set("dir", sortDir)
   const serialized = searchParams.toString()
   return serialized ? `${basePath}?${serialized}` : basePath
 }
@@ -103,18 +117,37 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
   const status = normalizeEmployeeFilterStatus(readSearchParam(params, "status"))
   const parsedPage = Number(readSearchParam(params, "page") ?? "1")
   const page = Number.isFinite(parsedPage) ? Math.max(1, Math.trunc(parsedPage)) : 1
+  const sortParam = readSearchParam(params, "sort") ?? ""
+  const sortBy: HrEmployeesSortField = isHrEmployeesSortField(sortParam) ? sortParam : "created_at"
+  const sortDir: "asc" | "desc" = readSearchParam(params, "dir") === "asc" ? "asc" : "desc"
 
-  const snapshot = await getHrEmployeesSnapshot(companyId, query, status, page)
+  const snapshot = await getHrEmployeesSnapshot(companyId, query, status, page, sortBy, sortDir)
   if (!snapshot) redirect("/login")
 
   const { company, totalEmployees, filteredCount, totalPages, currentPage, pagedEmployees } =
     snapshot
 
   const employeesBasePath = companyPath(company.slug, "/employees")
-  const currentListPath = buildEmployeeListPath(company.slug, searchQuery, status, currentPage)
+  const currentListPath = buildEmployeeListPath(
+    company.slug,
+    searchQuery,
+    status,
+    currentPage,
+    sortBy,
+    sortDir,
+  )
   const exportHref = `/api/company/employees/export${
     currentListPath === employeesBasePath ? "" : currentListPath.replace(employeesBasePath, "")
   }`
+
+  function sortUrl(field: HrEmployeesSortField) {
+    const nextDir = sortBy === field && sortDir === "asc" ? "desc" : "asc"
+    return buildEmployeeListPath(company.slug, searchQuery, status, 1, field, nextDir)
+  }
+
+  function sortDirection(field: HrEmployeesSortField): "asc" | "desc" | null {
+    return sortBy === field ? sortDir : null
+  }
 
   return (
     <div className="space-y-6">
@@ -168,38 +201,101 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
 
       <section className="rounded-lg bg-white p-5">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-base font-semibold text-slate-950">
+          <h2 className="text-xl font-semibold text-slate-950">
             Plantilla actual{" "}
             <span className="ml-2 text-sm font-normal text-slate-400">
               {filteredCount} de {totalEmployees}
             </span>
           </h2>
-          <a
-            href={exportHref}
-            className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-          >
-            Exportar CSV
-          </a>
+          <div className="flex flex-wrap items-center gap-2">
+            <ListFilters
+              searchPlaceholder="Nombre, correo, área o puesto..."
+              initialQuery={searchQuery}
+              selects={[
+                {
+                  name: "status",
+                  defaultValue: "all",
+                  initialValue: status,
+                  ariaLabel: "Filtrar por estado",
+                  options: [
+                    { value: "all", label: "Todos" },
+                    { value: "active", label: "Activos" },
+                    { value: "inactive", label: "Suspendidos" },
+                  ],
+                },
+              ]}
+              extraQuery={
+                sortBy !== "created_at" || sortDir !== "desc"
+                  ? `sort=${sortBy}&dir=${sortDir}`
+                  : undefined
+              }
+            />
+            <a
+              href={exportHref}
+              className="inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Exportar CSV
+            </a>
+          </div>
         </div>
-
-        <EmployeeListFilters
-          basePath={employeesBasePath}
-          initialQuery={searchQuery}
-          initialStatus={status}
-        />
 
         <DataTable
           ariaLabel="Plantilla de empleados"
+          headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
           columns={[
-            { label: "Empleado" },
-            { label: "Correo" },
-            { label: "Puesto", className: "hidden md:table-cell" },
-            { label: "Departamento", className: "hidden md:table-cell" },
+            { label: "SL" },
+            {
+              label: (
+                <SortableColumnHeader
+                  href={sortUrl("first_name")}
+                  label="Empleado"
+                  direction={sortDirection("first_name")}
+                />
+              ),
+            },
+            {
+              label: (
+                <SortableColumnHeader
+                  href={sortUrl("email")}
+                  label="Correo"
+                  direction={sortDirection("email")}
+                />
+              ),
+            },
+            {
+              label: (
+                <SortableColumnHeader
+                  href={sortUrl("position")}
+                  label="Puesto"
+                  direction={sortDirection("position")}
+                />
+              ),
+              className: "hidden md:table-cell",
+            },
+            {
+              label: (
+                <SortableColumnHeader
+                  href={sortUrl("department")}
+                  label="Departamento"
+                  direction={sortDirection("department")}
+                />
+              ),
+              className: "hidden md:table-cell",
+            },
             { label: "Avance", className: "hidden md:table-cell" },
-            { label: "Estado", className: "hidden md:table-cell" },
+            {
+              label: (
+                <SortableColumnHeader
+                  href={sortUrl("active")}
+                  label="Estado"
+                  direction={sortDirection("active")}
+                />
+              ),
+              className: "hidden md:table-cell",
+            },
             { label: <span className="sr-only">Acciones</span> },
           ]}
-          rows={pagedEmployees.map((employee) => {
+          rows={pagedEmployees.map((employee, index) => {
             const avgProgress = employee.courses.length
               ? Math.round(
                   employee.courses.reduce((sum, c) => sum + c.progress_pct, 0) /
@@ -208,9 +304,19 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
               : 0
 
             return (
-              <tr key={employee.id} className="bg-white transition-colors hover:bg-gray-50">
-                <td className="min-w-0 rounded-l-lg py-3 pl-4">
-                  <p className="truncate text-sm font-semibold text-slate-950">
+              <tr
+                key={employee.id}
+                className={
+                  index % 2 === 0
+                    ? "bg-white transition-colors hover:bg-slate-100"
+                    : "bg-slate-50 transition-colors hover:bg-slate-100"
+                }
+              >
+                <td className="rounded-l-lg py-3 pl-4 text-sm text-slate-400">
+                  {String(index + 1).padStart(2, "0")}
+                </td>
+                <td className="min-w-0 py-3">
+                  <p className="truncate text-base font-medium text-slate-950">
                     {employee.first_name} {employee.last_name}
                   </p>
                 </td>
@@ -263,7 +369,10 @@ export default async function CompanyEmployeesPage({ searchParams }: PageProps) 
           currentPage={currentPage}
           totalPages={totalPages}
           totalResults={filteredCount}
-          buildPageUrl={(p) => buildEmployeeListPath(company.slug, searchQuery, status, p)}
+          buildPageUrl={(p) =>
+            buildEmployeeListPath(company.slug, searchQuery, status, p, sortBy, sortDir)
+          }
+          variant="numbered"
         />
       </section>
     </div>

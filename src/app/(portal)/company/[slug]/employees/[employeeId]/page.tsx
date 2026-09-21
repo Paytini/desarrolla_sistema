@@ -222,7 +222,9 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
           <DataTable
             ariaLabel="Intentos de examen"
             pageSize={TABLE_PAGE_SIZE}
+            headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
             columns={[
+              { label: "SL" },
               { label: "Examen" },
               { label: "Resultado" },
               { label: "Puntaje" },
@@ -230,7 +232,7 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               { label: "Tiempo Hecho", className: "hidden md:table-cell" },
               { label: "Fecha" },
             ]}
-            rows={latestQuizAttempts.map((attempt) => {
+            rows={latestQuizAttempts.map((attempt, index) => {
               const scorePct = attempt.total_marks
                 ? Math.round((attempt.earned_marks / attempt.total_marks) * 100)
                 : 0
@@ -240,9 +242,19 @@ export default async function EmployeeProfilePage({ params }: PageProps) {
               )
 
               return (
-                <tr key={attempt.id} className="bg-gray-50">
-                  <td className="min-w-0 rounded-l-lg py-3 pl-4">
-                    <p className="truncate text-sm font-semibold text-slate-950">
+                <tr
+                  key={attempt.id}
+                  className={
+                    index % 2 === 0
+                      ? "bg-white transition-colors hover:bg-slate-100"
+                      : "bg-slate-50 transition-colors hover:bg-slate-100"
+                  }
+                >
+                  <td className="rounded-l-lg py-3 pl-4 text-sm text-slate-400">
+                    {String(index + 1).padStart(2, "0")}
+                  </td>
+                  <td className="min-w-0 py-3">
+                    <p className="truncate text-base font-medium text-slate-950">
                       {attempt.quiz_name ?? "Examen"}
                     </p>
                   </td>
