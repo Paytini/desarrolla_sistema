@@ -12,7 +12,7 @@ import { getSession } from "@/lib/session"
 import { retryCompanySyncAction, triggerGlobalLearningSyncAction } from "./actions"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
-import { SearchInput } from "@/components/shared/SearchInput"
+import { ListFilters } from "@/components/shared/ListFilters"
 import { DataTable } from "@/components/shared/DataTable"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
@@ -239,7 +239,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
           }}
         >
           <Box sx={{ px: 3, py: 2 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 500, color: slate[900] }}>
+            <Typography sx={{ fontSize: 20, fontWeight: 600, color: slate[900] }}>
               Control de vencimientos
             </Typography>
             <Typography sx={{ fontSize: 12, color: slate[400] }}>
@@ -309,20 +309,29 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
             ) : (
               <DataTable
                 ariaLabel="Control de vencimientos"
+                headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
                 columns={[
+                  { label: "SL" },
                   { label: "Empresa" },
                   { label: "Paquete" },
                   { label: "Vence" },
                   { label: "Estado" },
                 ]}
-                rows={renewalAlerts.map((item) => {
+                rows={renewalAlerts.map((item, index) => {
                   const days = item.remainingDays as number
                   return (
                     <tr
                       key={item.company.id}
-                      className="bg-white transition-colors hover:bg-gray-50"
+                      className={
+                        index % 2 === 0
+                          ? "bg-white transition-colors hover:bg-slate-100"
+                          : "bg-slate-50 transition-colors hover:bg-slate-100"
+                      }
                     >
-                      <td className="rounded-l-lg px-4 py-3 text-sm font-medium text-slate-900">
+                      <td className="rounded-l-lg px-4 py-3 text-sm text-slate-400">
+                        {String(index + 1).padStart(2, "0")}
+                      </td>
+                      <td className="px-4 py-3 text-base font-medium text-slate-900">
                         {item.company.name}
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-500">
@@ -385,25 +394,18 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
             }}
           >
             <Box>
-              <Typography sx={{ fontSize: 14, fontWeight: 500, color: slate[900] }}>
+              <Typography sx={{ fontSize: 20, fontWeight: 600, color: slate[900] }}>
                 Estado de sincronización WP/Tutor
               </Typography>
               <Typography sx={{ fontSize: 12, color: slate[400] }}>
                 Semáforo operativo por empresa con reintento directo.
               </Typography>
             </Box>
-            <Box
-              component="form"
-              method="GET"
-              sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
-            >
-              <SearchInput
-                name="sync_q"
-                defaultValue={syncQ}
-                placeholder="Buscar empresa…"
-                width={180}
-              />
-            </Box>
+            <ListFilters
+              searchParamName="sync_q"
+              searchPlaceholder="Buscar empresa…"
+              initialQuery={syncQ}
+            />
           </Box>
           <Box sx={{ p: 2.5, display: "grid", gap: 2 }}>
             <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1 }}>
@@ -484,7 +486,9 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
             ) : (
               <DataTable
                 ariaLabel="Estado de sincronización WP/Tutor"
+                headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
                 columns={[
+                  { label: "SL" },
                   { label: "Empresa" },
                   { label: "Sync" },
                   { label: "Errores" },
@@ -492,14 +496,21 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                   { label: "Sin WP" },
                   { label: "Acción", className: "text-right" },
                 ]}
-                rows={pagedCompanyStats.map((item) => {
+                rows={pagedCompanyStats.map((item, index) => {
                   const style = SYNC_CHIP_STYLES[item.syncStatus]
                   return (
                     <tr
                       key={item.company.id}
-                      className="bg-white transition-colors hover:bg-gray-50"
+                      className={
+                        index % 2 === 0
+                          ? "bg-white transition-colors hover:bg-slate-100"
+                          : "bg-slate-50 transition-colors hover:bg-slate-100"
+                      }
                     >
-                      <td className="rounded-l-lg px-4 py-3 text-sm font-medium text-slate-900">
+                      <td className="rounded-l-lg px-4 py-3 text-sm text-slate-400">
+                        {String(index + 1).padStart(2, "0")}
+                      </td>
+                      <td className="px-4 py-3 text-base font-medium text-slate-900">
                         {item.company.name}
                       </td>
                       <td className="px-4 py-3">
@@ -555,17 +566,17 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
                         <form action={retryCompanySyncAction}>
                           <input type="hidden" name="empresa_id" value={item.company.id} />
                           <SubmitButton
-                            variant="outlined"
-                            size="small"
+                            aria-label={`Reintentar sincronización de ${item.company.name}`}
                             sx={{
-                              height: 28,
-                              fontSize: 12,
-                              borderColor: "divider",
-                              color: "text.secondary",
-                              "&:hover": { borderColor: "text.secondary" },
+                              minWidth: 0,
+                              width: 32,
+                              height: 32,
+                              borderRadius: "8px",
+                              color: "primary.main",
+                              "&:hover": { bgcolor: "action.hover" },
                             }}
                           >
-                            Reintentar
+                            <RefreshCw size={14} />
                           </SubmitButton>
                         </form>
                       </td>
@@ -579,6 +590,7 @@ export default async function SuperAdminReportsPage({ searchParams }: PageProps)
               totalPages={syncTotalPages}
               totalResults={filteredCompanyStats.length}
               buildPageUrl={syncPageUrl}
+              variant="numbered"
             />
           </Box>
         </Paper>
