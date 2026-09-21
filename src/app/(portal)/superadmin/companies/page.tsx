@@ -201,7 +201,7 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         <div className="px-2">
           <DataTable
             ariaLabel="Empresas registradas"
-            headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-xs font-bold normal-case tracking-normal text-slate-700"
+            headerClassName="bg-slate-50 pt-2 first:rounded-l-lg last:rounded-r-lg text-sm font-normal normal-case tracking-normal text-slate-700"
             columns={[
               { label: "SL" },
               {
