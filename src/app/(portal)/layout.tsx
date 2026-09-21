@@ -59,6 +59,8 @@ export default async function PortalLayout({ children }: { children: React.React
             <NotificationBell />
             <TopbarUserMenu
               name={name}
+              email={email}
+              role={role}
               companyName={role !== "SUPERADMIN" ? companyName : undefined}
             />
           </div>
