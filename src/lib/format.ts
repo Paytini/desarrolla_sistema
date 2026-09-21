@@ -6,6 +6,10 @@ export function getInitials(name: string): string {
     .join("")
 }
 
+export function getShortName(name: string): string {
+  return name.trim().split(/\s+/).slice(0, 2).join(" ")
+}
+
 export function decodeHtmlEntities(text: string): string {
   if (!text) return text
   return text

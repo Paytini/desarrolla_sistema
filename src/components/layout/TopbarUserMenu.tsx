@@ -13,6 +13,7 @@ import StatusBadge from "@/components/shared/StatusBadge"
 import { fd } from "@/lib/theme-tokens"
 
 import { avatarColor, getInitials } from "@/components/layout/nav-config"
+import { getShortName } from "@/lib/format"
 
 type PortalRole = "SUPERADMIN" | "HR" | "EMPLOYEE"
 
@@ -39,6 +40,7 @@ export function TopbarUserMenu({
 }: TopbarUserMenuProps) {
   const color = avatarColor(name)
   const initials = getInitials(name)
+  const shortName = getShortName(name)
 
   return (
     <ActionsPopover
@@ -95,7 +97,7 @@ export function TopbarUserMenu({
               textOverflow: "ellipsis",
             }}
           >
-            {name}
+            {shortName}
           </Typography>
           <Box
             component={ChevronDown}
@@ -138,7 +140,7 @@ export function TopbarUserMenu({
                   textOverflow: "ellipsis",
                 }}
               >
-                {name}
+                {shortName}
               </Typography>
               <Typography
                 sx={{
