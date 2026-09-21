@@ -210,10 +210,19 @@ export async function getSuperadminCompaniesSnapshot() {
 
 export const SUPERADMIN_COMPANIES_PAGE_SIZE = 20
 
+const COMPANIES_SORT_FIELDS = ["name", "contracted_seats", "created_at", "active"] as const
+export type CompaniesSortField = (typeof COMPANIES_SORT_FIELDS)[number]
+
+export function isCompaniesSortField(value: string): value is CompaniesSortField {
+  return (COMPANIES_SORT_FIELDS as readonly string[]).includes(value)
+}
+
 export async function getSuperadminCompaniesListSnapshot(
   query: string,
   status: string,
   page: number,
+  sortBy: CompaniesSortField = "created_at",
+  sortDir: "asc" | "desc" = "desc",
 ) {
   const snapshot = unstable_cache(
     async () => {
@@ -239,7 +248,7 @@ export async function getSuperadminCompaniesListSnapshot(
 
       const companies = await prisma.company.findMany({
         where,
-        orderBy: { created_at: "desc" },
+        orderBy: { [sortBy]: sortDir },
         skip: (currentPage - 1) * SUPERADMIN_COMPANIES_PAGE_SIZE,
         take: SUPERADMIN_COMPANIES_PAGE_SIZE,
         select: {
@@ -262,7 +271,16 @@ export async function getSuperadminCompaniesListSnapshot(
 
       return { companies, filteredCount, totalPages, currentPage }
     },
-    ["dashboard-snapshot", "superadmin", "empresas-lista", status, query, String(page)],
+    [
+      "dashboard-snapshot",
+      "superadmin",
+      "empresas-lista",
+      status,
+      query,
+      String(page),
+      sortBy,
+      sortDir,
+    ],
     { revalidate: 45, tags: [SUPERADMIN_GLOBAL_TAG, SUPERADMIN_COMPANIES_TAG] },
   )
 
