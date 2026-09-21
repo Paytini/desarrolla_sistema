@@ -6,11 +6,6 @@ export function getInitials(name: string): string {
     .join("")
 }
 
-export function getShortName(name: string): string {
-  const words = name.trim().split(/\s+/)
-  return words.length <= 1 ? words[0] : `${words[0]} ${words[words.length - 1]}`
-}
-
 export function decodeHtmlEntities(text: string): string {
   if (!text) return text
   return text

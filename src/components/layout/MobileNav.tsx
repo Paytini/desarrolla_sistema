@@ -28,7 +28,6 @@ import {
   type Role,
 } from "@/components/layout/nav-config"
 import { fd, portalColors } from "@/lib/theme-tokens"
-import { getShortName } from "@/lib/format"
 
 function MobileNavLink({
   item,
@@ -113,7 +112,6 @@ export function MobileNav({
   }
 
   const initials = getInitials(name)
-  const shortName = getShortName(name)
   const homeHref = homeHrefForRole(role, companySlug)
 
   return (
@@ -260,7 +258,7 @@ export function MobileNav({
                 whiteSpace: "nowrap",
               }}
             >
-              {shortName}
+              {name}
             </Typography>
             <Typography sx={{ fontSize: "0.6875rem", color: "var(--sidebar-navy-text)" }}>
               {roleLabel[role]}
