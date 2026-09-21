@@ -22,6 +22,7 @@ type DataTableProps = {
   emptyState?: DataTableEmptyState
   pageSize?: number
   className?: string
+  headerClassName?: string
 }
 
 export function DataTable({
@@ -31,6 +32,7 @@ export function DataTable({
   emptyState,
   pageSize,
   className = "",
+  headerClassName = "text-[11px] font-semibold uppercase tracking-wide text-slate-400",
 }: DataTableProps) {
   const [page, setPage] = useState(0)
 
@@ -63,7 +65,7 @@ export function DataTable({
               <th
                 key={index}
                 scope="col"
-                className={`px-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400 ${column.className ?? ""}`}
+                className={`px-4 pb-2 text-left ${headerClassName} ${column.className ?? ""}`}
               >
                 {column.label}
               </th>
