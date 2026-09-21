@@ -21,20 +21,20 @@ export function CompanyRow({ company, index }: { company: Company; index: number
           : "bg-slate-50 transition-colors hover:bg-slate-100"
       }
     >
-      <td className="rounded-l-lg py-3 pl-4 text-xs text-slate-400">
+      <td className="rounded-l-lg py-3 pl-4 text-sm text-slate-400">
         {String(index + 1).padStart(2, "0")}
       </td>
       <td className="min-w-0 py-3">
-        <p className="truncate text-sm font-medium text-slate-950">{company.name}</p>
-        <p className="truncate text-[11px] text-slate-500">{company.hr_email}</p>
+        <p className="truncate text-base font-medium text-slate-950">{company.name}</p>
+        <p className="truncate text-xs text-slate-500">{company.hr_email}</p>
       </td>
 
-      <td className="hidden px-4 py-3 font-mono text-xs text-slate-500 sm:table-cell">
+      <td className="hidden px-4 py-3 font-mono text-sm text-slate-500 sm:table-cell">
         {company.rfc ?? "—"}
       </td>
 
       <td className="hidden px-4 py-3 md:table-cell">
-        <span className="inline-flex h-5 items-center rounded-full bg-slate-100 px-2 text-[11px] text-slate-600">
+        <span className="inline-flex h-6 items-center rounded-full bg-slate-100 px-2 text-xs text-slate-600">
           {packageName}
         </span>
       </td>
@@ -42,14 +42,14 @@ export function CompanyRow({ company, index }: { company: Company; index: number
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
           <SeatDonut used={activeEmployeesCount} total={company.contracted_seats} size={48} />
-          <span className="text-xs font-medium text-slate-900">
+          <span className="text-sm font-medium text-slate-900">
             {activeEmployeesCount}
             <span className="text-slate-500">/{company.contracted_seats}</span>
           </span>
         </div>
       </td>
 
-      <td className="hidden px-4 py-3 text-xs text-slate-500 lg:table-cell">
+      <td className="hidden px-4 py-3 text-sm text-slate-500 lg:table-cell">
         {formatDate(company.created_at)}
       </td>
 

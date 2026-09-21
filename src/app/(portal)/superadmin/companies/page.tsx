@@ -3,19 +3,18 @@ import {
   isCompaniesSortField,
   type CompaniesSortField,
 } from "@/lib/dashboard-cache"
-import { fd, slate } from "@/lib/theme-tokens"
 import { readSearchParam } from "@/lib/search-params"
+import { CompaniesListFilters } from "@/components/superadmin/CompaniesListFilters"
 import { CompanyRow } from "@/components/superadmin/CompanyRow"
 import { PanelBox } from "@/components/superadmin/PanelBox"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { DataTable } from "@/components/shared/DataTable"
-import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Plus, X } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowUpDown, Building2, Plus } from "lucide-react"
 import Link from "next/link"
 import { DismissibleAlert } from "@/components/shared/DismissibleAlert"
 import { Pagination } from "@/components/shared/Pagination"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
-import { SearchInput } from "@/components/shared/SearchInput"
 
 const successMessages: Record<string, string> = {
   empresa_creada: "Empresa creada correctamente con su usuario HR inicial.",
@@ -129,74 +128,13 @@ export default async function CompaniesPage({ searchParams }: PageProps) {
         titleSx={{ fontSize: "1.25rem" }}
         noPadding
         action={
-          <Box
-            component="form"
-            method="GET"
-            sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}
-          >
-            <SearchInput
-              name="q"
-              defaultValue={q}
-              placeholder="Buscar empresa o RFC…"
-              width={224}
-            />
-            <Box
-              component="select"
-              name="status"
-              defaultValue={statusFilter}
-              sx={{
-                height: 40,
-                borderRadius: "8px",
-                border: "1px solid",
-                borderColor: "divider",
-                bgcolor: fd.background,
-                px: 1.5,
-                fontSize: "13px",
-                color: "text.primary",
-                outline: "none",
-                cursor: "pointer",
-                "&:focus": { borderColor: "primary.main" },
-              }}
-            >
-              <option value="all">Todos</option>
-              <option value="activa">Activas</option>
-              <option value="suspendida">Suspendidas</option>
-            </Box>
-            <Button
-              type="submit"
-              variant="outlined"
-              size="small"
-              sx={{
-                bgcolor: fd.background,
-                height: 40,
-                px: 1.5,
-                fontSize: 13,
-                borderColor: "divider",
-                color: "text.secondary",
-              }}
-            >
-              Filtrar
-            </Button>
-            {(q || statusFilter !== "all") && (
-              <Link
-                href="/superadmin/companies"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  height: 40,
-                  paddingLeft: 8,
-                  paddingRight: 8,
-                  fontSize: 12,
-                  color: slate[500],
-                  textDecoration: "none",
-                }}
-              >
-                <X size={12} strokeWidth={2.5} />
-                Limpiar
-              </Link>
-            )}
-          </Box>
+          <CompaniesListFilters
+            basePath="/superadmin/companies"
+            initialQuery={q}
+            initialStatus={statusFilter}
+            sort={sortBy !== "created_at" ? sortBy : undefined}
+            dir={sortDir !== "desc" ? sortDir : undefined}
+          />
         }
       >
         <div className="px-2">
