@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Tooltip from "@mui/material/Tooltip"
 import {
   BookOpen,
   Building2,
@@ -107,13 +108,15 @@ export function PackageRow({
         </td>
         <td className="rounded-r-lg py-3 pr-2 text-right" onClick={(e) => e.stopPropagation()}>
           <div className="inline-flex items-center gap-0.5">
-            <Link
-              href={`/superadmin/packages/${pkg.id}/edit`}
-              aria-label="Editar paquete"
-              className="inline-flex size-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
-            >
-              <Pencil size={14} />
-            </Link>
+            <Tooltip title="Editar paquete">
+              <Link
+                href={`/superadmin/packages/${pkg.id}/edit`}
+                aria-label="Editar paquete"
+                className="inline-flex size-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-gray-100 hover:text-slate-700"
+              >
+                <Pencil size={14} />
+              </Link>
+            </Tooltip>
             <DeletePackageButton
               action={deletePackageAction}
               packageId={pkg.id}

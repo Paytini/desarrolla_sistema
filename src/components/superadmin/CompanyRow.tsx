@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Eye } from "lucide-react"
+import Tooltip from "@mui/material/Tooltip"
 
 import { SeatDonut } from "@/components/superadmin/SeatDonut"
 import { SuspendCompanyButton } from "@/components/superadmin/SuspendCompanyButton"
@@ -61,17 +62,20 @@ export function CompanyRow({ company, index }: { company: Company; index: number
 
       <td className="rounded-r-lg py-3 pr-2 text-right">
         <div className="flex items-center justify-end gap-1">
-          <Link
-            href={`/superadmin/companies/${company.id}`}
-            aria-label={`Ver ${company.name}`}
-            className="inline-flex size-8 items-center justify-center rounded-lg text-blue-500 transition hover:bg-blue-50"
-          >
-            <Eye size={16} strokeWidth={2} />
-          </Link>
+          <Tooltip title="Ver">
+            <Link
+              href={`/superadmin/companies/${company.id}`}
+              aria-label={`Ver ${company.name}`}
+              className="inline-flex size-8 items-center justify-center rounded-lg text-blue-500 transition hover:bg-blue-50"
+            >
+              <Eye size={16} strokeWidth={2} />
+            </Link>
+          </Tooltip>
           <SuspendCompanyButton
             companyId={company.id}
             active={company.active}
             name={company.name}
+            iconOnly
           />
         </div>
       </td>
