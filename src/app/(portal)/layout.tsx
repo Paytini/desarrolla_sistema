@@ -53,8 +53,10 @@ export default async function PortalLayout({ children }: { children: React.React
             <EmployeeSearchBar />
           )}
           <div className="flex flex-1 items-center justify-end gap-1">
+            <div className="hidden min-[900px]:block">
+              <FullscreenToggle />
+            </div>
             <NotificationBell />
-            <FullscreenToggle />
             <TopbarUserMenu
               name={name}
               companyName={role !== "SUPERADMIN" ? companyName : undefined}

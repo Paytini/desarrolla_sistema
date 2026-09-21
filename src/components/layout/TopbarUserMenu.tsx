@@ -1,8 +1,7 @@
 "use client"
 
 import { signOut } from "next-auth/react"
-import Link from "next/link"
-import { Bell, ChevronDown, LogOut } from "lucide-react"
+import { ChevronDown, LogOut } from "lucide-react"
 
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
@@ -135,38 +134,6 @@ export function TopbarUserMenu({ name, companyName, dark = false }: TopbarUserMe
               </Typography>
             )}
           </Box>
-
-          <Divider />
-
-          <Link href="/notifications" style={{ textDecoration: "none", color: "inherit" }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                width: "100%",
-                px: 3,
-                py: 1.5,
-                border: "none",
-                background: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                color: "text.primary",
-                fontSize: "0.875rem",
-                fontFamily: "inherit",
-                fontWeight: 500,
-                transition: "background 0.15s ease",
-                "&:hover": { bgcolor: "action.hover" },
-              }}
-            >
-              <Box
-                component={Bell}
-                size={17}
-                sx={{ color: "text.secondary", flexShrink: 0 }}
-              />
-              Notificaciones
-            </Box>
-          </Link>
 
           <Divider />
 
